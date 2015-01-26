@@ -22,7 +22,10 @@ build/Release
 # Dependency directory
 # Commenting this out is preferred by some people, see
 # https://npmjs.org/doc/faq.html#Should-I-check-my-node_modules-folder-into-git
-node_modules
+src/client/node_modules
+src/client/projectFilesBackup
+src/client/app/lib
+src/client/coverage
 
 # Users Environment Variables
 .lock-wscript
@@ -73,3 +76,5 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+
+*.cek
