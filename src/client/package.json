@@ -1,0 +1,29 @@
+{
+  "name": "FHIRStarter",
+  "version": "0.0.1",
+  "scripts": {
+    "postinstall": "node ./node_modules/bower/bin/bower install"
+  },
+  "devDependencies": {
+    "matchdep": "~0.3.0",
+    "bower": "~1.3",
+    "protractor": "~1.5.0",
+    "grunt": "~0.4.5",
+    "grunt-protractor-runner": "~1.1.4",
+    "grunt-karma": "~0.9.0",
+    "grunt-shell": "~1.1.1",
+    "grunt-contrib-jshint": "~0.10.0",
+    "karma": "~0.12.31",
+    "karma-chrome-launcher": "~0.1.7",
+    "jasmine-core": "~2.1.3",
+    "karma-jasmine": "~0.3.4",
+    "karma-script-launcher": "~0.1.0",
+    "requirejs": "~2.1.15",
+    "karma-requirejs": "~0.2.2",
+    "karma-coverage": "~0.2.7",
+    "grunt-contrib-concat": "~0.5.0",
+    "grunt-contrib-watch": "~0.6.1",
+    "grunt-contrib-connect": "~0.9.0",
+    "grunt-open": "~0.2.3"
+  }
+}

@@ -1,0 +1,57 @@
+<div data-ng-controller="contact as vm">
+    <md-content class="md-padding">
+        <md-divider>
+            <h3>Administrative Contact</h3>
+            <data-ng-form name="contactEditForm" data-ng-model="vm.contact">
+                <md-input-container>
+                    <label>Name</label>
+                    <input required
+                           data-ng-model="vm.contact.name"/>
+                </md-input-container>
+
+                <md-input-container>
+                    <label>Email</label>
+                    <input data-ng-model="vm.contact.email"/>
+                </md-input-container>
+
+                <md-input-container>
+                    <label>Phone</label>
+                    <input data-ng-model="vm.contact.phone"/>
+                </md-input-container>
+
+                <label>Purpose</label>&nbsp;&nbsp;<select
+                    id="contact-purpose"
+                    data-ng-model="vm.contact.purpose">
+                <option data-ng-repeat="coding in vm.contactTypes" value="{{coding.display}}"
+                        data-ng-selected="coding.code===vm.contact.purpose">
+                    {{coding.display}}
+                </option>
+                <option value=""></option>
+            </select>
+
+                <div data-ng-if="vm.mode==='multi'" class="md-padding">
+                    <md-button data-ng-click="vm.addToList(contactEditForm, vm.contact)">Add to list</md-button>
+                </div>
+            </data-ng-form>
+
+            <div data-ng-if="vm.contacts.length > 0 && vm.mode==='multi'">
+                <form>
+                    <section>
+                        <md-subheader>Contact List</md-subheader>
+                        <md-list>
+                            <md-item ng-repeat="a in vm.contacts">
+                                <md-item-content>
+                                    <div class="md-tile-left">
+                                    </div>
+                                    <div class="md-tile-content">
+                                        <h3>{{a}}</h3>
+                                    </div>
+                                </md-item-content>
+                            </md-item>
+                        </md-list>
+                    </section>
+                </form>
+            </div>
+        </md-divider>
+    </md-content>
+</div>

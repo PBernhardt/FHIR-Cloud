@@ -1,0 +1,135 @@
+﻿<section data-ng-controller="extensionDefinitionDetail as vm">
+    <div layout="row" layout-wrap>
+        <div flex="66">
+            <h3>{{vm.extensionDefinition.name}}</h3>
+        </div>
+
+        <div flex="100">
+            <div flex="100">
+                <md-tabs md-selected="selectedIndex">
+                    <md-tab label="Structured Data">
+                        <table class="table table-striped table-hover">
+                            <tr>
+                                <td>Display</td>
+                                <td>{{vm.extensionDefinition.display}}</td>
+                            </tr>
+                            <tr>
+                                <td>Description</td>
+                                <td>{{vm.extensionDefinition.description}}</td>
+                            </tr>
+                            <tr>
+                                <td>Publisher</td>
+                                <td>{{vm.extensionDefinition.publisher}}</td>
+                            </tr>
+                            <tr>
+                                <td>Status</td>
+                                <td>{{vm.extensionDefinition.status}}</td>
+                            </tr>
+                            <tr>
+                                <td>Date</td>
+                                <td>{{vm.extensionDefinition.date}}</td>
+                            </tr>
+                            <tr>
+                                <td>URL</td>
+                                <td>{{vm.extensionDefinition.url}}</td>
+                            </tr>
+                            <tr>
+                                <td>Id</td>
+                                <td>{{vm.extensionDefinition.id}}</td>
+                            </tr>
+                            <tr>
+                                <td>Communication</td>
+                                <td>
+                                    <p data-ng-repeat="t in vm.extensionDefinition.telecom">
+                                        <strong>{{t.system || "unspecified"}}</strong>:&nbsp;{{t.value}}
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Context Type</td>
+                                <td>{{vm.extensionDefinition.contextType}}</td>
+                            </tr>
+                            <tr>
+                                <td>Context</td>
+                                <td>
+                                    <p data-ng-repeat="c in vm.extensionDefinition.context">
+                                        {{c}}
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mapping</td>
+                                <td>
+                                    <table class="small" data-ng-show="vm.extensionDefinition.mapping">
+                                        <thead>
+                                        <th>Identity</th>
+                                        <th>Uri</th>
+                                        <th>Name</th>
+                                        </thead>
+                                        <tr data-ng-repeat="map in vm.extensionDefinition.mapping">
+                                            <td>{{map.identity}}</td>
+                                            <td>{{map.uri}}</td>
+                                            <td>{{map.name}}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Element</td>
+                                <td>
+                                    <table class="small" data-ng-show="vm.extensionDefinition.element">
+                                        <thead>
+                                        <th>Path</th>
+                                        <th>Short</th>
+                                        <th>Cardinality</th>
+                                        <th>Type</th>
+                                        <th>Summary?</th>
+                                        </thead>
+                                        <tr data-ng-repeat="el in vm.extensionDefinition.element">
+                                            <td>{{el.path}}</td>
+                                            <td>{{el.short}}</td>
+                                            <td>{{el.min}}..{{el.max}}</td>
+                                            <td>
+                                                <p data-ng-if="el.type" data-ng-repeat="t in el.type">
+                                                    <strong>code:</strong> {{t.code}}
+                                                </p>
+                                            </td>
+                                            <td>{{el.isSummary}}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Identifiers</td>
+                                <td>
+                                    <table class="small" data-ng-show="vm.extensionDefinition.identifier">
+                                        <thead>
+                                        <th>System</th>
+                                        <th>Value</th>
+                                        <th>Label</th>
+                                        <th>Use</th>
+                                        </thead>
+                                        <tr data-ng-repeat="id in vm.extensionDefinition.identifier">
+                                            <td>{{id.system}}</td>
+                                            <td>{{id.value}}</td>
+                                            <td>{{id.label}}</td>
+                                            <td>{{id.use}}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </md-tab>
+                    <md-tab label="Narrative">
+                        <div data-ng-bind-html="vm.narrative"></div>
+                    </md-tab>
+                    <md-tab label="Raw Data">
+                        <div>
+                            <pre>{{vm.json}}</pre>
+                        </div>
+                    </md-tab>
+                </md-tabs>
+            </div>
+        </div>
+    </div>
+</section>

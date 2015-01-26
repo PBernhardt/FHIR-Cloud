@@ -1,0 +1,112 @@
+<div data-ng-controller="qualification as vm">
+    <div class="form-group col-md-12">
+        <legend>Qualification</legend>
+        <div class="controls col-md-12 col-md-offset-2">
+            <data-ng-form name="qualificationEditForm" class="form-horizontal" data-ng-model="vm.qualification">
+
+                <div class="form-group col-md-10">
+                    <label class="control-label" for="qualification-code">Occupation</label>&nbsp;&nbsp;
+                    <input
+                            required
+                            type="text"
+                            typeahead="code as code.display for code in vm.occupationCodes | filter:$viewValue | limitTo:5"
+                            id="qualification-code"
+                            class="form-control"
+                            placeholder="Specific qualification the practitioner has to provide a service"
+                            data-ng-model="vm.qualification.code">
+                </div>
+
+                <div class="form-group col-md-10">
+                    <label class="control-label" for="qualification-issuer">Issuer</label>&nbsp;&nbsp;
+                    <input type="text"
+                           id="qualification-issuer"
+                           class="form-control"
+                           placeholder="Organization that regulates and issues the qualification"
+                           typeahead="item as item.display for item in vm.getOrganizationReference($viewValue) | filter:$viewValue"
+                           typeahead-loading="vm.loadingOrganizations"
+                           typeahead-wait-ms="300"
+                           typeahead-editable="true"
+                           typeahead-min-length="5"
+                           data-ng-model="vm.qualification.issuer">
+                    <br/>
+                </div>
+
+                <div class="form-group col-md-10">
+                    <legend>Period</legend>
+                    <span class="help-block">Period during which the qualification is valid.</span>
+
+                    <div class="form-group col-md-12">
+                        <div class="col-md-6">
+                            <label class="control-label" for="qualification-period-start">Start</label>&nbsp;&nbsp;
+                            <input
+                                    type="date"
+                                    id="qualification-period-start"
+                                    class="form-control"
+                                    tooltip="Start date of qualification"
+                                    data-ng-model="vm.qualification.period.start">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="control-label" for="qualification-period-start">End</label>&nbsp;&nbsp;
+                            <input
+                                    type="date"
+                                    id="qualification-period-end"
+                                    class="form-control"
+                                    tooltip="End date - leave blank if current"
+                                    data-ng-model="vm.qualification.period.end">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group col-md-10">
+                    <button type="submit" data-ng-disabled="qualificationEditForm.$invalid"
+                            class="btn btn-info"
+                            data-ng-click="vm.addToList(qualificationEditForm, vm.qualification)"><i
+                            class="fa fa-plus-square-o"></i>Save to List
+                    </button>
+                    <button type="button" class="btn btn-info pull-right"
+                            data-ng-click="vm.reset(qualificationEditForm)">
+                        <i
+                                class="fa fa-refresh"></i>
+                        Reset
+                    </button>
+                </div>
+            </data-ng-form>
+
+            <div collapse="vm.qualifications.length===0" class="col-md-12">
+                <form>
+                    <legend>Qualification List</legend>
+                    <table class="table table-responsive">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Occupation</th>
+                            <th>Issuer</th>
+                            <th>Period</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr data-ng-repeat="qual in vm.qualifications">
+                            <td>
+                                <button type="button" class="btn btn-info btn-xs"
+                                        data-ng-click="vm.editListItem(qual)">
+                                    Edit
+                                </button>
+                            </td>
+                            <td>{{qual.code | codeableConcept}}</td>
+                            <td>{{qual.issuer.display}}</td>
+                            <td>{{qual.period | periodText }}
+                            </td>
+                            <td style="padding-top: 0px">
+                                <img src="/content/images/x_red.gif"
+                                     data-ng-click="vm.removeListItem(qual)"
+                                     tooltip="remove"/>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,94 @@
+<section class="mainbar" data-ng-controller="patientDetail as vm">
+    <section class="matter">
+        <div class="container">
+            <div class="row">
+                <button class="btn btn-info" data-ng-click="vm.goBack()"><i class="fa fa-hand-o-left"></i>Back</button>
+                <button class="btn btn-info" data-ng-click="vm.cancel()" data-ng-disabled="!vm.canSave"><i
+                        class="fa fa-undo"></i>Cancel
+                </button>
+                <button class="btn btn-info" data-ng-click="vm.save()" data-ng-disabled="!vm.canSave"><i
+                        class="fa fa-save"></i>Save
+                </button>
+                <div class="pull-right" data-ng-hide="!vm.isEditing">
+                    <button class="btn btn-danger" data-ng-click="vm.delete()"><i
+                            class="fa fa-trash-o"></i>Delete
+                    </button>
+                </div>
+            </div>
+            <div class="widget wblue">
+                <div data-cc-widget-header title="{{vm.title}}"></div>
+                <div class="widget-content user">
+                    <data-ng-form name="patientEditForm" class="form-horizontal"
+                                  data-ng-model="vm.patient">
+                        <fieldset>
+                            <div class="form-group col-md-12">
+                                <div data-ng-include="'../../app/shared/humanName/humanName.html'"></div>
+
+                                <div data-ng-include="'../../app/shared/attachment/attachment.html'"></div>
+
+                                <div data-ng-include="'../../app/shared/demographics/demographics.html'"></div>
+
+                                <div data-ng-include="'../../app/shared/address/address.html'"></div>
+
+                                <div data-ng-include="'../../app/shared/telecom/telecom.html'"></div>
+
+                                <div class="form-group col-md-12">
+                                    <legend>Care&nbsp;Providers</legend>
+                                    <div class="controls col-md-10 col-md-offset-2">
+                                        <div class="form-group col-md-10">
+                                            <input required
+                                                   type="text"
+                                                   id="care-provider"
+                                                   class="form-control"
+                                                   placeholder="Start typing provider name to begin search"
+                                                   typeahead="item as item.display for item in vm.getPractionerReference($viewValue) | filter:$viewValue"
+                                                   typeahead-loading="vm.loadingPractitioners"
+                                                   typeahead-wait-ms="300"
+                                                   typeahead-editable="false"
+                                                   typeahead-min-length="5"
+                                                   data-ng-model="vm.patient.careProvider">
+                                        </div>
+                                        <div class="form-group col-md-10"
+                                             data-ng-show="vm.patient.careProvider.reference">
+                                            <a class="control-label" href="{{vm.patient.careProvider.reference}}"
+                                               target="_blank">Referenced Provider:
+                                                {{vm.patient.managingOrganization.display || "Name Not Specified" }}</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group col-md-12">
+                                    <legend>Managing&nbsp;Organization</legend>
+                                    <div class="controls col-md-10 col-md-offset-2">
+                                        <div class="form-group col-md-10">
+                                            <input required
+                                                   type="text"
+                                                   id="managing-organization"
+                                                   class="form-control"
+                                                   placeholder="Start typing organization name to begin search"
+                                                   typeahead="item as item.display for item in vm.getOrganizationReference($viewValue) | filter:$viewValue"
+                                                   typeahead-loading="vm.loadingOrganizations"
+                                                   typeahead-wait-ms="300"
+                                                   typeahead-editable="false"
+                                                   typeahead-min-length="5"
+                                                   data-ng-model="vm.patient.managingOrganization">
+                                        </div>
+                                        <div class="form-group col-md-10"
+                                             data-ng-show="vm.patient.managingOrganization.reference">
+                                            <a class="control-label"
+                                               data-ng-href="{{vm.patient.managingOrganization.reference}}"
+                                               target="_blank">Referenced Organization:
+                                                {{vm.patient.managingOrganization.display || "Name Not Specified" }}</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div data-ng-include="'../../app/shared/identifier/identifier.html'"></div>
+                            </div>
+                        </fieldset>
+                    </data-ng-form>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>

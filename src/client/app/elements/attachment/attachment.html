@@ -1,0 +1,20 @@
+<div data-ng-controller="attachment as vm">
+    <md-content class="md-padding">
+        <md-divider>
+            <h3>{{vm.title}}</h3>
+            <data-ng-form name="attachmentEditForm" data-ng-model="vm.attachment">
+                <div>
+                    <label>Add {{vm.title}}</label>
+                    <div fs-file-input="vm.selectedFile" on-change="vm.readFile()">
+                    </div>
+                </div>
+            </data-ng-form>
+
+            <div data-ng-if="vm.attachments.length >0">
+                <div data-ng-repeat="photo in vm.attachments">
+                    <img class="largeFace" fs-img-person="photo"/>
+                </div>
+            </div>
+        </md-divider>
+    </md-content>
+</div>

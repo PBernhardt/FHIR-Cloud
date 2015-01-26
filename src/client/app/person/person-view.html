@@ -1,0 +1,179 @@
+<section data-ng-controller="personDetail as vm">
+    <md-content>
+        <div layout="row" layout-wrap>
+
+            <div flex="15">
+                <img data-fs-img-person="vm.person.photo"
+                     class="largeFace" src="/img/unknown_person.jpg"/>
+            </div>
+            <div flex="85">
+                <h3>{{ vm.person.name | fullName }}</h3>
+                <md-tabs md-selected="selectedIndex">
+                    <md-tab label="Administration Detail">
+                        <table class="table table-striped table-hover">
+                            <tr>
+                                <td>Resource Id</td>
+                                <td>
+                                    {{vm.person.resourceId}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Name</td>
+                                <td>{{vm.person.name | fullName }}</td>
+                            </tr>
+                            <tr>
+                                <td>Date of Birth</td>
+                                <td>
+                                    <div data-ng-show="vm.person.birthDate">
+                                        {{vm.person.birthDate | date: longDate}}
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Gender</td>
+                                <td>
+                                    {{vm.person.gender}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Addresses</td>
+                                <td>
+                                    <p class="small" data-ng-repeat="a in vm.person.address">
+                                        <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Telecommunication</td>
+                                <td>
+                                    <p class="small" data-ng-repeat="t in vm.person.telecom">
+                                        <strong>{{t.use}} {{t.system}}</strong>: {{t.value}}
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Contact</td>
+                                <td>
+                                    <p class="small" data-ng-repeat="c in vm.person.contact">
+                                        {{c.name.given.join(' ')}} {{c.name.family.join(' ')}}
+                                        ({{c.relationship.text || "relationship unspecified"}})
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Links</td>
+                                <td>
+                                    <div data-ng-repeat="l in vm.person.link">
+                                        <a href="{{l.other.reference}}">{{l.other.type || "Link Type
+                                            Unspecified"}}</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Languages</td>
+                                <td>
+                                    <p class="small" data-ng-repeat="l in vm.person.communication">
+                                        {{l | codeableConcept}}<br/>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Marital Status</td>
+                                <td>
+                                    {{vm.person.maritalStatus | codeableConcept}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Multiple Birth</td>
+                                <td>
+                                    {{vm.person.multipleBirthInteger || vm.person.multipleBirthBoolean}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Deceased</td>
+                                <td>
+                                    {{vm.person.deceasedDateTime || vm.person.deceasedBoolean}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Managing Organization</td>
+                                <td>
+                                    <a href="{{vm.person.managingOrganization.reference}}">{{vm.person.managingOrganization.display}}</a>
+                                </td>
+                            </tr>
+                            <tr data-ng-show="vm.person.identifier">
+                                <td>Identifiers</td>
+                                <td>
+                                    <table class="table table-striped table-hover small">
+                                        <thead>
+                                        <tr>
+                                            <th>System</th>
+                                            <th>Value</th>
+                                            <th>Label</th>
+                                            <th>Use</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr data-ng-repeat="id in vm.person.identifier">
+                                            <td>{{id.system}}</td>
+                                            <td>{{id.value}}</td>
+                                            <td>{{id.label}}</td>
+                                            <td>{{id.use}}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Active</td>
+                                <td>
+                                    <i data-fs-true-check="vm.person.active"></i>
+                                </td>
+                            </tr>
+                        </table>
+                        <section layout="row" layout-sm="column" layout-align="space-between end">
+                            <md-button class="md-raised md-primary">Edit</md-button>
+                            <md-button class="md-raised md-warn">Delete</md-button>
+                        </section>
+                    </md-tab>
+                    <md-tab label="Clinical Summary">
+                        <div data-ng-repeat="item in vm.summary">
+                            <pre>{{item.resource | json}}</pre>
+                        </div>
+                    </md-tab>
+                    <md-tab label="Audit History">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Raw Data</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr data-ng-repeat="ev in vm.history">
+                                <td>{{ev.resource.event.dateTime | date: 'short'}}</td>
+                                <td>
+                                    <p data-ng-repeat="p in ev.resource.participant">{{p.name}}</p>
+                                </td>
+                                <td>
+
+                                    {{ev.resource.event.subtype[0].coding[0].display}}</td>
+                                <td>
+                                    <div>
+                                        <md-button layout-align="center center" layout="row">
+                                            <md-icon icon="img/visibility1.svg" style="width: 24px; height: 24px;"></md-icon> Source
+                                        </md-button>
+                                        <pre>{{ev.resource | json}}</pre></div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </md-tab>
+                </md-tabs>
+
+            </div>
+        </div>
+    </md-content>
+</section>

@@ -1,0 +1,80 @@
+﻿<section data-ng-controller="organizationDetail as vm">
+    <div flex>
+        <div>
+            <md-content class="md-padding">
+                <data-ng-form name="organizationEditForm"
+                              data-ng-model="vm.organization">
+                    <md-input-container>
+                        <label>Organization Name</label>
+                        <input data-ng-model="vm.organization.name" required>
+                    </md-input-container>
+                     <label>Type&nbsp;&nbsp;</label>
+                    <select
+                            id="organization-type"
+                            data-ng-model="vm.organization.type.coding[0]">
+                        <option data-ng-repeat="coding in vm.organizationTypes"
+                                value="{{coding}}"
+                                data-ng-selected="coding.code===vm.organization.type.coding[0].code">
+                            {{coding.display || ''}}
+                        </option>
+                    </select>
+
+                    <md-input-container>
+                        <label>Affiliated Organization</label>
+                        <input type="text"
+                               typeahead="item as item.display for item in vm.getOrganizationReference($viewValue) | filter:$viewValue"
+                               typeahead-loading="vm.loadingOrganizations"
+                               typeahead-wait-ms="500"
+                               typeahead-editable="false"
+                               typeahead-min-length="5"
+                               data-ng-model="vm.organization.partOf">
+                    </md-input-container>
+                    <div data-ng-show="vm.organization.partOf.reference">
+                        <a href="{{vm.organization.partOf.reference}}"
+                           target="_blank">Referenced Organization:
+                            {{vm.organization.partOf.display || "Name Not Specified" }}</a>
+                    </div>
+
+                    <div data-ng-include="'elements/address/address.html'"></div>
+
+                    <div data-ng-include="'elements/contactPoint/contactPoint.html'"></div>
+
+                    <div data-ng-include="'elements/contact/contact.html'"></div>
+
+                    <!--
+                                                        <div class="form-group col-md-12 well">
+                                                            <div class="col-md-2 control-label">Locations</div>
+                                                            <div class="controls col-md-10 col-md-offset-2">
+                                                                <div class="form-group col-md-8">
+                                                                    <select class="form-control" id="organization-location"
+                                                                            data-ng-model="vm.organization.location[0]">
+                                                                        <option data-ng-repeat="org in vm.organizations"
+                                                                                value="{{display}}"
+                                                                                data-ng-selected="org.id===vm.organization.location[0].reference">
+                                                                            {{org.name}}
+                                                                        </option>
+                                                                        <option value=""></option>
+                                                                    </select>
+                                                                    <button class="btn btn-info"
+                                                                            data-ng-click="vm.addToList(vm.location)"><i
+                                                                            class="fa fa-plus-square-o"></i>Add to Location List
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                    -->
+                    <div data-ng-include="'elements/identifier/identifier.html'"></div>
+                    <div layout="row" layout-align="space-around center">
+                        <md-button class="md-raised md-primary" data-ng-click="vm.save()" data-ng-disabled="!vm.canSave">Save
+                        </md-button>
+                        <md-button class="md-raised md-info" data-ng-click="vm.cancel()" data-ng-disabled="!vm.canSave">Cancel
+                        </md-button>
+                        <div data-ng-if="vm.isEditing">
+                            <md-button class="md-raised md-warn" data-ng-click="vm.delete()">Delete</md-button>
+                        </div>
+                    </div>
+                </data-ng-form>
+            </md-content>
+        </div>
+    </div>
+</section>

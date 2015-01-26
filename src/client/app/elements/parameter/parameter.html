@@ -1,0 +1,63 @@
+<div data-ng-controller="parameter as vm">
+    <md-content class="md-padding">
+        <md-divider>
+            <h3>Parameter</h3>
+            <data-ng-form name="parameterEditForm" data-ng-model="vm.parameter">
+                <md-input-container>
+                    <label>The namespace for the parameter</label>
+                    <input
+                           data-ng-model="vm.parameter.system"/>
+                </md-input-container>
+
+                <md-input-container>
+                    <label>The value that is unique</label>
+                    <input
+                            data-ng-model="vm.parameter.value"/>
+                </md-input-container>
+
+                <md-input-container>
+                    <label>Description of parameter</label>
+                    <input
+                            data-ng-model="vm.parameter.label"/>
+                </md-input-container>
+
+                <md-input-container>
+                    <label>Organization that issued id (may be just text)</label>
+                    <input
+                            data-ng-model="vm.parameter.assigner"/>
+                </md-input-container>
+
+                <md-radio-group data-ng-model="vm.parameter.use" layout="row" data-ng-if="vm.mode==='multi'">
+                    <md-radio-button value="usual" aria-label="usual">Official</md-radio-button>
+                    <md-radio-button value="official">Official</md-radio-button>
+                    <md-radio-button value="temp" aria-label=temp">Temporary</md-radio-button>
+                    <md-radio-button value="secondary" aria-label="old">Secondary</md-radio-button>
+                </md-radio-group>
+
+                <div data-ng-if="vm.mode==='multi'" class="md-padding">
+                    <md-button data-ng-click="vm.addToList(parameterEditForm, vm.parameter)">Add to list</md-button>
+                </div>
+            </data-ng-form>
+
+            <div data-ng-if="vm.parameters.length > 0 && vm.mode==='multi'">
+                <form>
+                    <section>
+                        <md-subheader>Parameter List</md-subheader>
+                        <md-list>
+                            <md-item ng-repeat="a in vm.parameters">
+                                <md-item-content>
+                                    <div class="md-tile-left">
+                                    </div>
+                                    <div class="md-tile-content">
+                                        <h3>{{a}}</h3>
+                                    </div>
+                                </md-item-content>
+                            </md-item>
+                        </md-list>
+                    </section>
+                </form>
+            </div>
+
+        </md-divider>
+    </md-content>
+</div>

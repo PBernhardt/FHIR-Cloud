@@ -1,0 +1,79 @@
+<div data-ng-controller="humanName as vm">
+    <md-content class="md-padding">
+        <md-divider>
+            <h3>Name</h3>
+            <data-ng-form name="humanNameEditForm" data-ng-model="vm.humanName">
+                <md-input-container>
+                    <label>Prefix</label>
+                    <input type="text"
+                           data-ng-model="vm.humanName.prefix"
+                           data-ng-change="vm.updateName()">
+                </md-input-container>
+                <md-input-container>
+                    <label>Given names (not always 'first'). Includes middle names</label>
+                    <input type="text"
+                           data-ng-model="vm.humanName.given"
+                           data-ng-change="vm.updateName()">
+                </md-input-container>
+                <md-input-container>
+                    <label>Family name (often called 'Surname')</label>
+                    <input type="text"
+                           data-ng-model="vm.humanName.family"
+                           data-ng-change="vm.updateName()">
+                </md-input-container>
+                <md-input-container>
+                    <label>Suffix</label>
+                    <input type="text"
+                           data-ng-model="vm.humanName.suffix"
+                           data-ng-change="vm.updateName()">
+                </md-input-container>
+            </data-ng-form>
+        </md-divider>
+        <md-radio-group data-ng-model="vm.humanName.use" layout="row" data-ng-if="vm.mode==='multi'">
+            <md-radio-button value="usual" aria-label="usual">Usual</md-radio-button>
+            <md-radio-button value="official">Official</md-radio-button>
+            <md-radio-button value="temp" aria-label="temp">Temp</md-radio-button>
+            <md-radio-button value="nickname" aria-label="nickname">Nickname</md-radio-button>
+            <md-radio-button value="maiden" aria-label="maiden">Maiden</md-radio-button>
+            <md-radio-button value="old" aria-label="old">Former</md-radio-button>
+        </md-radio-group>
+
+        <div data-ng-if="vm.humanName.use === 'old'">
+            <h4>Period of former name</h4>
+            <label>Start</label>
+            <input
+                    type="date"
+                    data-ng-model="vm.address.period.start">
+            <label>End</label>
+            <input
+                    type="date"
+                    data-ng-model="vm.address.period.end">
+        </div>
+        <div data-ng-if="vm.mode==='multi'" class="md-padding">
+            <md-button data-ng-click="vm.addToList(humanNameEditForm, vm.humanName)">Add to list</md-button>
+        </div>
+        <div>
+            <div data-ng-if="vm.humanNames.length > 0 && vm.mode==='multi'">
+                <form>
+                    <section>
+                        <md-subheader>Name List</md-subheader>
+
+                        <md-list>
+
+                            <md-item ng-repeat="a in vm.humanNames">
+                                <md-item-content>
+                                    <div class="md-tile-left">
+
+                                    </div>
+                                    <div class="md-tile-content">
+                                        <h3>{{a}}</h3>
+                                    </div>
+                                </md-item-content>
+                            </md-item>
+                        </md-list>
+                    </section>
+                </form>
+            </div>
+        </div>
+    </md-content>
+</div>

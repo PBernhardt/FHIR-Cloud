@@ -1,0 +1,24 @@
+<md-sidenav layout="column"
+            class="md-sidenav-left md-whiteframe-z2"
+            md-component-id="left"
+            md-is-locked-open="$media('gt-sm')"
+            tabindex="-1">
+
+    <md-toolbar layout="column" class="md-default-theme">
+        <h1 class="md-toolbar-tools" layout="column">
+            <a href="#/home" tabindex="0">FHIR Starter</a>
+        </h1>
+    </md-toolbar>
+    <md-content>
+        <div data-ng-repeat="section in menu.sections">
+            <md-button class="menu-item menu-title md-menu-item"
+                       data-ng-click="toggleSelectSection(section)">{{ section.name }}
+            </md-button>
+            <div data-ng-repeat="page in section.pages">
+                <a class="menu-item menu-sub-item md-menu-item"
+                   data-ng-show="isSectionSelected(section)"
+                   href="#{{page.href}}">{{page.name}}</a>
+            </div>
+        </div>
+    </md-content>
+</md-sidenav>

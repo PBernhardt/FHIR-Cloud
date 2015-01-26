@@ -1,0 +1,70 @@
+<div data-ng-controller="questionnaireAnswer as vm">
+    <div class="form-group col-md-12">
+        <label class="control-label" for="profile">Questionnaire Profiles</label>&nbsp;&nbsp;
+        <select class="form-control" id="profile"
+                data-ng-model="vm.selectedProfile"
+                data-ng-change="vm.loadQuestions()">
+            <option value="">--</option>
+            <option data-ng-repeat="item in vm.profiles | orderBy: 'content.name'" value="{{item.id}}">
+                {{item.content.name || ''}}
+            </option>
+        </select>
+    </div>
+    <div class="form-group col-md-12">
+        <div class="widget wlightblue" data-ng-show="vm.rendered">
+            <div data-cc-widget-header title="{{vm.questionnaire.group.title}}"></div>
+            <span class="help-block">{{vm.questionnaire.group.text}}</span>
+            <form name="questionnaireAnswerForm" class="form-horizontal"
+                          data-ng-model="vm.answers" data-ng-submit="vm.save($event)">
+                <div class="row">
+                     <div class="btn-group pull-right">
+                        <button class="btn btn-success" type="submit"><i
+                                class="fa fa-save"></i>Save
+                        </button>
+                    </div>
+                </div>
+                <fieldset>
+                    <div class="form-group col-md-12">
+                        <legend>Overview</legend>
+                        <div class="form-group col-md-12">
+                            <label class="control-label pull-left" for="text">Description</label>&nbsp;&nbsp;
+                            <input type="text" data-ng-model="vm.answers.$$narrative"
+                                   class="form-control"
+                                   placeholder="A brief description of this answer"
+                                   id="text">
+                        </div>
+                        <!--
+                        <div class="form-group col-md-4">
+                            <label class="control-label pull-left" for="answer-status">Status</label>&nbsp;&nbsp;
+                            <select class="form-control" id="answer-status"
+                                    data-ng-model="vm.answers.status">
+                                <option data-ng-repeat="coding in vm.answerStatuses" value="{{coding.code}}"
+                                        data-ng-selected="coding.code===vm.answers.status">
+                                    {{coding.code || ''}}
+                                </option>
+                            </select>
+                            <span class="help-block">The lifecycle status of these answers.</span>
+                        </div>-->
+                    </div>
+                    <div class="form-group col-md-12">
+                        <data-fs-questionnaire-groups question-groups="vm.questionnaire.group.group"
+                                                      answer-group="vm.answers.group.group"
+                                                      offset="0"
+                                                      cols="12"
+                                                      data-ng-model="vm.answers"
+                                                      value-sets="vm.questionnaire.contained"/>
+                    </div>
+                </fieldset>
+                <div class="btn-group pull-right">
+                    <button class="btn btn-success" type="submit"><i
+                            class="fa fa-save"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div data-ng-show="vm.isBusy" class="page-splash dissolve-animation">
+        <div class="page-splash-message page-splash-message-subtle">{{vm.busyMessage}}&nbsp;&nbsp;<i
+                class="fa fa-spinner fa-spin"></i></div>
+    </div>
+</div>

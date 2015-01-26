@@ -1,0 +1,67 @@
+<div data-ng-controller="address as vm">
+    <md-content class="md-padding">
+        <md-divider>
+            <h3>Address</h3>
+            <data-ng-form name="addressEditForm" data-ng-model="vm.address">
+                <md-input-container>
+                    <label>Address auto-fill</label>
+                    <input type="search"
+                           id="address"
+                           typeahead="address for address in vm.getLocation($viewValue)"
+                           typeahead-loading="vm.loadingLocations"
+                           typeahead-wait-ms="300"
+                           typeahead-editable="false"
+                           typeahead-min-length="5"
+                           data-ng-model="vm.address.text"
+                           data-ng-keyup="vm.capture($event, addressEditForm, vm.address)">
+                </md-input-container>
+
+                <md-radio-group data-ng-model="vm.address.use" layout="row" data-ng-if="vm.mode==='multi'">
+                    <md-radio-button value="work" aria-label="work">Work</md-radio-button>
+                    <md-radio-button value="home"> Home</md-radio-button>
+                    <md-radio-button value="temp" aria-label=temp">Temp</md-radio-button>
+                    <md-radio-button value="old" aria-label="old">Former</md-radio-button>
+                </md-radio-group>
+
+                <div data-ng-if="vm.address.use === 'old'">
+                    <h4>Period of former address</h4>
+                    <label>Start</label>
+                    <input
+                            type="date"
+                            data-ng-model="vm.address.period.start">
+                    <label>End</label>
+                    <input
+                            type="date"
+                            data-ng-model="vm.address.period.end">
+                </div>
+                <div data-ng-if="vm.mode==='multi'" class="md-padding">
+                    <md-button data-ng-click="vm.addToList(addressEditForm, vm.address)">Add to list</md-button>
+                </div>
+
+            </data-ng-form>
+            <div>
+                <div data-ng-if="vm.addresses.length > 0 && vm.mode==='multi'">
+                    <form>
+                        <section>
+                            <md-subheader>Address List</md-subheader>
+
+                            <md-list>
+
+                                <md-item ng-repeat="a in vm.addresses">
+                                    <md-item-content>
+                                        <div class="md-tile-left">
+
+                                        </div>
+                                        <div class="md-tile-content">
+                                            <h3>{{a}}</h3>
+                                        </div>
+                                    </md-item-content>
+                                </md-item>
+                            </md-list>
+                        </section>
+                    </form>
+                </div>
+            </div>
+        </md-divider>
+    </md-content>
+</div>
