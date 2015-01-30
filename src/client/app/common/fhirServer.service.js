@@ -32,24 +32,40 @@
                 var baseList = [
                     {
                         "id": 0,
-                        "name": "Health Directions DSTU2",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
+                        "name": "Health Directions DSTU2 (open)",
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
+                        "secure": false
                     },
                     {
                         "id": 1,
-                        "name": "Oridashi",
-                        "baseUrl": "http://md.oridashi.com.au"
+                        "name": "Health Directions DSTU2 (closed)",
+                        "baseUrl": "https://fhir-dev.healthintersections.com.au/closed",
+                        "secure": true
                     },
-
                     {
                         "id": 2,
-                        "name": "HAPI DSTU2",
-                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2"
+                        "name": "SMART on FHIR DSTU2",
+                        "baseUrl": "https://fhir-api-dstu2.smartplatforms.org",
+                        "secure": true
                     },
                     {
                         "id": 3,
+                        "name": "Oridashi",
+                        "baseUrl": "http://md.oridashi.com.au",
+                        "secure": false
+                    },
+
+                    {
+                        "id": 4,
+                        "name": "HAPI DSTU2",
+                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2",
+                        "secure": false
+                    },
+                    {
+                        "id": 5,
                         "name": "Aegis DSTU2",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                        "baseUrl": "http://wildfhir.aegis.net/fhir2",
+                        "secure": false
                     }
                 ];
                 var servers = dataCache.readFromCache('servers');
@@ -90,6 +106,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$cookieStore', 'common', 'dataCache', fhirServers]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', 'common', 'dataCache', fhirServers]);
 
 })();

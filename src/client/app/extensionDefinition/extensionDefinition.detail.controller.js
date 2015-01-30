@@ -176,7 +176,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdDialog', '$routeParams', 'common', 'fhirServers', 'identifierService', 'extensionDefinitionService', 'contactPointService', extensionDefinitionDetail]);
 
 })();

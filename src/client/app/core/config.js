@@ -4,8 +4,8 @@
     var core = angular.module('app.core');
 
     var config = {
-        appErrorPrefix: '[FHIR Starter Error] ', //Configure the exceptionHandler decorator
-        appTitle: 'FHIR Starter',
+        appErrorPrefix: '[FHIR Cloud Error] ', //Configure the exceptionHandler decorator
+        appTitle: 'FHIR Cloud',
         version: '1.0.0'
     };
 

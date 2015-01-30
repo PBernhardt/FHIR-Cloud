@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter', [
+    var app = angular.module('FHIRCloud', [
         // Angular modules
         'ngAnimate',        // animations
         'ngMaterial',       // material design
@@ -10,13 +10,15 @@
         'ngMessages',
         'ngCookies',
         'common',
-        'ui.bootstrap'
+        'ui.bootstrap',
+        'AdalAngular'
     ]);
 
-    app.config(['$routeProvider', '$locationProvider',
-        function ($routeProvider, $locationProvider) {
+    app.config(['$routeProvider', '$httpProvider', '$locationProvider', 'adalAuthenticationServiceProvider',
+        function ($routeProvider, $httpProvider, $locationProvider, adalAuthenticationServiceProvider) {
             $routeProvider.when('/conformance', {
-                templateUrl: 'conformance/conformance.html'
+                templateUrl: 'conformance/conformance.html',
+                requireADLogin: true
             }).when('/extensionDefinition', {
                 templateUrl: 'extensionDefinition/extensionDefinition-search.html'
             }).when('/extensionDefinition/view/:hashKey', {
@@ -69,10 +71,18 @@
                 redirectTo: '/home'
             });
             //   $locationProvider.html5Mode({enabled: true, requireBase: false});
+/*
+            adalAuthenticationServiceProvider.init(
+                {
+                    tenant: 'b0a4bfcb-677b-4629-b45d-b7974cf6e563',
+                    clientId: '2783f45e-3703-451b-bd9e-c6c1ba41c2ff'
+                },
+                $httpProvider
+            );*/
         }]);
 
     app.controller('HomeCtrl', function ($scope) {
-        $scope.welcome_message = "Hello FHIR Starter user!";
+        $scope.welcome_message = "Hello FHIR Cloud user!";
     });
 
     app.controller('LeftCtrl', function ($scope, $timeout, $mdSidenav, $log) {
@@ -124,7 +134,12 @@
             {name: 'Documents', id: 3, pages: _documentsPages}
         ];
 
-        $scope.menu = {sections: _sections, selectedSection: undefined, selectedPage: undefined, selectedSubPage: undefined};
+        $scope.menu = {
+            sections: _sections,
+            selectedSection: undefined,
+            selectedPage: undefined,
+            selectedSubPage: undefined
+        };
 
         $scope.isSectionSelected = function (section) {
             return section === $scope.menu.selectedSection;

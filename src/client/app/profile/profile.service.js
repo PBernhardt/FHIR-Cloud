@@ -270,6 +270,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', profileService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', profileService]);
 
 })();

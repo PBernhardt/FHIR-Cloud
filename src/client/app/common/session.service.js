@@ -28,6 +28,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['dataCache', sessionService]);
+    angular.module('FHIRCloud').factory(serviceId, ['dataCache', sessionService]);
 
 })();

@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter', [
+    var app = angular.module('FHIRCloud', [
         // Angular modules
         'ngAnimate',        // animations
         'ngMaterial',       // material design
@@ -36,7 +36,7 @@
         }]);
 
     app.controller('HomeCtrl', function ($scope) {
-        $scope.welcome_message = "Hello FHIR Starter user!";
+        $scope.welcome_message = "Hello FHIR Cloud user!";
     });
 
     app.controller('LeftCtrl', function ($scope, $timeout, $mdSidenav, $log) {

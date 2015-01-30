@@ -3,145 +3,116 @@
         <div flex="66">
             <h3>{{vm.profile.name}}</h3>
         </div>
-        <div flex="33">
-            <md-button data-ng-click="vm.toggleSideNav($event)" class="md-primary">Actions</md-button>
-        </div>
 
         <div flex="100">
-            <table class="table table-striped table-hover">
-                <tr>
-                    <td>Type</td>
-                    <td>{{vm.profile.type.coding[0].display}}</td>
-                </tr>
-                <tr>
-                    <td>Active</td>
-                    <td>{{vm.profile.active}}</td>
-                </tr>
-                <tr>
-                    <td>Addresses</td>
-                    <td>
-                        <p data-ng-repeat="a in vm.profile.address">
-                            {{ a | singleLineAddress }}
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Communication</td>
-                    <td>
-                        <p data-ng-repeat="t in vm.profile.telecom">
-                            <strong>{{t.system || "unspecified"}}</strong>:&nbsp;{{t.value}}
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Administrative Contacts</td>
-                    <td>
-                        <table
-                                data-ng-repeat="ac in vm.profile.contact">
-                            <tr>
-                                <td>Name</td>
-                                <td>{{ac.name.given.join(' ')}}
-                                    {{ac.name.family.join(' ')}}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Address</td>
-                                <td>
-                                    <p>
-                                        {{ac.address.line.join(', ')}},
-                                        {{ac.address.city}},
-                                        {{ac.address.state}}
-                                        {{ac.address.zip}}
-                                        {{ac.address.country}}
-                                    </p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Communication</td>
-                                <td>
-                                    <p data-ng-repeat="ct in ac.telecom">
-                                        <strong>{{ct.use}} {{ct.system}}</strong>: {{ct.value}}
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Locations</td>
-                    <td>
-                        <p data-ng-repeat="loc in vm.profile.location">
-                            <a href="{{loc.reference}}">{{loc.display}}</a>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Associated Profile</td>
-                    <td>
-                        <a href="{{vm.profile.partOf.reference}}">{{vm.profile.partOf.display}}</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Identifiers</td>
-                    <td>
-                        <table data-ng-show="vm.profile.identifier">
-                            <thead>
-                            <th>System</th>
-                            <th>Value</th>
-                            <th>Label</th>
-                            <th>Use</th>
-                            </thead>
-                            <tr data-ng-repeat="id in vm.profile.identifier">
-                                <td>{{id.system}}</td>
-                                <td>{{id.value}}</td>
-                                <td>{{id.label}}</td>
-                                <td>{{id.use}}</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+            <md-tabs md-selected="selectedIndex">
+                <md-tab label="Summary">
+                    <table class="table table-striped table-hover">
+                        <tr>
+                            <td>Type</td>
+                            <td>{{vm.profile.type}}</td>
+                        </tr>
+                        <tr>
+                            <td>Base</td>
+                            <td>{{vm.profile.base}}</td>
+                        </tr>
+                        <tr>
+                            <td>Date</td>
+                            <td>{{vm.profile.date}}</td>
+                        </tr>
+                        <tr>
+                            <td>Description</td>
+                            <td>{{vm.profile.description}}</td>
+                        </tr>
+                        <tr>
+                            <td>Id</td>
+                            <td>{{vm.profile.id}}</td>
+                        </tr>
+                        <tr>
+                            <td>Publisher</td>
+                            <td>{{vm.profile.publisher}}</td>
+                        </tr>
+                        <tr>
+                            <td>Status</td>
+                            <td>{{vm.profile.status}}</td>
+                        </tr>
+                        <tr>
+                            <td>Telecom</td>
+                            <td>
+                                <p data-ng-repeat="t in vm.profile.telecom">
+                                    <strong>{{t.system || "unspecified"}}</strong>:&nbsp;{{t.value}}
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Url</td>
+                            <td>{{vm.profile.url}}</td>
+                        </tr>
+                    </table>
+                </md-tab>
+                <md-tab hide-sm label="Snapshot" ng-if="vm.profile.snapshot">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <th>Path</th>
+                        <th hide-md>Description</th>
+                        <th>Detail</th>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="snap in vm.profile.snapshot.element">
+                            <td>{{snap.path}} <i ng-if="snap.name">({{snap.name}})</i>
+                            </td>
+                            <td>{{snap.short}}
+
+                            </td>
+                            <td>
+                                <md-button md-no-ink=""
+                                           ng-click="vm.showFullDescription(snap, $event)"
+                                           aria-label="{{snap.name}}">
+                                    View
+                                </md-button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </md-tab>
+                <md-tab hide-sm label="Differential" ng-if="vm.profile.differential">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <th>Path</th>
+                        <th>Type</th>
+                        <th>Binding</th>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="diff in vm.profile.differential.element">
+                            <td>{{diff.path}} <i ng-if="snap.name">({{diff.name}})</i>
+                            </td>
+                            <td>
+                                <div ng-repeat="c in diff.type">
+                                    <md-button ng-if="c.code==='Extension'" md-no-ink
+                                               ng-click="vm.viewExtensionDefinition(c.profile, $event)">Extension
+                                    </md-button>
+                                    <p ng-if="c.code!=='Extension'">{{c.code}}</p>
+                                </div>
+                            </td>
+                            <td>
+                                <md-button ng-if="diff.binding" md-no-ink
+                                           ng-click="vm.viewBoundValueSet(diff.binding.referenceReference.reference, $event)">
+                                    {{diff.binding.name | truncate: 10}}
+                                </md-button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </md-tab>
+                <md-tab hide-sm label="Narrative">
+                    <div data-ng-bind-html="vm.narrative"></div>
+                </md-tab>
+                <md-tab hide-sm label="Raw Data">
+                    <div>
+                        <pre>{{vm.json}}</pre>
+                    </div>
+                </md-tab>
+            </md-tabs>
         </div>
     </div>
-    <md-sidenav
-            class="md-sidenav-right md-whiteframe-z2"
-            md-component-id="right"
-            layout="column"
-            tab-index="-1">
-        <md-content class="md-padding" layout="column" layout-align="center center">
-            <md-button class="md-fab" aria-label="New Profile" data-ng-href="#/profile/edit/new">
-                <md-tooltip>
-                    Create new Profile
-                </md-tooltip>
-                <md-icon icon="img/add182.svg" style="width: 24px; height: 24px;"></md-icon>
-            </md-button>
-            <md-button class="md-fab" aria-label="search" data-ng-href="#/profile">
-                <md-tooltip>
-                    Search for Profile
-                </md-tooltip>
-                <md-icon icon="img/search100.svg" style="width: 24px; height: 24px;"></md-icon>
-            </md-button>
-            <md-button class="md-fab" aria-label="patients" data-ng-href="#/patients/{{vm.profile.id}}">
-                <md-tooltip>
-                    View Profile Patients
-                </md-tooltip>
-                <md-icon icon="img/person325.svg" style="width: 24px; height: 24px;"></md-icon>
-            </md-button>
-            <md-button class="md-fab" aria-label="persons" data-ng-href="#/profile/persons">
-                <md-tooltip>
-                    View Profile Persons
-                </md-tooltip>
-                <md-icon icon="img/apple70.svg" style="width: 24px; height: 24px;"></md-icon>
-            </md-button>
-            <md-button class="md-fab" aria-label="createPatients" ng-click="vm.createRandomPatients($event)">
-                <md-tooltip>
-                    Create Random Patients
-                </md-tooltip>
-                <md-icon icon="img/add184.svg" style="width: 24px; height: 24px;"></md-icon>
-            </md-button>
-            <md-button ng-click="vm.toggleSideNav($event)" class="md-primary">
-                Close
-            </md-button>
-        </md-content>
-    </md-sidenav>
 </section>

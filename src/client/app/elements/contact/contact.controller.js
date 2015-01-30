@@ -52,6 +52,6 @@
 
         activate();
     }
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'contactService', 'localValueSets', contact]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'contactService', 'localValueSets', contact]);
 
 })();

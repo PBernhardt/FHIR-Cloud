@@ -385,7 +385,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
             'organizationService', 'patientService', 'contactPointService', patientDetail]);

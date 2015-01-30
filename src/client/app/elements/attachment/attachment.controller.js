@@ -54,6 +54,6 @@
 
         activate();
     }
-    angular.module('FHIRStarter').controller(controllerId, ['$scope', 'common', 'attachmentService', attachment]);
+    angular.module('FHIRCloud').controller(controllerId, ['$scope', 'common', 'attachmentService', attachment]);
 
 })();

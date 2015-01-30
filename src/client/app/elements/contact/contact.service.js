@@ -101,6 +101,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'localValueSets', contactService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'localValueSets', contactService]);
 
 })();

@@ -69,6 +69,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'identifierService', identifier]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'identifierService', identifier]);
 
 })();

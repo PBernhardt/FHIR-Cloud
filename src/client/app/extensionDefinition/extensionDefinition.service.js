@@ -162,26 +162,8 @@
             var deferred = $q.defer();
             fhirClient.getResource(url)
                 .then(function (results) {
-                    var searchResults = {"links": {}, "extensionDefinitions": []};
-                    var extensionDefinitions = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                if (item.content && item.content.resourceType === 'ExtensionDefinition') {
-                                    extensionDefinitions.push({display: item.content.name, reference: item.id});
-                                }
-                            });
-
-                    }
-                    if (extensionDefinitions.length === 0) {
-                        extensionDefinitions.push({display: "No matches", reference: ''});
-                    }
-                    searchResults.extensionDefinitions = extensionDefinitions;
-                    if (results.data.link) {
-                        searchResults.links = results.data.link;
-                    }
-                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
-                    deferred.resolve(searchResults);
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
@@ -193,13 +175,8 @@
             data.resource = {
                 "resourceType": "ExtensionDefinition",
                 "identifier": [],
-                "type": {"coding": []},
                 "telecom": [],
-                "contact": [],
-                "address": [],
-                "partOf": null,
-                "location": [],
-                "active": true
+                 "active": true
             };
             return data;
         }
@@ -220,20 +197,11 @@
         }
 
         function _prepArrays(resource) {
-            if (resource.address.length === 0) {
-                resource.address = null;
-            }
             if (resource.identifier.length === 0) {
                 resource.identifier = null;
             }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
             if (resource.telecom.length === 0) {
                 resource.telecom = null;
-            }
-            if (resource.location.length === 0) {
-                resource.location = null;
             }
             return $q.when(resource);
         }
@@ -270,6 +238,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', extensionDefinitionService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', extensionDefinitionService]);
 
 })();

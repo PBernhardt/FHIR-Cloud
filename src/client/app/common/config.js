@@ -1,7 +1,7 @@
 ﻿(function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter');
+    var app = angular.module('FHIRCloud');
 
     var imageSettings = {
         imageBasePath: '/img/',
@@ -140,7 +140,7 @@
 
     var config = {
         appErrorPrefix: '[FS Error] ', //Configure the exceptionHandler decorator
-        docTitle: 'FHIRStarter: ',
+        docTitle: 'FHIRCloud: ',
         events: events,
         fhirPrimitiveTypes: fhirPrimitiveTypes,
         fhirResources: fhirResources,

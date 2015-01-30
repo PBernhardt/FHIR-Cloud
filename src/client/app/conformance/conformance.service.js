@@ -35,7 +35,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', conformanceService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', conformanceService]);
 
 
 })();

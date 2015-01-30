@@ -17,7 +17,7 @@
 
     var controllerId = 'qualification';
 
-    angular.module('FHIRStarter').controller(controllerId, ['$scope', 'common', 'fhirServers', 'organizationService', 'qualificationService', 'valuesetService', qualification]);
+    angular.module('FHIRCloud').controller(controllerId, ['$scope', 'common', 'fhirServers', 'organizationService', 'qualificationService', 'valuesetService', qualification]);
 
     function qualification($scope, common, fhirServers, organizationService, qualificationService, valuesetService) {
         var vm = this;

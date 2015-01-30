@@ -17,7 +17,7 @@
 
     var serviceId = 'qualificationService';
 
-    angular.module('FHIRStarter').factory(serviceId, [qualificationService]);
+    angular.module('FHIRCloud').factory(serviceId, [qualificationService]);
 
     function qualificationService() {
         var qualifications = [];

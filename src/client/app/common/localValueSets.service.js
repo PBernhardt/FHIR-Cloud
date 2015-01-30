@@ -315,6 +315,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, [localValueSets]);
+    angular.module('FHIRCloud').factory(serviceId, [localValueSets]);
 
 })();

@@ -114,6 +114,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'config', 'addressService', address]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'addressService', address]);
 
 })();

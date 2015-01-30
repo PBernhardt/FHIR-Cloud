@@ -3,7 +3,7 @@
 
     var controllerId = 'profileSearch';
 
-    function profileSearch($location, $mdSidenav, common, config, fhirServers, profileService) {
+    function profileSearch($location, common, config, fhirServers, profileService) {
         var keyCodes = config.keyCodes;
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
@@ -28,7 +28,6 @@
         function activate() {
             common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
                 .then(function () {
-                    $mdSidenav('right').close();
                 });
         }
 
@@ -86,11 +85,6 @@
             }
         }
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
         function toggleSpinner(on) {
             vm.isBusy = on;
         }
@@ -111,11 +105,10 @@
         vm.dereferenceLink = dereferenceLink;
         vm.submit = submit;
         vm.goToDetail = goToDetail;
-        vm.toggleSideNav = toggleSideNav;
 
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'profileService', profileSearch]);
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', 'common', 'config', 'fhirServers', 'profileService', profileSearch]);
 })();

@@ -45,6 +45,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$cacheFactory', dataCache]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cacheFactory', dataCache]);
 
 })();

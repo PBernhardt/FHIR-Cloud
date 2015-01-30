@@ -123,6 +123,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'config', 'demographicsService', 'localValueSets', demographics]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'demographicsService', 'localValueSets', demographics]);
 
 })();

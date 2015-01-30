@@ -170,6 +170,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, [contactPointService]);
+    angular.module('FHIRCloud').factory(serviceId, [contactPointService]);
    
 })();

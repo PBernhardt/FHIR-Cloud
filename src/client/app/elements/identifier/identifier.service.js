@@ -50,7 +50,7 @@
             }
             else {
                 identifiers = [];
-                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Starter identifier"};
+                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Cloud identifier"};
                 identifiers.push(defaultId);
             }
             _identifier = identifiers[0];
@@ -85,6 +85,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', identifierService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', identifierService]);
 
 })();

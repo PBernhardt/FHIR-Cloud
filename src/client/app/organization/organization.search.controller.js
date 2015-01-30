@@ -8,6 +8,7 @@
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
+        var noToast = false;
 
         /* jshint validthis:true */
         var vm = this;
@@ -51,7 +52,7 @@
                 toggleSpinner(true);
                 organizationService.getOrganizations(vm.activeServer.baseUrl, vm.searchText)
                     .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, false);
+                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                         return data;
                     }, function (error) {
                         toggleSpinner(false);
@@ -68,7 +69,7 @@
             toggleSpinner(true);
             organizationService.getOrganizationsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) + ' Organizations from ' + vm.activeServer.name, true);
+                    logInfo('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
                     toggleSpinner(false);
@@ -116,6 +117,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'organizationService', organizationSearch]);
 })();

@@ -85,5 +85,5 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'fileReader', attachmentService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'fileReader', attachmentService]);
 })();

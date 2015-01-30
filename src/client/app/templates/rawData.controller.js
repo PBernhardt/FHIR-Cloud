@@ -20,6 +20,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$scope', '$mdDialog', 'common', 'data', rawData]);
 })();

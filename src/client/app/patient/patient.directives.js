@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter');
+    var app = angular.module('FHIRCloud');
 
     app.directive('fhirClinicalResource', function () {
         var directiveDefinitionObject  = {

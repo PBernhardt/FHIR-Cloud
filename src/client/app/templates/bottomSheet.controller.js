@@ -21,6 +21,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$scope', '$mdBottomSheet', 'common', 'items', bottomSheet]);
 })();

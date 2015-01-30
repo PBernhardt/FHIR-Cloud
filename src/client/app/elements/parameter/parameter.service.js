@@ -50,7 +50,7 @@
             }
             else {
                 parameters = [];
-                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Starter parameter"};
+                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Cloud parameter"};
                 parameters.push(defaultId);
             }
             _parameter = parameters[0];
@@ -85,6 +85,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', parameterService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', parameterService]);
 
 })();

@@ -165,5 +165,5 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$http', 'common', addressService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', addressService]);
 })();

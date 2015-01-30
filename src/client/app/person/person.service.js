@@ -234,6 +234,59 @@
             return data;
         }
 
+        function seedRandomPernsons(resourceId, organizationName) {
+            var deferred = $q.defer();
+            $http.get('http://api.randomuser.me/?results=25')
+                .success(function (data) {
+                    var count = 0;
+                    angular.forEach(data.results, function(result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "Patient",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": stringDOB,
+                            "contact": [],
+                            "communication": [],
+                            "maritalStatus": [],
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": [{"url": user.picture.large}],
+                            "identifier": [
+                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
+                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                            ],
+                            "managingOrganization": { "reference": resourceId, "display": organizationName },
+                            "link": [],
+                            "active": true
+                        };
+                        $timeout(addPatient(resource).then(count = count + 1), 2000);
+
+                    });
+                    deferred.resolve(count + ' patients created for ' + organizationName);
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
         function setPersonContext(data) {
             dataCache.addToCache(itemCacheKey, data);
         }
@@ -287,6 +340,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$filter', '$http', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         personService]);
 })();

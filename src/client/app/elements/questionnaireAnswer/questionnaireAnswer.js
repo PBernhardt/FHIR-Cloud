@@ -31,7 +31,7 @@
 
     var controllerId = 'questionnaireAnswer';
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$routeParams', '$scope', '$window', 'common', 'localValueSets', 'questionnaireAnswerService', questionnaireAnswer]);
 
     function questionnaireAnswer($routeParams, $scope, $window, common, localValueSets, questionnaireAnswerService) {

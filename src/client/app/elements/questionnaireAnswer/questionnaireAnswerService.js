@@ -31,7 +31,7 @@
 
     var serviceId = 'questionnaireAnswerService';
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', questionnaireAnswerService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', questionnaireAnswerService]);
 
     function questionnaireAnswerService(common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localProfiles';

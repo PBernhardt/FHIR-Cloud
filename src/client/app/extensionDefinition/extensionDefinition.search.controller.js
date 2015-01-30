@@ -68,7 +68,7 @@
             toggleSpinner(true);
             extensionDefinitionService.getExtensionDefinitionsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name, true);
+                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name);
                     return data;
                 }, function (error) {
                     toggleSpinner(false);
@@ -116,6 +116,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'extensionDefinitionService', extensionDefinitionSearch]);
 })();

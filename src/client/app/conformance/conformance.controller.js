@@ -25,7 +25,6 @@
                 conformanceService.clearCache();
                 fhirServers.getServerById(id).then(function (data) {
                     vm.activeServer = data;
-                    logInfo('Changed target server to ' + vm.activeServer.name);
                 }).then(_getConformanceStatement);
             }
             $mdSidenav('right').close();
@@ -36,6 +35,7 @@
             conformanceService.getConformance(vm.activeServer.baseUrl).then(
                 function (conformanceStatement) {
                     vm.conformance = conformanceStatement;
+                    fhirServers.setActiveServer(vm.activeServer);
                     logInfo('Loaded conformance statement for ' + vm.activeServer.name, null, noToast);
                 }, function (error) {
                     logError('Failed to retrieve conformance statement for ' + vm.activeServer.name, error);
@@ -76,6 +76,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'conformanceService', conformance]);
 })();

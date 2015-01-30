@@ -110,6 +110,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', 'common', 'config', 'fhirServers', 'valueSetService', valueSetSearch]);
 })();

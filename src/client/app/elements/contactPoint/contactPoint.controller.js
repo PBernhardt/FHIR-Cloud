@@ -62,6 +62,6 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'contactPointService', contactPoint]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'contactPointService', contactPoint]);
 
 })();

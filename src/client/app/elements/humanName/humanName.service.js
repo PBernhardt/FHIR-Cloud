@@ -131,6 +131,6 @@
 
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', humanNameService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', humanNameService]);
 
 })();

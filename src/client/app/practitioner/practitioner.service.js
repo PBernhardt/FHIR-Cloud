@@ -343,6 +343,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         practitionerService]);
 })();

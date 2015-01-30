@@ -146,6 +146,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, [demographicsService]);
+    angular.module('FHIRCloud').factory(serviceId, [demographicsService]);
 
 })();

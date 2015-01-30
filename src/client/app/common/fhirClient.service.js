@@ -99,7 +99,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$http', 'common', fhirClient]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', fhirClient]);
 
 
 })();

@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter', [
+    var app = angular.module('FHIRCloud', [
         // Angular modules
         'ngAnimate',        // animations
         'ngMaterial',       // material design
@@ -10,13 +10,15 @@
         'ngMessages',
         'ngCookies',
         'common',
-        'ui.bootstrap'
+        'ui.bootstrap',
+        'AdalAngular'
     ]);
 
-    app.config(['$routeProvider', '$locationProvider',
-        function ($routeProvider, $locationProvider) {
+    app.config(['$routeProvider', '$httpProvider', '$locationProvider', 'adalAuthenticationServiceProvider',
+        function ($routeProvider, $httpProvider, $locationProvider, adalAuthenticationServiceProvider) {
             $routeProvider.when('/conformance', {
-                templateUrl: 'conformance/conformance.html'
+                templateUrl: 'conformance/conformance.html',
+                requireADLogin: true
             }).when('/extensionDefinition', {
                 templateUrl: 'extensionDefinition/extensionDefinition-search.html'
             }).when('/extensionDefinition/view/:hashKey', {
@@ -69,10 +71,18 @@
                 redirectTo: '/home'
             });
             //   $locationProvider.html5Mode({enabled: true, requireBase: false});
+/*
+            adalAuthenticationServiceProvider.init(
+                {
+                    tenant: 'b0a4bfcb-677b-4629-b45d-b7974cf6e563',
+                    clientId: '2783f45e-3703-451b-bd9e-c6c1ba41c2ff'
+                },
+                $httpProvider
+            );*/
         }]);
 
     app.controller('HomeCtrl', function ($scope) {
-        $scope.welcome_message = "Hello FHIR Starter user!";
+        $scope.welcome_message = "Hello FHIR Cloud user!";
     });
 
     app.controller('LeftCtrl', function ($scope, $timeout, $mdSidenav, $log) {
@@ -124,7 +134,12 @@
             {name: 'Documents', id: 3, pages: _documentsPages}
         ];
 
-        $scope.menu = {sections: _sections, selectedSection: undefined, selectedPage: undefined, selectedSubPage: undefined};
+        $scope.menu = {
+            sections: _sections,
+            selectedSection: undefined,
+            selectedPage: undefined,
+            selectedSubPage: undefined
+        };
 
         $scope.isSectionSelected = function (section) {
             return section === $scope.menu.selectedSection;
@@ -420,7 +435,7 @@
 })();(function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter');
+    var app = angular.module('FHIRCloud');
 
     var imageSettings = {
         imageBasePath: '/img/',
@@ -559,7 +574,7 @@
 
     var config = {
         appErrorPrefix: '[FS Error] ', //Configure the exceptionHandler decorator
-        docTitle: 'FHIRStarter: ',
+        docTitle: 'FHIRCloud: ',
         events: events,
         fhirPrimitiveTypes: fhirPrimitiveTypes,
         fhirResources: fhirResources,
@@ -647,13 +662,13 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$cacheFactory', dataCache]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cacheFactory', dataCache]);
 
 })();
 (function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter');
+    var app = angular.module('FHIRCloud');
 
     app.directive('fsAddListItem', ['$parse', function ($parse) {
         // Description:
@@ -974,7 +989,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$http', 'common', fhirClient]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', fhirClient]);
 
 
 })();(function () {
@@ -1011,24 +1026,40 @@
                 var baseList = [
                     {
                         "id": 0,
-                        "name": "Health Directions DSTU2",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
+                        "name": "Health Directions DSTU2 (open)",
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
+                        "secure": false
                     },
                     {
                         "id": 1,
-                        "name": "Oridashi",
-                        "baseUrl": "http://md.oridashi.com.au"
+                        "name": "Health Directions DSTU2 (closed)",
+                        "baseUrl": "https://fhir-dev.healthintersections.com.au/closed",
+                        "secure": true
                     },
-
                     {
                         "id": 2,
-                        "name": "HAPI DSTU2",
-                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2"
+                        "name": "SMART on FHIR DSTU2",
+                        "baseUrl": "https://fhir-api-dstu2.smartplatforms.org",
+                        "secure": true
                     },
                     {
                         "id": 3,
+                        "name": "Oridashi",
+                        "baseUrl": "http://md.oridashi.com.au",
+                        "secure": false
+                    },
+
+                    {
+                        "id": 4,
+                        "name": "HAPI DSTU2",
+                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2",
+                        "secure": false
+                    },
+                    {
+                        "id": 5,
                         "name": "Aegis DSTU2",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                        "baseUrl": "http://wildfhir.aegis.net/fhir2",
+                        "secure": false
                     }
                 ];
                 var servers = dataCache.readFromCache('servers');
@@ -1069,7 +1100,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$cookieStore', 'common', 'dataCache', fhirServers]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', 'common', 'dataCache', fhirServers]);
 
 })();(function () {
     'use strict';
@@ -1126,13 +1157,13 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', fileReader]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', fileReader]);
 
 
 })();(function () {
     'use strict';
 
-    var app = angular.module('FHIRStarter');
+    var app = angular.module('FHIRCloud');
 
     app.filter('codeableConcept', function () {
         return function (codeableConcept) {
@@ -1842,7 +1873,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, [localValueSets]);
+    angular.module('FHIRCloud').factory(serviceId, [localValueSets]);
 
 })();
 (function () {
@@ -1995,7 +2026,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['dataCache', sessionService]);
+    angular.module('FHIRCloud').factory(serviceId, ['dataCache', sessionService]);
 
 })();(function () {
     'use strict';
@@ -2024,7 +2055,6 @@
                 conformanceService.clearCache();
                 fhirServers.getServerById(id).then(function (data) {
                     vm.activeServer = data;
-                    logInfo('Changed target server to ' + vm.activeServer.name);
                 }).then(_getConformanceStatement);
             }
             $mdSidenav('right').close();
@@ -2035,6 +2065,7 @@
             conformanceService.getConformance(vm.activeServer.baseUrl).then(
                 function (conformanceStatement) {
                     vm.conformance = conformanceStatement;
+                    fhirServers.setActiveServer(vm.activeServer);
                     logInfo('Loaded conformance statement for ' + vm.activeServer.name, null, noToast);
                 }, function (error) {
                     logError('Failed to retrieve conformance statement for ' + vm.activeServer.name, error);
@@ -2075,7 +2106,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'conformanceService', conformance]);
 })();(function () {
     'use strict';
@@ -2114,7 +2145,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', conformanceService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', conformanceService]);
 
 
 })();(function () {
@@ -2204,7 +2235,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'fileReader', attachmentService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'fileReader', attachmentService]);
 })();(function () {
     'use strict';
 
@@ -2261,7 +2292,7 @@
 
         activate();
     }
-    angular.module('FHIRStarter').controller(controllerId, ['$scope', 'common', 'attachmentService', attachment]);
+    angular.module('FHIRCloud').controller(controllerId, ['$scope', 'common', 'attachmentService', attachment]);
 
 })();
 (function () {
@@ -2380,7 +2411,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'config', 'addressService', address]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'addressService', address]);
 
 })();
 (function () {
@@ -2550,7 +2581,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$http', 'common', addressService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', addressService]);
 })();(function () {
     'use strict';
 
@@ -2605,7 +2636,7 @@
 
         activate();
     }
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'contactService', 'localValueSets', contact]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'contactService', 'localValueSets', contact]);
 
 })();
 (function () {
@@ -2711,7 +2742,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'localValueSets', contactService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'localValueSets', contactService]);
 
 })();(function () {
     'use strict';
@@ -2777,7 +2808,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'contactPointService', contactPoint]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'contactPointService', contactPoint]);
 
 })();
 (function () {
@@ -2952,7 +2983,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, [contactPointService]);
+    angular.module('FHIRCloud').factory(serviceId, [contactPointService]);
    
 })();
 (function () {
@@ -3080,7 +3111,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'config', 'demographicsService', 'localValueSets', demographics]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'demographicsService', 'localValueSets', demographics]);
 
 })();
 (function () {
@@ -3231,7 +3262,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, [demographicsService]);
+    angular.module('FHIRCloud').factory(serviceId, [demographicsService]);
 
 })();(function () {
     'use strict';
@@ -3310,7 +3341,7 @@
 
         activate();
     }
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'humanNameService', humanName]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'humanNameService', humanName]);
 
 })();
 (function () {
@@ -3446,7 +3477,7 @@
 
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', humanNameService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', humanNameService]);
 
 })();(function () {
     'use strict';
@@ -3519,7 +3550,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId, ['common', 'identifierService', identifier]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'identifierService', identifier]);
 
 })();
 (function () {
@@ -3574,7 +3605,7 @@
             }
             else {
                 identifiers = [];
-                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Starter identifier"};
+                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Cloud identifier"};
                 identifiers.push(defaultId);
             }
             _identifier = identifiers[0];
@@ -3609,7 +3640,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', identifierService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', identifierService]);
 
 })();(function () {
     'use strict';
@@ -3789,7 +3820,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdDialog', '$routeParams', 'common', 'fhirServers', 'identifierService', 'extensionDefinitionService', 'contactPointService', extensionDefinitionDetail]);
 
 })();(function () {
@@ -3862,7 +3893,7 @@
             toggleSpinner(true);
             extensionDefinitionService.getExtensionDefinitionsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name, true);
+                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name);
                     return data;
                 }, function (error) {
                     toggleSpinner(false);
@@ -3910,7 +3941,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'extensionDefinitionService', extensionDefinitionSearch]);
 })();
 (function () {
@@ -4077,26 +4108,8 @@
             var deferred = $q.defer();
             fhirClient.getResource(url)
                 .then(function (results) {
-                    var searchResults = {"links": {}, "extensionDefinitions": []};
-                    var extensionDefinitions = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                if (item.content && item.content.resourceType === 'ExtensionDefinition') {
-                                    extensionDefinitions.push({display: item.content.name, reference: item.id});
-                                }
-                            });
-
-                    }
-                    if (extensionDefinitions.length === 0) {
-                        extensionDefinitions.push({display: "No matches", reference: ''});
-                    }
-                    searchResults.extensionDefinitions = extensionDefinitions;
-                    if (results.data.link) {
-                        searchResults.links = results.data.link;
-                    }
-                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
-                    deferred.resolve(searchResults);
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
@@ -4108,13 +4121,8 @@
             data.resource = {
                 "resourceType": "ExtensionDefinition",
                 "identifier": [],
-                "type": {"coding": []},
                 "telecom": [],
-                "contact": [],
-                "address": [],
-                "partOf": null,
-                "location": [],
-                "active": true
+                 "active": true
             };
             return data;
         }
@@ -4135,20 +4143,11 @@
         }
 
         function _prepArrays(resource) {
-            if (resource.address.length === 0) {
-                resource.address = null;
-            }
             if (resource.identifier.length === 0) {
                 resource.identifier = null;
             }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
             if (resource.telecom.length === 0) {
                 resource.telecom = null;
-            }
-            if (resource.location.length === 0) {
-                resource.location = null;
             }
             return $q.when(resource);
         }
@@ -4185,7 +4184,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', extensionDefinitionService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', extensionDefinitionService]);
 
 })();(function () {
     'use strict';
@@ -4354,7 +4353,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'contactPointService', 'fhirServers', 'operationDefinitionService', operationDefinitionDetail]);
 
 })();(function () {
@@ -4476,7 +4475,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'operationDefinitionService', operationDefinitionSearch]);
 })();
 (function () {
@@ -4751,7 +4750,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', operationDefinitionService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', operationDefinitionService]);
 
 })();(function () {
     'use strict';
@@ -4979,7 +4978,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', organizationDetail]);
 
 })();(function () {
@@ -4992,6 +4991,7 @@
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
+        var noToast = false;
 
         /* jshint validthis:true */
         var vm = this;
@@ -5035,7 +5035,7 @@
                 toggleSpinner(true);
                 organizationService.getOrganizations(vm.activeServer.baseUrl, vm.searchText)
                     .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, false);
+                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                         return data;
                     }, function (error) {
                         toggleSpinner(false);
@@ -5052,7 +5052,7 @@
             toggleSpinner(true);
             organizationService.getOrganizationsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) + ' Organizations from ' + vm.activeServer.name, true);
+                    logInfo('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
                     toggleSpinner(false);
@@ -5100,7 +5100,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'organizationService', organizationSearch]);
 })();
 (function () {
@@ -5375,7 +5375,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', organizationService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', organizationService]);
 
 })();(function () {
     'use strict';
@@ -5764,7 +5764,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
             'organizationService', 'patientService', 'contactPointService', patientDetail]);
@@ -5890,7 +5890,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'patientService', patientSearch]);
 })();
 (function () {
@@ -6135,9 +6135,9 @@
             return deferred.promise;
         }
 
-        function seedRandomPatients(resourceId, patientName) {
+        function seedRandomPatients(resourceId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=10')
+            $http.get('http://api.randomuser.me/?results=25')
                 .success(function (data) {
                     var count = 0;
                     angular.forEach(data.results, function(result) {
@@ -6171,16 +6171,16 @@
                             "photo": [{"url": user.picture.large}],
                             "identifier": [
                                 {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
-                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": patientName + " master Id", "assigner": {"reference": resourceId, "display": patientName}}
+                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
                             ],
-                            "managingpatient": { "reference": resourceId, "display": patientName },
+                            "managingOrganization": { "reference": resourceId, "display": organizationName },
                             "link": [],
                             "active": true
                         };
                         $timeout(addPatient(resource).then(count = count + 1), 2000);
 
                     });
-                    deferred.resolve(count + ' patients created for ' + patientName);
+                    deferred.resolve(count + ' patients created for ' + organizationName);
                 })
                 .error(function (error) {
                     deferred.reject(error);
@@ -6238,7 +6238,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         patientService]);
 })();(function () {
     'use strict';
@@ -6440,7 +6440,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'fhirServers', 'identifierService', 'personService', 'contactPointService', 'attachmentService', 'humanNameService', personDetail]);
 
 })();(function () {
@@ -6552,7 +6552,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'personService', personSearch]);
 })();
 (function () {
@@ -6791,6 +6791,59 @@
             return data;
         }
 
+        function seedRandomPernsons(resourceId, organizationName) {
+            var deferred = $q.defer();
+            $http.get('http://api.randomuser.me/?results=25')
+                .success(function (data) {
+                    var count = 0;
+                    angular.forEach(data.results, function(result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "Patient",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": stringDOB,
+                            "contact": [],
+                            "communication": [],
+                            "maritalStatus": [],
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": [{"url": user.picture.large}],
+                            "identifier": [
+                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
+                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                            ],
+                            "managingOrganization": { "reference": resourceId, "display": organizationName },
+                            "link": [],
+                            "active": true
+                        };
+                        $timeout(addPatient(resource).then(count = count + 1), 2000);
+
+                    });
+                    deferred.resolve(count + ' patients created for ' + organizationName);
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
         function setPersonContext(data) {
             dataCache.addToCache(itemCacheKey, data);
         }
@@ -6844,7 +6897,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$filter', '$http', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         personService]);
 })();(function () {
     'use strict';
@@ -6968,7 +7021,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'practitionerService', practitionerSearch]);
 })();
 (function () {
@@ -7316,21 +7369,20 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         practitionerService]);
 })();(function () {
     'use strict';
 
     var controllerId = 'profileDetail';
 
-    function profileDetail($location, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, profileService, contactPointService, sessionService, patientService) {
+    function profileDetail($location, $routeParams, $window, $mdDialog, common, fhirServers, profileService, contactPointService, valueSetService) {
         /* jshint validthis:true */
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
-        var $q = common.$q;
 
         function cancel() {
 
@@ -7377,35 +7429,22 @@
                 });
         }
 
-        function getProfileReference(input) {
-            var deferred = $q.defer();
-            vm.loadingProfiles = true;
-            profileService.getProfileReference(vm.activeServer.baseUrl, input)
-                .then(function (data) {
-                    vm.loadingProfiles = false;
-                    deferred.resolve(data);
-                }, function (error) {
-                    vm.loadingProfiles = false;
-                    logError(common.unexpectedOutcome(error));
-                    deferred.reject();
-                });
-            return deferred.promise;
-        }
-
-        function getProfileTypes() {
-            vm.profileTypes = localValueSets.profileType();
-        }
-
         function getRequestedProfile() {
             function intitializeRelatedData(data) {
-                vm.profile = data.resource;
+                var rawData = angular.copy(data.resource);
+                if (rawData.text) {
+                    vm.narrative = (rawData.text.div || '<div>Not provided</div>');
+                } else {
+                    vm.narrative =  '<div>Not provided</div>';
+                }
+                vm.json = rawData;
+                vm.json.text = {div: "see narrative tab"};
+                vm.json = angular.toJson(rawData, true);
+                vm.profile = rawData;
                 if (angular.isUndefined(vm.profile.type)) {
                     vm.profile.type = {"coding": []};
                 }
                 vm.title = vm.profile.name;
-                identifierService.init(vm.profile.identifier);
-                addressService.init(vm.profile.address, false);
-                contactService.init(vm.profile.contact);
                 contactPointService.init(vm.profile.telecom, false, false);
             }
 
@@ -7418,9 +7457,6 @@
                 if ($routeParams.hashKey) {
                     profileService.getCachedProfile($routeParams.hashKey)
                         .then(intitializeRelatedData).then(function () {
-                            var session = sessionService.getSession();
-                            session.profile = vm.profile;
-                            sessionService.updateSession(session);
                         }, function (error) {
                             logError(error);
                         });
@@ -7470,11 +7506,7 @@
             var profile = profileService.initializeNewProfile().resource;
             profile.name = vm.profile.name;
             profile.type = vm.profile.type;
-            profile.address = addressService.mapFromViewModel();
             profile.telecom = contactPointService.mapFromViewModel();
-            profile.contact = contactService.mapFromViewModel();
-            profile.partOf = vm.profile.partOf;
-            profile.identifier = identifierService.getAll();
             profile.active = vm.profile.active;
             if (vm.isEditing) {
                 profileService.updateProfile(vm.profile.resourceId, profile)
@@ -7491,6 +7523,26 @@
             }
         }
 
+        function showFullDescription(element, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: element
+                },
+                targetEvent: event
+            });
+        }
+
+        function viewExtensionDefinition(extensionDefinition, event) {
+            console.log(extensionDefinition);
+        }
+
+        function viewBoundValueSet(reference, $event) {
+            console.log(reference);
+        }
+
         Object.defineProperty(vm, 'canSave', {
             get: canSave
         });
@@ -7499,60 +7551,40 @@
             get: canDelete
         });
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
         function activate() {
-            common.activateController([getActiveServer(), getProfileTypes()], controllerId).then(function () {
+            common.activateController([getActiveServer()], controllerId).then(function () {
                 getRequestedProfile();
             });
-        }
-
-        function createRandomPatients(event) {
-            vm.profile.resourceId = vm.activeServer.baseUrl + '/Profile/' + vm.profile.id;
-            logSuccess("Creating random patients for " + vm.profile.resourceId);
-            patientService.seedRandomPatients(vm.profile.resourceId, vm.profile.name).then(
-                function (result) {
-                    logSuccess(result);
-                }, function (error) {
-                    logError(error);
-                });
         }
 
         vm.activeServer = null;
         vm.cancel = cancel;
         vm.activate = activate;
-        vm.contactTypes = undefined;
         vm.delete = deleteProfile;
         vm.edit = edit;
-        vm.getProfileReference = getProfileReference;
         vm.getTitle = getTitle;
         vm.goBack = goBack;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.loadingProfiles = false;
         vm.profile = undefined;
-        vm.profileTypes = undefined;
         vm.save = save;
-        vm.states = undefined;
         vm.title = 'profileDetail';
-        vm.toggleSideNav = toggleSideNav;
-        vm.createRandomPatients = createRandomPatients;
+        vm.showFullDescription = showFullDescription;
+        vm.viewExtensionDefinition = viewExtensionDefinition;
+        vm.viewBoundValueSet = viewBoundValueSet;
 
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
-        ['$location', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'profileService', 'contactPointService', 'sessionService', 'patientService', profileDetail]);
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'fhirServers', 'profileService', 'contactPointService', 'valueSetService', profileDetail]);
 
 })();(function () {
     'use strict';
 
     var controllerId = 'profileSearch';
 
-    function profileSearch($location, $mdSidenav, common, config, fhirServers, profileService) {
+    function profileSearch($location, common, config, fhirServers, profileService) {
         var keyCodes = config.keyCodes;
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
@@ -7577,7 +7609,6 @@
         function activate() {
             common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
                 .then(function () {
-                    $mdSidenav('right').close();
                 });
         }
 
@@ -7635,11 +7666,6 @@
             }
         }
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
         function toggleSpinner(on) {
             vm.isBusy = on;
         }
@@ -7660,13 +7686,12 @@
         vm.dereferenceLink = dereferenceLink;
         vm.submit = submit;
         vm.goToDetail = goToDetail;
-        vm.toggleSideNav = toggleSideNav;
 
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'profileService', profileSearch]);
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', 'common', 'config', 'fhirServers', 'profileService', profileSearch]);
 })();
 (function () {
     'use strict';
@@ -7940,7 +7965,7 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', profileService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', profileService]);
 
 })();(function () {
     'use strict';
@@ -7965,7 +7990,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$scope', '$mdBottomSheet', 'common', 'items', bottomSheet]);
 })();(function () {
     'use strict';
@@ -7989,7 +8014,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$scope', '$mdDialog', 'common', 'data', rawData]);
 })();(function () {
     'use strict';
@@ -8167,7 +8192,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'fhirServers', 'valueSetService', 'contactPointService', valueSetDetail]);
 
 })();(function () {
@@ -8282,7 +8307,7 @@
         activate();
     }
 
-    angular.module('FHIRStarter').controller(controllerId,
+    angular.module('FHIRCloud').controller(controllerId,
         ['$location', 'common', 'config', 'fhirServers', 'valueSetService', valueSetSearch]);
 })();
 (function () {
@@ -8557,6 +8582,6 @@
         return service;
     }
 
-    angular.module('FHIRStarter').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', valueSetService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', valueSetService]);
 
 })();
