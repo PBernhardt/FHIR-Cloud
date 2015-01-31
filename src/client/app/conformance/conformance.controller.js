@@ -32,7 +32,7 @@
 
         function _getConformanceStatement() {
             common.toggleProgressBar(true);
-            conformanceService.getConformance(vm.activeServer.baseUrl).then(
+            conformanceService.getConformanceMetadata(vm.activeServer.baseUrl).then(
                 function (conformanceStatement) {
                     vm.conformance = conformanceStatement;
                     fhirServers.setActiveServer(vm.activeServer);

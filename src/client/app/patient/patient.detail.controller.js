@@ -20,7 +20,6 @@
         function activate() {
             common.activateController([getActiveServer()], controllerId).then(function () {
                 getRequestedPatient();
-                initStoredVitals();
             });
         }
 
@@ -159,7 +158,7 @@
                 if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
                     if (angular.isUndefined($routeParams.id)) {
                         //redirect to search
-                        $location.path('/patients');
+                        $location.path('/patient');
                     }
                 } else {
                     vm.patient = JSON.parse($window.localStorage.patient);

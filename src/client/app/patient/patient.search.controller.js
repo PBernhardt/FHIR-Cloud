@@ -3,7 +3,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdSidenav, common, config, fhirServers, patientService) {
+    function patientSearch($location, $mdSidenav, $routeParams, common, config, fhirServers, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -14,23 +14,38 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([_getActiveServer(), _getCachedPatients()], controllerId)
+            common.activateController([getActiveServer()], controllerId)
                 .then(function () {
-
+                    if ($routeParams.orgId !== null) {
+                        getOrganizationPatients($routeParams.orgId);
+                    } else {
+                        getCachedPatients();
+                    }
                 }, function (error) {
                     logError('Error ' + error);
                 });
         }
 
-        function _getActiveServer() {
+        function getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
         }
 
-        function _getCachedPatients() {
+        function getCachedPatients() {
             patientService.getCachedSearchResults()
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from cache', null, noToast);
+                    return data;
+                }, function (message) {
+                    logInfo(message, null, noToast);
+                })
+                .then(processSearchResults);
+        }
+
+        function getOrganizationPatients(orgId) {
+            patientService.getPatients(vm.activeServer.baseUrl, vm.searchText, orgId)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from cache', null, noToast);
                     return data;
@@ -121,5 +136,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'patientService', patientSearch]);
+        ['$location', '$mdSidenav', '$routeParams', 'common', 'config', 'fhirServers', 'patientService', patientSearch]);
 })();

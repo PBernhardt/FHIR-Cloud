@@ -17,8 +17,9 @@
     app.config(['$routeProvider', '$httpProvider', '$locationProvider', 'adalAuthenticationServiceProvider',
         function ($routeProvider, $httpProvider, $locationProvider, adalAuthenticationServiceProvider) {
             $routeProvider.when('/conformance', {
-                templateUrl: 'conformance/conformance.html',
-                requireADLogin: true
+                templateUrl: 'conformance/conformance-search.html'
+            }).when('/conformance/view/:hashKey', {
+                templateUrl: 'conformance/conformance-view.html'
             }).when('/extensionDefinition', {
                 templateUrl: 'extensionDefinition/extensionDefinition-search.html'
             }).when('/extensionDefinition/view/:hashKey', {
@@ -115,7 +116,7 @@
         ];
 
         var _conformancePages = [
-            {name: 'Conformance', href: 'conformance'},
+            {name: 'Conformance Statement', href: 'conformance'},
             {name: 'Profile', href: 'profile'},
             {name: 'Extension Definition', href: 'extensionDefinition'},
             {name: 'Operation Definition', href: 'operationDefinition'},
@@ -128,10 +129,30 @@
             {name: 'Document Manifest', href: 'documentManifest'}
         ];
 
+        var _dafResources= [
+            {name: 'Patient', href: 'daf/patient'},
+            {name: 'Allergy Intolerance', href: 'daf/allergyIntolerance'},
+            {name: 'Diagnostic Order', href: 'daf/diagnosticOrder'},
+            {name: 'Diagnostic Report', href: 'daf/diagnosticReport'},
+            {name: 'Encounter', href: 'daf/encounter'},
+            {name: 'Family History', href: 'daf/familyHistory'},
+            {name: 'Immunization', href: 'daf/immunization'},
+            {name: 'Results', href: 'daf/results'},
+            {name: 'Medication', href: 'daf/medication'},
+            {name: 'Medication Statement', href: 'daf/medicationStatement'},
+            {name: 'Medication Administration', href: 'daf/medicationAdministration'},
+            {name: 'Condition', href: 'daf/condition'},
+            {name: 'Procedure', href: 'daf/procedure'},
+            {name: 'Smoking Status', href: 'daf/smokingStatus'},
+            {name: 'Vital Signs', href: 'daf/vitalSigns'},
+            {name: 'List', href: 'daf/list'}
+        ];
+
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
             {name: 'Conformance', id: 2, pages: _conformancePages},
-            {name: 'Documents', id: 3, pages: _documentsPages}
+            {name: 'Documents', id: 3, pages: _documentsPages},
+            {name: 'DAF Profiles', id: 3, pages: _dafResources}
         ];
 
         $scope.menu = {
@@ -2031,18 +2052,55 @@
 })();(function () {
     'use strict';
 
-    var controllerId = 'conformance';
+    var controllerId = 'conformanceDetail';
 
-    function conformance($location, $mdSidenav, common, config, fhirServers, conformanceService) {
+    function conformanceDetail($location, $mdDialog, $routeParams, common, fhirServers, identifierService, conformanceService, contactPointService) {
         /* jshint validthis:true */
         var vm = this;
 
-        var getLogFn = common.logger.getLogFn;
-        var logInfo = getLogFn(controllerId, 'info');
-        var logError = getLogFn(controllerId, 'error');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var noToast = false;
 
-        function _getActiveServer() {
+        function cancel() {
+
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        function deleteConformance(conformance) {
+            function executeDelete() {
+                if (conformance && conformance.resourceId && conformance.hashKey) {
+                    conformanceService.deleteCachedConformance(conformance.hashKey, conformance.resourceId)
+                        .then(function () {
+                            logSuccess("Deleted conformance " + conformance.name);
+                            $location.path('/conformances');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+            var confirm = $mdDialog.confirm().title('Delete ' + conformance.name + '?').ok('Yes').cancel('No');
+            $mdDialog.show(confirm).then(executeDelete);
+
+        }
+
+        function edit(conformance) {
+            if (conformance && conformance.hashKey) {
+                $location.path('/conformance/edit/' + conformance.hashKey);
+            }
+        }
+
+        function getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
@@ -2050,34 +2108,214 @@
                 });
         }
 
-        function changeFHIRServer(id) {
-            if (vm.activeServer && vm.activeServer.id !== id) {
-                conformanceService.clearCache();
-                fhirServers.getServerById(id).then(function (data) {
-                    vm.activeServer = data;
-                }).then(_getConformanceStatement);
+        function getRequestedConformance() {
+            function intitializeRelatedData(data) {
+                var rawData = angular.copy(data.resource);
+                if (angular.isDefined(rawData.text)) {
+                    vm.narrative = (rawData.text.div || '<div>Not provided</div>');
+                } else {
+                    vm.narrative = '<div>Not provided</div>';
+                }
+                vm.json = rawData;
+                vm.json.text = { div: "see narrative tab"};
+                vm.json = angular.toJson(rawData, true);
+                vm.conformance = rawData;
+                if (angular.isUndefined(vm.conformance.code)) {
+                    vm.conformance.code = {"coding": []};
+                }
+                vm.title = vm.conformance.name;
+                identifierService.init(vm.conformance.identifier);
+                contactPointService.init(vm.conformance.telecom, false, false);
             }
-            $mdSidenav('right').close();
+
+            if ($routeParams.hashKey === 'new') {
+                var data = conformanceService.initializeNewConformance();
+                intitializeRelatedData(data);
+                vm.title = 'Add New Conformance';
+                vm.isEditing = false;
+            } else {
+                if ($routeParams.hashKey) {
+                    conformanceService.getCachedConformance($routeParams.hashKey)
+                        .then(intitializeRelatedData).then(function () {
+
+                        }, function (error) {
+                            logError(error);
+                        });
+                } else if ($routeParams.id) {
+                    var resourceId = vm.activeServer.baseUrl + '/Conformance/' + $routeParams.id;
+                    conformanceService.getConformance(resourceId)
+                        .then(intitializeRelatedData, function (error) {
+                            logError(error);
+                        });
+                }
+            }
         }
 
-        function _getConformanceStatement() {
-            common.toggleProgressBar(true);
-            conformanceService.getConformance(vm.activeServer.baseUrl).then(
-                function (conformanceStatement) {
-                    vm.conformance = conformanceStatement;
-                    fhirServers.setActiveServer(vm.activeServer);
-                    logInfo('Loaded conformance statement for ' + vm.activeServer.name, null, noToast);
-                }, function (error) {
-                    logError('Failed to retrieve conformance statement for ' + vm.activeServer.name, error);
-                }).then(function () {
-                    common.toggleProgressBar(false);
+        function getTitle() {
+            var title = '';
+            if (vm.conformance) {
+                title = vm.title = 'Edit ' + ((vm.conformance && vm.conformance.fullName) || '');
+            } else {
+                title = vm.title = 'Add New Conformance';
+            }
+            vm.title = title;
+            return vm.title;
+        }
+
+        function processResult(results) {
+            var resourceVersionId = results.headers.location || results.headers["content-location"];
+            if (angular.isUndefined(resourceVersionId)) {
+                logWarning("Conformance saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
+            } else {
+                vm.conformance.resourceId = common.setResourceId(vm.conformance.resourceId, resourceVersionId);
+                logSuccess("Conformance saved at " + resourceVersionId);
+            }
+            vm.isEditing = true;
+            getTitle();
+        }
+
+        function save() {
+            if (vm.conformance.name.length < 5) {
+                logError("Conformance Name must be at least 5 characters");
+                return;
+            }
+            var conformance = conformanceService.initializeNewConformance().resource;
+            conformance.name = vm.conformance.name;
+            conformance.identifier = identifierService.getAll();
+            if (vm.isEditing) {
+                conformanceService.updateConformance(vm.conformance.resourceId, conformance)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
+            } else {
+                conformanceService.addConformance(conformance)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
+            }
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId).then(function () {
+                getRequestedConformance();
+            });
+        }
+
+        vm.activeServer = null;
+        vm.cancel = cancel;
+        vm.activate = activate;
+        vm.delete = deleteConformance;
+        vm.edit = edit;
+        vm.getTitle = getTitle;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.conformance = undefined;
+        vm.save = save;
+        vm.states = undefined;
+        vm.title = 'conformanceDetail';
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdDialog', '$routeParams', 'common', 'fhirServers', 'identifierService', 'conformanceService', 'contactPointService', conformanceDetail]);
+
+})();(function () {
+    'use strict';
+
+    var controllerId = 'conformanceSearch';
+
+    function conformanceSearch($location, $mdSidenav, common, config, fhirServers, conformanceService) {
+        var keyCodes = config.keyCodes;
+        var getLogFn = common.logger.getLogFn;
+        var logInfo = getLogFn(controllerId, 'info');
+        var logError = getLogFn(controllerId, 'error');
+
+        /* jshint validthis:true */
+        var vm = this;
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
                 });
         }
 
-        function _getFhirServers() {
-            fhirServers.getAllServers().then(function (data) {
-                vm.fhirServers = data;
-            });
+        function getCachedSearchResults() {
+            conformanceService.getCachedSearchResults()
+                .then(processSearchResults);
+        }
+
+        function activate() {
+            common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
+                .then(function () {
+
+                });
+        }
+
+        function goToDetail(hash) {
+            if (hash) {
+                $location.path('/conformance/view/' + hash);
+            }
+        }
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.conformances = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function submit(valid) {
+            if (valid) {
+                toggleSpinner(true);
+                conformanceService.getConformances(vm.activeServer.baseUrl, vm.searchText)
+                    .then(function (data) {
+                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Conformance Statements from ' + vm.activeServer.name, false);
+                        return data;
+                    }, function (error) {
+                        toggleSpinner(false);
+                        logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    })
+                    .then(processSearchResults)
+                    .then(function () {
+                        toggleSpinner(false);
+                    });
+            }
+        }
+
+        function dereferenceLink(url) {
+            toggleSpinner(true);
+            conformanceService.getConformancesByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.conformances) ? data.conformances.length : 0) + ' Conformance Statements from ' + vm.activeServer.name);
+                    return data;
+                }, function (error) {
+                    toggleSpinner(false);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                    toggleSpinner(false);
+                });
+        }
+
+        function keyPress($event) {
+            if ($event.keyCode === keyCodes.esc) {
+                vm.searchText = '';
+            }
         }
 
         function toggleSideNav(event) {
@@ -2085,47 +2323,55 @@
             $mdSidenav('right').toggle();
         }
 
-        function activate() {
-            common.activateController([_getActiveServer(), _getFhirServers()], controllerId)
-                .then(_getConformanceStatement)
-                .then(function () {
-                    $mdSidenav('right').close();
-                });
+        function toggleSpinner(on) {
+            vm.isBusy = on;
         }
 
         vm.activeServer = null;
-        vm.conformance = null;
         vm.isBusy = false;
+        vm.conformances = [];
         vm.errorOutcome = null;
-        vm.message = '';
-        vm.title = 'Conformance Statement';
-        vm.fhirServers = null;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'Conformance Statements';
+        vm.keyPress = keyPress;
+        vm.dereferenceLink = dereferenceLink;
+        vm.submit = submit;
+        vm.goToDetail = goToDetail;
         vm.toggleSideNav = toggleSideNav;
-        vm.changeFHIRServer = changeFHIRServer;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'conformanceService', conformance]);
-})();(function () {
+        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'conformanceService', conformanceSearch]);
+})();
+(function () {
     'use strict';
 
     var serviceId = 'conformanceService';
 
-    function conformanceService(common, dataCache, fhirClient) {
+    function conformanceService(common, dataCache, fhirClient, fhirServers) {
+        var dataCacheKey = 'localConformances';
+        var getLogFn = common.logger.getLogFn;
+        var logWarning = getLogFn(serviceId, 'warning');
         var $q = common.$q;
 
-        function getConformance(baseUrl) {
+        function getConformanceMetadata(baseUrl) {
             var deferred = $q.defer();
 
-            var cachedData = dataCache.readFromCache('conformance');
+            var cachedData = dataCache.readFromCache(dataCacheKey);
             if (cachedData) {
                 deferred.resolve(cachedData);
             } else {
                 fhirClient.getResource(baseUrl + '/metadata')
                     .then(function (results) {
-                        dataCache.addToCache('conformance', results.data);
+                        dataCache.addToCache(dataCacheKey, results.data);
                         deferred.resolve(results.data);
                     }, function (outcome) {
                         deferred.reject(outcome);
@@ -2134,20 +2380,229 @@
             return deferred.promise;
         }
 
-        function clearCache() {
-            dataCache.addToCache('conformance', null);
+        function addConformance(resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/Conformance";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
         }
 
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedConformance(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                var removed = false;
+                var cachedConformances = searchResults.entry;
+                for (var i = 0, len = cachedConformances.length; i < len; i++) {
+                    if (cachedConformances[i].$$hashKey === hashKey) {
+                        cachedConformances.splice(i, 1);
+                        searchResults.entry = cachedConformances;
+                        searchResults.totalResults = (searchResults.totalResults - 1);
+                        dataCache.addToCache(dataCacheKey, searchResults);
+                        removed = true;
+                        break;
+                    }
+                }
+                if (removed) {
+                    deferred.resolve();
+                } else {
+                    logWarning('Conformance not found in cache: ' + hashKey);
+                    deferred.resolve();
+                }
+            }
+
+            var deferred = $q.defer();
+            deleteConformance(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache)
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteConformance(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getCachedConformance(hashKey) {
+            function getConformance(searchResults) {
+                var cachedConformance;
+                var cachedConformances = searchResults.entry;
+                cachedConformance = _.find(cachedConformances, {'$$hashKey': hashKey});
+                if (cachedConformance) {
+                    deferred.resolve(cachedConformance);
+                } else {
+                    deferred.reject('Conformance not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            getCachedSearchResults()
+                .then(getConformance,
+                function () {
+                    deferred.reject('Conformance search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getConformance(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: add support for summary when DSTU2 server implementers have support
+        function getConformanceReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Conformance?name=' + input + '&_count=20')
+                .then(function (results) {
+                    var extensionDefinitions = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                extensionDefinitions.push({display: item.resource.name, reference: item.resource.id});
+                            });
+                    }
+                    if (extensionDefinitions.length === 0) {
+                        extensionDefinitions.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(extensionDefinitions);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: waiting for server implementers to add support for _summary
+        function getConformances(baseUrl, nameFilter) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/Conformance?name=' + nameFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getConformancesByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewConformance() {
+            var data = {};
+            data.resource = {
+                "resourceType": "Conformance",
+                "active": true
+            };
+            return data;
+        }
+
+        function updateConformance(resourceVersionId, resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function _prepArrays(resource) {
+            return $q.when(resource);
+        }
+
+        function _prepCoding(coding) {
+            var result = null;
+            if (angular.isArray(coding) && angular.isDefined(coding[0])) {
+                if (angular.isObject(coding[0])) {
+                    result = coding;
+                } else {
+                    var parsedCoding = JSON.parse(coding[0]);
+                    result = [];
+                    result.push(parsedCoding ? parsedCoding : null);
+                }
+            }
+            return result;
+        }
+
+
         var service = {
+            addConformance: addConformance,
+            clearCache: clearCache,
+            deleteCachedConformance: deleteCachedConformance,
+            deleteConformance: deleteConformance,
+            getCachedConformance: getCachedConformance,
+            getCachedSearchResults: getCachedSearchResults,
             getConformance: getConformance,
-            clearCache: clearCache
+            getConformanceMetadata: getConformanceMetadata,
+            getConformances: getConformances,
+            getConformancesByLink: getConformancesByLink,
+            getConformanceReference: getConformanceReference,
+            initializeNewConformance: initializeNewConformance,
+            updateConformance: updateConformance
         };
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', conformanceService]);
-
-
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', conformanceService]);
 })();(function () {
     'use strict';
 
@@ -5399,7 +5854,6 @@
         function activate() {
             common.activateController([getActiveServer()], controllerId).then(function () {
                 getRequestedPatient();
-                initStoredVitals();
             });
         }
 
@@ -5538,7 +5992,7 @@
                 if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
                     if (angular.isUndefined($routeParams.id)) {
                         //redirect to search
-                        $location.path('/patients');
+                        $location.path('/patient');
                     }
                 } else {
                     vm.patient = JSON.parse($window.localStorage.patient);
@@ -5773,7 +6227,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdSidenav, common, config, fhirServers, patientService) {
+    function patientSearch($location, $mdSidenav, $routeParams, common, config, fhirServers, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -5784,23 +6238,38 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([_getActiveServer(), _getCachedPatients()], controllerId)
+            common.activateController([getActiveServer()], controllerId)
                 .then(function () {
-
+                    if ($routeParams.orgId !== null) {
+                        getOrganizationPatients($routeParams.orgId);
+                    } else {
+                        getCachedPatients();
+                    }
                 }, function (error) {
                     logError('Error ' + error);
                 });
         }
 
-        function _getActiveServer() {
+        function getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
         }
 
-        function _getCachedPatients() {
+        function getCachedPatients() {
             patientService.getCachedSearchResults()
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from cache', null, noToast);
+                    return data;
+                }, function (message) {
+                    logInfo(message, null, noToast);
+                })
+                .then(processSearchResults);
+        }
+
+        function getOrganizationPatients(orgId) {
+            patientService.getPatients(vm.activeServer.baseUrl, vm.searchText, orgId)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from cache', null, noToast);
                     return data;
@@ -5891,7 +6360,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'patientService', patientSearch]);
+        ['$location', '$mdSidenav', '$routeParams', 'common', 'config', 'fhirServers', 'patientService', patientSearch]);
 })();
 (function () {
     'use strict';
@@ -6064,18 +6533,30 @@
             return deferred.promise;
         }
 
-        function getPatients(baseUrl, nameFilter) {
+        function getPatients(baseUrl, nameFilter, organizationId) {
             var deferred = $q.defer();
             var params = '';
 
-            if (angular.isUndefined(nameFilter)) {
+            if (angular.isUndefined(nameFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
-            var names = nameFilter.split(' ');
-            if (names.length === 1) {
-                params = 'name=' + names[0];
-            } else {
-                params = 'given=' + names[0] + '&family=' + names[1];
+
+            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
+                var names = nameFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:Organization=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
             }
 
             fhirClient.getResource(baseUrl + '/Patient?' + params + '&_count=20')

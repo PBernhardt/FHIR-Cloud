@@ -1,6 +1,11 @@
 {
-  "name": "FHIRStarter",
+  "name": "FHIR-Cloud",
   "version": "0.0.1",
+  "description": "A reference client for Fast Healthcare Interoperability Resources (FHIR)",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
   "scripts": {
     "postinstall": "node ./node_modules/bower/bin/bower install"
   },

@@ -17,8 +17,9 @@
     app.config(['$routeProvider', '$httpProvider', '$locationProvider', 'adalAuthenticationServiceProvider',
         function ($routeProvider, $httpProvider, $locationProvider, adalAuthenticationServiceProvider) {
             $routeProvider.when('/conformance', {
-                templateUrl: 'conformance/conformance.html',
-                requireADLogin: true
+                templateUrl: 'conformance/conformance-search.html'
+            }).when('/conformance/view/:hashKey', {
+                templateUrl: 'conformance/conformance-view.html'
             }).when('/extensionDefinition', {
                 templateUrl: 'extensionDefinition/extensionDefinition-search.html'
             }).when('/extensionDefinition/view/:hashKey', {
@@ -115,7 +116,7 @@
         ];
 
         var _conformancePages = [
-            {name: 'Conformance', href: 'conformance'},
+            {name: 'Conformance Statement', href: 'conformance'},
             {name: 'Profile', href: 'profile'},
             {name: 'Extension Definition', href: 'extensionDefinition'},
             {name: 'Operation Definition', href: 'operationDefinition'},
@@ -128,10 +129,30 @@
             {name: 'Document Manifest', href: 'documentManifest'}
         ];
 
+        var _dafResources= [
+            {name: 'Patient', href: 'daf/patient'},
+            {name: 'Allergy Intolerance', href: 'daf/allergyIntolerance'},
+            {name: 'Diagnostic Order', href: 'daf/diagnosticOrder'},
+            {name: 'Diagnostic Report', href: 'daf/diagnosticReport'},
+            {name: 'Encounter', href: 'daf/encounter'},
+            {name: 'Family History', href: 'daf/familyHistory'},
+            {name: 'Immunization', href: 'daf/immunization'},
+            {name: 'Results', href: 'daf/results'},
+            {name: 'Medication', href: 'daf/medication'},
+            {name: 'Medication Statement', href: 'daf/medicationStatement'},
+            {name: 'Medication Administration', href: 'daf/medicationAdministration'},
+            {name: 'Condition', href: 'daf/condition'},
+            {name: 'Procedure', href: 'daf/procedure'},
+            {name: 'Smoking Status', href: 'daf/smokingStatus'},
+            {name: 'Vital Signs', href: 'daf/vitalSigns'},
+            {name: 'List', href: 'daf/list'}
+        ];
+
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
             {name: 'Conformance', id: 2, pages: _conformancePages},
-            {name: 'Documents', id: 3, pages: _documentsPages}
+            {name: 'Documents', id: 3, pages: _documentsPages},
+            {name: 'DAF Profiles', id: 3, pages: _dafResources}
         ];
 
         $scope.menu = {
