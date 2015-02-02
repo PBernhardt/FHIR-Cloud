@@ -111,8 +111,7 @@
             {name: 'Organization', href: 'organization'},
             {name: 'Patient', href: 'patient'},
             {name: 'Practitioner', href: 'practitioner'},
-            {name: 'Person', href: 'person'},
-            {name: 'Healthcare Service', href: 'healthcareService'}
+            {name: 'Person', href: 'person'}
         ];
 
         var _conformancePages = [
@@ -1185,6 +1184,17 @@
     'use strict';
 
     var app = angular.module('FHIRCloud');
+
+    app.filter('lastUrlPart', function () {
+        return function (input) {
+            var urlParts = input.split("/");
+            if (angular.isArray(urlParts)) {
+                return urlParts[urlParts.length - 1];
+            } else {
+                return input;
+            }
+        };
+    });
 
     app.filter('codeableConcept', function () {
         return function (codeableConcept) {
@@ -5212,14 +5222,15 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($location, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService) {
+    function organizationDetail($location, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
-        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logSuccess = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var $q = common.$q;
+        var noToast = false;
 
         function cancel() {
 
@@ -5404,7 +5415,18 @@
             logSuccess("Creating random patients for " + vm.organization.resourceId);
             patientService.seedRandomPatients(vm.organization.resourceId, vm.organization.name).then(
                 function (result) {
-                    logSuccess(result);
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError(error);
+                });
+        }
+
+        function createRandomPersons(event) {
+            vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
+            logSuccess("Creating random patients for " + vm.organization.resourceId);
+            personService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
                 }, function (error) {
                     logError(error);
                 });
@@ -5429,12 +5451,13 @@
         vm.title = 'organizationDetail';
         vm.toggleSideNav = toggleSideNav;
         vm.createRandomPatients = createRandomPatients;
+        vm.createRandomPersons = createRandomPersons;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', organizationDetail]);
+        ['$location', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
 
 })();(function () {
     'use strict';
@@ -6370,6 +6393,8 @@
     function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localPatients';
         var itemCacheKey = 'contextPatient';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
 
         function addPatient(resource) {
@@ -6404,6 +6429,7 @@
                 }
                 deferred.resolve();
             }
+
             var deferred = $q.defer();
             deletePatient(resourceId)
                 .then(getCachedSearchResults,
@@ -6436,10 +6462,10 @@
             fhirClient.getResource(resourceId + '/$everything')
                 .then(function (results) {
                     var everything = {"patient": null, "summary": [], "history": []};
-                    everything.history = _.remove(results.data.entry, function(item) {
-                       return (item.resource.resourceType === 'SecurityEvent');
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'SecurityEvent');
                     });
-                    everything.patient = _.remove(results.data.entry, function(item) {
+                    everything.patient = _.remove(results.data.entry, function (item) {
                         return (item.resource.resourceType === 'Patient');
                     })[0];
                     everything.summary = results.data.entry;
@@ -6593,7 +6619,7 @@
                 "address": [],
                 "photo": [],
                 "communication": [],
-                "managingpatient": null,
+                "managingOrganization": null,
                 "contact": [],
                 "link": [],
                 "active": true
@@ -6618,10 +6644,9 @@
 
         function seedRandomPatients(resourceId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=25')
+            $http.get('http://api.randomuser.me/?results=100')
                 .success(function (data) {
-                    var count = 0;
-                    angular.forEach(data.results, function(result) {
+                     angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
@@ -6651,17 +6676,35 @@
                             }],
                             "photo": [{"url": user.picture.large}],
                             "identifier": [
-                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
-                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "official",
+                                    "label": "Social Security Number",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "label": organizationName + " master Id",
+                                    "assigner": {"reference": resourceId, "display": organizationName}
+                                }
                             ],
-                            "managingOrganization": { "reference": resourceId, "display": organizationName },
+                            "managingOrganization": {"reference": resourceId, "display": organizationName},
                             "link": [],
                             "active": true
                         };
-                        $timeout(addPatient(resource).then(count = count + 1), 2000);
-
+                        var timer = $timeout(function () {}, 3000);
+                        timer.then(function () {
+                            addPatient(resource).then(function (results) {
+                                logInfo("Created patient " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create patient " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
                     });
-                    deferred.resolve(count + ' patients created for ' + organizationName);
+                    deferred.resolve();
                 })
                 .error(function (error) {
                     deferred.reject(error);
@@ -6724,14 +6767,14 @@
 })();(function () {
     'use strict';
 
-    var controllerId = 'person.detail';
+    var controllerId = 'personDetail';
 
-    function personDetail($location, $routeParams, $window, addressService, $mdDialog, common, fhirServers, identifierService, personService, contactPointService, attachmentService, humanNameService) {
+    function personDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $window, addressService, common, fhirServers, identifierService, personService, contactPointService, attachmentService, humanNameService, organizationService) {
         /* jshint validthis:true */
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
-        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var $q = common.$q;
 
@@ -6748,12 +6791,12 @@
         }
 
         function deletePerson(person) {
-            function confirmDelete() {
+            function executeDelete() {
                 if (person && person.resourceId && person.hashKey) {
                     personService.deleteCachedPerson(person.hashKey, person.resourceId)
                         .then(function () {
-                            logSuccess("Deleted person " + person.name);
-                            $location.path('/persons');
+                            logInfo("Deleted person " + person.fullName);
+                            $location.path('/person');
                         },
                         function (error) {
                             logError(common.unexpectedOutcome(error));
@@ -6761,8 +6804,17 @@
                     );
                 }
             }
-            var confirm = $mdDialog.confirm().title('Delete ' + person.name + '?').ok('Yes').cancel('No');
-            $mdDialog.show(confirm).then(confirmDelete);
+
+            var confirm = $mdDialog.confirm()
+                .title('Delete ' + person.fullName + '?')
+                .ariaLabel('delete person')
+                .ok('Yes')
+                .cancel('No')
+                .targetEvent(event);
+            $mdDialog.show(confirm).then(executeDelete,
+                function () {
+                    logInfo('You decided to keep ' + person.fullName);
+                });
         }
 
         function edit(person) {
@@ -6781,13 +6833,13 @@
 
         function getOrganizationReference(input) {
             var deferred = $q.defer();
-            vm.loadingpersons = true;
-            personService.getOrganizationReference(vm.activeServer.baseUrl, input)
+            vm.loadingOrganizations = true;
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    vm.loadingpersons = false;
+                    vm.loadingOrganizations = false;
                     deferred.resolve(data);
                 }, function (error) {
-                    vm.loadingpersons = false;
+                    vm.loadingOrganizations = false;
                     logError(common.unexpectedOutcome(error));
                     deferred.reject();
                 });
@@ -6796,16 +6848,22 @@
 
         function getRequestedPerson() {
             function intitializeRelatedData(data) {
-                vm.person = data.resource;
-                attachmentService.init(vm.person.photo, 'Photo');
+                vm.person = data;
+                attachmentService.init([vm.person.photo], 'Photo');
                 humanNameService.init(vm.person.name);
                 identifierService.init(vm.person.identifier);
                 addressService.init(vm.person.address, true);
                 contactPointService.init(vm.person.telecom, true, true);
+                vm.person.fullName = humanNameService.getFullName();
             }
 
             if ($routeParams.hashKey === 'new') {
                 vm.person = null;
+                attachmentService.reset();
+                humanNameService.reset();
+                identifierService.reset();
+                addressService.reset();
+                contactPointService.reset();
                 personService.seedNewPerson()
                     .then(intitializeRelatedData)
                     .then(function () {
@@ -6851,7 +6909,7 @@
                 logWarning("Person saved, but location is unavailable. CORS not implemented correctly at remote host.", true);
             } else {
                 vm.person.resourceId = common.setResourceId(vm.person.resourceId, resourceVersionId);
-                logSuccess("Person saved at " + resourceVersionId, true);
+                logInfo("Person saved at " + resourceVersionId, true);
             }
             vm.person.fullName = vm.person.name;
             vm.isEditing = true;
@@ -6885,6 +6943,35 @@
             }
         }
 
+        function personActionsMenu($event) {
+            var menuItems = [
+                {name: 'Edit', icon: 'img/account4.svg'},
+                {name: 'Add', icon: 'img/add184.svg'},
+                {name: 'Locate', icon: 'img/share39.svg'},
+                {name: 'Delete', icon: 'img/rubbish.svg'}
+            ];
+            $mdBottomSheet.show({
+                locals: {items: menuItems},
+                templateUrl: 'templates/bottomSheet.html',
+                controller: 'bottomSheetController',
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.name) {
+                    case 'Edit':
+                        $location.path('/person/edit/' + vm.person.$$hashKey);
+                        break;
+                    case 'Add':
+                        $location.path('/person/edit/new');
+                        break;
+                    case 'Locate':
+                        logInfo('TODO: implement Locate');
+                        break;
+                    case 'Delete':
+                        deletePerson(vm.person, $event);
+                }
+            });
+        }
+
         Object.defineProperty(vm, 'canSave', {
             get: canSave
         });
@@ -6911,25 +6998,26 @@
         vm.goBack = goBack;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.loadingpersons = false;
+        vm.loadingOrganizations = false;
         vm.person = undefined;
         vm.personTypes = undefined;
         vm.save = save;
         vm.states = undefined;
         vm.title = 'Person Detail';
+        vm.personActionsMenu = personActionsMenu;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'fhirServers', 'identifierService', 'personService', 'contactPointService', 'attachmentService', 'humanNameService', personDetail]);
+        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$window', 'addressService', 'common', 'fhirServers', 'identifierService', 'personService', 'contactPointService', 'attachmentService', 'humanNameService', 'organizationService', personDetail]);
 
 })();(function () {
     'use strict';
 
     var controllerId = 'personSearch';
 
-    function personSearch($location, $mdSidenav, common, config, fhirServers, personService) {
+    function personSearch($location, $mdBottomSheet, common, config, fhirServers, personService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -7005,13 +7093,38 @@
             }
         }
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
         function toggleSpinner(on) {
             vm.isBusy = on;
+        }
+
+        function personSearchActionsMenu($event) {
+            var menuItems = [
+                {name: 'Add', icon: 'img/add184.svg'},
+                {name: 'Search', icon: 'img/search100.svg'},
+                {name: 'Clear', icon: 'img/clear5.svg'}
+            ];
+            $mdBottomSheet.show({
+                locals: {items: menuItems},
+                templateUrl: 'templates/bottomSheet.html',
+                controller: 'bottomSheetController',
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.name) {
+                    case 'Add':
+                        $location.path('/person/edit/new');
+                        break;
+                    case 'Search':
+                        logInfo('TODO: implement Locate');
+                        break;
+                    case 'Clear':
+                        personService.clearCache();
+                        vm.searchText = '';
+                        vm.persons = [];
+                        vm.paging = null;
+                        $location.path('/person');
+                        logInfo('Search results cache cleared');
+                }
+            });
         }
 
         vm.activeServer = null;
@@ -7028,22 +7141,24 @@
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'Person';
-        vm.toggleSideNav = toggleSideNav;
+        vm.personSearchActionsMenu = personSearchActionsMenu;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'personService', personSearch]);
+        ['$location', '$mdBottomSheet', 'common', 'config', 'fhirServers', 'personService', personSearch]);
 })();
 (function () {
     'use strict';
 
     var serviceId = 'personService';
 
-    function personService($filter, $http, common, dataCache, fhirClient, fhirServers) {
+    function personService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localPersons';
         var itemCacheKey = 'contextPerson';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
 
         function addPerson(resource) {
@@ -7112,15 +7227,15 @@
                 var cachedPersons = searchResults.entry;
                 for (var i = 0, len = cachedPersons.length; i < len; i++) {
                     if (cachedPersons[i].$$hashKey === hashKey) {
-                        cachedPerson = cachedPersons[i];
-                        cachedPerson.content.resourceId = cachedPerson.id;
-                        cachedPerson.content.hashKey = cachedPerson.$$hashKey;
+                        cachedPerson = cachedPersons[i].resource;
+                        //TODO: FHIR Change request to make fully-qualified resourceId part of meta data
+                        cachedPerson.resourceId = (searchResults.base + cachedPerson.resourceType + '/' + cachedPerson.id);
+                        cachedPerson.hashKey = hashKey;
                         break;
                     }
                 }
                 if (cachedPerson) {
-
-                    deferred.resolve(cachedPerson.content);
+                    deferred.resolve(cachedPerson);
                 } else {
                     deferred.reject('Person not found in cache: ' + hashKey);
                 }
@@ -7189,21 +7304,33 @@
             return deferred.promise;
         }
 
-        function getPersons(baseUrl, nameFilter) {
+        function getPersons(baseUrl, nameFilter, organizationId) {
             var deferred = $q.defer();
             var params = '';
 
-            if (angular.isUndefined(nameFilter)) {
+            if (angular.isUndefined(nameFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
-            var names = nameFilter.split(' ');
-            if (names.length === 1) {
-                params = 'name=' + names[0];
-            } else {
-                params = 'given=' + names[0] + '&family=' + names[1];
+
+            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
+                var names = nameFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
             }
 
-            fhirClient.getResource(baseUrl + '/Person?' + params)
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:Organization=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Person?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -7239,14 +7366,14 @@
                             "postalCode": user.location.zip,
                             "use": "home"
                         }],
-                        "photo": [{"url": user.picture.large}],
+                        "photo": {"url": user.picture.large},
                         "identifier": [{"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official"}],
                         "managingOrganization": null,
                         "link": [],
                         "active": true
                     };
                     var randomPerson = {"resource": resource};
-                    deferred.resolve(randomPerson);
+                    deferred.resolve(randomPerson.resource);
                 })
                 .error(function (error) {
                     deferred.reject(error);
@@ -7263,7 +7390,7 @@
                 "birthDate": undefined,
                 "telecom": [],
                 "address": [],
-                "photo": [],
+                "photo": undefined,
                 "identifier": [],
                 "managingOrganization": undefined,
                 "link": [],
@@ -7272,17 +7399,16 @@
             return data;
         }
 
-        function seedRandomPernsons(resourceId, organizationName) {
+        function seedRandomPersons(resourceId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=25')
+            $http.get('http://api.randomuser.me/?results=100')
                 .success(function (data) {
-                    var count = 0;
                     angular.forEach(data.results, function(result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
                         var resource = {
-                            "resourceType": "Patient",
+                            "resourceType": "Person",
                             "name": [{
                                 "family": [$filter('titleCase')(user.name.last)],
                                 "given": [$filter('titleCase')(user.name.first)],
@@ -7291,9 +7417,6 @@
                             }],
                             "gender": user.gender,
                             "birthDate": stringDOB,
-                            "contact": [],
-                            "communication": [],
-                            "maritalStatus": [],
                             "telecom": [
                                 {"system": "email", "value": user.email, "use": "home"},
                                 {"system": "phone", "value": user.cell, "use": "mobile"},
@@ -7305,19 +7428,25 @@
                                 "postalCode": user.location.zip,
                                 "use": "home"
                             }],
-                            "photo": [{"url": user.picture.large}],
+                            "photo": {"url": user.picture.large},
                             "identifier": [
                                 {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
-                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                                {"system": "urn:oid:2.16.840.1.113883.15.34", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
                             ],
                             "managingOrganization": { "reference": resourceId, "display": organizationName },
                             "link": [],
                             "active": true
                         };
-                        $timeout(addPatient(resource).then(count = count + 1), 2000);
-
+                        var timer = $timeout(function () {}, 5000);
+                        timer.then(function () {
+                            addPerson(resource).then(function (results) {
+                                logInfo("Created person " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create person " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
                     });
-                    deferred.resolve(count + ' patients created for ' + organizationName);
+                    deferred.resolve();
                 })
                 .error(function (error) {
                     deferred.reject(error);
@@ -7371,6 +7500,7 @@
             getPersons: getPersons,
             initializePerson: initializePerson,
             seedNewPerson: seedNewPerson,
+            seedRandomPersons: seedRandomPersons,
             setPersonContext: setPersonContext,
             updatePerson: updatePerson
         };
@@ -7378,7 +7508,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         personService]);
 })();(function () {
     'use strict';
@@ -8016,12 +8146,24 @@
             });
         }
 
+        function viewProfileDetail(profile, event) {
+            console.log(profile);
+        }
+
         function viewExtensionDefinition(extensionDefinition, event) {
             console.log(extensionDefinition);
         }
 
-        function viewBoundValueSet(reference, $event) {
-            console.log(reference);
+        function viewBoundValueSet(reference, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/valueSet-popup.html',
+                controller: 'valueSetPopupController',
+                locals: {
+                    data: reference
+                },
+                targetEvent: event
+            });
         }
 
         Object.defineProperty(vm, 'canSave', {
@@ -8053,6 +8195,7 @@
         vm.showFullDescription = showFullDescription;
         vm.viewExtensionDefinition = viewExtensionDefinition;
         vm.viewBoundValueSet = viewBoundValueSet;
+        vm.viewProfileDetail = viewProfileDetail;
 
         activate();
     }
@@ -8500,6 +8643,91 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'valueSetPopupController';
+
+    function valueSetPopupController($scope, $mdDialog, common, config, data, fhirServers, valueSetService) {
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var $q = common.$q;
+        var noToast = false;
+
+        function closeDialog() {
+            $mdDialog.hide();
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    $scope.activeServer = server;
+                    return $scope.activeServer;
+                });
+        }
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId).then(function () {
+                getValueSet($scope.data);
+            });
+        }
+
+        function getValueSet(identifier) {
+            valueSetService.getValueSets($scope.activeServer.baseUrl, undefined, identifier)
+                .then(function (bundle) {
+                    $scope.options = undefined;
+                    $scope.valueSet = bundle.entry[0].resource;
+                    if (angular.isDefined($scope.valueSet.define)) {
+                        logInfo("Value set defines its own concepts", null, noToast);
+                        $scope.system =  $scope.valueSet.define.system;
+                        $scope.options = $scope.valueSet.define.concept;
+                        $scope.valueSet.selectedCode = $scope.options[0];
+                        selectionChanged();
+                    }
+                    else if (angular.isDefined($scope.valueSet.compose) && angular.isArray($scope.valueSet.compose.include)) {
+                        logInfo("Value set includes concepts", null, noToast);
+                        $scope.system = $scope.valueSet.compose.include[0].system;
+                        $scope.options = $scope.valueSet.compose.include[0].concept;
+                        $scope.valueSet.selectedCode = $scope.options[0];
+                        selectionChanged();
+                    }
+                }, function (error) {
+                    logError('Error returning value set', error);
+                })
+        }
+
+        function expandValueSet(searchText) {
+            var deferred = $q.defer();
+            $scope.fetchingExpansion = true;
+            valueSetService.getFilteredExpansion($scope.activeServer.baseUrl, $scope.valueSet.id, searchText)
+                .then(function (data) {
+                    $scope.fetchingExpansion = false;
+                    deferred.resolve(data);
+                }, function (error) {
+                    $scope.fetchingExpansion = false;
+                    logError(error, null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function selectionChanged() {
+            if ($scope.valueSet.selectedCode.system === undefined) {
+                $scope.valueSet.selectedCode.system = $scope.system;
+            }
+        }
+
+        $scope.data = data;
+        $scope.closeDialog = closeDialog;
+        $scope.activate = activate;
+        $scope.expandValueSet = expandValueSet;
+        $scope.selectionChanged = selectionChanged;
+        $scope.fetchingExpansion = false;
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$scope', '$mdDialog', 'common', 'config', 'data', 'fhirServers', 'valueSetService', valueSetPopupController]);
+})();(function () {
+    'use strict';
+
     var controllerId = 'valueSetDetail';
 
     function valueSetDetail($location, $routeParams, $window, $mdDialog, common, fhirServers, valueSetService, contactPointService) {
@@ -8938,10 +9166,25 @@
         }
 
         //TODO: waiting for server implementers to add support for _summary
-        function getValueSets(baseUrl, nameFilter) {
+        function getValueSets(baseUrl, nameFilter, identifier) {
             var deferred = $q.defer();
+            var params = '';
 
-            fhirClient.getResource(baseUrl + '/ValueSet?name=' + nameFilter + '&_count=20')
+            if (angular.isUndefined(nameFilter) && angular.isUndefined(identifier)) {
+                deferred.reject('Invalid search input');
+            }
+            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
+                params = 'name=' + nameFilter;
+            }
+            if (angular.isDefined(identifier)) {
+                var identifierParam = 'identifier=' + identifier;
+                if (params.length > 1) {
+                    params = params + '&' + identifierParam;
+                } else {
+                    params = identifierParam;
+                }
+            }
+            fhirClient.getResource(baseUrl + '/ValueSet?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -8985,16 +9228,23 @@
             var data = {};
             data.resource = {
                 "resourceType": "ValueSet",
-                "identifier": [],
-                "type": {"coding": []},
-                "telecom": [],
-                "contact": [],
-                "address": [],
-                "partOf": null,
-                "location": [],
                 "active": true
             };
             return data;
+        }
+
+        // http://fhir-dev.healthintersections.com.au/open/ValueSet/$expand?identifier=http://hl7.org/fhir/vs/condition-code&filter=xxx
+        function getFilteredExpansion(baseUrl, id, filter) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/ValueSet/' + id + '/$expand?filter=' + filter + '&_count=10')
+                .then(function (results) {
+                    if (results.data && results.data.expansion && angular.isArray(results.data.expansion.contains)) {
+                        deferred.resolve(results.data.expansion.contains);
+                    } else {
+                        deferred.reject("Response did not include expected expansion");
+                    }
+                });
+            return deferred.promise;
         }
 
         function updateValueSet(resourceVersionId, resource) {
@@ -9013,21 +9263,6 @@
         }
 
         function _prepArrays(resource) {
-            if (resource.address.length === 0) {
-                resource.address = null;
-            }
-            if (resource.identifier.length === 0) {
-                resource.identifier = null;
-            }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
-            if (resource.telecom.length === 0) {
-                resource.telecom = null;
-            }
-            if (resource.location.length === 0) {
-                resource.location = null;
-            }
             return $q.when(resource);
         }
 
@@ -9050,6 +9285,7 @@
             clearCache: clearCache,
             deleteCachedValueSet: deleteCachedValueSet,
             deleteValueSet: deleteValueSet,
+            getFilteredExpansion: getFilteredExpansion,
             getCachedValueSet: getCachedValueSet,
             getCachedSearchResults: getCachedSearchResults,
             getValueSet: getValueSet,

@@ -162,12 +162,24 @@
             });
         }
 
+        function viewProfileDetail(profile, event) {
+            console.log(profile);
+        }
+
         function viewExtensionDefinition(extensionDefinition, event) {
             console.log(extensionDefinition);
         }
 
-        function viewBoundValueSet(reference, $event) {
-            console.log(reference);
+        function viewBoundValueSet(reference, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/valueSet-popup.html',
+                controller: 'valueSetPopupController',
+                locals: {
+                    data: reference
+                },
+                targetEvent: event
+            });
         }
 
         Object.defineProperty(vm, 'canSave', {
@@ -199,6 +211,7 @@
         vm.showFullDescription = showFullDescription;
         vm.viewExtensionDefinition = viewExtensionDefinition;
         vm.viewBoundValueSet = viewBoundValueSet;
+        vm.viewProfileDetail = viewProfileDetail;
 
         activate();
     }

@@ -1,12 +1,12 @@
-<section data-ng-controller="personDetail as vm">
+<section ng-controller="personDetail as vm">
     <div flex>
         <h3>{{vm.title}}</h3>
         <md-content class="md-padding">
             <form name="personEditForm"
-                          data-ng-model="vm.person">
-                <div data-ng-include="'elements/humanName/humanName.html'"></div>
+                          ng-model="vm.person">
+                <div ng-include="'elements/humanName/humanName.html'"></div>
 
-                <md-radio-group data-ng-model="vm.person.gender" layout="row">
+                <md-radio-group ng-model="vm.person.gender" layout="row">
                     <md-radio-button value="female" aria-label="female">Female</md-radio-button>
                     <md-radio-button value="male" aria-label="male">Male</md-radio-button>
                     <md-radio-button value="other" aria-label="other">Other</md-radio-button>
@@ -14,43 +14,38 @@
                 </md-radio-group>
 
                 <label for="birthDate">Birth date</label>
-                <input type="date" data-ng-model="vm.person.birthDate" id="birthDate"/>
+                <input type="date" ng-model="vm.person.birthDate" id="birthDate"/>
 
-                <div data-ng-include="'elements/attachment/attachment.html'"></div>
+                <div ng-include="'elements/attachment/attachment.html'"></div>
                 <md-input-container>
                     <label>Managing Organization</label>
                     <input
                             type="text"
-                            id="organization-partOf"
                             typeahead="item as item.display for item in vm.getOrganizationReference($viewValue) | filter:$viewValue"
                             typeahead-loading="vm.loadingOrganizations"
                             typeahead-wait-ms="300"
                             typeahead-editable="false"
                             typeahead-min-length="5"
-                            data-ng-model="vm.person.managingOrganization">
+                            ng-model="vm.person.managingOrganization">
                 </md-input-container>
-                <div data-ng-show="vm.person.managingOrganization.reference">
+                <div ng-show="vm.person.managingOrganization.reference">
                     <a href="{{vm.person.managingOrganization.reference}}"
                        target="_blank">Referenced Organization:
                         {{vm.person.managingOrganization.display || "Name Not Specified" }}</a>
                 </div>
 
-                <div data-ng-include="'elements/address/address.html'"></div>
+                <div ng-include="'elements/address/address.html'"></div>
 
-                <div data-ng-include="'elements/contactPoint/contactPoint.html'"></div>
+                <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
 
-                <div data-ng-include="'elements/identifier/identifier.html'"></div>
+                <div ng-include="'elements/identifier/identifier.html'"></div>
 
                 <div layout="row" layout-align="space-around center">
-                    <md-button class="md-raised md-primary" data-ng-click="vm.save()" data-ng-disabled="!vm.canSave">
+                    <md-button class="md-raised md-primary" ng-click="vm.save()" ng-disabled="!vm.canSave">
                         Save
                     </md-button>
-                    <div data-ng-if="vm.isEditing">
-                        <md-button class="md-raised md-warn" data-ng-click="vm.delete()">Delete</md-button>
-                    </div>
                 </div>
-
-                <div data-ng-show="vm.isBusy">
+                <div ng-show="vm.isBusy">
                     <footer>
                         <md-progress-linear md-mode="indeterminate"></md-progress-linear>
                     </footer>

@@ -1,6 +1,30 @@
 <md-dialog>
     <md-content>
-        <pre>{{data}}</pre>
+        <h3>{{valueSet.name}}</h3>
+
+        <p>{{valueSet.description}}</p>
+
+        <pre>{{valueSet.selectedCode | json }}</pre>
+        <div ng-if="options">
+            <label>Available concepts</label>
+            <select ng-model="valueSet.selectedCode" ng-options="(coding.display || coding.code) for coding in options"
+                    ng-change="selectionChanged()"></select>
+        </div>
+
+        <div ng-if="(options===undefined)">
+            <md-input-container>
+                <label>Type-ahead search</label>
+                <input type="search"
+                       width="250"
+                       typeahead="item as item.display for item in expandValueSet($viewValue) | limitTo:10"
+                       typeahead-loading="fetchingExpansion"
+                       typeahead-wait-ms="300"
+                       typeahead-editable="false"
+                       typeahead-min-length="2"
+                       ng-model="valueSet.selectedCode">
+            </md-input-container>
+        </div>
+        <md-progress-linear ng-if="fetchingExpansion" md-mode="indeterminate"></md-progress-linear>
         <div class="md-actions">
             <md-button ng-click="closeDialog()">
                 Close

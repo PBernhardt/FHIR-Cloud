@@ -3,7 +3,7 @@
 
     var controllerId = 'personSearch';
 
-    function personSearch($location, $mdSidenav, common, config, fhirServers, personService) {
+    function personSearch($location, $mdBottomSheet, common, config, fhirServers, personService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -79,13 +79,38 @@
             }
         }
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
         function toggleSpinner(on) {
             vm.isBusy = on;
+        }
+
+        function personSearchActionsMenu($event) {
+            var menuItems = [
+                {name: 'Add', icon: 'img/add184.svg'},
+                {name: 'Search', icon: 'img/search100.svg'},
+                {name: 'Clear', icon: 'img/clear5.svg'}
+            ];
+            $mdBottomSheet.show({
+                locals: {items: menuItems},
+                templateUrl: 'templates/bottomSheet.html',
+                controller: 'bottomSheetController',
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.name) {
+                    case 'Add':
+                        $location.path('/person/edit/new');
+                        break;
+                    case 'Search':
+                        logInfo('TODO: implement Locate');
+                        break;
+                    case 'Clear':
+                        personService.clearCache();
+                        vm.searchText = '';
+                        vm.persons = [];
+                        vm.paging = null;
+                        $location.path('/person');
+                        logInfo('Search results cache cleared');
+                }
+            });
         }
 
         vm.activeServer = null;
@@ -102,11 +127,11 @@
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'Person';
-        vm.toggleSideNav = toggleSideNav;
+        vm.personSearchActionsMenu = personSearchActionsMenu;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'personService', personSearch]);
+        ['$location', '$mdBottomSheet', 'common', 'config', 'fhirServers', 'personService', personSearch]);
 })();

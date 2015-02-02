@@ -145,6 +145,7 @@ module.exports = function (grunt) {
                     'app/profile/profile.service.js',
                     'app/templates/bottomSheet.controller.js',
                     'app/templates/rawData.controller.js',
+                    'app/templates/valueSet-popup.controller.js',
                     'app/valueSet/valueSet.detail.controller.js',
                     'app/valueSet/valueSet.search.controller.js',
                     'app/valueSet/valueSet.service.js'

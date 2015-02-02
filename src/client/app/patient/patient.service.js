@@ -6,6 +6,8 @@
     function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localPatients';
         var itemCacheKey = 'contextPatient';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
 
         function addPatient(resource) {
@@ -40,6 +42,7 @@
                 }
                 deferred.resolve();
             }
+
             var deferred = $q.defer();
             deletePatient(resourceId)
                 .then(getCachedSearchResults,
@@ -72,10 +75,10 @@
             fhirClient.getResource(resourceId + '/$everything')
                 .then(function (results) {
                     var everything = {"patient": null, "summary": [], "history": []};
-                    everything.history = _.remove(results.data.entry, function(item) {
-                       return (item.resource.resourceType === 'SecurityEvent');
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'SecurityEvent');
                     });
-                    everything.patient = _.remove(results.data.entry, function(item) {
+                    everything.patient = _.remove(results.data.entry, function (item) {
                         return (item.resource.resourceType === 'Patient');
                     })[0];
                     everything.summary = results.data.entry;
@@ -229,7 +232,7 @@
                 "address": [],
                 "photo": [],
                 "communication": [],
-                "managingpatient": null,
+                "managingOrganization": null,
                 "contact": [],
                 "link": [],
                 "active": true
@@ -254,10 +257,9 @@
 
         function seedRandomPatients(resourceId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=25')
+            $http.get('http://api.randomuser.me/?results=100')
                 .success(function (data) {
-                    var count = 0;
-                    angular.forEach(data.results, function(result) {
+                     angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
@@ -287,17 +289,35 @@
                             }],
                             "photo": [{"url": user.picture.large}],
                             "identifier": [
-                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
-                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "official",
+                                    "label": "Social Security Number",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "label": organizationName + " master Id",
+                                    "assigner": {"reference": resourceId, "display": organizationName}
+                                }
                             ],
-                            "managingOrganization": { "reference": resourceId, "display": organizationName },
+                            "managingOrganization": {"reference": resourceId, "display": organizationName},
                             "link": [],
                             "active": true
                         };
-                        $timeout(addPatient(resource).then(count = count + 1), 2000);
-
+                        var timer = $timeout(function () {}, 3000);
+                        timer.then(function () {
+                            addPatient(resource).then(function (results) {
+                                logInfo("Created patient " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create patient " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
                     });
-                    deferred.resolve(count + ' patients created for ' + organizationName);
+                    deferred.resolve();
                 })
                 .error(function (error) {
                     deferred.reject(error);

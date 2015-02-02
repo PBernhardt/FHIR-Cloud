@@ -145,10 +145,25 @@
         }
 
         //TODO: waiting for server implementers to add support for _summary
-        function getValueSets(baseUrl, nameFilter) {
+        function getValueSets(baseUrl, nameFilter, identifier) {
             var deferred = $q.defer();
+            var params = '';
 
-            fhirClient.getResource(baseUrl + '/ValueSet?name=' + nameFilter + '&_count=20')
+            if (angular.isUndefined(nameFilter) && angular.isUndefined(identifier)) {
+                deferred.reject('Invalid search input');
+            }
+            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
+                params = 'name=' + nameFilter;
+            }
+            if (angular.isDefined(identifier)) {
+                var identifierParam = 'identifier=' + identifier;
+                if (params.length > 1) {
+                    params = params + '&' + identifierParam;
+                } else {
+                    params = identifierParam;
+                }
+            }
+            fhirClient.getResource(baseUrl + '/ValueSet?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -192,16 +207,23 @@
             var data = {};
             data.resource = {
                 "resourceType": "ValueSet",
-                "identifier": [],
-                "type": {"coding": []},
-                "telecom": [],
-                "contact": [],
-                "address": [],
-                "partOf": null,
-                "location": [],
                 "active": true
             };
             return data;
+        }
+
+        // http://fhir-dev.healthintersections.com.au/open/ValueSet/$expand?identifier=http://hl7.org/fhir/vs/condition-code&filter=xxx
+        function getFilteredExpansion(baseUrl, id, filter) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/ValueSet/' + id + '/$expand?filter=' + filter + '&_count=10')
+                .then(function (results) {
+                    if (results.data && results.data.expansion && angular.isArray(results.data.expansion.contains)) {
+                        deferred.resolve(results.data.expansion.contains);
+                    } else {
+                        deferred.reject("Response did not include expected expansion");
+                    }
+                });
+            return deferred.promise;
         }
 
         function updateValueSet(resourceVersionId, resource) {
@@ -220,21 +242,6 @@
         }
 
         function _prepArrays(resource) {
-            if (resource.address.length === 0) {
-                resource.address = null;
-            }
-            if (resource.identifier.length === 0) {
-                resource.identifier = null;
-            }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
-            if (resource.telecom.length === 0) {
-                resource.telecom = null;
-            }
-            if (resource.location.length === 0) {
-                resource.location = null;
-            }
             return $q.when(resource);
         }
 
@@ -257,6 +264,7 @@
             clearCache: clearCache,
             deleteCachedValueSet: deleteCachedValueSet,
             deleteValueSet: deleteValueSet,
+            getFilteredExpansion: getFilteredExpansion,
             getCachedValueSet: getCachedValueSet,
             getCachedSearchResults: getCachedSearchResults,
             getValueSet: getValueSet,

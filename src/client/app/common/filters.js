@@ -3,6 +3,17 @@
 
     var app = angular.module('FHIRCloud');
 
+    app.filter('lastUrlPart', function () {
+        return function (input) {
+            var urlParts = input.split("/");
+            if (angular.isArray(urlParts)) {
+                return urlParts[urlParts.length - 1];
+            } else {
+                return input;
+            }
+        };
+    });
+
     app.filter('codeableConcept', function () {
         return function (codeableConcept) {
             if (angular.isUndefined(codeableConcept)) {

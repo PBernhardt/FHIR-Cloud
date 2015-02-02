@@ -3,14 +3,15 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($location, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService) {
+    function organizationDetail($location, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
-        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logSuccess = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var $q = common.$q;
+        var noToast = false;
 
         function cancel() {
 
@@ -195,7 +196,18 @@
             logSuccess("Creating random patients for " + vm.organization.resourceId);
             patientService.seedRandomPatients(vm.organization.resourceId, vm.organization.name).then(
                 function (result) {
-                    logSuccess(result);
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError(error);
+                });
+        }
+
+        function createRandomPersons(event) {
+            vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
+            logSuccess("Creating random patients for " + vm.organization.resourceId);
+            personService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
                 }, function (error) {
                     logError(error);
                 });
@@ -220,11 +232,12 @@
         vm.title = 'organizationDetail';
         vm.toggleSideNav = toggleSideNav;
         vm.createRandomPatients = createRandomPatients;
+        vm.createRandomPersons = createRandomPersons;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', organizationDetail]);
+        ['$location', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
 
 })();

@@ -111,8 +111,7 @@
             {name: 'Organization', href: 'organization'},
             {name: 'Patient', href: 'patient'},
             {name: 'Practitioner', href: 'practitioner'},
-            {name: 'Person', href: 'person'},
-            {name: 'Healthcare Service', href: 'healthcareService'}
+            {name: 'Person', href: 'person'}
         ];
 
         var _conformancePages = [

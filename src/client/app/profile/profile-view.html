@@ -84,20 +84,23 @@
                         </thead>
                         <tbody>
                         <tr ng-repeat="diff in vm.profile.differential.element">
-                            <td>{{diff.path}} <i ng-if="snap.name">({{diff.name}})</i>
+                            <td>{{diff.path}} <i ng-if="diff.name">({{diff.name}})</i>
                             </td>
                             <td>
                                 <div ng-repeat="c in diff.type">
                                     <md-button ng-if="c.code==='Extension'" md-no-ink
-                                               ng-click="vm.viewExtensionDefinition(c.profile, $event)">Extension
+                                               ng-click="vm.viewExtensionDefinition(c.profile, $event)">{{ c.profile | lastUrlPart }}
                                     </md-button>
-                                    <p ng-if="c.code!=='Extension'">{{c.code}}</p>
+                                    <md-button ng-if="c.code==='Reference'" md-no-ink
+                                               ng-click="vm.viewProfileDetail(c.profile, $event)">{{ c.profile | lastUrlPart }}
+                                    </md-button>
+                                    <p ng-if="c.code!=='Extension' && c.code!=='Reference'">{{c.code}}</p>
                                 </div>
                             </td>
                             <td>
                                 <md-button ng-if="diff.binding" md-no-ink
                                            ng-click="vm.viewBoundValueSet(diff.binding.referenceReference.reference, $event)">
-                                    {{diff.binding.name | truncate: 10}}
+                                    {{ diff.binding.name | lastUrlPart }}
                                 </md-button>
                             </td>
                         </tr>
