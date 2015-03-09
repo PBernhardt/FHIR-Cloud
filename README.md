@@ -1,13 +1,5 @@
 # FHIR Cloud
 
-Another client and server reference implementation of Fast Healthcare Interoperability Resources (FHIR).
-
-## The Server
-
-To do. ;)
-
-## The Client
-
 An AngularJS application for getting started with Fast Healthcare Interoperability Resources (FHIR). Includes helpful unit testing tools, Protractor integration and coverage testing.
 
 ## Installation

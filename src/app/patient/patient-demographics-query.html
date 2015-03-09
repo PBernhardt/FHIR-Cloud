@@ -1,0 +1,33 @@
+﻿<div ng-controller="patientSearch as vm" layout="row" layout-wrap>
+    <div flex="100">
+        <h3>Find a Patient by Demographics</h3>
+    </div>
+    <div layout="column" layout-align="space-between start">
+        <md-input-container>
+            <label>First Name</label>
+            <input data-ng-model="vm.patient.firstName">
+        </md-input-container>
+        <md-input-container>
+            <label>Last Name</label>
+            <input data-ng-model="vm.patient.lastName">
+        </md-input-container>
+        <md-input-container>
+            <label>Birth date</label>
+            <input data-ng-model="vm.patient.dob" type="date">
+        </md-input-container>
+        <md-input-container>
+            <label>Gender</label>
+            <input data-ng-model="vm.patient.gender">
+        </md-input-container>
+        <md-input-container>
+            <label>Postal code</label>
+            <input data-ng-model="vm.patient.postalCode">
+        </md-input-container>
+
+    </div>
+    <div flex="20">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+</div>

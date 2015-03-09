@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>FHIR Cloud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="lib/angular-material/angular-material.css">
+
+    <link rel="stylesheet" href="assets/app.css"/>
+    <link rel="stylesheet" href="lib/angular/angular-csp.css">
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
+</head>
+
+<body ng-app="FHIRCloud" layout="column" ng-controller="MainCtrl">
+
+<md-toolbar layout="row" class="fill-height">
+    <md-button class="menu" hide-gt-sm ng-click="toggleMenu()" aria-label="Show Menu">
+        <md-icon md-svg-src="menu"></md-icon>
+    </md-button>
+    <h1 hide-sm>FHIR Cloud</h1>
+    <md-button class="menu" ng-click="authenticate()" aria-label="Account">
+        <md-icon md-svg-src="account"></md-icon>
+    </md-button>
+    <md-button class="menu" ng-click="toggleServers()" aria-label="FHIR Servers">
+        <md-icon md-svg-src="fire"></md-icon>
+    </md-button>
+    <md-button class="menu" ng-click="showAbout()" hide-sm aria-label="About">
+        <md-icon md-svg-src="caduceus"></md-icon>
+    </md-button>
+</md-toolbar>
+
+<div flex layout="row">
+
+    <md-sidenav layout="column" class="md-whiteframe-z2" md-component-id="left" md-is-locked-open="$mdMedia('gt-sm')"
+                tabindex="-1">
+        <md-content>
+            <div ng-repeat="section in menu.sections">
+                <md-button class="menu-item menu-title md-menu-item" aria-label="section.name"
+                           ng-click="toggleSelectSection(section)"><span ng-bind="section.name"></span>
+                </md-button>
+                <div data-ng-repeat="page in section.pages">
+                    <a class="menu-item menu-sub-item md-menu-item"
+                       ng-show="isSectionSelected(section)"
+                       ng-click="pageSelected(page)"><span ng-bind="page.name"></span></a>
+                </div>
+            </div>
+        </md-content>
+    </md-sidenav>
+
+    <md-content flex id="content">
+        <div ng-view></div>
+
+
+        <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right" tabindex="-1">
+            <md-toolbar class="md-theme-light">
+                <h1 class="md-toolbar-tools">FHIR Servers</h1>
+            </md-toolbar>
+            <md-content>
+                <md-list>
+                    <md-item ng-repeat="s in FHIRServers">
+                        <md-button ng-click="selectServer(s)" ng-class="{'selected' : s === s.selected }">
+                            {{s.name}}
+                        </md-button>
+                    </md-item>
+                </md-list>
+        </md-sidenav>
+    </md-content>
+</div>
+
+<script src="lib/jquery/dist/jquery.min.js"></script>
+<script src="lib/angular/angular.js"></script>
+<script src="lib/angular-animate/angular-animate.min.js"></script>
+<script src="lib/angular-aria/angular-aria.min.js"></script>
+<script src="lib/angular-material/angular-material.min.js"></script>
+<script src="lib/angular-route/angular-route.min.js"></script>
+<script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
+<script src="lib/angular-messages/angular-messages.min.js"></script>
+<script src="lib/angular-cookies/angular-cookies.min.js"></script>
+<script src="lib/moment/min/moment.min.js"></script>
+<script src="lib/lodash/dist/lodash.min.js"></script>
+<script src="lib/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+<script src="lib/adal-angular/lib/adal.js"></script>
+<script src="lib/adal-angular/lib/adal-angular.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

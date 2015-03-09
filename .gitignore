@@ -22,10 +22,11 @@ build/Release
 # Dependency directory
 # Commenting this out is preferred by some people, see
 # https://npmjs.org/doc/faq.html#Should-I-check-my-node_modules-folder-into-git
-src/client/node_modules
-src/client/projectFilesBackup
-src/client/app/lib
-src/client/coverage
+src/node_modules
+src/projectFilesBackup
+src/app/lib
+src/app/img
+src/coverage
 
 # Users Environment Variables
 .lock-wscript

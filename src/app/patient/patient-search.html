@@ -1,0 +1,22 @@
+﻿<div ng-controller="patientSearch as vm" layout="row" layout-wrap>
+        <div flex="80">
+            <h3>Find a Patient</h3>
+            <md-autocomplete
+                    md-selected-item-change="vm.goToPatient(vm.selectedPatient)"
+                    md-selected-item="vm.selectedPatient"
+                    md-search-text="vm.searchText"
+                    md-items="patient in vm.querySearch(vm.searchText)"
+                    md-delay="200"
+                    md-min-length="3"
+                    placeholder="Search by patient name">
+              <span md-highlight-text="vm.searchText">{{patient.resource.name | fullName}}</span>
+            </md-autocomplete>
+        </div>
+        <div flex="20">
+            <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+                <md-icon md-svg-icon="actions"></md-icon>
+            </md-button>
+        </div>
+</div>
+
+

@@ -1,0 +1,191 @@
+<div data-ng-controller="patientDetail as vm" layout="row" layout-wrap>
+    <div flex="25" hide-sm>
+        <img data-fs-img-person="vm.patient.photo[0]" class="largeFace"/>
+    </div>
+    <div flex="65" layout="row" layout-align="start center">
+        <h3>{{ vm.patient.name | fullName }}</h3>
+    </div>
+    <div flex="10">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100">
+
+        <md-tabs md-selected="selectedIndex">
+            <md-tab label="Administration Detail">
+                <md-content class="demo-container">
+                    <table class="table table-striped table-hover">
+                        <tr>
+                            <td>Resource Id</td>
+                            <td>
+                                {{vm.patient.resourceId}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Name</td>
+                            <td>{{vm.patient.name | fullName }}</td>
+                        </tr>
+                        <tr>
+                            <td>Date of Birth</td>
+                            <td>
+                                <div data-ng-show="vm.patient.birthDate">
+                                    {{vm.patient.birthDate | date: longDate}}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Gender</td>
+                            <td>
+                                {{vm.patient.gender}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Addresses</td>
+                            <td>
+                                <p class="small" data-ng-repeat="a in vm.patient.address">
+                                    <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Telecommunication</td>
+                            <td>
+                                <p class="small" data-ng-repeat="t in vm.patient.telecom">
+                                    <strong>{{t.use}} {{t.system}}</strong>: {{t.value}}
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Contact</td>
+                            <td>
+                                <p class="small" data-ng-repeat="c in vm.patient.contact">
+                                    {{c.name.given.join(' ')}} {{c.name.family.join(' ')}}
+                                    ({{c.relationship.text || "relationship unspecified"}})
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Links</td>
+                            <td>
+                                <div data-ng-repeat="l in vm.patient.link">
+                                    <a href="{{l.other.reference}}">{{l.other.type || "Link Type Unspecified"}}</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Languages</td>
+                            <td>
+                                <p class="small" data-ng-repeat="l in vm.patient.communication">
+                                    {{l | codeableConcept}}<br/>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Marital Status</td>
+                            <td>
+                                {{vm.patient.maritalStatus | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Multiple Birth</td>
+                            <td>
+                                {{vm.patient.multipleBirthInteger || vm.patient.multipleBirthBoolean}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Deceased</td>
+                            <td>
+                                {{vm.patient.deceasedDateTime || vm.patient.deceasedBoolean}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Managing Organization</td>
+                            <td>
+                                <a href="{{vm.patient.managingOrganization.reference}}">{{vm.patient.managingOrganization.display}}</a>
+                            </td>
+                        </tr>
+                        <tr data-ng-show="vm.patient.identifier">
+                            <td>Identifiers</td>
+                            <td>
+                                <table class="table table-striped table-hover small">
+                                    <thead>
+                                    <tr>
+                                        <th>System</th>
+                                        <th>Value</th>
+                                        <th>Label</th>
+                                        <th>Use</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr data-ng-repeat="id in vm.patient.identifier">
+                                        <td>{{id.system}}</td>
+                                        <td>{{id.value}}</td>
+                                        <td>{{id.label}}</td>
+                                        <td>{{id.use}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Active</td>
+                            <td>
+                                <i data-fs-true-check="vm.patient.active"></i>
+                            </td>
+                        </tr>
+                    </table>
+                </md-content>
+            </md-tab>
+            <md-tab label="Clinical Summary">
+                <md-list>
+                    <md-item ng-repeat="item in vm.summary">
+                        <md-item-content md-is-locked-open="true">
+                            <div class="md-tile-left">
+                                <md-button layout-align="start start"
+                                           ng-click="vm.showClinicalData($index, $event)"
+                                           aria-label="{{item.resource.id}}">
+                                    <md-icon md-svg-src="view"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <div ng-hide="item.resource.code && item.resource.code.text">
+                                    <h4>{{ item.resource.resourceType }}</h4>
+                                </div>
+                                <div ng-show="item.resource.code && item.resource.code.text">
+                                    <h4>{{ item.resource.code.text }}</h4>
+                                </div>
+                                <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
+                                </div>
+                                <div ng-show="item.resource.emptyReason.text">
+                                    <p> {{ item.resource.emptyReason.text }}</p>
+                                </div>
+                            </div>
+                        </md-item-content>
+                    </md-item>
+                </md-list>
+            </md-tab>
+            <md-tab label="Audit History">
+                <md-list>
+                    <md-item ng-repeat="ev in vm.history">
+                        <md-item-content>
+                            <div class="md-tile-left">
+                                <md-button
+                                        ng-click="vm.showAuditData($index, $event)"
+                                        aria-label="{{ev.resource.id}}">
+                                    <md-icon md-svg-src="view"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <h3>{{ev.resource.event.dateTime | date: 'medium'}}</h3>
+                                <h4>{{ev.resource.event.subtype[0].coding[0].display}}</h4>
+
+                                <p data-ng-repeat="p in ev.resource.participant">{{p.name}}
+                            </div>
+                        </md-item-content>
+                    </md-item>
+                </md-list>
+            </md-tab>
+        </md-tabs>
+    </div>
+</div>
