@@ -6392,7 +6392,7 @@
             var deferred = $q.defer();
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
                     logError('Error getting patients', error, noToast);
@@ -6419,7 +6419,7 @@
                         $location.path('/patient/patient-demographics');
                         break;
                     case 2:
-                        $location.path('/patient/patient-race-query');
+                        $location.path('/patient/patient-race');
                         break;
                     case 3:
                         $location.path('/patient');

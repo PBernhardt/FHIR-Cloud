@@ -100,11 +100,6 @@ md-sidenav md-list {
 }
 
 /* Primary content area */
-
-#content {
-    overflow: hidden;
-}
-
 #content  {
     padding-left: 40px;
     padding-right: 40px;

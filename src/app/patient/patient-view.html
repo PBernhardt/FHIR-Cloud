@@ -11,7 +11,6 @@
         </md-button>
     </div>
     <div flex="100">
-
         <md-tabs md-selected="selectedIndex">
             <md-tab label="Administration Detail">
                 <md-content class="demo-container">
@@ -162,6 +161,7 @@
                                 </div>
                             </div>
                         </md-item-content>
+                        <md-divider ng-if="!$last"></md-divider>
                     </md-item>
                 </md-list>
             </md-tab>
@@ -183,6 +183,7 @@
                                 <p data-ng-repeat="p in ev.resource.participant">{{p.name}}
                             </div>
                         </md-item-content>
+                        <md-divider ng-if="!$last"></md-divider>
                     </md-item>
                 </md-list>
             </md-tab>
