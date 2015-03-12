@@ -7,6 +7,11 @@ html, body {
     overflow-y: hidden;
 }
 
+p.result {
+    font-size: 0.8em;
+    color: #777;
+}
+
 .hidden-thing {
     position: absolute;
     left: 100%;

@@ -1,0 +1,112 @@
+﻿<div ng-controller="patientSearch as vm" layout="column" layout-wrap>
+    <div flex="100">
+        <h3>Detailed Search Options</h3>
+    </div>
+    <md-content class="md-padding">
+        <form name="patientSearch">
+            <div layout layout-sm="column">
+                <md-input-container flex>
+                    <label>First Name</label>
+                    <input ng-model="vm.patient.firstName">
+                </md-input-container>
+                <md-input-container flex>
+                    <label>Last Name</label>
+                    <input ng-model="vm.patient.lastName">
+                </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex>
+                    <label>Identifier system</label>
+                    <input ng-model="vm.patient.idSystem" placeholder="Should be a valid URI">
+                </md-input-container>
+                <md-input-container flex>
+                    <label>Identifier value</label>
+                    <input ng-model="vm.patient.idValue">
+                </md-input-container>
+            </div>
+
+            <div layout layout-sm="column">
+                <md-input-container flex>
+                    <label>City</label>
+                    <input ng-model="vm.patient.city">
+                </md-input-container>
+                <md-input-container flex>
+                    <label>State</label>
+                    <input ng-model="vm.patient.state">
+                </md-input-container>
+
+                <md-input-container flex>
+                    <label>Postal code</label>
+                    <input ng-model="vm.patient.postalCode">
+                </md-input-container>
+            </div>
+
+
+            <div layout layout-sm="column">
+                <div>
+                    <md-input-container flex>
+                        <label>Birth date</label>
+                        <input ng-model="vm.patient.dob" id="dob" type="date">
+                    </md-input-container>
+                </div>
+                <div flex>
+                    <span>Starting age</span>
+
+                    <md-slider flex class="md-primary" md-discrete step="10" min="0" max="80" ng-model="vm.patient.ageStart" aria-label="Starting age"
+                               id="age-start">
+                    </md-slider>
+                 </div>
+                <div flex>
+                    <span>Ending age</span>
+                    <md-slider md-discrete step="10" min="10" max="100" ng-model="vm.patient.ageEnd" aria-label="Ending age" id="age-end">
+                    </md-slider>
+                </div>
+            </div>
+
+            <div layout layout-sm="column" layout-align="space-between center">
+                <div>
+                    <md-select ng-model="vm.patient.gender">
+                        <md-option value="female">Female</md-option>
+                        <md-option value="male">Male</md-option>
+                        <md-option value="other">Other</md-option>
+                        <md-option value="unknown">Unknown</md-option>
+                    </md-select>
+                    <p class="result">Gender</p>
+                </div>
+                <div>
+                    <md-select ng-model="vm.patient.race" md-on-open="vm.loadRaces()">
+                        <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
+                    </md-select>
+                    <p class="result">Race</p>
+                </div>
+
+                <div>
+                    <md-select ng-model="vm.patient.ethnicity" md-on-open="vm.loadEthnicities()"
+                               style="min-width: 200px;">
+                        <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
+                            <md-option ng-value="main">{{main.display}}</md-option>
+                            <md-optgroup ng-value="group" ng-repeat="group in main.concept">
+                                {{group.display}}
+                                <md-option ng-value="group">{{group.display}}</md-option>
+                                <md-option ng-value="class" ng-repeat="class in group.concept">{{class.display}}
+                                </md-option>
+                            </md-optgroup>
+                        </md-optgroup>
+                    </md-select>
+                    <p class="result">Ethnicity</p>
+                </div>
+            </div>
+        </form>
+        <md-button tooltip="Go!" ng-click="vm.detailSearch()">
+            <md-icon md-svg-icon="search" alt="Search"></md-icon>
+        </md-button>
+        <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+    </md-content>
+
+    <div flex="20">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+</div>

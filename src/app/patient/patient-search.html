@@ -8,7 +8,7 @@
                     md-items="patient in vm.querySearch(vm.searchText)"
                     md-delay="200"
                     md-min-length="3"
-                    placeholder="Search by patient name">
+                    placeholder="What patient are you looking for?">
               <span md-highlight-text="vm.searchText">{{patient.resource.name | fullName}}</span>
             </md-autocomplete>
         </div>

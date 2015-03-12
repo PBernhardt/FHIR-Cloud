@@ -3,7 +3,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, $routeParams, common, config, fhirServers, patientService) {
+    function patientSearch($location, $mdBottomSheet, $routeParams, common, config, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -52,6 +52,18 @@
             }
         }
 
+        function loadEthnicities() {
+            return vm.ethnicities = localValueSets.ethnicity().concept;
+        }
+
+        function loadRaces() {
+            return vm.races = localValueSets.race().concept;
+        }
+
+        function detailSearch() {
+            vm.isBusy = (!vm.isBusy);
+        }
+
         function querySearch(searchText) {
             var deferred = $q.defer();
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
@@ -80,12 +92,9 @@
                         $location.path('/patient/edit/new');
                         break;
                     case 1:
-                        $location.path('/patient/patient-demographics');
+                        $location.path('/patient/patient-detailed-search');
                         break;
                     case 2:
-                        $location.path('/patient/patient-race');
-                        break;
-                    case 3:
                         $location.path('/patient');
                         break;
                 }
@@ -97,9 +106,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Add new patient', icon: 'add', index: 0},
-                    {name: 'Find by Demographics', icon: 'group', index: 1},
-                    {name: 'Find by Race or Ethnicity', icon: 'group', index: 2},
-                    {name: 'Find by Name', icon: 'group', index: 3}
+                    {name: 'Detailed Search Options', icon: 'group', index: 1},
+                    {name: 'Find by Name', icon: 'group', index: 2}
                 ];
                 this.title = 'Patient search options';
                 this.performAction = function (action) {
@@ -129,10 +137,16 @@
             telephone: ''
         };
         vm.actions = actions;
+        vm.races = [];
+        vm.loadRaces = loadRaces;
+        vm.ethnicities = [];
+        vm.loadEthnicities = loadEthnicities;
+        vm.detailSearch = detailSearch;
+        vm.isBusy = false;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'config', 'fhirServers', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'config', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
 })();

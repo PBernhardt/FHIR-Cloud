@@ -67,8 +67,8 @@
                 templateUrl: 'patient/patient-view.html'
             }).when('/patient/edit/:hashKey', {
                 templateUrl: 'patient/patient-edit.html'
-            }).when('/patient/patient-demographics', {
-                templateUrl: 'patient/patient-demographics-query.html'
+            }).when('/patient/patient-detailed-search', {
+                templateUrl: 'patient/patient-detailed-search.html'
             }).when('/patient/patient-race', {
                 templateUrl: 'patient/patient-demographics-query.html'
             }).when('/practitioner', {
