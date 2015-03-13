@@ -24,12 +24,13 @@
                 .icon("actions", "./assets/svg/actions.svg", 24)
                 .icon("account", "./assets/svg/account.svg", 24)
                 .icon("add", "./assets/svg/add.svg", 24)
-                .icon("caduceus", "./assets/svg/caduceus.svg", 24)
+                .icon("cloud", "./assets/svg/cloud.svg", 24)
                 .icon("delete", "./assets/svg/delete.svg", 24)
                 .icon("edit", "./assets/svg/edit.svg", 24)
                 .icon("fire", "./assets/svg/fire.svg", 24)
                 .icon("group", "./assets/svg/group.svg", 24)
                 .icon("menu", "./assets/svg/menu.svg", 24)
+                .icon("openId", "./assets/svg/openId.svg", 24)
                 .icon("organization", "./assets/svg/hospital.svg", 24)
                 .icon("practitioner", "./assets/svg/md.svg", 24)
                 .icon("save", "./assets/svg/save.svg", 24)
@@ -87,6 +88,12 @@
                 templateUrl: 'profile/profile-edit.html'
             }).when('/healthcareService', {
                 templateUrl: 'templates/home.html'
+            }).when('/relatedPerson', {
+                templateUrl: 'relatedPerson/relatedPerson-search.html'
+            }).when('/relatedPerson/view/:hashKey', {
+                templateUrl: 'relatedPerson/relatedPerson-view.html'
+            }).when('/relatedPerson/edit/:hashKey', {
+                templateUrl: 'person/person-edit.html'                
             }).when('/valueSet', {
                 templateUrl: 'valueSet/valueSet-search.html'
             }).when('/valueSet/view/:hashKey', {
@@ -140,7 +147,8 @@
             {name: 'Organization', href: 'organization'},
             {name: 'Patient', href: 'patient'},
             {name: 'Practitioner', href: 'practitioner'},
-            {name: 'Person', href: 'person'}
+            {name: 'Person', href: 'person'},
+            {name: 'Related Person', href: 'relatedPerson'}
         ];
 
         var _conformancePages = [
@@ -9499,6 +9507,751 @@
 
     angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', profileService]);
 
+})();(function () {
+    'use strict';
+
+    var controllerId = 'relatedPersonDetail';
+
+    function relatedPersonDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $window, addressService, common, fhirServers, identifierService, relatedPersonService, contactPointService, attachmentService, humanNameService, organizationService) {
+        /* jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+
+        function cancel() {
+
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        function deleteRelatedperson(relatedPerson) {
+            function executeDelete() {
+                if (relatedPerson && relatedPerson.resourceId && relatedPerson.hashKey) {
+                    relatedPersonService.deleteCachedRelatedperson(relatedPerson.hashKey, relatedPerson.resourceId)
+                        .then(function () {
+                            logInfo("Deleted relatedPerson " + relatedPerson.fullName);
+                            $location.path('/relatedPerson');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            var confirm = $mdDialog.confirm()
+                .title('Delete ' + relatedPerson.fullName + '?')
+                .ariaLabel('delete relatedPerson')
+                .ok('Yes')
+                .cancel('No')
+                .targetEvent(event);
+            $mdDialog.show(confirm).then(executeDelete,
+                function () {
+                    logInfo('You decided to keep ' + relatedPerson.fullName);
+                });
+        }
+
+        function edit(relatedPerson) {
+            if (relatedPerson && relatedPerson.hashKey) {
+                $location.path('/relatedPerson/edit/' + relatedPerson.hashKey);
+            }
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            vm.loadingOrganizations = true;
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    vm.loadingOrganizations = false;
+                    deferred.resolve(data);
+                }, function (error) {
+                    vm.loadingOrganizations = false;
+                    logError(common.unexpectedOutcome(error));
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function getRequestedRelatedperson() {
+            function intitializeRelatedData(data) {
+                vm.relatedPerson = data;
+                attachmentService.init([vm.relatedPerson.photo], 'Photo');
+                humanNameService.init(vm.relatedPerson.name);
+                identifierService.init(vm.relatedPerson.identifier);
+                addressService.init(vm.relatedPerson.address, true);
+                contactPointService.init(vm.relatedPerson.telecom, true, true);
+                vm.relatedPerson.fullName = humanNameService.getFullName();
+            }
+
+            if ($routeParams.hashKey === 'new') {
+                vm.relatedPerson = null;
+                attachmentService.reset();
+                humanNameService.reset();
+                identifierService.reset();
+                addressService.reset();
+                contactPointService.reset();
+                relatedPersonService.seedNewRelatedperson()
+                    .then(intitializeRelatedData)
+                    .then(function () {
+                        vm.title = 'Add New relatedPerson';
+                        vm.isEditing = false;
+                    }, function (error) {
+                        logError(error);
+                    });
+            } else {
+                if ($routeParams.hashKey) {
+                    relatedPersonService.getCachedRelatedperson($routeParams.hashKey)
+                        .then(intitializeRelatedData, function (error) {
+                            logError(error);
+                        });
+                } else if ($routeParams.id) {
+                    var resourceId = vm.activeServer.baseUrl + '/Relatedperson/' + $routeParams.id;
+                    relatedPersonService.getRelatedperson(resourceId)
+                        .then(intitializeRelatedData, function (error) {
+                            logError(error);
+                        });
+                }
+            }
+        }
+
+        function getTitle() {
+            var title = '';
+            if (vm.relatedPerson) {
+                title = vm.title = 'Edit ' + ((vm.relatedPerson && vm.relatedPerson.fullName) || '');
+            } else {
+                title = vm.title = 'Add New relatedPerson';
+            }
+            vm.title = title;
+            return vm.title;
+        }
+
+        function goBack() {
+            $window.history.back();
+        }
+
+        function processResult(results) {
+            var resourceVersionId = results.headers.location || results.headers["content-location"];
+            if (angular.isUndefined(resourceVersionId)) {
+                logWarning("Relatedperson saved, but location is unavailable. CORS not implemented correctly at remote host.", true);
+            } else {
+                vm.relatedPerson.resourceId = common.setResourceId(vm.relatedPerson.resourceId, resourceVersionId);
+                logInfo("Relatedperson saved at " + resourceVersionId, true);
+            }
+            vm.relatedPerson.fullName = vm.relatedPerson.name;
+            vm.isEditing = true;
+            getTitle();
+        }
+
+        function save() {
+            var relatedPerson = relatedPersonService.initializeRelatedperson().resource;
+            relatedPerson.name = humanNameService.mapFromViewModel();
+            relatedPerson.photo = attachmentService.getAll()[0];
+            relatedPerson.address = addressService.mapFromViewModel();
+            relatedPerson.telecom = contactPointService.mapFromViewModel();
+            relatedPerson.identifier = identifierService.getAll();
+            relatedPerson.gender = vm.relatedPerson.gender;
+            relatedPerson.birthDate = vm.relatedPerson.birthDate;
+            relatedPerson.link = vm.relatedPerson.link;
+            relatedPerson.managingOrganization = vm.relatedPerson.managingOrganization;
+            if (vm.isEditing) {
+                relatedPersonService.updateRelatedperson(vm.relatedPerson.resourceId, relatedPerson)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
+            } else {
+                relatedPersonService.addRelatedperson(relatedPerson)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
+            }
+        }
+
+        function relatedPersonActionsMenu($event) {
+            var menuItems = [
+                {name: 'Edit', icon: 'img/account4.svg'},
+                {name: 'Add', icon: 'img/add184.svg'},
+                {name: 'Locate', icon: 'img/share39.svg'},
+                {name: 'Delete', icon: 'img/rubbish.svg'}
+            ];
+            $mdBottomSheet.show({
+                locals: {items: menuItems},
+                templateUrl: 'templates/bottomSheet.html',
+                controller: 'bottomSheetController',
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.name) {
+                    case 'Edit':
+                        $location.path('/relatedPerson/edit/' + vm.relatedPerson.$$hashKey);
+                        break;
+                    case 'Add':
+                        $location.path('/relatedPerson/edit/new');
+                        break;
+                    case 'Locate':
+                        logInfo('TODO: implement Locate');
+                        break;
+                    case 'Delete':
+                        deleteRelatedperson(vm.relatedPerson, $event);
+                }
+            });
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId).then(function () {
+                getRequestedRelatedperson();
+            });
+        }
+
+        vm.activeServer = null;
+        vm.cancel = cancel;
+        vm.activate = activate;
+        vm.contactTypes = undefined;
+        vm.delete = deleteRelatedperson;
+        vm.edit = edit;
+        vm.getOrganizationReference = getOrganizationReference;
+        vm.getTitle = getTitle;
+        vm.goBack = goBack;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.loadingOrganizations = false;
+        vm.relatedPerson = undefined;
+        vm.relatedPersonTypes = undefined;
+        vm.save = save;
+        vm.states = undefined;
+        vm.title = 'Relatedperson Detail';
+        vm.relatedPersonActionsMenu = relatedPersonActionsMenu;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$window', 'addressService', 'common', 'fhirServers', 'identifierService', 'relatedPersonService', 'contactPointService', 'attachmentService', 'humanNameService', 'organizationService', relatedPersonDetail]);
+
+})();(function () {
+    'use strict';
+
+    var controllerId = 'relatedPersonSearch';
+
+    function relatedPersonSearch($location, $mdBottomSheet, common, config, fhirServers, relatedPersonService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var getLogFn = common.logger.getLogFn;
+        var logInfo = getLogFn(controllerId, 'info');
+        var logError = getLogFn(controllerId, 'error');
+        var keyCodes = config.keyCodes;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([_getActiveServer(), _getCachedRelatedpersons()], controllerId)
+                .then(function () {
+
+                }, function (error) {
+                    logError('Error activating controller', error, noToast);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function _getCachedRelatedpersons() {
+            relatedPersonService.getCachedSearchResults()
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' relatedPersons from cache', null, noToast);
+                    return data;
+                }, function (message) {
+                    logInfo(message, null, noToast);
+                })
+                .then(processSearchResults);
+        }
+
+        function goToRelatedperson(relatedPerson) {
+            if (relatedPerson && relatedPerson.$$hashKey) {
+                $location.path('/relatedPerson/view/' + relatedPerson.$$hashKey);
+            }
+        }
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.relatedPersons = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function submit() {
+            if (vm.searchText.length > 0) {
+                toggleSpinner(true);
+                relatedPersonService.getRelatedpersons(vm.activeServer.baseUrl, vm.searchText)
+                    .then(function (data) {
+                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' relatedPersons from ' + vm.activeServer.name);
+                        return data;
+                    }, function (error) {
+                        logError('Error: ' + error);
+                        toggleSpinner(false);
+                    })
+                    .then(processSearchResults)
+                    .then(function () {
+                        toggleSpinner(false);
+                    });
+            }
+        }
+
+        function keyPress($event) {
+            if ($event.keyCode === keyCodes.esc) {
+                vm.searchText = '';
+            }
+        }
+
+        function toggleSpinner(on) {
+            vm.isBusy = on;
+        }
+
+        function relatedPersonSearchActionsMenu($event) {
+            var menuItems = [
+                {name: 'Add', icon: 'img/add184.svg'},
+                {name: 'Search', icon: 'img/search100.svg'},
+                {name: 'Clear', icon: 'img/clear5.svg'}
+            ];
+            $mdBottomSheet.show({
+                locals: {items: menuItems},
+                templateUrl: 'templates/bottomSheet.html',
+                controller: 'bottomSheetController',
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.name) {
+                    case 'Add':
+                        $location.path('/relatedPerson/edit/new');
+                        break;
+                    case 'Search':
+                        logInfo('TODO: implement Locate');
+                        break;
+                    case 'Clear':
+                        relatedPersonService.clearCache();
+                        vm.searchText = '';
+                        vm.relatedPersons = [];
+                        vm.paging = null;
+                        $location.path('/relatedPerson');
+                        logInfo('Search results cache cleared');
+                }
+            });
+        }
+
+        vm.activeServer = null;
+        vm.isBusy = false;
+        vm.keyPress = keyPress;
+        vm.goToRelatedperson = goToRelatedperson;
+        vm.relatedPersons = [];
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.submit = submit;
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'Relatedperson';
+        vm.relatedPersonSearchActionsMenu = relatedPersonSearchActionsMenu;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', 'common', 'config', 'fhirServers', 'relatedPersonService', relatedPersonSearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'relatedPersonService';
+
+    function relatedPersonService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
+        var dataCacheKey = 'localRelatedPersons';
+        var itemCacheKey = 'contextRelatedPerson';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var $q = common.$q;
+
+        function addRelatedperson(resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/relatedPerson";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedRelatedperson(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                if (searchResults && searchResults.entry) {
+                    var cachedRelatedpersons = searchResults.entry;
+                    searchResults.entry = _.remove(cachedRelatedpersons, function (item) {
+                        return item.$$hashKey !== hashKey;
+                    });
+                    searchResults.totalResults = (searchResults.totalResults - 1);
+                    dataCache.addToCache(dataCacheKey, searchResults);
+                }
+                deferred.resolve();
+            }
+
+            var deferred = $q.defer();
+            deleteRelatedperson(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteRelatedperson(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedRelatedperson(hashKey) {
+            function getRelatedperson(searchResults) {
+                var cachedRelatedperson;
+                var cachedRelatedpersons = searchResults.entry;
+                for (var i = 0, len = cachedRelatedpersons.length; i < len; i++) {
+                    if (cachedRelatedpersons[i].$$hashKey === hashKey) {
+                        cachedRelatedperson = cachedRelatedpersons[i].resource;
+                        //TODO: FHIR Change request to make fully-qualified resourceId part of meta data
+                        cachedRelatedperson.resourceId = (searchResults.base + cachedRelatedperson.resourceType + '/' + cachedRelatedperson.id);
+                        cachedRelatedperson.hashKey = hashKey;
+                        break;
+                    }
+                }
+                if (cachedRelatedperson) {
+                    deferred.resolve(cachedRelatedperson);
+                } else {
+                    deferred.reject('Relatedperson not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            getCachedSearchResults()
+                .then(getRelatedperson,
+                function () {
+                    deferred.reject('Relatedperson search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getRelatedperson(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (data) {
+                    dataCache.addToCache(dataCacheKey, data);
+                    deferred.resolve(data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getRelatedpersonContext() {
+            return dataCache.readFromCache(dataCacheKey);
+        }
+
+        function getRelatedpersonReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Relatedperson/?name=' + input + '&_count=20&_summary=true')
+                .then(function (results) {
+                    var Relatedpersons = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'Relatedperson') {
+                                    //  var display = com
+                                    Relatedpersons.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
+                    }
+                    if (Relatedpersons.length === 0) {
+                        Relatedpersons.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(Relatedpersons);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getRelatedpersons(baseUrl, nameFilter, organizationId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(nameFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
+                var names = nameFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:Organization=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Relatedperson?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedNewRelatedperson() {
+            var deferred = $q.defer();
+            $http.get('http://api.randomuser.me')
+                .success(function (data) {
+                    var user = data.results[0].user;
+                    var resource = {
+                        "resourceType": "Relatedperson",
+                        "name": [{
+                            "family": [$filter('titleCase')(user.name.last)],
+                            "given": [$filter('titleCase')(user.name.first)],
+                            "prefix": [$filter('titleCase')(user.name.title)],
+                            "use": "usual"
+                        }],
+                        "gender": user.gender,
+                        "birthDate": new Date(parseInt(user.dob)),
+                        "telecom": [
+                            {"system": "email", "value": user.email, "use": "home"},
+                            {"system": "phone", "value": user.cell, "use": "mobile"},
+                            {"system": "phone", "value": user.phone, "use": "home"}],
+                        "address": [{
+                            "line": [$filter('titleCase')(user.location.street)],
+                            "city": $filter('titleCase')(user.location.city),
+                            "state": $filter('abbreviateState')(user.location.state),
+                            "postalCode": user.location.zip,
+                            "use": "home"
+                        }],
+                        "photo": {"url": user.picture.large},
+                        "identifier": [{"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official"}],
+                        "managingOrganization": null,
+                        "link": [],
+                        "active": true
+                    };
+                    var randomRelatedperson = {"resource": resource};
+                    deferred.resolve(randomRelatedperson.resource);
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function initializeRelatedperson() {
+            var data = {};
+            data.resource = {
+                "resourceType": "Relatedperson",
+                "name": [],
+                "gender": undefined,
+                "birthDate": undefined,
+                "telecom": [],
+                "address": [],
+                "photo": undefined,
+                "identifier": [],
+                "managingOrganization": undefined,
+                "link": [],
+                "active": true
+            };
+            return data;
+        }
+
+        function seedRandomRelatedpersons(resourceId, organizationName) {
+            var deferred = $q.defer();
+            $http.get('http://api.randomuser.me/?results=100')
+                .success(function (data) {
+                    angular.forEach(data.results, function(result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "Relatedperson",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": stringDOB,
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": {"url": user.picture.large},
+                            "identifier": [
+                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
+                                {"system": "urn:oid:2.16.840.1.113883.15.34", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                            ],
+                            "managingOrganization": { "reference": resourceId, "display": organizationName },
+                            "link": [],
+                            "active": true
+                        };
+                        var timer = $timeout(function () {}, 5000);
+                        timer.then(function () {
+                            addRelatedperson(resource).then(function (results) {
+                                logInfo("Created relatedPerson " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create relatedPerson " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
+                    });
+                    deferred.resolve();
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function setRelatedpersonContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updateRelatedperson(resourceVersionId, resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.link.length === 0) {
+                resource.link = null;
+            }
+            return $q.when(resource);
+        }
+
+
+        var service = {
+            addRelatedperson: addRelatedperson,
+            clearCache: clearCache,
+            deleteCachedRelatedperson: deleteCachedRelatedperson,
+            deleteRelatedperson: deleteRelatedperson,
+            getCachedRelatedperson: getCachedRelatedperson,
+            getCachedSearchResults: getCachedSearchResults,
+            getRelatedperson: getRelatedperson,
+            getRelatedpersonContext: getRelatedpersonContext,
+            getRelatedpersonReference: getRelatedpersonReference,
+            getRelatedpersons: getRelatedpersons,
+            initializeRelatedperson: initializeRelatedperson,
+            seedNewRelatedperson: seedNewRelatedperson,
+            seedRandomRelatedpersons: seedRandomRelatedpersons,
+            setRelatedpersonContext: setRelatedpersonContext,
+            updateRelatedperson: updateRelatedperson
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+        relatedPersonService]);
 })();(function () {
     'use strict';
 

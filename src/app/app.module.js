@@ -24,12 +24,13 @@
                 .icon("actions", "./assets/svg/actions.svg", 24)
                 .icon("account", "./assets/svg/account.svg", 24)
                 .icon("add", "./assets/svg/add.svg", 24)
-                .icon("caduceus", "./assets/svg/caduceus.svg", 24)
+                .icon("cloud", "./assets/svg/cloud.svg", 24)
                 .icon("delete", "./assets/svg/delete.svg", 24)
                 .icon("edit", "./assets/svg/edit.svg", 24)
                 .icon("fire", "./assets/svg/fire.svg", 24)
                 .icon("group", "./assets/svg/group.svg", 24)
                 .icon("menu", "./assets/svg/menu.svg", 24)
+                .icon("openId", "./assets/svg/openId.svg", 24)
                 .icon("organization", "./assets/svg/hospital.svg", 24)
                 .icon("practitioner", "./assets/svg/md.svg", 24)
                 .icon("save", "./assets/svg/save.svg", 24)
@@ -87,6 +88,12 @@
                 templateUrl: 'profile/profile-edit.html'
             }).when('/healthcareService', {
                 templateUrl: 'templates/home.html'
+            }).when('/relatedPerson', {
+                templateUrl: 'relatedPerson/relatedPerson-search.html'
+            }).when('/relatedPerson/view/:hashKey', {
+                templateUrl: 'relatedPerson/relatedPerson-view.html'
+            }).when('/relatedPerson/edit/:hashKey', {
+                templateUrl: 'person/person-edit.html'                
             }).when('/valueSet', {
                 templateUrl: 'valueSet/valueSet-search.html'
             }).when('/valueSet/view/:hashKey', {
@@ -140,7 +147,8 @@
             {name: 'Organization', href: 'organization'},
             {name: 'Patient', href: 'patient'},
             {name: 'Practitioner', href: 'practitioner'},
-            {name: 'Person', href: 'person'}
+            {name: 'Person', href: 'person'},
+            {name: 'Related Person', href: 'relatedPerson'}
         ];
 
         var _conformancePages = [
