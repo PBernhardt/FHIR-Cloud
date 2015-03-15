@@ -172,16 +172,33 @@
             return deferred.promise;
         }
 
-        function getPatients(baseUrl, nameFilter, organizationId) {
+        function searchPatients(baseUrl, searchFilter) {
             var deferred = $q.defer();
-            var params = '';
 
-            if (angular.isUndefined(nameFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
 
-            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
-                var names = nameFilter.split(' ');
+            fhirClient.getResource(baseUrl + '/Patient?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getPatients(baseUrl, searchFilter, organizationId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
                 if (names.length === 1) {
                     params = 'name=' + names[0];
                 } else {
@@ -369,7 +386,8 @@
             initializeNewPatient: initializeNewPatient,
             setPatientContext: setPatientContext,
             updatePatient: updatePatient,
-            seedRandomPatients: seedRandomPatients
+            seedRandomPatients: seedRandomPatients,
+            searchPatients: searchPatients
         };
 
         return service;

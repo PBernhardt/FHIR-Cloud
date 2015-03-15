@@ -32,6 +32,7 @@
                 .icon("menu", "./assets/svg/menu.svg", 24)
                 .icon("openId", "./assets/svg/openId.svg", 24)
                 .icon("organization", "./assets/svg/hospital.svg", 24)
+                .icon("person", "./assets/svg/person.svg", 24)
                 .icon("practitioner", "./assets/svg/md.svg", 24)
                 .icon("save", "./assets/svg/save.svg", 24)
                 .icon("search", "./assets/svg/search.svg", 24)
@@ -93,7 +94,7 @@
             }).when('/relatedPerson/view/:hashKey', {
                 templateUrl: 'relatedPerson/relatedPerson-view.html'
             }).when('/relatedPerson/edit/:hashKey', {
-                templateUrl: 'person/person-edit.html'                
+                templateUrl: 'person/person-edit.html'
             }).when('/valueSet', {
                 templateUrl: 'valueSet/valueSet-search.html'
             }).when('/valueSet/view/:hashKey', {
@@ -133,7 +134,7 @@
         }
     );
 
-    app.controller('MainCtrl', function ($scope, $mdDialog, $mdSidenav, $mdToast, $filter, $location, $rootScope,  $window, common, config) {
+    app.controller('MainCtrl', function ($scope, $mdDialog, $mdSidenav, $mdToast, $filter, $location, $rootScope, $window, common, config) {
         /*jshint validthis:true */
         var vm = this;
         var events = config.events;
@@ -184,7 +185,7 @@
             {name: 'List', href: 'daf/list'}
         ];
 
-        $scope.FHIRServers =  [
+        $scope.FHIRServers = [
             {
                 "id": 0,
                 "name": "Health Directions (open)",
@@ -245,12 +246,26 @@
             $mdSidenav('right').toggle();
         };
 
-        $scope.showAbout = function () {
-
+        $scope.showAbout = function (ev) {
+            $mdDialog.show(
+                $mdDialog.alert()
+                    .title('This is an alert title')
+                    .content('You can specify some description text in here.')
+                    .ariaLabel('Password notification')
+                    .ok('Got it!')
+                    .targetEvent(ev)
+            );
         };
 
-        $scope.authenticate = function () {
-
+        $scope.authenticate = function (ev) {
+            $mdDialog.show(
+                $mdDialog.alert()
+                    .title('This is an alert title')
+                    .content('You can specify some description text in here.')
+                    .ariaLabel('Password notification')
+                    .ok('Got it!')
+                    .targetEvent(ev)
+            );
         };
 
         $scope.selectServer = function (fhirServer) {

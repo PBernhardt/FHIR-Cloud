@@ -17,7 +17,7 @@
             common.activateController([getActiveServer()], controllerId)
                 .then(function () {
                     if ($routeParams.orgId !== null) {
-                     //   getOrganizationPatients($routeParams.orgId);
+                        //   getOrganizationPatients($routeParams.orgId);
                     } else {
 
                     }
@@ -60,8 +60,127 @@
             return vm.races = localValueSets.race().concept;
         }
 
+        function loadLanguages() {
+            return vm.languages = localValueSets.iso6391Languages();
+        }
+
         function detailSearch() {
-            vm.isBusy = (!vm.isBusy);
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.patientSearch.name.given) {
+                queryParam.param = "given";
+                queryParam.value = vm.patientSearch.name.given;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.name.family) {
+                queryParam.param = "family";
+                queryParam.value = vm.patientSearch.name.family;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.mothersMaidenName) {
+                queryParam.param = "mothersMaidenName";
+                queryParam.value = vm.patientSearch.mothersMaidenName;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.patientSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.patientSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.patientSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.patientSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.dob) {
+                queryParam.param = "birthDate";
+                queryParam.value = formatString(vm.patientSearch.dob);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.age.start || vm.patientSearch.age.end) {
+                if (vm.patientSearch.age.start === vm.patientSearch.age.end) {
+                    queryParam.param = "age";
+                    queryParam.value = vm.patientSearch.age.start;
+                    queryParams.push(_.clone(queryParam));
+                }
+                else {
+                    queryParam.param = "age";
+                    queryParam.value = ">".concat(vm.patientSearch.age.start === 0 ? vm.patientSearch.age.start : (vm.patientSearch.age.start - 1));
+                    queryParams.push(_.clone(queryParam));
+                    queryParam.value = "<".concat(vm.patientSearch.age.end === 1 ? vm.patientSearch.age.end : (vm.patientSearch.age.end + 1));
+                    queryParams.push(_.clone(queryParam));
+                }
+            }
+            if (vm.patientSearch.identifier.system && vm.patientSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.patientSearch.identifier.system.concat("|", vm.patientSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.telecom) {
+                queryParam.param = "telecom";
+                queryParam.value = vm.patientSearch.telecom;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.gender) {
+                queryParam.param = "gender";
+                queryParam.value = vm.patientSearch.gender;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.race) {
+                queryParam.param = "race";
+                queryParam.value = localValueSets.race().system.concat("|", vm.patientSearch.race.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.language) {
+                queryParam.param = "language";
+                queryParam.value = vm.patientSearch.language.system.concat("|", vm.patientSearch.language.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.patientSearch.ethnicity) {
+                queryParam.param = "ethnicity";
+                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.patientSearch.ethnicity.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", item.value, "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            function formatString(input) {
+                var yyyy = input.getFullYear().toString();
+                var mm = (input.getMonth() + 1).toString();
+                var dd = input.getDate().toString();
+                return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
+            }
+            searchPatients(queryString);
+        }
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            patientService.getPatientsByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
         }
 
         function querySearch(searchText) {
@@ -77,6 +196,50 @@
             return deferred.promise;
         }
 
+        function searchPatients(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            patientService.searchPatients(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error getting patients', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.patients = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function ageRangeChange() {
+            if (vm.patientSearch.age.end === undefined) {
+                vm.patientSearch.age.end = vm.patientSearch.age.start;
+            }
+            if (vm.patientSearch.age.start === undefined) {
+                vm.patientSearch.age.start = vm.patientSearch.age.end;
+            }
+            if (vm.patientSearch.age.start > vm.patientSearch.age.end) {
+                vm.patientSearch.age.end = vm.patientSearch.age.start;
+            }
+        }
+
+        function dobChange() {
+            if (vm.patientSearch.dob !== undefined) {
+                vm.patientSearch.age.end = vm.patientSearch.age.start = undefined;
+            }
+        }
+
         function actions($event) {
             $mdBottomSheet.show({
                 parent: angular.element(document.getElementById('content')),
@@ -86,8 +249,7 @@
                 bindToController: true,
                 targetEvent: $event
             }).then(function (clickedItem) {
-                switch (clickedItem.index)
-                {
+                switch (clickedItem.index) {
                     case 0:
                         $location.path('/patient/edit/new');
                         break;
@@ -106,8 +268,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Add new patient', icon: 'add', index: 0},
-                    {name: 'Detailed Search Options', icon: 'group', index: 1},
-                    {name: 'Find by Name', icon: 'group', index: 2}
+                    {name: 'Detailed search', icon: 'group', index: 1},
+                    {name: 'Quick find', icon: 'person', index: 2}
                 ];
                 this.title = 'Patient search options';
                 this.performAction = function (action) {
@@ -117,6 +279,7 @@
         }
 
         vm.activeServer = null;
+        vm.dereferenceLink = dereferenceLink;
         vm.goToPatient = goToPatient;
         vm.patients = [];
         vm.selectedPatient = null;
@@ -126,24 +289,36 @@
         vm.title = 'Patients';
         vm.managingOrganization = undefined;
         vm.practitioner = undefined;
-        vm.patientDemographicsQuery = {
-            name: '',
-            gender: '',
-            age: null,
-            ethnicity: null,
-            race: null,
-            zipCode: '',
-            streetAddress: '',
-            telephone: ''
-        };
         vm.actions = actions;
         vm.races = [];
         vm.loadRaces = loadRaces;
         vm.ethnicities = [];
         vm.loadEthnicities = loadEthnicities;
+        vm.languages = [];
+        vm.loadLanguages = loadLanguages;
         vm.detailSearch = detailSearch;
         vm.isBusy = false;
-
+        vm.ageRangeChange = ageRangeChange;
+        vm.dobChange = dobChange;
+        vm.patientSearch = {
+            name: {first: undefined, last: undefined},
+            mothersMaidenName: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            telecom: undefined,
+            identifier: {system: undefined, value: undefined},
+            age: {start: undefined, end: undefined},
+            dob: undefined,
+            race: undefined,
+            gender: undefined,
+            ethnicity: undefined,
+            language: undefined
+        };
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.selectedTab = 0;
         activate();
     }
 
