@@ -12,20 +12,19 @@
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
 </head>
 
-<body ng-app="FHIRCloud" layout="column" ng-controller="MainCtrl">
-
+<body ng-app="FHIRCloud" layout="column" ng-controller="mainController as vm">
 <md-toolbar layout="row" class="fill-height">
-    <md-button class="menu" hide-gt-sm ng-click="toggleMenu()" aria-label="Show Menu">
+    <md-button class="menu" hide-gt-sm ng-click="vm.toggleMenu()" aria-label="Show Menu">
         <md-icon md-svg-src="menu"></md-icon>
     </md-button>
     <h1 hide-sm>FHIR Cloud</h1>
-    <md-button class="menu" ng-click="authenticate()" aria-label="Account">
+    <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
         <md-icon md-svg-src="account"></md-icon>
     </md-button>
-    <md-button class="menu" ng-click="toggleServers()" aria-label="FHIR Servers">
+    <md-button class="menu" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
         <md-icon md-svg-src="fire"></md-icon>
     </md-button>
-    <md-button class="menu" ng-click="showAbout()" hide-sm aria-label="About">
+    <md-button class="menu" ng-click="vm.showAbout()" hide-sm aria-label="About">
         <md-icon md-svg-src="cloud"></md-icon>
     </md-button>
 </md-toolbar>
@@ -35,14 +34,14 @@
     <md-sidenav layout="column" class="md-whiteframe-z2" md-component-id="left" md-is-locked-open="$mdMedia('gt-sm')"
                 tabindex="-1">
         <md-content>
-            <div ng-repeat="section in menu.sections">
+            <div ng-repeat="section in vm.menu.sections">
                 <md-button class="menu-item menu-title md-menu-item" aria-label="section.name"
-                           ng-click="toggleSelectSection(section)"><span ng-bind="section.name"></span>
+                           ng-click="vm.toggleSelectSection(section)"><span ng-bind="section.name"></span>
                 </md-button>
                 <div data-ng-repeat="page in section.pages">
                     <a class="menu-item menu-sub-item md-menu-item"
-                       ng-show="isSectionSelected(section)"
-                       ng-click="pageSelected(page)"><span ng-bind="page.name"></span></a>
+                       ng-show="vm.isSectionSelected(section)"
+                       ng-click="vm.pageSelected(page)"><span ng-bind="page.name"></span></a>
                 </div>
             </div>
         </md-content>
@@ -58,8 +57,8 @@
             </md-toolbar>
             <md-content>
                 <md-list>
-                    <md-item ng-repeat="s in FHIRServers">
-                        <md-button ng-click="selectServer(s)" ng-class="{'selected' : s === s.selected }">
+                    <md-item ng-repeat="s in vm.FHIRServers">
+                        <md-button ng-click="vm.selectServer(s)" ng-class="{'selected' : s === s.selected }">
                             {{s.name}}
                         </md-button>
                     </md-item>

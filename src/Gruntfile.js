@@ -103,6 +103,7 @@ module.exports = function (grunt) {
                     'app/common/filters.js',
                     'app/common/localValueSets.service.js',
                     'app/common/logger.service.js',
+                    'app/common/main.controller.js',
                     'app/common/progress.service.js',
                     'app/common/session.service.js',
                     'app/conformance/conformance.detail.controller.js',

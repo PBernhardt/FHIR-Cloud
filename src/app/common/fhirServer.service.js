@@ -9,7 +9,7 @@
         function getActiveServer() {
             var activeServer = dataCache.readFromCache('activeServer');
             if (angular.isUndefined(activeServer)) {
-                activeServer = $cookieStore.get('server');
+                activeServer = $cookieStore.get('activeServer');
             }
             if (angular.isUndefined(activeServer)) {
                 getAllServers()
@@ -22,8 +22,8 @@
         }
 
         function setActiveServer(server) {
-            dataCache.addToCache('server', server);
-            $cookieStore.put('server', server);
+            dataCache.addToCache('activeServer', server);
+            $cookieStore.put('activeServer', server);
         }
 
         function getAllServers() {
@@ -32,40 +32,28 @@
                 var baseList = [
                     {
                         "id": 0,
-                        "name": "Health Directions DSTU2 (open)",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
-                        "secure": false
+                        "name": "Health Directions (open)",
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
                     },
                     {
                         "id": 1,
-                        "name": "Health Directions DSTU2 (closed)",
-                        "baseUrl": "https://fhir-dev.healthintersections.com.au/closed",
-                        "secure": true
+                        "name": "Health Directions",
+                        "baseUrl": "https://fhir-dev.healthintersections.com.au/closed"
                     },
                     {
                         "id": 2,
-                        "name": "SMART on FHIR DSTU2",
-                        "baseUrl": "https://fhir-api-dstu2.smartplatforms.org",
-                        "secure": true
+                        "name": "SMART on FHIR",
+                        "baseUrl": "https://fhir-api-dstu2.smartplatforms.org"
                     },
-                    {
-                        "id": 3,
-                        "name": "Oridashi",
-                        "baseUrl": "http://md.oridashi.com.au",
-                        "secure": false
-                    },
-
                     {
                         "id": 4,
-                        "name": "HAPI DSTU2",
-                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2",
-                        "secure": false
+                        "name": "HAPI",
+                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2"
                     },
                     {
                         "id": 5,
-                        "name": "Aegis DSTU2",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2",
-                        "secure": false
+                        "name": "RelayHealth",
+                        "baseUrl": "http://rhc-fhirservice-dev.cloudapp.net"
                     }
                 ];
                 var servers = dataCache.readFromCache('servers');
