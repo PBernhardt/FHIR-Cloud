@@ -1,4 +1,4 @@
-<div data-ng-controller="patientDetail as vm" layout="row" layout-wrap>
+<div ng-controller="patientDetail as vm" layout="row" layout-wrap>
     <div flex="25" hide-sm>
         <img data-fs-img-person="vm.patient.photo[0]" class="largeFace"/>
     </div>
@@ -28,7 +28,7 @@
                         <tr>
                             <td>Date of Birth</td>
                             <td>
-                                <div data-ng-show="vm.patient.birthDate">
+                                <div ng-show="vm.patient.birthDate">
                                     {{vm.patient.birthDate | date: longDate}}
                                 </div>
                             </td>
@@ -42,7 +42,7 @@
                         <tr>
                             <td>Addresses</td>
                             <td>
-                                <p class="small" data-ng-repeat="a in vm.patient.address">
+                                <p class="small" ng-repeat="a in vm.patient.address">
                                     <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
                                 </p>
                             </td>
@@ -50,7 +50,7 @@
                         <tr>
                             <td>Telecommunication</td>
                             <td>
-                                <p class="small" data-ng-repeat="t in vm.patient.telecom">
+                                <p class="small" ng-repeat="t in vm.patient.telecom">
                                     <strong>{{t.use}} {{t.system}}</strong>: {{t.value}}
                                 </p>
                             </td>
@@ -58,7 +58,7 @@
                         <tr>
                             <td>Contact</td>
                             <td>
-                                <p class="small" data-ng-repeat="c in vm.patient.contact">
+                                <p class="small" ng-repeat="c in vm.patient.contact">
                                     {{c.name.given.join(' ')}} {{c.name.family.join(' ')}}
                                     ({{c.relationship.text || "relationship unspecified"}})
                                 </p>
@@ -67,7 +67,7 @@
                         <tr>
                             <td>Links</td>
                             <td>
-                                <div data-ng-repeat="l in vm.patient.link">
+                                <div ng-repeat="l in vm.patient.link">
                                     <a href="{{l.other.reference}}">{{l.other.type || "Link Type Unspecified"}}</a>
                                 </div>
                             </td>
@@ -75,9 +75,11 @@
                         <tr>
                             <td>Languages</td>
                             <td>
-                                <p class="small" data-ng-repeat="l in vm.patient.communication">
-                                    {{l | codeableConcept}}<br/>
-                                </p>
+                                <div ng-if="vm.patient.communication">
+                                    <p class="small" ng-repeat="l in vm.patient.communication">
+                                        {{l.language | codeableConcept}}<br/>
+                                    </p>
+                                </div>
                             </td>
                         </tr>
                         <tr>
@@ -104,7 +106,7 @@
                                 <a href="{{vm.patient.managingOrganization.reference}}">{{vm.patient.managingOrganization.display}}</a>
                             </td>
                         </tr>
-                        <tr data-ng-show="vm.patient.identifier">
+                        <tr ng-show="vm.patient.identifier">
                             <td>Identifiers</td>
                             <td>
                                 <table class="table table-striped table-hover small">
@@ -117,7 +119,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr data-ng-repeat="id in vm.patient.identifier">
+                                    <tr ng-repeat="id in vm.patient.identifier">
                                         <td>{{id.system}}</td>
                                         <td>{{id.value}}</td>
                                         <td>{{id.label}}</td>
@@ -180,7 +182,7 @@
                                 <h3>{{ev.resource.event.dateTime | date: 'medium'}}</h3>
                                 <h4>{{ev.resource.event.subtype[0].coding[0].display}}</h4>
 
-                                <p data-ng-repeat="p in ev.resource.participant">{{p.name}}
+                                <p ng-repeat="p in ev.resource.participant">{{p.name}}
                             </div>
                         </md-item-content>
                         <md-divider ng-if="!$last"></md-divider>

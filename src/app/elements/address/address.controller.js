@@ -3,41 +3,22 @@
 
     var controllerId = 'address';
 
-    function address(common, config, addressService) {
+    function address(common, addressService) {
         /* jshint validthis:true */
         var vm = this;
-        var keyCodes = config.keyCodes;
         var logError = common.logger.getLogFn(controllerId, 'error');
         var $q = common.$q;
 
         function addToList(form, item) {
             if (form.$valid) {
-                addressService.add(item);
+                addressService.add(_.clone(item));
                 vm.addresses = addressService.getAll();
                 initAddress();
                 form.$setPristine();
             }
         }
 
-        function capture($event, form, item) {
-            if (form.$valid) {
-                if ($event.keyCode === keyCodes.esc) {
-                    initAddress();
-                } else if ($event.keyCode === keyCodes.enter) {
-                    if (vm.mode === 'single') {
-                        addressService.add(item);
-                    } else {
-                        addToList(form, item);
-                    }
-                }
-            }
-        }
-
-        function editListItem(item) {
-            vm.address = item;
-        }
-
-        vm.editListItem = editListItem;
+        vm.addToList = addToList;
 
         function getAddresses() {
             vm.addresses = addressService.getAll();
@@ -45,13 +26,10 @@
 
         function getLocation(input) {
             var deferred = $q.defer();
-            vm.loadingLocations = true;
             addressService.searchGoogle(input)
                 .then(function (data) {
-                    vm.loadingLocations = false;
                     deferred.resolve(data);
                 }, function (error) {
-                    vm.loadingLocations = false;
                     logError(error);
                     deferred.reject();
                 });
@@ -68,9 +46,9 @@
         function initAddress() {
             if (vm.mode === 'single' && vm.addresses.length > 0) {
                 vm.address = vm.addresses[0];
-
-            } else {
-                vm.address = {"use": "work"};
+            }
+            else {
+                vm.address = {};
             }
             return vm.address;
         }
@@ -80,12 +58,14 @@
             vm.addresses = addressService.getAll();
         }
 
+        vm.removeListItem = removeListItem;
 
         function reset(form) {
             initAddress();
             form.$setPristine();
         }
 
+        vm.reset = reset;
 
         function supportHome() {
             vm.showHome = addressService.supportHome();
@@ -101,19 +81,15 @@
                 });
         }
 
-        vm.address = {};
+        vm.address = undefined;
         vm.addresses = [];
-        vm.addToList = addToList;
-        vm.capture = capture;
-        vm.loadingLocations = false;
         vm.mode = 'multi';
+        vm.searchText = '';
         vm.showHome = true;
-        vm.reset = reset;
-        vm.removeListItem = removeListItem;
 
         activate();
     }
 
-    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'addressService', address]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'addressService', address]);
 
 })();

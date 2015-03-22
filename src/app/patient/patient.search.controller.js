@@ -3,7 +3,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, $routeParams, common, config, fhirServers, localValueSets, patientService) {
+    function patientSearch($location, $mdBottomSheet, $routeParams, common, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -268,7 +268,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Add new patient', icon: 'add', index: 0},
-                    {name: 'Detailed search', icon: 'group', index: 1},
+                    {name: 'Detailed search', icon: 'search', index: 1},
                     {name: 'Quick find', icon: 'person', index: 2}
                 ];
                 this.title = 'Patient search options';
@@ -323,5 +323,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'config', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
 })();

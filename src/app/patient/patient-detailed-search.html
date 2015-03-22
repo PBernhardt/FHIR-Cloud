@@ -108,9 +108,9 @@
                             </div>
                         </div>
 
-                        <div layout layout-sm="column" layout-align="space-between center">
-                            <div>
-                                <md-select ng-model="vm.patientSearch.gender">
+                        <div layout-gt-md="row" layout-align="space-between center">
+                            <div layout="column" layout-align="center center" style="height: 100px;">
+                                <md-select ng-model="vm.patientSearch.gender" style="min-width: 100px;">
                                     <md-option value="female">Female</md-option>
                                     <md-option value="male">Male</md-option>
                                     <md-option value="other">Other</md-option>
@@ -118,7 +118,8 @@
                                 </md-select>
                                 <p class="result">Gender</p>
                             </div>
-                            <div>
+
+                            <div layout="column" layout-align="center center" style="height: 100px;">
                                 <md-select ng-model="vm.patientSearch.language" md-on-open="vm.loadLanguages()">
                                     <md-option ng-value="language" ng-repeat="language in vm.languages">
                                         {{language.display}}
@@ -127,14 +128,13 @@
                                 <p class="result">Language</p>
                             </div>
 
-                            <div>
+                            <div layout="column" layout-align="center center" style="height: 100px;">
                                 <md-select ng-model="vm.patientSearch.race" md-on-open="vm.loadRaces()">
                                     <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
                                 </md-select>
                                 <p class="result">Race</p>
                             </div>
-
-                            <div>
+                            <div layout="column" layout-align="center center" style="height: 100px;">
                                 <md-select ng-model="vm.patientSearch.ethnicity" md-on-open="vm.loadEthnicities()"
                                            style="min-width: 200px;">
                                     <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}

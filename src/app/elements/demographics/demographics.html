@@ -1,114 +1,80 @@
 <div data-ng-controller="demographics as vm">
-    <div class="form-group col-md-12">
-        <legend>Demographics</legend>
-        <div class="controls col-md-12 col-md-offset-2">
-            <data-ng-form name="demographicsEditForm" class="form-horizontal" data-ng-model="vm.demographics">
-                <div class="form-group col-md-12">
-                    <div class="form-group col-md-4">
-                        <label class="control-label pull-left" for="demographics-gender">Gender</label>&nbsp;&nbsp;
-                        <select class="form-control" id="demographics-gender"
-                                data-ng-model="vm.demographics.gender"
-                                data-ng-change="vm.updateGender()">
-                            <option data-ng-repeat="coding in vm.genders" value="{{coding.code}}"
-                                    data-ng-selected="coding.code===vm.demographics.gender">
-                                {{coding.display || ''}}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label class="control-label pull-left"
-                               for="demographics-maritalStatus">Marital&nbsp;Status</label>&nbsp;&nbsp;
-                        <select
-                                class="form-control" id="demographics-maritalStatus"
-                                data-ng-model="vm.demographics.maritalStatus"
-                                data-ng-change="vm.updateMaritalStatus()">
-                            <option data-ng-repeat="coding in vm.maritalStatuses" value="{{coding}}"
-                                    data-ng-selected="coding.code===vm.demographics.maritalStatus.coding[0].code">
-                                {{coding.display || ''}}
-                            </option>
-                        </select>
-                    </div>
+    <div layout-gt-lg="row" layout-align="space-between center" layout-wrap>
+        <md-input-container flex>
+            <label>Birth date</label>
+            <input ng-model="vm.demographics.birthDate" id="dob" type="date">
+        </md-input-container>
 
-                    <div class="form-group col-md-6">
-                        <label class="control-label pull-left" for="demographics-language">Language</label>&nbsp;&nbsp;
-                        <input type="text"
-                               data-ng-model="vm.selectedLanguage"
-                               data-ng-keyup="vm.addLanguage($event)"
-                               typeahead="code as code.display for code in vm.languages | filter:$viewValue | limitTo:5"
-                               class="form-control"
-                               placeholder="Enter name of language"
-                               id="demographics-language">
-                    </div>
-                    <div collapse="vm.demographics.language.length===0" class="col-md-6">
-                        <form>
-                            <table class="table table-responsive">
-                                <thead>
-                                <tr>
-                                    <th colspan="2">Languages</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr data-ng-repeat="item in vm.demographics.language">
-                                    <td>{{item | codeableConcept}}</td>
-                                    <td style="padding-top:0;text-align:right">
-                                        <img src="/content/images/x_red.gif"
-                                             data-ng-click="vm.removeLanguage(item)"
-                                             tooltip="remove"/>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </form>
-                    </div>
-                </div>
+        <md-input-container flex>
+            <label>Birth order</label>
+            <input ng-model="vm.demographics.birthOrder" id="order" type="number">
+        </md-input-container>
 
-                <div class="form-group col-md-12 col-md-offset-2">
-                    <div class="form-group col-md-5">
-                        <label class="control-label" for="demographics-dob">Date of Birth&nbsp;&nbsp;</label>
-                        <input type="date"
-                               id="demographics-dob"
-                               class="form-control"
-                               data-ng-model="vm.demographics.birthDate"
-                               data-ng-change="vm.updateBirthDate()">
-                    </div>
-                    <div class="form-group col-md-3">
-                        <label class="control-label" for="demographics-multipleBirth">Multiple&nbsp;Birth&nbsp;</label>
-                        <input id="demographics-multipleBirth"
-                               class="checkbox-inline"
-                               type="checkbox"
-                               data-ng-model="vm.demographics.multipleBirth"
-                               data-ng-change="vm.updateMultipleBirth()">
-                    </div>
-                    <div class="form-group col-md-4" data-ng-show="vm.demographics.multipleBirth === true">
-                        <label class="control-label" for="demographics-birthOrder">Birth&nbsp;Order</label>
-                        <input id="demographics-birthOrder"
-                               class="checkbox-inline"
-                               type="number"
-                               min="1" max="12"
-                               data-ng-model="vm.demographics.birthOrder"
-                               data-ng-change="vm.updateBirthOrder()">
-                    </div>
-                </div>
+        <md-input-container flex>
+            <label>Place of birth</label>
+            <input ng-model="vm.demographics.placeOfBirth">
+        </md-input-container>
 
-                <div class="form-group col-md-12 col-md-offset-2">
-                    <div class="form-group col-md-6">
-                        <label class="control-label" for="demographics-deceased">Deceased</label>
-                        <input id="demographics-deceased"
-                               class="checkbox-inline"
-                               type="checkbox"
-                               data-ng-model="vm.demographics.deceased"
-                               data-ng-change="vm.updateDeceased()">
-                    </div>
-                    <div class="form-group col-md-6" data-ng-show="vm.demographics.deceased === true">
-                        <label class="control-label" for="demographics-dod">Date&nbsp;of&nbsp;Death&nbsp;&nbsp;</label>
-                        <input type="date"
-                               id="demographics-dod"
-                               class="form-control"
-                               data-ng-model="vm.demographics.deceasedDate"
-                               data-ng-change="vm.updateDeceasedDate()">
-                    </div>
-                </div>
-            </data-ng-form>
+        <md-input-container flex>
+            <label>Mother's maiden name</label>
+            <input ng-model="vm.demographics.mothersMaidenName">
+        </md-input-container>
+
+        <md-input-container flex>
+            <label>Date of death</label>
+            <input ng-model="vm.demographics.deceasedDate" id="dod" type="date">
+        </md-input-container>
+    </div>
+    <div layout-gt-md="row" layout-align="space-between center" layout-wrap>
+        <div layout="column" layout-align="center center" style="height: 100px;">
+            <md-select ng-model="vm.demographics.gender" ng-change="vm.updateGender()" ng-selected="vm.demographics.gender.code">
+                <md-option value="female">Female</md-option>
+                <md-option value="male">Male</md-option>
+                <md-option value="other">Other</md-option>
+                <md-option value="unknown">Unknown</md-option>
+            </md-select>
+            <p class="result">Gender</p>
+        </div>
+        <div layout="column" layout-align="center center" style="height: 100px;">
+            <md-select ng-model="vm.demographics.language" ng-change="vm.updateLanguage()" md-on-open="vm.loadLanguages()" ng-selected="vm.demographics.language.code">
+                <md-option ng-value="language" ng-repeat="language in vm.languages">
+                    {{language.display}}
+                </md-option>
+            </md-select>
+            <p class="result">Language</p>
+        </div>
+
+        <div layout="column" layout-align="center center" style="height: 100px;">
+            <md-select ng-model="vm.demographics.race" md-on-open="vm.loadRaces()" ng-selected="vm.demographics.race.code">
+                <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
+            </md-select>
+            <p class="result">Race</p>
+        </div>
+
+        <div layout="column" layout-align="center center" style="height: 100px;">
+            <md-select ng-model="vm.demographics.religion" md-on-open="vm.loadReligions()" ng-selected="vm.demographics.religion.code">
+                <md-option ng-value="religion" ng-repeat="religion in vm.religions">
+                    {{religion.display}}
+                </md-option>
+            </md-select>
+            <p class="result">Religion</p>
+        </div>
+
+        <div layout="column" layout-align="center center" style="height: 100px;">
+            <md-select ng-model="vm.demographics.ethnicity" md-on-open="vm.loadEthnicities()"
+                       style="min-width: 200px;" ng-selected="vm.demographics.ethnicity.code">
+                <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
+                    <md-option ng-value="main">{{main.display}}</md-option>
+                    <md-optgroup ng-value="group" ng-repeat="group in main.concept">
+                        {{group.display}}
+                        <md-option ng-value="group">{{group.display}}</md-option>
+                        <md-option ng-value="class" ng-repeat="class in group.concept">
+                            {{class.display}}
+                        </md-option>
+                    </md-optgroup>
+                </md-optgroup>
+            </md-select>
+            <p class="result">Ethnicity</p>
         </div>
     </div>
 </div>

@@ -18,10 +18,11 @@
 
         function addToList(form, item) {
             if (form.$valid) {
-                identifierService.add(item);
+                identifierService.add(_.clone(item));
                 vm.identifiers = identifierService.getAll();
                 vm.identifier = {};
                 form.$setPristine();
+                form.$setUntouched();
             }
         }
 
@@ -53,7 +54,7 @@
         }
 
         function updateIdentifier() {
-            identifierService.setSingle(vm.identifier);
+            identifierService.setSingle(_.clone(vm.identifier));
         }
 
         vm.addToList = addToList;

@@ -1,65 +1,67 @@
-<div data-ng-controller="address as vm">
+<div ng-controller="address as vm">
     <md-content class="md-padding">
         <md-divider>
-            <h3>Address</h3>
-            <data-ng-form name="addressEditForm" data-ng-model="vm.address">
-                <md-input-container>
-                    <label>Address auto-fill</label>
-                    <input type="search"
-                           id="address"
-                           typeahead="address for address in vm.getLocation($viewValue)"
-                           typeahead-loading="vm.loadingLocations"
-                           typeahead-wait-ms="300"
-                           typeahead-editable="false"
-                           typeahead-min-length="5"
-                           data-ng-model="vm.address.text"
-                           data-ng-keyup="vm.capture($event, addressEditForm, vm.address)">
-                </md-input-container>
+            <ng-form name="addressEditForm" ng-model="vm.address">
+                <md-autocomplete
+                        id = "addressSearch"
+                        md-selected-item="vm.address.text"
+                        md-search-text="vm.searchText"
+                        md-items="address in vm.getLocation(vm.searchText)"
+                        md-delay="200"
+                        md-min-length="3"
+                        md-item-text="address"
+                        placeholder="What address are you looking for?">
+                    <span md-highlight-text="vm.searchText">{{address}}</span>
+                </md-autocomplete>
 
-                <md-radio-group data-ng-model="vm.address.use" layout="row" data-ng-if="vm.mode==='multi'">
-                    <md-radio-button value="work" aria-label="work">Work</md-radio-button>
+                <md-radio-group ng-model="vm.address.use" layout-gt-md="row" ng-if="vm.mode==='multi'">
+                    <md-radio-button value="work" aria-label="work" selected>Work</md-radio-button>
                     <md-radio-button value="home"> Home</md-radio-button>
                     <md-radio-button value="temp" aria-label=temp">Temp</md-radio-button>
                     <md-radio-button value="old" aria-label="old">Former</md-radio-button>
                 </md-radio-group>
 
-                <div data-ng-if="vm.address.use === 'old'">
+                <div ng-if="vm.address.use === 'old'">
                     <h4>Period of former address</h4>
                     <label>Start</label>
-                    <input
-                            type="date"
-                            data-ng-model="vm.address.period.start">
+                    <input id="periodStart"
+                           type="date"
+                           ng-model="vm.address.period.start">
                     <label>End</label>
-                    <input
-                            type="date"
-                            data-ng-model="vm.address.period.end">
+                    <input id="periodEnd"
+                           type="date"
+                           ng-model="vm.address.period.end">
                 </div>
-                <div data-ng-if="vm.mode==='multi'" class="md-padding">
-                    <md-button data-ng-click="vm.addToList(addressEditForm, vm.address)">Add to list</md-button>
+                <div ng-if="vm.mode==='multi'" class="md-padding">
+                    <md-button ng-click="vm.addToList(addressEditForm, vm.address)" aria-label="Save to list"
+                               ng-if="vm.address.text">
+                        <md-icon md-svg-icon="list" alt="Save to address list"></md-icon>
+                    </md-button>
                 </div>
+            </ng-form>
 
-            </data-ng-form>
             <div>
-                <div data-ng-if="vm.addresses.length > 0 && vm.mode==='multi'">
-                    <form>
-                        <section>
-                            <md-subheader>Address List</md-subheader>
+                <div ng-if="vm.addresses.length > 0 && vm.mode==='multi'">
+                    <md-subheader>Address List</md-subheader>
+                    <md-list>
+                        <md-item ng-repeat="addr in vm.addresses track by $index">
+                            <md-item-content>
+                                <div class="md-tile-left">
+                                    <md-button ng-click="vm.removeListItem(addr)" aria-label="Remove from list">
+                                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                                    </md-button>
+                                </div>
+                                <div class="md-tile-content">
+                                    <h3>{{::addr.text}}</h3>
+                                    <h4>{{::addr.use}}</h4>
 
-                            <md-list>
-
-                                <md-item ng-repeat="a in vm.addresses">
-                                    <md-item-content>
-                                        <div class="md-tile-left">
-
-                                        </div>
-                                        <div class="md-tile-content">
-                                            <h3>{{a}}</h3>
-                                        </div>
-                                    </md-item-content>
-                                </md-item>
-                            </md-list>
-                        </section>
-                    </form>
+                                    <p ng-if="addr.period">
+                                        {{::addr.period | periodText}}
+                                    </p>
+                                </div>
+                            </md-item-content>
+                        </md-item>
+                    </md-list>
                 </div>
             </div>
         </md-divider>

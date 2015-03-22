@@ -9,7 +9,7 @@
         var keyCodes = config.keyCodes;
 
         function activate() {
-            common.activateController([getGenders(), getMaritalStatuses(), getLanguages()], controllerId).then(function () {
+            common.activateController([], controllerId).then(function () {
                 initData();
             });
         }
@@ -19,7 +19,7 @@
                 vm.selectedLanguage = null;
             } else if ($event.keyCode === keyCodes.enter) {
                 if (vm.selectedLanguage !== null) {
-                    var coding = { "coding": [vm.selectedLanguage], "text": vm.selectedLanguage.display };
+                    var coding = {"coding": [vm.selectedLanguage], "text": vm.selectedLanguage.display};
                     if (_.first(vm.demographics.language, coding).length === 0) {
                         vm.demographics.language.push(coding);
                     }
@@ -28,18 +28,38 @@
                 vm.selectedLanguage = null;
             }
         }
+        function loadEthnicities() {
+            return vm.ethnicities = localValueSets.ethnicity().concept;
+        }
+        vm.loadEthnicities = loadEthnicities;
 
-        function getGenders() {
-            vm.genders = localValueSets.administrativeGender();
+        function loadGenders() {
+            return vm.genders = localValueSets.administrativeGender();
         }
 
-        function getLanguages() {
-            vm.languages = localValueSets.iso6391Languages();
+        vm.loadGenders = loadGenders;
+
+        function loadLanguages() {
+            return vm.languages = localValueSets.iso6391Languages();
         }
 
-        function getMaritalStatuses() {
-            vm.maritalStatuses = localValueSets.maritalStatus();
+        vm.loadLanguages = loadLanguages;
+
+        function loadMaritalStatuses() {
+            return vm.maritalStatuses = localValueSets.maritalStatus();
         }
+
+        vm.loadMaritalStatuses = loadMaritalStatuses;
+
+        function loadReligions() {
+            return vm.religions = localValueSets.religion().concept;
+        }
+        vm.loadReligions = loadReligions;
+
+        function loadRaces() {
+            return vm.races = localValueSets.race().concept;
+        }
+        vm.loadRaces = loadRaces;
 
         function initData() {
             vm.demographics.birthDate = demographicsService.getBirthDate();
@@ -50,6 +70,12 @@
             vm.demographics.language = demographicsService.getLanguage();
             vm.demographics.maritalStatus = demographicsService.getMaritalStatus();
             vm.demographics.multipleBirth = demographicsService.getMultipleBirth();
+            // Known extensions
+            vm.demographics.race = null;
+            vm.demographics.religion = null;
+            vm.demographics.ethnicity = null;
+            vm.demographics.mothersMaidenName = null;
+            vm.demographics.placeOfBirth = null;
         }
 
         function removeLanguage(item) {
@@ -95,6 +121,18 @@
             demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
         }
 
+        function updateRace() {
+            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        }
+
+        function updateReligion() {
+            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        }
+
+        function updateEthnicity() {
+            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        }
+
         vm.addLanguage = addLanguage;
         vm.demographics = {
             "birthDate": null,
@@ -109,6 +147,9 @@
         vm.genders = [];
         vm.languages = [];
         vm.maritalStatuses = [];
+        vm.religions = [];
+        vm.races = [];
+        vm.ethnicities = [];
         vm.removeLanguage = removeLanguage;
         vm.selectedLanguage = null;
         vm.updateBirthDate = updateBirthDate;
@@ -119,6 +160,9 @@
         vm.updateLanguage = updateLanguage;
         vm.updateMaritalStatus = updateMaritalStatus;
         vm.updateMultipleBirth = updateMultipleBirth;
+        vm.updateRace = updateRace;
+        vm.updateReligion = updateReligion;
+        vm.updateEthnicity = updateEthnicity;
 
         activate();
     }

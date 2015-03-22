@@ -12,6 +12,31 @@
         var _multipleBirth = false;
         var _gender = null;
         var _maritalStatus = {"coding": []};
+        var _race = {"coding": []};
+        var _religion = {"coding": []};
+        var _ethnicity = {"coding": []};
+        var _birthPlace = {"address": {"text": null}};
+        var _mothersMaidenName = null;
+
+        function getRace() {
+            return _race;
+        }
+
+        function getReligion() {
+            return _religion;
+        }
+
+        function getEthnicity() {
+            return _ethnicity;
+        }
+
+        function getBirthPlace() {
+            return _birthPlace;
+        }
+
+        function getMothersMaidenName() {
+            return _mothersMaidenName;
+        }
 
         function getBirthDate() {
             return _birthDate;
@@ -75,8 +100,32 @@
             }
         }
 
+        function initializeKnownExtensions(extensions) {
+            //TODO: Set DAF properties here
+        }
+
+        function setRace(value) {
+            _race = value;
+        }
+
+        function setReligion(value) {
+            _religion = value;
+        }
+
+        function setEthnicity(value) {
+            _ethnicity = value;
+        }
+
+        function setBirthPlace(value) {
+            _birthPlace = value;
+        }
+
+        function setMothersMaidenName(value) {
+            _mothersMaidenName = value;
+        }
+
         function setBirthDate(value) {
-            _birthDate = value;
+            _birthDate = new Date(value);
         }
 
         function setBirthOrder(value) {
@@ -141,7 +190,18 @@
             setGender: setGender,
             setLanguage: setLanguage,
             setMaritalStatus: setMaritalStatus,
-            setMultipleBirth: setMultipleBirth
+            setMultipleBirth: setMultipleBirth,
+            getRace: getRace,
+            setRace: setRace,
+            getEthnicity: getEthnicity,
+            setEthnicity: setEthnicity,
+            getReligion: getReligion,
+            setReligion: setReligion,
+            getMothersMaidenName: getMothersMaidenName,
+            setMothersMaidenName: setMothersMaidenName,
+            getBirthPlace: getBirthPlace,
+            setBirthPlace: setBirthPlace,
+            initializeKnownExtensions: initializeKnownExtensions
         };
         return service;
     }

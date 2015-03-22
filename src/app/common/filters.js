@@ -28,7 +28,7 @@
                     } else if (item && item.display) {
                         return item.display;
                     } else {
-                        return "No display text for code";
+                        return "No display text for code: (" + item.system + ":" + item.code + ")";
                     }
                 }
             } else {

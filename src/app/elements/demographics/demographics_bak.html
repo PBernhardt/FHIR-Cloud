@@ -1,0 +1,114 @@
+<div data-ng-controller="demographics as vm">
+    <div class="form-group col-md-12">
+        <legend>Demographics</legend>
+        <div class="controls col-md-12 col-md-offset-2">
+            <data-ng-form name="demographicsEditForm" class="form-horizontal" data-ng-model="vm.demographics">
+                <div class="form-group col-md-12">
+                    <div class="form-group col-md-4">
+                        <label class="control-label pull-left" for="demographics-gender">Gender</label>&nbsp;&nbsp;
+                        <select class="form-control" id="demographics-gender"
+                                data-ng-model="vm.demographics.gender"
+                                data-ng-change="vm.updateGender()">
+                            <option data-ng-repeat="coding in vm.genders" value="{{coding.code}}"
+                                    data-ng-selected="coding.code===vm.demographics.gender">
+                                {{coding.display || ''}}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="control-label pull-left"
+                               for="demographics-maritalStatus">Marital&nbsp;Status</label>&nbsp;&nbsp;
+                        <select
+                                class="form-control" id="demographics-maritalStatus"
+                                data-ng-model="vm.demographics.maritalStatus"
+                                data-ng-change="vm.updateMaritalStatus()">
+                            <option data-ng-repeat="coding in vm.maritalStatuses" value="{{coding}}"
+                                    data-ng-selected="coding.code===vm.demographics.maritalStatus.coding[0].code">
+                                {{coding.display || ''}}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label class="control-label pull-left" for="demographics-language">Language</label>&nbsp;&nbsp;
+                        <input type="text"
+                               data-ng-model="vm.selectedLanguage"
+                               data-ng-keyup="vm.addLanguage($event)"
+                               typeahead="code as code.display for code in vm.languages | filter:$viewValue | limitTo:5"
+                               class="form-control"
+                               placeholder="Enter name of language"
+                               id="demographics-language">
+                    </div>
+                    <div collapse="vm.demographics.language.length===0" class="col-md-6">
+                        <form>
+                            <table class="table table-responsive">
+                                <thead>
+                                <tr>
+                                    <th colspan="2">Languages</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr data-ng-repeat="item in vm.demographics.language">
+                                    <td>{{item | codeableConcept}}</td>
+                                    <td style="padding-top:0;text-align:right">
+                                        <img src="/content/images/x_red.gif"
+                                             data-ng-click="vm.removeLanguage(item)"
+                                             tooltip="remove"/>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="form-group col-md-12 col-md-offset-2">
+                    <div class="form-group col-md-5">
+                        <label class="control-label" for="demographics-dob">Date of Birth&nbsp;&nbsp;</label>
+                        <input type="date"
+                               id="demographics-dob"
+                               class="form-control"
+                               data-ng-model="vm.demographics.birthDate"
+                               data-ng-change="vm.updateBirthDate()">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label class="control-label" for="demographics-multipleBirth">Multiple&nbsp;Birth&nbsp;</label>
+                        <input id="demographics-multipleBirth"
+                               class="checkbox-inline"
+                               type="checkbox"
+                               data-ng-model="vm.demographics.multipleBirth"
+                               data-ng-change="vm.updateMultipleBirth()">
+                    </div>
+                    <div class="form-group col-md-4" data-ng-show="vm.demographics.multipleBirth === true">
+                        <label class="control-label" for="demographics-birthOrder">Birth&nbsp;Order</label>
+                        <input id="demographics-birthOrder"
+                               class="checkbox-inline"
+                               type="number"
+                               min="1" max="12"
+                               data-ng-model="vm.demographics.birthOrder"
+                               data-ng-change="vm.updateBirthOrder()">
+                    </div>
+                </div>
+
+                <div class="form-group col-md-12 col-md-offset-2">
+                    <div class="form-group col-md-6">
+                        <label class="control-label" for="demographics-deceased">Deceased</label>
+                        <input id="demographics-deceased"
+                               class="checkbox-inline"
+                               type="checkbox"
+                               data-ng-model="vm.demographics.deceased"
+                               data-ng-change="vm.updateDeceased()">
+                    </div>
+                    <div class="form-group col-md-6" data-ng-show="vm.demographics.deceased === true">
+                        <label class="control-label" for="demographics-dod">Date&nbsp;of&nbsp;Death&nbsp;&nbsp;</label>
+                        <input type="date"
+                               id="demographics-dod"
+                               class="form-control"
+                               data-ng-model="vm.demographics.deceasedDate"
+                               data-ng-change="vm.updateDeceasedDate()">
+                    </div>
+                </div>
+            </data-ng-form>
+        </div>
+    </div>
+</div>

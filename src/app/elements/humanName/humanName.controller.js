@@ -20,7 +20,27 @@
 
         function addToList(form, item) {
             if (form.$valid) {
-                humanNameService.add(item);
+                var name = {
+                    "prefix": [],
+                    "suffix": [],
+                    "given": [],
+                    "family": [],
+                    "use": item.use,
+                    "period": item.period
+                }
+                if (angular.isDefined(item.prefix)) {
+                    name.prefix =  item.prefix.split(' ');
+                }
+                if (angular.isDefined(item.suffix)) {
+                    name.suffix =  item.suffix.split(' ');
+                }
+                if (angular.isDefined(item.given)) {
+                    name.given =  item.given.split(' ');
+                }
+                if (angular.isDefined(item.family)) {
+                    name.family =  item.family.split(' ');
+                }
+                humanNameService.add(name);
                 vm.humanNames = humanNameService.getAll();
                 initName();
                 form.$setPristine();

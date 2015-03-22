@@ -1053,7 +1053,6 @@
             ];
         }
 
-
         function maritalStatus() {
             return [
                 {"code": "UNK", "display": "Unknown", "system": "http://hl7.org/fhir/v3/NullFlavor"},

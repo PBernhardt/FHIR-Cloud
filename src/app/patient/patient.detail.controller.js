@@ -5,7 +5,7 @@
 
     function patientDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
                            common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService) {
+                           organizationService, patientService, contactPointService, localValueSets) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -135,6 +135,7 @@
                 demographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger);
                 demographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
                 demographicsService.setBirthDate(vm.patient.birthDate);
+                demographicsService.initializeKnownExtensions(vm.patient.extensions);
                 attachmentService.init(vm.patient.photo, "Photos");
                 identifierService.init(vm.patient.identifier);
                 addressService.init(vm.patient.address, true);
@@ -246,7 +247,7 @@
                 vm.isEditing = true;
                 vm.title = getTitle();
                 $window.localStorage.patient = JSON.stringify(vm.patient);
-                common.toggleProgressBar(false);
+                vm.isBusy = false;
             }
 
             var patient = patientService.initializeNewPatient();
@@ -254,7 +255,7 @@
                 logError("Patient must have at least one name.");
                 return;
             }
-            common.toggleProgressBar(true);
+            vm.isBusy = true;
             patient.name = humanNameService.mapFromViewModel();
             patient.photo = attachmentService.getAll();
             patient.birthDate = demographicsService.getBirthDate();
@@ -276,14 +277,14 @@
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
-                        common.toggleProgressBar(false);
+                        vm.isBusy = false;
                     });
             } else {
                 patientService.addPatient(patient)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
-                        common.toggleProgressBar(false);
+                        vm.isBusy = false;
                     });
             }
         }
@@ -308,35 +309,6 @@
             });
         }
 
-        function patientActionsMenu($event) {
-            var menuItems = [
-                {name: 'Edit', icon: 'img/account4.svg'},
-                {name: 'Locate', icon: 'img/share39.svg'},
-                {name: 'Consult', icon: 'img/clipboard99.svg'},
-                {name: 'Delete', icon: 'img/rubbish.svg'}
-            ];
-            $mdBottomSheet.show({
-                locals: {items: menuItems},
-                templateUrl: 'templates/bottomSheet.html',
-                controller: 'bottomSheetController',
-                targetEvent: $event
-            }).then(function (clickedItem) {
-                switch (clickedItem.name) {
-                    case 'Edit':
-                        logInfo('TODO: implement Edit');
-                        break;
-                    case 'Locate':
-                        logInfo('TODO: implement Locate');
-                        break;
-                    case 'Consult':
-                        logInfo('TODO: implement Consult');
-                        break;
-                    case 'Delete':
-                        deletePatient(vm.patient, $event);
-                }
-            });
-        }
-
         function canDelete() {
             return !vm.isEditing;
         }
@@ -353,6 +325,49 @@
             get: canDelete
         });
 
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/patient/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/patient/edit/' + vm.patient.hashKey);
+                        break;
+                    case 2:
+                        $location.path('/patient/patient-detailed-search');
+                        break;
+                    case 3:
+                        $location.path('/patient');
+                        break;
+                    case 4:
+                        deletePatient(vm.patient);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new patient', icon: 'add', index: 0},
+                    {name: 'Edit patient', icon: 'group', index: 1},
+                    {name: 'Detailed search', icon: 'search', index: 2},
+                    {name: 'Quick find', icon: 'hospital', index: 3},
+                    {name: 'Delete patient', icon: 'delete', index: 4},
+                ];
+                this.title = 'Organization search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
         vm.activeServer = null;
         vm.calculateAge = calculateAge;
         vm.clearErrors = clearErrors;
@@ -361,6 +376,7 @@
         vm.dataEvents = [];
         vm.errors = [];
         vm.history = [];
+        vm.isBusy = false;
         vm.summary = [];
         vm.edit = edit;
         vm.getOrganizationReference = getOrganizationReference;
@@ -379,7 +395,6 @@
         vm.title = 'Patient Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;
-        vm.patientActionsMenu = patientActionsMenu;
 
         activate();
     }
@@ -387,5 +402,5 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', patientDetail]);
+            'organizationService', 'patientService', 'contactPointService', 'localValueSets', patientDetail]);
 })();

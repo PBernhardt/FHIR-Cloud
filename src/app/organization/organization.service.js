@@ -8,6 +8,7 @@
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
         var $q = common.$q;
+        var noToast = false;
 
         function addOrganization(resource) {
             _prepArrays(resource)
@@ -49,7 +50,7 @@
                 if (removed) {
                     deferred.resolve();
                 } else {
-                    logWarning('Organization not found in cache: ' + hashKey);
+                    logWarning('Organization not found in cache: ' + hashKey, null, noToast);
                     deferred.resolve();
                 }
             }
@@ -131,7 +132,7 @@
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
-                                organizations.push({display: item.resource.name, reference: item.resource.id});
+                                organizations.push({display: item.resource.name, reference: baseUrl + '/Organization/' + item.resource.id});
                             });
                     }
                     if (organizations.length === 0) {

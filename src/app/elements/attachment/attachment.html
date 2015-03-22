@@ -1,20 +1,18 @@
-<div data-ng-controller="attachment as vm">
+<div ng-controller="attachment as vm">
     <md-content class="md-padding">
-        <md-divider>
-            <h3>{{vm.title}}</h3>
-            <data-ng-form name="attachmentEditForm" data-ng-model="vm.attachment">
-                <div>
-                    <label>Add {{vm.title}}</label>
-                    <div fs-file-input="vm.selectedFile" on-change="vm.readFile()">
-                    </div>
-                </div>
-            </data-ng-form>
+        <ng-form name="attachmentEditForm" ng-model="vm.attachment">
+            <div>
+                <label>Add {{vm.title}}</label>
 
-            <div data-ng-if="vm.attachments.length >0">
-                <div data-ng-repeat="photo in vm.attachments">
-                    <img class="largeFace" fs-img-person="photo"/>
+                <div fs-file-input="vm.selectedFile" on-change="vm.readFile()">
                 </div>
             </div>
-        </md-divider>
+        </ng-form>
+
+        <div ng-if="vm.attachments.length > 0" layout-gt-md="row" layout-align="space-around center">
+            <div ng-repeat="photo in vm.attachments">
+                <img class="largeFace" fs-img-person="photo"/>
+            </div>
+        </div>
     </md-content>
 </div>

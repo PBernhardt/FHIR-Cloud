@@ -1,63 +1,65 @@
-<div data-ng-controller="identifier as vm">
+<div ng-controller="identifier as vm">
     <md-content class="md-padding">
-        <md-divider>
-            <h3>Identifier</h3>
-            <data-ng-form name="identifierEditForm" data-ng-model="vm.identifier">
-                <md-input-container>
-                    <label>The namespace for the identifier</label>
-                    <input
-                           data-ng-model="vm.identifier.system"/>
-                </md-input-container>
+        <ng-form name="identifierEditForm" ng-model="vm.identifier">
+            <md-input-container>
+                <label>The namespace for the identifier (required)</label>
+                <input name="system"
+                       ng-model="vm.identifier.system"/>
+            </md-input-container>
 
-                <md-input-container>
-                    <label>The value that is unique</label>
-                    <input
-                            data-ng-model="vm.identifier.value"/>
-                </md-input-container>
+            <md-input-container>
+                <label>The value that is unique (required)</label>
+                <input name="value"
+                       ng-model="vm.identifier.value"/>
+            </md-input-container>
 
-                <md-input-container>
-                    <label>Description of identifier</label>
-                    <input
-                            data-ng-model="vm.identifier.label"/>
-                </md-input-container>
+            <md-input-container>
+                <label>Description of identifier</label>
+                <input ng-model="vm.identifier.label"/>
+            </md-input-container>
 
-                <md-input-container>
-                    <label>Organization that issued id (may be just text)</label>
-                    <input
-                            data-ng-model="vm.identifier.assigner"/>
-                </md-input-container>
+            <md-input-container>
+                <label>Organization that issued id (may be just text)</label>
+                <input ng-model="vm.identifier.assigner"/>
+            </md-input-container>
 
-                <md-radio-group data-ng-model="vm.identifier.use" layout="row" data-ng-if="vm.mode==='multi'">
-                    <md-radio-button value="usual" aria-label="usual">Usual</md-radio-button>
-                    <md-radio-button value="official">Official</md-radio-button>
-                    <md-radio-button value="temp" aria-label=temp">Temporary</md-radio-button>
-                    <md-radio-button value="secondary" aria-label="old">Secondary</md-radio-button>
-                </md-radio-group>
+            <md-radio-group ng-model="vm.identifier.use" layout-gt-md="row" ng-if="vm.mode==='multi'">
+                <md-radio-button value="usual" aria-label="usual">Usual</md-radio-button>
+                <md-radio-button value="official" aria-label="official">Official</md-radio-button>
+                <md-radio-button value="temp" aria-label="temp">Temporary</md-radio-button>
+                <md-radio-button value="secondary" aria-label="old">Secondary</md-radio-button>
+            </md-radio-group>
 
-                <div data-ng-if="vm.mode==='multi'" class="md-padding">
-                    <md-button data-ng-click="vm.addToList(identifierEditForm, vm.identifier)">Add to list</md-button>
-                </div>
-            </data-ng-form>
-
-            <div data-ng-if="vm.identifiers.length > 0 && vm.mode==='multi'">
-                <form>
-                    <section>
-                        <md-subheader>Identifier List</md-subheader>
-                        <md-list>
-                            <md-item ng-repeat="a in vm.identifiers">
-                                <md-item-content>
-                                    <div class="md-tile-left">
-                                    </div>
-                                    <div class="md-tile-content">
-                                        <h3>{{a}}</h3>
-                                    </div>
-                                </md-item-content>
-                            </md-item>
-                        </md-list>
-                    </section>
-                </form>
+            <div ng-if="vm.mode==='multi'" class="md-padding">
+                <md-button ng-click="vm.addToList(identifierEditForm, vm.identifier)"
+                           aria-label="Save identifier to list"
+                           ng-if="vm.identifier.system || vm.identifier.value">
+                    <md-icon md-svg-icon="list" alt="Save to identifier list"></md-icon>
+                </md-button>
             </div>
+        </ng-form>
 
-        </md-divider>
+        <div ng-if="vm.identifiers.length > 0 && vm.mode==='multi'">
+            <form>
+                <md-subheader>Identifier List</md-subheader>
+                <md-list>
+                    <md-item ng-repeat="id in vm.identifiers">
+                        <md-item-content>
+                            <div class="md-tile-left">
+                                <md-button ng-click="vm.removeListItem(id)" aria-label="Remove {{id.value}} from list">
+                                    <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <h3>{{id.system}}</h3>
+                                <h4>{{id.value}}</h4>
+
+                                <p>{{id.label}}</p>
+                            </div>
+                        </md-item-content>
+                    </md-item>
+                </md-list>
+            </form>
+        </div>
     </md-content>
 </div>

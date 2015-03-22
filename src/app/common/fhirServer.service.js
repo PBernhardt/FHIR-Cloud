@@ -54,6 +54,16 @@
                         "id": 5,
                         "name": "RelayHealth",
                         "baseUrl": "http://rhc-fhirservice-dev.cloudapp.net"
+                    },
+                    {
+                        "id": 6,
+                        "name": "HealthConnex",
+                        "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
+                    },
+                    {
+                        "id": 7,
+                        "name": "Argonaut Reference",
+                        "baseUrl": "http://argonaut.healthintersections.com.au/open"
                     }
                 ];
                 var servers = dataCache.readFromCache('servers');

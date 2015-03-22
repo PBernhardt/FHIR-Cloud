@@ -228,6 +228,14 @@
             return message;
         }
 
+        function randomHash() {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            for( var i=0; i < 5; i++ )
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            return text;
+        }
+
         var service = {
             // common angular dependencies
             $broadcast: $broadcast,
@@ -244,6 +252,7 @@
             logger: logger, // for accessibility
             makeHumanName: makeHumanName,
             mapDisplayToCoding: mapDisplayToCoding,
+            randomHash: randomHash,
             removeNullProperties: removeNullProperties,
             setResourceId: setResourceId,
             textContains: textContains,
@@ -506,12 +515,16 @@
             .icon("edit", "./assets/svg/edit.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
+            .icon("hospital", "./assets/svg/hospital.svg", 24)
+            .icon("list", "./assets/svg/list.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
+            .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
-            .icon("save", "./assets/svg/save.svg", 24)
+            .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
+            .icon("saveToList", "./assets/svg/saveToList.svg", 24)
             .icon("search", "./assets/svg/search.svg", 24)
             .icon("settings", "./assets/svg/settings.svg", 24)
             .icon("view", "./assets/svg/visibility.svg", 12);
@@ -966,6 +979,16 @@
                         "id": 5,
                         "name": "RelayHealth",
                         "baseUrl": "http://rhc-fhirservice-dev.cloudapp.net"
+                    },
+                    {
+                        "id": 6,
+                        "name": "HealthConnex",
+                        "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
+                    },
+                    {
+                        "id": 7,
+                        "name": "Argonaut Reference",
+                        "baseUrl": "http://argonaut.healthintersections.com.au/open"
                     }
                 ];
                 var servers = dataCache.readFromCache('servers');
@@ -1096,7 +1119,7 @@
                     } else if (item && item.display) {
                         return item.display;
                     } else {
-                        return "No display text for code";
+                        return "No display text for code: (" + item.system + ":" + item.code + ")";
                     }
                 }
             } else {
@@ -2528,7 +2551,6 @@
             ];
         }
 
-
         function maritalStatus() {
             return [
                 {"code": "UNK", "display": "Unknown", "system": "http://hl7.org/fhir/v3/NullFlavor"},
@@ -3637,41 +3659,22 @@
 
     var controllerId = 'address';
 
-    function address(common, config, addressService) {
+    function address(common, addressService) {
         /* jshint validthis:true */
         var vm = this;
-        var keyCodes = config.keyCodes;
         var logError = common.logger.getLogFn(controllerId, 'error');
         var $q = common.$q;
 
         function addToList(form, item) {
             if (form.$valid) {
-                addressService.add(item);
+                addressService.add(_.clone(item));
                 vm.addresses = addressService.getAll();
                 initAddress();
                 form.$setPristine();
             }
         }
 
-        function capture($event, form, item) {
-            if (form.$valid) {
-                if ($event.keyCode === keyCodes.esc) {
-                    initAddress();
-                } else if ($event.keyCode === keyCodes.enter) {
-                    if (vm.mode === 'single') {
-                        addressService.add(item);
-                    } else {
-                        addToList(form, item);
-                    }
-                }
-            }
-        }
-
-        function editListItem(item) {
-            vm.address = item;
-        }
-
-        vm.editListItem = editListItem;
+        vm.addToList = addToList;
 
         function getAddresses() {
             vm.addresses = addressService.getAll();
@@ -3679,13 +3682,10 @@
 
         function getLocation(input) {
             var deferred = $q.defer();
-            vm.loadingLocations = true;
             addressService.searchGoogle(input)
                 .then(function (data) {
-                    vm.loadingLocations = false;
                     deferred.resolve(data);
                 }, function (error) {
-                    vm.loadingLocations = false;
                     logError(error);
                     deferred.reject();
                 });
@@ -3702,9 +3702,9 @@
         function initAddress() {
             if (vm.mode === 'single' && vm.addresses.length > 0) {
                 vm.address = vm.addresses[0];
-
-            } else {
-                vm.address = {"use": "work"};
+            }
+            else {
+                vm.address = {};
             }
             return vm.address;
         }
@@ -3714,12 +3714,14 @@
             vm.addresses = addressService.getAll();
         }
 
+        vm.removeListItem = removeListItem;
 
         function reset(form) {
             initAddress();
             form.$setPristine();
         }
 
+        vm.reset = reset;
 
         function supportHome() {
             vm.showHome = addressService.supportHome();
@@ -3735,20 +3737,16 @@
                 });
         }
 
-        vm.address = {};
+        vm.address = undefined;
         vm.addresses = [];
-        vm.addToList = addToList;
-        vm.capture = capture;
-        vm.loadingLocations = false;
         vm.mode = 'multi';
+        vm.searchText = '';
         vm.showHome = true;
-        vm.reset = reset;
-        vm.removeListItem = removeListItem;
 
         activate();
     }
 
-    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'addressService', address]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'addressService', address]);
 
 })();
 (function () {
@@ -3776,11 +3774,12 @@
                     address.postalCode = stateAndZip[1];
                     address.country = parts[3];
                 }
+                item.$$hashKey = common.randomHash();
                 item.address = address;
                 return item;
             }
 
-            var index = getIndex(item.$$hashKey);
+            var index = _.indexOf(addresses, item);
 
             if (index > -1) {
                 addresses[index] = updateFromFormattedAddress(item);
@@ -3791,17 +3790,6 @@
 
         function getAll() {
             return _.compact(addresses);
-        }
-
-        function getIndex(hashKey) {
-            if (angular.isUndefined(hashKey) === false) {
-                for (var i = 0, len = addresses.length; i < len; i++) {
-                    if (addresses[i].$$hashKey === hashKey) {
-                        return i;
-                    }
-                }
-            }
-            return -1;
         }
 
         function getMode() {
@@ -3855,13 +3843,12 @@
                 }
             }
             return mappedAddresses;
-
-
         }
 
         function remove(item) {
-            var index = getIndex(item.$$hashKey);
-            addresses.splice(index, 1);
+            _.remove(addresses, function (n) {
+                return item.$$hashKey === n.$$hashKey;
+            });
         }
 
         function reset() {
@@ -4334,7 +4321,7 @@
         var keyCodes = config.keyCodes;
 
         function activate() {
-            common.activateController([getGenders(), getMaritalStatuses(), getLanguages()], controllerId).then(function () {
+            common.activateController([], controllerId).then(function () {
                 initData();
             });
         }
@@ -4344,7 +4331,7 @@
                 vm.selectedLanguage = null;
             } else if ($event.keyCode === keyCodes.enter) {
                 if (vm.selectedLanguage !== null) {
-                    var coding = { "coding": [vm.selectedLanguage], "text": vm.selectedLanguage.display };
+                    var coding = {"coding": [vm.selectedLanguage], "text": vm.selectedLanguage.display};
                     if (_.first(vm.demographics.language, coding).length === 0) {
                         vm.demographics.language.push(coding);
                     }
@@ -4353,18 +4340,38 @@
                 vm.selectedLanguage = null;
             }
         }
+        function loadEthnicities() {
+            return vm.ethnicities = localValueSets.ethnicity().concept;
+        }
+        vm.loadEthnicities = loadEthnicities;
 
-        function getGenders() {
-            vm.genders = localValueSets.administrativeGender();
+        function loadGenders() {
+            return vm.genders = localValueSets.administrativeGender();
         }
 
-        function getLanguages() {
-            vm.languages = localValueSets.iso6391Languages();
+        vm.loadGenders = loadGenders;
+
+        function loadLanguages() {
+            return vm.languages = localValueSets.iso6391Languages();
         }
 
-        function getMaritalStatuses() {
-            vm.maritalStatuses = localValueSets.maritalStatus();
+        vm.loadLanguages = loadLanguages;
+
+        function loadMaritalStatuses() {
+            return vm.maritalStatuses = localValueSets.maritalStatus();
         }
+
+        vm.loadMaritalStatuses = loadMaritalStatuses;
+
+        function loadReligions() {
+            return vm.religions = localValueSets.religion().concept;
+        }
+        vm.loadReligions = loadReligions;
+
+        function loadRaces() {
+            return vm.races = localValueSets.race().concept;
+        }
+        vm.loadRaces = loadRaces;
 
         function initData() {
             vm.demographics.birthDate = demographicsService.getBirthDate();
@@ -4375,6 +4382,12 @@
             vm.demographics.language = demographicsService.getLanguage();
             vm.demographics.maritalStatus = demographicsService.getMaritalStatus();
             vm.demographics.multipleBirth = demographicsService.getMultipleBirth();
+            // Known extensions
+            vm.demographics.race = null;
+            vm.demographics.religion = null;
+            vm.demographics.ethnicity = null;
+            vm.demographics.mothersMaidenName = null;
+            vm.demographics.placeOfBirth = null;
         }
 
         function removeLanguage(item) {
@@ -4420,6 +4433,18 @@
             demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
         }
 
+        function updateRace() {
+            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        }
+
+        function updateReligion() {
+            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        }
+
+        function updateEthnicity() {
+            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        }
+
         vm.addLanguage = addLanguage;
         vm.demographics = {
             "birthDate": null,
@@ -4434,6 +4459,9 @@
         vm.genders = [];
         vm.languages = [];
         vm.maritalStatuses = [];
+        vm.religions = [];
+        vm.races = [];
+        vm.ethnicities = [];
         vm.removeLanguage = removeLanguage;
         vm.selectedLanguage = null;
         vm.updateBirthDate = updateBirthDate;
@@ -4444,6 +4472,9 @@
         vm.updateLanguage = updateLanguage;
         vm.updateMaritalStatus = updateMaritalStatus;
         vm.updateMultipleBirth = updateMultipleBirth;
+        vm.updateRace = updateRace;
+        vm.updateReligion = updateReligion;
+        vm.updateEthnicity = updateEthnicity;
 
         activate();
     }
@@ -4465,6 +4496,31 @@
         var _multipleBirth = false;
         var _gender = null;
         var _maritalStatus = {"coding": []};
+        var _race = {"coding": []};
+        var _religion = {"coding": []};
+        var _ethnicity = {"coding": []};
+        var _birthPlace = {"address": {"text": null}};
+        var _mothersMaidenName = null;
+
+        function getRace() {
+            return _race;
+        }
+
+        function getReligion() {
+            return _religion;
+        }
+
+        function getEthnicity() {
+            return _ethnicity;
+        }
+
+        function getBirthPlace() {
+            return _birthPlace;
+        }
+
+        function getMothersMaidenName() {
+            return _mothersMaidenName;
+        }
 
         function getBirthDate() {
             return _birthDate;
@@ -4528,8 +4584,32 @@
             }
         }
 
+        function initializeKnownExtensions(extensions) {
+            //TODO: Set DAF properties here
+        }
+
+        function setRace(value) {
+            _race = value;
+        }
+
+        function setReligion(value) {
+            _religion = value;
+        }
+
+        function setEthnicity(value) {
+            _ethnicity = value;
+        }
+
+        function setBirthPlace(value) {
+            _birthPlace = value;
+        }
+
+        function setMothersMaidenName(value) {
+            _mothersMaidenName = value;
+        }
+
         function setBirthDate(value) {
-            _birthDate = value;
+            _birthDate = new Date(value);
         }
 
         function setBirthOrder(value) {
@@ -4594,7 +4674,18 @@
             setGender: setGender,
             setLanguage: setLanguage,
             setMaritalStatus: setMaritalStatus,
-            setMultipleBirth: setMultipleBirth
+            setMultipleBirth: setMultipleBirth,
+            getRace: getRace,
+            setRace: setRace,
+            getEthnicity: getEthnicity,
+            setEthnicity: setEthnicity,
+            getReligion: getReligion,
+            setReligion: setReligion,
+            getMothersMaidenName: getMothersMaidenName,
+            setMothersMaidenName: setMothersMaidenName,
+            getBirthPlace: getBirthPlace,
+            setBirthPlace: setBirthPlace,
+            initializeKnownExtensions: initializeKnownExtensions
         };
         return service;
     }
@@ -4623,7 +4714,27 @@
 
         function addToList(form, item) {
             if (form.$valid) {
-                humanNameService.add(item);
+                var name = {
+                    "prefix": [],
+                    "suffix": [],
+                    "given": [],
+                    "family": [],
+                    "use": item.use,
+                    "period": item.period
+                }
+                if (angular.isDefined(item.prefix)) {
+                    name.prefix =  item.prefix.split(' ');
+                }
+                if (angular.isDefined(item.suffix)) {
+                    name.suffix =  item.suffix.split(' ');
+                }
+                if (angular.isDefined(item.given)) {
+                    name.given =  item.given.split(' ');
+                }
+                if (angular.isDefined(item.family)) {
+                    name.family =  item.family.split(' ');
+                }
+                humanNameService.add(name);
                 vm.humanNames = humanNameService.getAll();
                 initName();
                 form.$setPristine();
@@ -4836,10 +4947,11 @@
 
         function addToList(form, item) {
             if (form.$valid) {
-                identifierService.add(item);
+                identifierService.add(_.clone(item));
                 vm.identifiers = identifierService.getAll();
                 vm.identifier = {};
                 form.$setPristine();
+                form.$setUntouched();
             }
         }
 
@@ -4871,7 +4983,7 @@
         }
 
         function updateIdentifier() {
-            identifierService.setSingle(vm.identifier);
+            identifierService.setSingle(_.clone(vm.identifier));
         }
 
         vm.addToList = addToList;
@@ -6094,13 +6206,13 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($location, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
+    function organizationDetail($location, $mdBottomSheet, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
-        var logSuccess = common.logger.getLogFn(controllerId, 'info');
-        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
         var $q = common.$q;
         var noToast = false;
 
@@ -6118,11 +6230,11 @@
 
         function deleteOrganization(organization) {
             function executeDelete() {
-                if (organization && organization.resourceId && organization.hashKey) {
+                if (organization && organization.resourceId) {
                     organizationService.deleteCachedOrganization(organization.hashKey, organization.resourceId)
                         .then(function () {
                             logSuccess("Deleted organization " + organization.name);
-                            $location.path('/organizations');
+                            $location.path('/organization');
                         },
                         function (error) {
                             logError(common.unexpectedOutcome(error));
@@ -6130,9 +6242,12 @@
                     );
                 }
             }
-            var confirm = $mdDialog.confirm().title('Delete ' + organization.name + '?').ok('Yes').cancel('No');
-            $mdDialog.show(confirm).then(executeDelete);
-
+            if (angular.isDefined(organization) && organization.resourceId) {
+                var confirm = $mdDialog.confirm().title('Delete ' + organization.name + '?').ok('Yes').cancel('No');
+                $mdDialog.show(confirm).then(executeDelete);
+            } else {
+                logInfo("You must first select an organization to delete.")
+            }
         }
 
         function edit(organization) {
@@ -6151,14 +6266,12 @@
 
         function getOrganizationReference(input) {
             var deferred = $q.defer();
-            vm.loadingOrganizations = true;
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    vm.loadingOrganizations = false;
-                    deferred.resolve(data);
+                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data || []);
                 }, function (error) {
-                    vm.loadingOrganizations = false;
-                    logError(common.unexpectedOutcome(error));
+                    logError('Error getting organizations', error, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
@@ -6224,7 +6337,7 @@
         function processResult(results) {
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Organization saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                logWarning("Organization saved, but location is unavailable. CORS is not implemented correctly at remote host.");
             } else {
                 vm.organization.resourceId = common.setResourceId(vm.organization.resourceId, resourceVersionId);
                 logSuccess("Organization saved at " + resourceVersionId);
@@ -6271,11 +6384,6 @@
             get: canDelete
         });
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
         function activate() {
             common.activateController([getActiveServer(), getOrganizationTypes()], controllerId).then(function () {
                 getRequestedOrganization();
@@ -6304,6 +6412,49 @@
                 });
         }
 
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/organization/edit/new');
+                        break;
+                    case 1:
+                        createRandomPatients();
+                        break;
+                    case 2:
+                        $location.path('/organization/organization-detailed-search');
+                        break;
+                    case 3:
+                        $location.path('/organization');
+                        break;
+                    case 4:
+                        deleteOrganization(vm.organization);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new organization', icon: 'add', index: 0},
+                    {name: 'Create random patients', icon: 'group', index: 1},
+                    {name: 'Detailed search', icon: 'search', index: 2},
+                    {name: 'Quick find', icon: 'hospital', index: 3},
+                    {name: 'Delete organization', icon: 'delete', index: 4},
+                ];
+                this.title = 'Organization search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
         vm.activeServer = null;
         vm.cancel = cancel;
         vm.activate = activate;
@@ -6313,15 +6464,16 @@
         vm.getOrganizationReference = getOrganizationReference;
         vm.getTitle = getTitle;
         vm.goBack = goBack;
+        vm.isBusy = false;
         vm.isSaving = false;
         vm.isEditing = true;
         vm.loadingOrganizations = false;
         vm.organization = undefined;
         vm.organizationTypes = undefined;
         vm.save = save;
+        vm.searchText = undefined;
         vm.states = undefined;
         vm.title = 'organizationDetail';
-        vm.toggleSideNav = toggleSideNav;
         vm.createRandomPatients = createRandomPatients;
         vm.createRandomPersons = createRandomPersons;
 
@@ -6329,19 +6481,20 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
+        ['$location', '$mdBottomSheet', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
 
-})();(function () {
+})
+();(function () {
     'use strict';
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdSidenav, common, config, fhirServers, organizationService) {
-        var keyCodes = config.keyCodes;
+    function organizationSearch($location, $mdBottomSheet, $mdSidenav, common, fhirServers, organizationService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
         var noToast = false;
+        var $q = common.$q;
 
         /* jshint validthis:true */
         var vm = this;
@@ -6380,22 +6533,17 @@
             }
         }
 
-        function submit(valid) {
-            if (valid) {
-                toggleSpinner(true);
-                organizationService.getOrganizations(vm.activeServer.baseUrl, vm.searchText)
-                    .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
-                        return data;
-                    }, function (error) {
-                        toggleSpinner(false);
-                        logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
-                    })
-                    .then(processSearchResults)
-                    .then(function () {
-                        toggleSpinner(false);
-                    });
-            }
+        function querySearch(searchText) {
+            var deferred = $q.defer();
+            organizationService.getOrganizations(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data.entry || []);
+                }, function (error) {
+                    logError('Error getting organizations', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
         }
 
         function dereferenceLink(url) {
@@ -6414,21 +6562,41 @@
                 });
         }
 
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/organization/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/organization/organization-detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/organization');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new organization', icon: 'add', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'hospital', index: 2}
+                ];
+                this.title = 'Organization search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
             }
         }
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
-        function toggleSpinner(on) {
-            vm.isBusy = on;
-        }
-
+        vm.actions = actions;
         vm.activeServer = null;
         vm.isBusy = false;
         vm.organizations = [];
@@ -6438,20 +6606,18 @@
             totalResults: 0,
             links: null
         };
+        vm.querySearch = querySearch;
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'Organizations';
-        vm.keyPress = keyPress;
         vm.dereferenceLink = dereferenceLink;
-        vm.submit = submit;
         vm.goToDetail = goToDetail;
-        vm.toggleSideNav = toggleSideNav;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'organizationService', organizationSearch]);
+        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'fhirServers', 'organizationService', organizationSearch]);
 })();
 (function () {
     'use strict';
@@ -6463,6 +6629,7 @@
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
         var $q = common.$q;
+        var noToast = false;
 
         function addOrganization(resource) {
             _prepArrays(resource)
@@ -6504,7 +6671,7 @@
                 if (removed) {
                     deferred.resolve();
                 } else {
-                    logWarning('Organization not found in cache: ' + hashKey);
+                    logWarning('Organization not found in cache: ' + hashKey, null, noToast);
                     deferred.resolve();
                 }
             }
@@ -6586,7 +6753,7 @@
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
-                                organizations.push({display: item.resource.name, reference: item.resource.id});
+                                organizations.push({display: item.resource.name, reference: baseUrl + '/Organization/' + item.resource.id});
                             });
                     }
                     if (organizations.length === 0) {
@@ -6734,7 +6901,7 @@
 
     function patientDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
                            common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService) {
+                           organizationService, patientService, contactPointService, localValueSets) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -6864,6 +7031,7 @@
                 demographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger);
                 demographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
                 demographicsService.setBirthDate(vm.patient.birthDate);
+                demographicsService.initializeKnownExtensions(vm.patient.extensions);
                 attachmentService.init(vm.patient.photo, "Photos");
                 identifierService.init(vm.patient.identifier);
                 addressService.init(vm.patient.address, true);
@@ -6975,7 +7143,7 @@
                 vm.isEditing = true;
                 vm.title = getTitle();
                 $window.localStorage.patient = JSON.stringify(vm.patient);
-                common.toggleProgressBar(false);
+                vm.isBusy = false;
             }
 
             var patient = patientService.initializeNewPatient();
@@ -6983,7 +7151,7 @@
                 logError("Patient must have at least one name.");
                 return;
             }
-            common.toggleProgressBar(true);
+            vm.isBusy = true;
             patient.name = humanNameService.mapFromViewModel();
             patient.photo = attachmentService.getAll();
             patient.birthDate = demographicsService.getBirthDate();
@@ -7005,14 +7173,14 @@
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
-                        common.toggleProgressBar(false);
+                        vm.isBusy = false;
                     });
             } else {
                 patientService.addPatient(patient)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
-                        common.toggleProgressBar(false);
+                        vm.isBusy = false;
                     });
             }
         }
@@ -7037,35 +7205,6 @@
             });
         }
 
-        function patientActionsMenu($event) {
-            var menuItems = [
-                {name: 'Edit', icon: 'img/account4.svg'},
-                {name: 'Locate', icon: 'img/share39.svg'},
-                {name: 'Consult', icon: 'img/clipboard99.svg'},
-                {name: 'Delete', icon: 'img/rubbish.svg'}
-            ];
-            $mdBottomSheet.show({
-                locals: {items: menuItems},
-                templateUrl: 'templates/bottomSheet.html',
-                controller: 'bottomSheetController',
-                targetEvent: $event
-            }).then(function (clickedItem) {
-                switch (clickedItem.name) {
-                    case 'Edit':
-                        logInfo('TODO: implement Edit');
-                        break;
-                    case 'Locate':
-                        logInfo('TODO: implement Locate');
-                        break;
-                    case 'Consult':
-                        logInfo('TODO: implement Consult');
-                        break;
-                    case 'Delete':
-                        deletePatient(vm.patient, $event);
-                }
-            });
-        }
-
         function canDelete() {
             return !vm.isEditing;
         }
@@ -7082,6 +7221,49 @@
             get: canDelete
         });
 
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/patient/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/patient/edit/' + vm.patient.hashKey);
+                        break;
+                    case 2:
+                        $location.path('/patient/patient-detailed-search');
+                        break;
+                    case 3:
+                        $location.path('/patient');
+                        break;
+                    case 4:
+                        deletePatient(vm.patient);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new patient', icon: 'add', index: 0},
+                    {name: 'Edit patient', icon: 'group', index: 1},
+                    {name: 'Detailed search', icon: 'search', index: 2},
+                    {name: 'Quick find', icon: 'hospital', index: 3},
+                    {name: 'Delete patient', icon: 'delete', index: 4},
+                ];
+                this.title = 'Organization search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
         vm.activeServer = null;
         vm.calculateAge = calculateAge;
         vm.clearErrors = clearErrors;
@@ -7090,6 +7272,7 @@
         vm.dataEvents = [];
         vm.errors = [];
         vm.history = [];
+        vm.isBusy = false;
         vm.summary = [];
         vm.edit = edit;
         vm.getOrganizationReference = getOrganizationReference;
@@ -7108,7 +7291,6 @@
         vm.title = 'Patient Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;
-        vm.patientActionsMenu = patientActionsMenu;
 
         activate();
     }
@@ -7116,13 +7298,13 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', patientDetail]);
+            'organizationService', 'patientService', 'contactPointService', 'localValueSets', patientDetail]);
 })();(function () {
     'use strict';
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, $routeParams, common, config, fhirServers, localValueSets, patientService) {
+    function patientSearch($location, $mdBottomSheet, $routeParams, common, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -7387,7 +7569,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Add new patient', icon: 'add', index: 0},
-                    {name: 'Detailed search', icon: 'group', index: 1},
+                    {name: 'Detailed search', icon: 'search', index: 1},
                     {name: 'Quick find', icon: 'person', index: 2}
                 ];
                 this.title = 'Patient search options';
@@ -7442,7 +7624,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'config', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
 })();
 (function () {
     'use strict';

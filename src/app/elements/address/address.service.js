@@ -23,11 +23,12 @@
                     address.postalCode = stateAndZip[1];
                     address.country = parts[3];
                 }
+                item.$$hashKey = common.randomHash();
                 item.address = address;
                 return item;
             }
 
-            var index = getIndex(item.$$hashKey);
+            var index = _.indexOf(addresses, item);
 
             if (index > -1) {
                 addresses[index] = updateFromFormattedAddress(item);
@@ -38,17 +39,6 @@
 
         function getAll() {
             return _.compact(addresses);
-        }
-
-        function getIndex(hashKey) {
-            if (angular.isUndefined(hashKey) === false) {
-                for (var i = 0, len = addresses.length; i < len; i++) {
-                    if (addresses[i].$$hashKey === hashKey) {
-                        return i;
-                    }
-                }
-            }
-            return -1;
         }
 
         function getMode() {
@@ -102,13 +92,12 @@
                 }
             }
             return mappedAddresses;
-
-
         }
 
         function remove(item) {
-            var index = getIndex(item.$$hashKey);
-            addresses.splice(index, 1);
+            _.remove(addresses, function (n) {
+                return item.$$hashKey === n.$$hashKey;
+            });
         }
 
         function reset() {

@@ -212,6 +212,14 @@
             return message;
         }
 
+        function randomHash() {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            for( var i=0; i < 5; i++ )
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            return text;
+        }
+
         var service = {
             // common angular dependencies
             $broadcast: $broadcast,
@@ -228,6 +236,7 @@
             logger: logger, // for accessibility
             makeHumanName: makeHumanName,
             mapDisplayToCoding: mapDisplayToCoding,
+            randomHash: randomHash,
             removeNullProperties: removeNullProperties,
             setResourceId: setResourceId,
             textContains: textContains,

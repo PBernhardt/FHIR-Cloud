@@ -1,82 +1,83 @@
-<div data-ng-controller="contactPoint as vm">
+<div ng-controller="contactPoint as vm">
     <md-content class="md-padding">
-        <md-divider>
-            <h3>Contact Point</h3>
-            <data-ng-form name="contactPointEditForm"
-                          data-ng-model="vm.contactPoint">
-                <md-radio-group data-ng-model="vm.contactPoint.use" layout="row">
-                    <md-radio-button value="work" aria-label="work">Work</md-radio-button>
-                    <md-radio-button value="home" aria-label="home">Home</md-radio-button>
-                    <md-radio-button value="mobile" aria-label="mobile"> Mobile</md-radio-button>
-                    <md-radio-button value="temp" aria-label=temp">Temp</md-radio-button>
-                    <md-radio-button value="old" aria-label="old">Former</md-radio-button>
-                </md-radio-group>
-
-                <md-input-container>
-                    <label>Email</label>
-                    <input type="email"
-                           data-ng-model="vm.contactPoint.email"/>
-                </md-input-container>
-
-                <md-input-container>
-                    <label>Phone</label>
-                    <input type="text"
-                           data-ng-model="vm.contactPoint.phone"/>
-                </md-input-container>
+        <ng-form name="contactPointEditForm"
+                      ng-model="vm.contactPoint">
 
 
-                <md-input-container>
-                    <label>Fax</label>
-                    <input type="text"
-                           data-ng-model="vm.contactPoint.fax"/>
-                </md-input-container>
+
+            <md-input-container>
+                <label>Email</label>
+                <input type="email"
+                       ng-model="vm.contactPoint.email"/>
+            </md-input-container>
+
+            <md-input-container>
+                <label>Phone</label>
+                <input type="text"
+                       ng-model="vm.contactPoint.phone"/>
+            </md-input-container>
 
 
-                <md-input-container>
-                    <label>Website</label>
-                    <input type="url"
-                           data-ng-model="vm.contactPoint.url"/>
-                </md-input-container>
+            <md-input-container>
+                <label>Fax</label>
+                <input type="text"
+                       ng-model="vm.contactPoint.fax"/>
+            </md-input-container>
 
-                <div data-ng-if="vm.contactPoint.use === 'old'">
-                    <h4>Period of former contact point</h4>
-                    <label>Start</label>
-                    <input
-                            type="date"
-                            data-ng-model="vm.contactPoint.period.start">
-                    <label>End</label>
-                    <input
-                            type="date"
-                            data-ng-model="vm.contactPoint.period.end">
-                </div>
-                <div class="md-padding">
-                    <md-button data-ng-click="vm.addToList(contactPointEditForm, vm.contactPoint)">Add to list
-                    </md-button>
-                </div>
-            </data-ng-form>
-            <div>
-                <div data-ng-if="vm.contactPoints.length > 0">
-                    <form>
-                        <section>
-                            <md-subheader>Contact Point List</md-subheader>
 
-                            <md-list>
-                                <md-item ng-repeat="a in vm.contactPoints">
-                                    <md-item-content>
-                                        <div class="md-tile-left">
+            <md-input-container>
+                <label>Website</label>
+                <input type="url"
+                       ng-model="vm.contactPoint.url"/>
+            </md-input-container>
 
-                                        </div>
-                                        <div class="md-tile-content">
-                                            <h3>{{a}}</h3>
-                                        </div>
-                                    </md-item-content>
-                                </md-item>
-                            </md-list>
-                        </section>
-                    </form>
-                </div>
+            <div ng-if="vm.contactPoint.use === 'old'">
+                <h4>Period of former contact point</h4>
+                <label>Start</label>
+                <input
+                        type="date"
+                        ng-model="vm.contactPoint.period.start">
+                <label>End</label>
+                <input
+                        type="date"
+                        ng-model="vm.contactPoint.period.end">
             </div>
-        </md-divider>
+
+            <md-radio-group ng-model="vm.contactPoint.use" layout-gt-md="row">
+                <md-radio-button value="work" aria-label="work">Work</md-radio-button>
+                <md-radio-button value="home" aria-label="home">Home</md-radio-button>
+                <md-radio-button value="mobile" aria-label="mobile"> Mobile</md-radio-button>
+                <md-radio-button value="temp" aria-label=temp">Temp</md-radio-button>
+                <md-radio-button value="old" aria-label="old">Former</md-radio-button>
+            </md-radio-group>
+
+            <div class="md-padding">
+                <md-button ng-click="vm.addToList(contactPointEditForm, vm.contactPoint)" aria-label="Save contact point to list">
+                    <md-icon md-svg-icon="list" alt="Save to contact list"></md-icon>
+                </md-button>
+            </div>
+        </ng-form>
+        <div>
+            <div ng-if="vm.contactPoints.length > 0">
+                <form>
+                    <section>
+                        <md-subheader>Contact Point List</md-subheader>
+                        <md-list>
+                            <md-item ng-repeat="a in vm.contactPoints">
+                                <md-item-content>
+                                    <div class="md-tile-left">
+
+                                    </div>
+                                    <div class="md-tile-content">
+                                        <h3>{{a}}</h3>
+                                    </div>
+                                </md-item-content>
+                            </md-item>
+                        </md-list>
+                    </section>
+                </form>
+            </div>
+        </div>
     </md-content>
 </div>
 
