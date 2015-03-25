@@ -466,8 +466,8 @@
                 templateUrl: 'patient/patient-edit.html'
             }).when('/patient/patient-detailed-search', {
                 templateUrl: 'patient/patient-detailed-search.html'
-            }).when('/patient/patient-race', {
-                templateUrl: 'patient/patient-demographics-query.html'
+            }).when('/patient/smart', {
+                templateUrl: 'patient/patient-smart.html'
             }).when('/practitioner', {
                 templateUrl: 'practitioner/practitioner-search.html'
             }).when('/person', {
@@ -7246,6 +7246,9 @@
                     case 4:
                         deletePatient(vm.patient);
                         break;
+                    case 5:
+                        $location.path('/patient/smart');
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -7255,6 +7258,7 @@
                     {name: 'Detailed search', icon: 'search', index: 2},
                     {name: 'Quick find', icon: 'hospital', index: 3},
                     {name: 'Delete patient', icon: 'delete', index: 4},
+                    {name: 'SMART App', icon: 'rx', index: 5}
                 ];
                 this.title = 'Organization search options';
                 this.performAction = function (action) {
@@ -7299,6 +7303,51 @@
         ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
             'organizationService', 'patientService', 'contactPointService', 'localValueSets', patientDetail]);
+})();(function () {
+    'use strict';
+
+    var app = angular.module('FHIRCloud');
+
+    app.directive('smartApplication', function () {
+        // Description:
+        //
+        // Usage: <smart-application app="{app}"?fhirServiceUrl={server}&patient="{patient}"></smart-application>
+        var directiveDefinitionObject = {
+            restrict: 'EA',
+            scope: {
+                'app': '=app',
+                'patient': '=patient',
+                'server': '=server'
+            },
+            templateUrl: 'templates/smart-app.html',
+            link: function (scope, element, attr) {
+
+            }
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fhirClinicalResource', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'resource': '=resource?'
+            },
+            templateUrl: 'templates/pagination.html',
+            link: function (scope, element, attr) {
+                scope.$watch('links', function (links) {
+                        if (links) {
+                            scope.refresh = _.remove(links,
+                                function (item) {
+                                    return (item.relation === 'self');
+                                });
+                        }
+                    }
+                );
+            }
+        };
+        return directiveDefinitionObject;
+    });
 })();(function () {
     'use strict';
 

@@ -133,6 +133,7 @@ module.exports = function (grunt) {
                     'app/organization/organization.search.controller.js',
                     'app/organization/organization.service.js',
                     'app/patient/patient.detail.controller.js',
+                    'app/patient/patient.directives.js',
                     'app/patient/patient.search.controller.js',
                     'app/patient/patient.service.js',
                     'app/person/person.detail.controller.js',

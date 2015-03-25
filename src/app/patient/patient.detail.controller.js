@@ -350,6 +350,9 @@
                     case 4:
                         deletePatient(vm.patient);
                         break;
+                    case 5:
+                        $location.path('/patient/smart');
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -359,6 +362,7 @@
                     {name: 'Detailed search', icon: 'search', index: 2},
                     {name: 'Quick find', icon: 'hospital', index: 3},
                     {name: 'Delete patient', icon: 'delete', index: 4},
+                    {name: 'SMART App', icon: 'rx', index: 5}
                 ];
                 this.title = 'Organization search options';
                 this.performAction = function (action) {

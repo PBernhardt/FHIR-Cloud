@@ -199,8 +199,8 @@
                 templateUrl: 'patient/patient-edit.html'
             }).when('/patient/patient-detailed-search', {
                 templateUrl: 'patient/patient-detailed-search.html'
-            }).when('/patient/patient-race', {
-                templateUrl: 'patient/patient-demographics-query.html'
+            }).when('/patient/smart', {
+                templateUrl: 'patient/patient-smart.html'
             }).when('/practitioner', {
                 templateUrl: 'practitioner/practitioner-search.html'
             }).when('/person', {
