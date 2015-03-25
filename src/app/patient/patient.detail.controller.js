@@ -16,7 +16,6 @@
         var $q = common.$q;
         var noToast = false;
 
-
         function activate() {
             common.activateController([getActiveServer()], controllerId).then(function () {
                 getRequestedPatient();
@@ -155,6 +154,11 @@
             }
 
             vm.lookupKey = $routeParams.hashKey;
+
+            if ($routeParams.smartApp !== undefined) {
+                vm.smartLaunchUrl = "https://fhir.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api.smarthealthit.org&patientId=1520204";
+                return;
+            }
             if (vm.lookupKey === "current") {
                 if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
                     if (angular.isUndefined($routeParams.id)) {
@@ -178,7 +182,9 @@
                         .then(initializeAdministrationData, function (error) {
                             logError(common.unexpectedOutcome(error));
                         }).then(function () {
-                            getEverything(vm.patient.resourceId);
+                            if (vm.patient.resourceId) {
+                                getEverything(vm.patient.resourceId);
+                            }
                         });
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
@@ -351,7 +357,7 @@
                         deletePatient(vm.patient);
                         break;
                     case 5:
-                        $location.path('/patient/smart');
+                        $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
                         break;
                 }
             });
@@ -362,9 +368,9 @@
                     {name: 'Detailed search', icon: 'search', index: 2},
                     {name: 'Quick find', icon: 'hospital', index: 3},
                     {name: 'Delete patient', icon: 'delete', index: 4},
-                    {name: 'SMART App', icon: 'rx', index: 5}
+                    {name: 'SMART App', icon: 'smart', index: 5}
                 ];
-                this.title = 'Organization search options';
+                this.title = 'Patient options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
                 };
@@ -396,6 +402,7 @@
         vm.loadingOrganizations = false;
         vm.patient = undefined;
         vm.save = save;
+        vm.smartLaunchUrl = '';
         vm.title = 'Patient Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;

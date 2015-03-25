@@ -199,7 +199,7 @@
                 templateUrl: 'patient/patient-edit.html'
             }).when('/patient/patient-detailed-search', {
                 templateUrl: 'patient/patient-detailed-search.html'
-            }).when('/patient/smart', {
+            }).when('/patient/smart/:smartApp/:patientId', {
                 templateUrl: 'patient/patient-smart.html'
             }).when('/practitioner', {
                 templateUrl: 'practitioner/practitioner-search.html'
@@ -246,6 +246,7 @@
             .icon("cloud", "./assets/svg/cloud.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
+            .icon("error", "./assets/svb/error.svg", 48)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
@@ -256,10 +257,12 @@
             .icon("organization", "./assets/svg/hospital.svg", 24)
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
+            .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
             .icon("saveToList", "./assets/svg/saveToList.svg", 24)
             .icon("search", "./assets/svg/search.svg", 24)
             .icon("settings", "./assets/svg/settings.svg", 24)
+            .icon("smart", "./assets/svg/SMART.svg", 24)
             .icon("view", "./assets/svg/visibility.svg", 12);
     }]);
 

@@ -1,9 +1,7 @@
 <div flex layout-wrap ng-controller="patientDetail as vm">
-    <!--
     <div flex="90" hide-sm>
-        <iframe src="https://fhir.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api.smarthealthit.org&patientId=1520204" style="height: 1280px; width: 800px;" allowfullscreen="" frameborder="0"></iframe>
-    </div>-->
-    <smart-application app="https://fhir.smarthealthit.org/apps/cardiac-risk/launch.html" server="https%3A%2F%2Ffhir-open-api.smarthealthit.org" patient="1520204"></smart-application>
+        <smart-application smart-url="vm.smartLaunchUrl"></smart-application>
+    </div>
     <div flex="10">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
