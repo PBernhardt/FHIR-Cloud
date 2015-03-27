@@ -3,6 +3,36 @@
 
     var app = angular.module('FHIRCloud');
 
+    app.directive('smartApp', function (common, $http, $compile, $sce) {
+        // Description:
+        //
+        // Usage:
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'smartUrl': '=smartUrl'
+            },
+            link: function (scope, element, attr) {
+                var loadedUri = '';
+
+                scope.$watch('smartUrl', function (uri) {
+                    if (loadedUri !== uri) {
+                        loadedUri = uri;
+
+                        scope.trustedUri = $sce.trustAsResourceUrl(scope.smartUrl);
+
+                        var iFrameHtml = '<iframe src="{{trustedUri}}" style="height: 1280px; width: 800px;" allowfullscreen="" frameborder="0"></iframe>';
+
+                        var markup = $compile(iFrameHtml)(scope);
+                        element.empty();
+                        element.append(markup);
+                    }
+                })
+            }
+        };
+        return directiveDefinitionObject;
+    });
+
     app.directive('smartApplication', function (common, $http, $compile, $sce) {
         // Description:
         //

@@ -37,10 +37,18 @@
         };
     });
 
-    app.filter('smartUrl', function($sce) {
-        return function(appUrl, fhirServer, patientId) {
+    app.filter('smartUrl', function ($sce) {
+        return function (appUrl, fhirServer, patientId) {
             var launchUrl = appUrl + '?fhirServiceUrl=' + fhirServer + '&patient=' + patientId;
             return $sce.trustAsResourceUrl(launchUrl);
+        }
+    });
+
+    app.filter('dateString', function () {
+        return function (dateTime) {
+            if (angular.isDefined(dateTime)) {
+                return moment(dateTime).format('YYYY-MM-DD');
+            }
         }
     });
 

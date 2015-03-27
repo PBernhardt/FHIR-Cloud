@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-
     <title>FHIR Cloud</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="shortcut icon" href="favicon.ico"/>
@@ -56,9 +55,9 @@
             </md-toolbar>
             <md-content>
                 <md-list>
-                    <md-item ng-repeat="s in vm.FHIRServers">
-                        <md-button ng-click="vm.selectServer(s)" ng-class="{'selected' : s === s.selected }">
-                            {{s.name}}
+                    <md-item ng-repeat="server in vm.FHIRServers">
+                        <md-button ng-click="vm.selectServer(server)" ng-class="{'selected' : server === server.selected }">
+                            {{server.name}}
                         </md-button>
                     </md-item>
                 </md-list>

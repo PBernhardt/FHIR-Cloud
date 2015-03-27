@@ -15,7 +15,18 @@
 
         function addToList(form, item) {
             if (form.$valid) {
-                contactPointService.add(item);
+                if (item.email) {
+                    contactPointService.add({"system": "email", "value": item.email, "use": item.use});
+                }
+                if (item.phone) {
+                    contactPointService.add({"system": "phone", "value": item.phone, "use": item.use});
+                }
+                if (item.fax) {
+                    contactPointService.add({"system": "fax", "value": item.fax, "use": item.use});
+                }
+                if (item.url) {
+                    contactPointService.add({"system": "url", "value": item.url, "use": item.use});
+                }
                 vm.contactPoints = contactPointService.getAll();
                 vm.contactPoint = {};
                 form.$setPristine();

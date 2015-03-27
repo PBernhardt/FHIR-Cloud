@@ -42,8 +42,8 @@
                     },
                     {
                         "id": 2,
-                        "name": "SMART on FHIR",
-                        "baseUrl": "https://fhir-api-dstu2.smartplatforms.org"
+                        "name": "SMART on FHIR (open)",
+                        "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org"
                     },
                     {
                         "id": 4,
@@ -53,7 +53,7 @@
                     {
                         "id": 5,
                         "name": "RelayHealth",
-                        "baseUrl": "http://rhc-fhirservice-dev.cloudapp.net"
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice"
                     },
                     {
                         "id": 6,

@@ -154,7 +154,7 @@
                 queryParams.push(_.clone(queryParam));
             }
             _.forEach(queryParams, function (item) {
-                queryString = queryString.concat(item.param, "=", item.value, "&");
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
             });
             queryString = _.trimRight(queryString, '&');
 

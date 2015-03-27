@@ -113,6 +113,7 @@
                 .then(function (conformance) {
                     logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                     vm.activeServer = fhirServer;
+                    fhirServers.setActiveServer(fhirServer);
                     if (angular.isArray(conformance.rest[0].security.extension)) {
                         _.forEach(conformance.rest[0].security.extension, function (ex) {
                             if (_.endsWith(ex.url, "#authorize")) {
@@ -125,7 +126,6 @@
                             }
                         })
                     }
-                    fhirServers.setActiveServer(vm.activeServer);
                 }, function (error) {
                     logInfo('Error returning conformance statement for ' + fhirServer.name, error);
                 })

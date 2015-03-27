@@ -970,8 +970,8 @@
                     },
                     {
                         "id": 2,
-                        "name": "SMART on FHIR",
-                        "baseUrl": "https://fhir-api-dstu2.smartplatforms.org"
+                        "name": "SMART on FHIR (open)",
+                        "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org"
                     },
                     {
                         "id": 4,
@@ -981,7 +981,7 @@
                     {
                         "id": 5,
                         "name": "RelayHealth",
-                        "baseUrl": "http://rhc-fhirservice-dev.cloudapp.net"
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice"
                     },
                     {
                         "id": 6,
@@ -1131,10 +1131,18 @@
         };
     });
 
-    app.filter('smartUrl', function($sce) {
-        return function(appUrl, fhirServer, patientId) {
+    app.filter('smartUrl', function ($sce) {
+        return function (appUrl, fhirServer, patientId) {
             var launchUrl = appUrl + '?fhirServiceUrl=' + fhirServer + '&patient=' + patientId;
             return $sce.trustAsResourceUrl(launchUrl);
+        }
+    });
+
+    app.filter('dateString', function () {
+        return function (dateTime) {
+            if (angular.isDefined(dateTime)) {
+                return moment(dateTime).format('YYYY-MM-DD');
+            }
         }
     });
 
@@ -2839,6 +2847,7 @@
                 .then(function (conformance) {
                     logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                     vm.activeServer = fhirServer;
+                    fhirServers.setActiveServer(fhirServer);
                     if (angular.isArray(conformance.rest[0].security.extension)) {
                         _.forEach(conformance.rest[0].security.extension, function (ex) {
                             if (_.endsWith(ex.url, "#authorize")) {
@@ -2851,7 +2860,6 @@
                             }
                         })
                     }
-                    fhirServers.setActiveServer(vm.activeServer);
                 }, function (error) {
                     logInfo('Error returning conformance statement for ' + fhirServer.name, error);
                 })
@@ -4095,7 +4103,18 @@
 
         function addToList(form, item) {
             if (form.$valid) {
-                contactPointService.add(item);
+                if (item.email) {
+                    contactPointService.add({"system": "email", "value": item.email, "use": item.use});
+                }
+                if (item.phone) {
+                    contactPointService.add({"system": "phone", "value": item.phone, "use": item.use});
+                }
+                if (item.fax) {
+                    contactPointService.add({"system": "fax", "value": item.fax, "use": item.use});
+                }
+                if (item.url) {
+                    contactPointService.add({"system": "url", "value": item.url, "use": item.use});
+                }
                 vm.contactPoints = contactPointService.getAll();
                 vm.contactPoint = {};
                 form.$setPristine();
@@ -4350,6 +4369,7 @@
                 vm.selectedLanguage = null;
             }
         }
+
         function loadEthnicities() {
             return vm.ethnicities = localValueSets.ethnicity().concept;
         }
@@ -4744,7 +4764,7 @@
                 if (angular.isDefined(item.family)) {
                     name.family =  item.family.split(' ');
                 }
-                humanNameService.add(name);
+                humanNameService.add(_.clone(name));
                 vm.humanNames = humanNameService.getAll();
                 initName();
                 form.$setPristine();
@@ -4807,7 +4827,7 @@
 
     var serviceId = 'humanNameService';
 
-    function humanNameService(common) {
+    function humanNameService($filter) {
         var humanNames = [];
         var _mode = 'multi';
 
@@ -4816,6 +4836,7 @@
             if (index > -1) {
                 humanNames[index] = item;
             } else {
+                item.text = $filter('fullName')(item);
                 humanNames.push(item);
             }
         }
@@ -4855,18 +4876,18 @@
                     if ((angular.isUndefined(item) || item === null) === false) {
                         var humanName = {};
                         if (angular.isArray(item.given)) {
-                            humanName.given = item.given.join(' ');
+                            humanName.given = item.given;
                         }
                         if (angular.isArray(item.family)) {
-                            humanName.family = item.family.join(' ');
+                            humanName.family = item.family;
                         }
                         if (angular.isArray(item.prefix)) {
-                            humanName.prefix = item.prefix.join(' ');
+                            humanName.prefix = item.prefix;
                         }
                         if (angular.isArray(item.suffix)) {
-                            humanName.suffix = item.suffix.join(' ');
+                            humanName.suffix = item.suffix;
                         }
-                        humanName.text = item.text;
+                        humanName.text = item.text || $filter('fullName')(item);
                         humanName.period = item.period;
                         humanName.use = item.use;
                         humanNames.push(humanName);
@@ -4882,18 +4903,10 @@
             var model = [];
             _.forEach(humanNames, function (item) {
                 var mappedItem = {};
-                if (item.given) {
-                    mappedItem.given = item.given.split(' ');
-                }
-                if (item.family) {
-                    mappedItem.family = item.family.split(' ');
-                }
-                if (item.prefix) {
-                    mappedItem.prefix = item.prefix.split(' ');
-                }
-                if (item.suffix) {
-                    mappedItem.suffix = item.suffix.split(' ');
-                }
+                mappedItem.given = item.given;
+                mappedItem.family = item.family;
+                mappedItem.prefix = item.prefix;
+                mappedItem.suffix = item.suffix;
                 mappedItem.text = item.text;
                 mappedItem.period = item.period;
                 mappedItem.use = item.use;
@@ -4935,7 +4948,7 @@
 
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', humanNameService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', humanNameService]);
 
 })();(function () {
     'use strict';
@@ -6909,7 +6922,7 @@
 
     var controllerId = 'patientDetail';
 
-    function patientDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
+    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
                            common, demographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, localValueSets) {
 
@@ -7014,7 +7027,7 @@
                     deferred.resolve(data);
                 }, function (error) {
                     vm.loadingOrganizations = false;
-                    logError(common.unexpectedOutcome(error));
+                    logError(common.unexpectedOutcome(error), null, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
@@ -7028,7 +7041,7 @@
                     logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
                 }, function (error) {
                     vm.loadingOrganizations = false;
-                    logError(common.unexpectedOutcome(error));
+                    logError(common.unexpectedOutcome(error), null, noToast);
                 });
         }
 
@@ -7062,7 +7075,23 @@
             vm.lookupKey = $routeParams.hashKey;
 
             if ($routeParams.smartApp !== undefined) {
-                vm.smartLaunchUrl = "https://fhir.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api.smarthealthit.org&patientId=1520204";
+                var appUrl = '';
+                vm.patient = {};
+                vm.patient.id = $routeParams.patientId;
+                switch ($routeParams.smartApp) {
+                    case 'cardiac-risk':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
+                        break;
+                    case 'growth-chart':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
+                        break;
+                    default:
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
+                }
+                var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
+
+                // vm.smartLaunchUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
+                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + vm.patient.id;
                 return;
             }
             if (vm.lookupKey === "current") {
@@ -7167,10 +7196,9 @@
                 logError("Patient must have at least one name.");
                 return;
             }
-            vm.isBusy = true;
             patient.name = humanNameService.mapFromViewModel();
             patient.photo = attachmentService.getAll();
-            patient.birthDate = demographicsService.getBirthDate();
+            patient.birthDate = $filter('dateString')(demographicsService.getBirthDate());
             patient.gender = demographicsService.getGender();
             patient.maritalStatus = demographicsService.getMaritalStatus();
             patient.multipleBirthBoolean = demographicsService.getMultipleBirth();
@@ -7184,7 +7212,9 @@
             patient.managingOrganization = vm.patient.managingOrganization;
 
             patient.active = vm.patient.active;
+            vm.isBusy = true;
             if (vm.isEditing) {
+                patient.id = vm.patient.id;
                 patientService.updatePatient(vm.patient.resourceId, patient)
                     .then(processResult,
                     function (error) {
@@ -7265,6 +7295,12 @@
                     case 5:
                         $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
                         break;
+                    case 6:
+                        $location.path('/patient/smart/growth-chart/' + vm.patient.id);
+                        break;
+                    case 7:
+                        $location.path('/patient/smart/diabetes-monograph/' + vm.patient.id);
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -7274,9 +7310,11 @@
                     {name: 'Detailed search', icon: 'search', index: 2},
                     {name: 'Quick find', icon: 'hospital', index: 3},
                     {name: 'Delete patient', icon: 'delete', index: 4},
-                    {name: 'SMART App', icon: 'smart', index: 5}
+                    {name: 'Cardiac Risk', icon: 'smart', index: 5},
+                    {name: 'Growth Chart', icon: 'smart', index: 6},
+                    {name: 'BP Centiles', icon: 'smart', index: 7}
                 ];
-                this.title = 'Organization search options';
+                this.title = 'Patient options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
                 };
@@ -7317,13 +7355,43 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
             'organizationService', 'patientService', 'contactPointService', 'localValueSets', patientDetail]);
 })();(function () {
     'use strict';
 
     var app = angular.module('FHIRCloud');
+
+    app.directive('smartApp', function (common, $http, $compile, $sce) {
+        // Description:
+        //
+        // Usage:
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'smartUrl': '=smartUrl'
+            },
+            link: function (scope, element, attr) {
+                var loadedUri = '';
+
+                scope.$watch('smartUrl', function (uri) {
+                    if (loadedUri !== uri) {
+                        loadedUri = uri;
+
+                        scope.trustedUri = $sce.trustAsResourceUrl(scope.smartUrl);
+
+                        var iFrameHtml = '<iframe src="{{trustedUri}}" style="height: 1280px; width: 800px;" allowfullscreen="" frameborder="0"></iframe>';
+
+                        var markup = $compile(iFrameHtml)(scope);
+                        element.empty();
+                        element.append(markup);
+                    }
+                })
+            }
+        };
+        return directiveDefinitionObject;
+    });
 
     app.directive('smartApplication', function (common, $http, $compile, $sce) {
         // Description:
@@ -7579,7 +7647,7 @@
                 queryParams.push(_.clone(queryParam));
             }
             _.forEach(queryParams, function (item) {
-                queryString = queryString.concat(item.param, "=", item.value, "&");
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
             });
             queryString = _.trimRight(queryString, '&');
 
@@ -7848,7 +7916,6 @@
                 for (var i = 0, len = cachedPatients.length; i < len; i++) {
                     if (cachedPatients[i].$$hashKey === hashKey) {
                         cachedPatient = cachedPatients[i].resource;
-                        //TODO: FHIR Change request to make fully-qualified resourceId part of meta data
                         cachedPatient.resourceId = (searchResults.base + cachedPatient.resourceType + '/' + cachedPatient.id);
                         cachedPatient.hashKey = hashKey;
                         break;
@@ -7959,7 +8026,7 @@
             }
 
             if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:Organization=' + organizationId;
+                var orgParam = 'organization:=' + organizationId;
                 if (params.length > 1) {
                     params = params + '&' + orgParam;
                 } else {
@@ -7996,14 +8063,16 @@
                 "gender": undefined,
                 "birthDate": null,
                 "maritalStatus": undefined,
-                //              "multipleBirth": false,
+                "multipleBirth": false,
                 "telecom": [],
                 "address": [],
                 "photo": [],
                 "communication": [],
                 "managingOrganization": null,
+                "careProvider": [],
                 "contact": [],
                 "link": [],
+                "extension": [],
                 "active": true
             };
         }
@@ -8028,7 +8097,7 @@
             var deferred = $q.defer();
             $http.get('http://api.randomuser.me/?results=100')
                 .success(function (data) {
-                     angular.forEach(data.results, function (result) {
+                    angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
@@ -8077,7 +8146,8 @@
                             "link": [],
                             "active": true
                         };
-                        var timer = $timeout(function () {}, 3000);
+                        var timer = $timeout(function () {
+                        }, 3000);
                         timer.then(function () {
                             addPatient(resource).then(function (results) {
                                 logInfo("Created patient " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);

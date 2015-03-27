@@ -3,7 +3,7 @@
 
     var serviceId = 'humanNameService';
 
-    function humanNameService(common) {
+    function humanNameService($filter) {
         var humanNames = [];
         var _mode = 'multi';
 
@@ -12,6 +12,7 @@
             if (index > -1) {
                 humanNames[index] = item;
             } else {
+                item.text = $filter('fullName')(item);
                 humanNames.push(item);
             }
         }
@@ -51,18 +52,18 @@
                     if ((angular.isUndefined(item) || item === null) === false) {
                         var humanName = {};
                         if (angular.isArray(item.given)) {
-                            humanName.given = item.given.join(' ');
+                            humanName.given = item.given;
                         }
                         if (angular.isArray(item.family)) {
-                            humanName.family = item.family.join(' ');
+                            humanName.family = item.family;
                         }
                         if (angular.isArray(item.prefix)) {
-                            humanName.prefix = item.prefix.join(' ');
+                            humanName.prefix = item.prefix;
                         }
                         if (angular.isArray(item.suffix)) {
-                            humanName.suffix = item.suffix.join(' ');
+                            humanName.suffix = item.suffix;
                         }
-                        humanName.text = item.text;
+                        humanName.text = item.text || $filter('fullName')(item);
                         humanName.period = item.period;
                         humanName.use = item.use;
                         humanNames.push(humanName);
@@ -78,18 +79,10 @@
             var model = [];
             _.forEach(humanNames, function (item) {
                 var mappedItem = {};
-                if (item.given) {
-                    mappedItem.given = item.given.split(' ');
-                }
-                if (item.family) {
-                    mappedItem.family = item.family.split(' ');
-                }
-                if (item.prefix) {
-                    mappedItem.prefix = item.prefix.split(' ');
-                }
-                if (item.suffix) {
-                    mappedItem.suffix = item.suffix.split(' ');
-                }
+                mappedItem.given = item.given;
+                mappedItem.family = item.family;
+                mappedItem.prefix = item.prefix;
+                mappedItem.suffix = item.suffix;
                 mappedItem.text = item.text;
                 mappedItem.period = item.period;
                 mappedItem.use = item.use;
@@ -131,6 +124,6 @@
 
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', humanNameService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', humanNameService]);
 
 })();

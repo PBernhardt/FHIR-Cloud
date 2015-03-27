@@ -40,7 +40,7 @@
                 if (angular.isDefined(item.family)) {
                     name.family =  item.family.split(' ');
                 }
-                humanNameService.add(name);
+                humanNameService.add(_.clone(name));
                 vm.humanNames = humanNameService.getAll();
                 initName();
                 form.$setPristine();

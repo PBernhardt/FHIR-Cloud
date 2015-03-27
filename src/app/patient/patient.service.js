@@ -96,7 +96,6 @@
                 for (var i = 0, len = cachedPatients.length; i < len; i++) {
                     if (cachedPatients[i].$$hashKey === hashKey) {
                         cachedPatient = cachedPatients[i].resource;
-                        //TODO: FHIR Change request to make fully-qualified resourceId part of meta data
                         cachedPatient.resourceId = (searchResults.base + cachedPatient.resourceType + '/' + cachedPatient.id);
                         cachedPatient.hashKey = hashKey;
                         break;
@@ -207,7 +206,7 @@
             }
 
             if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:Organization=' + organizationId;
+                var orgParam = 'organization:=' + organizationId;
                 if (params.length > 1) {
                     params = params + '&' + orgParam;
                 } else {
@@ -244,14 +243,16 @@
                 "gender": undefined,
                 "birthDate": null,
                 "maritalStatus": undefined,
-                //              "multipleBirth": false,
+                "multipleBirth": false,
                 "telecom": [],
                 "address": [],
                 "photo": [],
                 "communication": [],
                 "managingOrganization": null,
+                "careProvider": [],
                 "contact": [],
                 "link": [],
+                "extension": [],
                 "active": true
             };
         }
@@ -276,7 +277,7 @@
             var deferred = $q.defer();
             $http.get('http://api.randomuser.me/?results=100')
                 .success(function (data) {
-                     angular.forEach(data.results, function (result) {
+                    angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
@@ -325,7 +326,8 @@
                             "link": [],
                             "active": true
                         };
-                        var timer = $timeout(function () {}, 3000);
+                        var timer = $timeout(function () {
+                        }, 3000);
                         timer.then(function () {
                             addPatient(resource).then(function (results) {
                                 logInfo("Created patient " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);

@@ -28,6 +28,7 @@
                 vm.selectedLanguage = null;
             }
         }
+
         function loadEthnicities() {
             return vm.ethnicities = localValueSets.ethnicity().concept;
         }

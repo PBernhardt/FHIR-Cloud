@@ -63,13 +63,20 @@
                     <section>
                         <md-subheader>Contact Point List</md-subheader>
                         <md-list>
-                            <md-item ng-repeat="a in vm.contactPoints">
+                            <md-item ng-repeat="cp in vm.contactPoints">
                                 <md-item-content>
                                     <div class="md-tile-left">
-
+                                        <md-button ng-click="vm.removeListItem(cp)" aria-label="Remove from list">
+                                            <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                                        </md-button>
                                     </div>
                                     <div class="md-tile-content">
-                                        <h3>{{a}}</h3>
+                                        <h3>{{::cp.value}}</h3>
+                                        <h4>{{::cp.use}}</h4>
+
+                                        <p ng-if="cp.period">
+                                            {{::cp.period | periodText}}
+                                        </p>
                                     </div>
                                 </md-item-content>
                             </md-item>
