@@ -960,17 +960,12 @@
                 var baseList = [
                     {
                         "id": 0,
-                        "name": "Health Directions (open)",
+                        "name": "Health Directions",
                         "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
                     },
                     {
-                        "id": 1,
-                        "name": "Health Directions",
-                        "baseUrl": "https://fhir-dev.healthintersections.com.au/closed"
-                    },
-                    {
                         "id": 2,
-                        "name": "SMART on FHIR (open)",
+                        "name": "SMART on FHIR",
                         "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org"
                     },
                     {
@@ -992,6 +987,21 @@
                         "id": 7,
                         "name": "Argonaut Reference",
                         "baseUrl": "http://argonaut.healthintersections.com.au/open"
+                    },
+                    {
+                        "id": 8,
+                        "name": "EPIC",
+                        "baseUrl": "http://open.epic.com/Clinical/FHIR"
+                    },
+                    {
+                        "id": 9,
+                        "name": "Cerner",
+                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                    },
+                    {
+                        "id": 10,
+                        "name": "AEGIS",
+                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
                     }
                 ];
                 var servers = dataCache.readFromCache('servers');
@@ -2830,14 +2840,15 @@
         }
 
         function authenticate(ev) {
-            $mdDialog.show(
-                $mdDialog.alert()
-                    .title('FHIR Cloud')
-                    .content('Active Server: ' + vm.activeServer.name)
-                    .ariaLabel('About FHIR Cloud')
-                    .ok('Close')
-                    .targetEvent(ev)
-            );
+            $mdDialog.show({
+                templateUrl: './templates/authenticate.html',
+                targetEvent: ev
+            })
+                .then(function (data) {
+                    // what they entered
+                }, function () {
+                    // login cancelled
+                })
         }
 
         function selectServer(fhirServer) {
@@ -2848,7 +2859,9 @@
                     logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                     vm.activeServer = fhirServer;
                     fhirServers.setActiveServer(fhirServer);
-                    if (angular.isArray(conformance.rest[0].security.extension)) {
+                    if (angular.isUndefined(conformance.rest[0].security)) {
+                        logInfo("Security information missing - this is an OPEN server", null, noToast);
+                    } else if (angular.isArray(conformance.rest[0].security.extension)) {
                         _.forEach(conformance.rest[0].security.extension, function (ex) {
                             if (_.endsWith(ex.url, "#authorize")) {
                                 vm.activeServer.authorizeUri = ex.valueUri;
@@ -7117,7 +7130,7 @@
                         .then(initializeAdministrationData, function (error) {
                             logError(common.unexpectedOutcome(error));
                         }).then(function () {
-                            if (vm.patient.resourceId) {
+                            if (vm.patient && vm.patient.resourceId) {
                                 getEverything(vm.patient.resourceId);
                             }
                         });
@@ -7278,41 +7291,33 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/patient/edit/new');
+                        //TODO
                         break;
                     case 1:
-                        $location.path('/patient/edit/' + vm.patient.hashKey);
-                        break;
-                    case 2:
-                        $location.path('/patient/patient-detailed-search');
-                        break;
-                    case 3:
-                        $location.path('/patient');
-                        break;
-                    case 4:
-                        deletePatient(vm.patient);
-                        break;
-                    case 5:
                         $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
                         break;
-                    case 6:
+                    case 2:
                         $location.path('/patient/smart/growth-chart/' + vm.patient.id);
                         break;
-                    case 7:
-                        $location.path('/patient/smart/diabetes-monograph/' + vm.patient.id);
+                    case 3:
+                        $location.path('/patient/edit/new');
+                        break;
+                    case 4:
+                        $location.path('/patient/edit/' + vm.patient.hashKey);
+                        break;
+                    case 5:
+                        deletePatient(vm.patient);
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new patient', icon: 'add', index: 0},
-                    {name: 'Edit patient', icon: 'group', index: 1},
-                    {name: 'Detailed search', icon: 'search', index: 2},
-                    {name: 'Quick find', icon: 'hospital', index: 3},
-                    {name: 'Delete patient', icon: 'delete', index: 4},
-                    {name: 'Cardiac Risk', icon: 'smart', index: 5},
-                    {name: 'Growth Chart', icon: 'smart', index: 6},
-                    {name: 'BP Centiles', icon: 'smart', index: 7}
+                    {name: 'Consult', icon: 'rx', index: 0},
+                    {name: 'Cardiac Risk', icon: 'smart', index: 1},
+                    {name: 'Growth Chart', icon: 'smart', index: 2},
+                    {name: 'Add new patient', icon: 'add', index: 3},
+                    {name: 'Edit patient', icon: 'edit', index: 4},
+                    {name: 'Delete patient', icon: 'delete', index: 5}
                 ];
                 this.title = 'Patient options';
                 this.performAction = function (action) {

@@ -96,14 +96,15 @@
         }
 
         function authenticate(ev) {
-            $mdDialog.show(
-                $mdDialog.alert()
-                    .title('FHIR Cloud')
-                    .content('Active Server: ' + vm.activeServer.name)
-                    .ariaLabel('About FHIR Cloud')
-                    .ok('Close')
-                    .targetEvent(ev)
-            );
+            $mdDialog.show({
+                templateUrl: './templates/authenticate.html',
+                targetEvent: ev
+            })
+                .then(function (data) {
+                    // what they entered
+                }, function () {
+                    // login cancelled
+                })
         }
 
         function selectServer(fhirServer) {
@@ -114,7 +115,9 @@
                     logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                     vm.activeServer = fhirServer;
                     fhirServers.setActiveServer(fhirServer);
-                    if (angular.isArray(conformance.rest[0].security.extension)) {
+                    if (angular.isUndefined(conformance.rest[0].security)) {
+                        logInfo("Security information missing - this is an OPEN server", null, noToast);
+                    } else if (angular.isArray(conformance.rest[0].security.extension)) {
                         _.forEach(conformance.rest[0].security.extension, function (ex) {
                             if (_.endsWith(ex.url, "#authorize")) {
                                 vm.activeServer.authorizeUri = ex.valueUri;

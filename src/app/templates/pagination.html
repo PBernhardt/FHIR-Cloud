@@ -1,8 +1,8 @@
-<section layout="row" layout-sm="column"
-         layout-align="space-between center" data-ng-show="links && links.length > 0">
+<div layout="row" layout-sm="column"
+         layout-align="space-between center" data-ng-show="links && links.length > 1">
     <label>More Results</label>
 
     <div data-ng-repeat="item in links">
         <md-button class="md-raised" ng-click="click({url:item.url})">{{item.relation}}</md-button>
     </div>
-</section>
+</div>

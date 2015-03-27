@@ -32,17 +32,12 @@
                 var baseList = [
                     {
                         "id": 0,
-                        "name": "Health Directions (open)",
+                        "name": "Health Directions",
                         "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
                     },
                     {
-                        "id": 1,
-                        "name": "Health Directions",
-                        "baseUrl": "https://fhir-dev.healthintersections.com.au/closed"
-                    },
-                    {
                         "id": 2,
-                        "name": "SMART on FHIR (open)",
+                        "name": "SMART on FHIR",
                         "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org"
                     },
                     {
@@ -64,6 +59,21 @@
                         "id": 7,
                         "name": "Argonaut Reference",
                         "baseUrl": "http://argonaut.healthintersections.com.au/open"
+                    },
+                    {
+                        "id": 8,
+                        "name": "EPIC",
+                        "baseUrl": "http://open.epic.com/Clinical/FHIR"
+                    },
+                    {
+                        "id": 9,
+                        "name": "Cerner",
+                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                    },
+                    {
+                        "id": 10,
+                        "name": "AEGIS",
+                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
                     }
                 ];
                 var servers = dataCache.readFromCache('servers');

@@ -1,0 +1,19 @@
+<md-dialog aria-label="authenticate">
+    <md-content>
+        <h3>Login to FHIR-Cloud</h3>
+        <md-input-container>
+            <label>User name</label>
+            <input type="text"
+                   ng-model="user">
+        </md-input-container>
+        <md-input-container>
+            <label>Password</label>
+            <input type="password"
+                   ng-model="password">
+        </md-input-container>
+        <div layout="row" layout-align="space-between center">
+            <md-button class="md-primary">Login</md-button>
+            <md-button class="md-warn">Cancel</md-button>
+        </div>
+    </md-content>
+</md-dialog>
