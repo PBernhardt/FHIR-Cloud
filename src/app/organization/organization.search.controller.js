@@ -3,7 +3,7 @@
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdBottomSheet, $mdSidenav, common, fhirServers, organizationService) {
+    function organizationSearch($location, $mdBottomSheet, $mdSidenav, common, fhirServers, localValueSets, organizationService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -39,6 +39,8 @@
             }
         }
 
+        vm.goToDetail = goToDetail;
+
         function processSearchResults(searchResults) {
             if (searchResults) {
                 vm.organizations = (searchResults.entry || []);
@@ -59,22 +61,61 @@
                 });
             return deferred.promise;
         }
+        vm.querySearch = querySearch;
+
+        function searchOrganizations(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            organizationService.searchOrganizations(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error finding organizations: ', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
 
         function dereferenceLink(url) {
-            toggleSpinner(true);
             organizationService.getOrganizationsByLink(url)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
-                    toggleSpinner(false);
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                 })
                 .then(processSearchResults)
                 .then(function () {
-                    toggleSpinner(false);
                 });
         }
+
+        vm.dereferenceLink = dereferenceLink;
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data || []);
+                }, function (error) {
+                    logError('Error getting organizations', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function loadOrganizationTypes() {
+            vm.organizationTypes = localValueSets.organizationType();
+        }
+
+        vm.loadOrganizationTypes = loadOrganizationTypes;
 
         function actions($event) {
             $mdBottomSheet.show({
@@ -90,7 +131,7 @@
                         $location.path('/organization/edit/new');
                         break;
                     case 1:
-                        $location.path('/organization/organization-detailed-search');
+                        $location.path('/organization/detailed-search');
                         break;
                     case 2:
                         $location.path('/organization');
@@ -111,25 +152,85 @@
         }
 
         vm.actions = actions;
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.organizationSearch.name) {
+                queryParam.param = "name";
+                queryParam.value = vm.organizationSearch.name;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.organizationSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.organizationSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.organizationSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.organizationSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.identifier.system && vm.organizationSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.organizationSearch.identifier.system.concat("|", vm.organizationSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.type) {
+                queryParam.param = "type";
+                queryParam.value = vm.organizationSearch.type;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.partOf) {
+                queryParam.param = "partOf";
+                queryParam.value = vm.organizationSearch.partOf.reference;
+                queryParams.push(_.clone(queryParam));
+            }
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            searchOrganizations(queryString);
+        }
+
+        vm.detailSearch = detailSearch;
+
         vm.activeServer = null;
         vm.isBusy = false;
         vm.organizations = [];
         vm.errorOutcome = null;
+        vm.organizationTypes = null;
+        vm.organizationSearch = {
+            name: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            identifier: {system: undefined, value: undefined},
+            type: undefined,
+            partOf: undefined
+        };
         vm.paging = {
             currentPage: 1,
             totalResults: 0,
             links: null
         };
-        vm.querySearch = querySearch;
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'Organizations';
-        vm.dereferenceLink = dereferenceLink;
-        vm.goToDetail = goToDetail;
-
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'fhirServers', 'organizationService', organizationSearch]);
+        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
 })();

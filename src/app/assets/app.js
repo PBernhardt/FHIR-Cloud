@@ -452,6 +452,8 @@
                 templateUrl: 'operationDefinition/operationDefinition-edit.html'
             }).when('/organization', {
                 templateUrl: 'organization/organization-search.html'
+            }).when('/organization/detailed-search', {
+                templateUrl: 'organization/organization-detailed-search.html'
             }).when('/organization/view/:hashKey', {
                 templateUrl: 'organization/organization-view.html'
             }).when('/organization/edit/:hashKey', {
@@ -464,8 +466,8 @@
                 templateUrl: 'patient/patient-view.html'
             }).when('/patient/edit/:hashKey', {
                 templateUrl: 'patient/patient-edit.html'
-            }).when('/patient/patient-detailed-search', {
-                templateUrl: 'patient/patient-detailed-search.html'
+            }).when('/patient/detail-search', {
+                templateUrl: 'patient/detailed-search.html'
             }).when('/patient/smart/:smartApp/:patientId', {
                 templateUrl: 'patient/patient-smart.html'
             }).when('/practitioner', {
@@ -510,6 +512,7 @@
             .icon("actions", "./assets/svg/actions.svg", 24)
             .icon("account", "./assets/svg/account.svg", 24)
             .icon("add", "./assets/svg/add.svg", 24)
+            .icon("cardio", "./assets/svg/cardio2.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
@@ -523,6 +526,7 @@
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
             .icon("person", "./assets/svg/person.svg", 24)
+            .icon("personAdd", "./assets/svg/personAdd.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
@@ -976,7 +980,7 @@
                     {
                         "id": 5,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice"
+                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice"
                     },
                     {
                         "id": 6,
@@ -1174,6 +1178,15 @@
                 return 'Name Unknown';
             }
         };
+    });
+
+    app.filter('idFromURL', function () {
+        return function (uri) {
+            if (uri.length > 5) {
+                var pathArray = uri.split('/');
+                return pathArray[pathArray.length - 1];
+            }
+        }
     });
 
     app.filter('periodText', function () {
@@ -6242,7 +6255,7 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($location, $mdBottomSheet, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
+    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -6376,7 +6389,8 @@
                 logWarning("Organization saved, but location is unavailable. CORS is not implemented correctly at remote host.");
             } else {
                 vm.organization.resourceId = common.setResourceId(vm.organization.resourceId, resourceVersionId);
-                logSuccess("Organization saved at " + resourceVersionId);
+                vm.organization.id = $filter('idFromURL')(vm.organization.resourceId);
+                    logSuccess("Organization saved at " + resourceVersionId);
             }
             // vm.organization.fullName = organization.name;
             vm.isEditing = true;
@@ -6398,6 +6412,7 @@
             organization.identifier = identifierService.getAll();
             organization.active = vm.organization.active;
             if (vm.isEditing) {
+                organization.id = vm.organization.id;
                 organizationService.updateOrganization(vm.organization.resourceId, organization)
                     .then(processResult,
                     function (error) {
@@ -6428,8 +6443,8 @@
 
         function createRandomPatients(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logSuccess("Creating random patients for " + vm.organization.resourceId);
-            patientService.seedRandomPatients(vm.organization.resourceId, vm.organization.name).then(
+            logSuccess("Creating random patients for " + vm.organization.name);
+            patientService.seedRandomPatients(vm.organization.id, vm.organization.name).then(
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
@@ -6465,7 +6480,7 @@
                         createRandomPatients();
                         break;
                     case 2:
-                        $location.path('/organization/organization-detailed-search');
+                        $location.path('/organization/detailed-search');
                         break;
                     case 3:
                         $location.path('/organization');
@@ -6517,7 +6532,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
+        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
 
 })
 ();(function () {
@@ -6525,7 +6540,7 @@
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdBottomSheet, $mdSidenav, common, fhirServers, organizationService) {
+    function organizationSearch($location, $mdBottomSheet, $mdSidenav, common, fhirServers, localValueSets, organizationService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -6561,6 +6576,8 @@
             }
         }
 
+        vm.goToDetail = goToDetail;
+
         function processSearchResults(searchResults) {
             if (searchResults) {
                 vm.organizations = (searchResults.entry || []);
@@ -6581,22 +6598,61 @@
                 });
             return deferred.promise;
         }
+        vm.querySearch = querySearch;
+
+        function searchOrganizations(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            organizationService.searchOrganizations(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error finding organizations: ', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
 
         function dereferenceLink(url) {
-            toggleSpinner(true);
             organizationService.getOrganizationsByLink(url)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
-                    toggleSpinner(false);
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                 })
                 .then(processSearchResults)
                 .then(function () {
-                    toggleSpinner(false);
                 });
         }
+
+        vm.dereferenceLink = dereferenceLink;
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data || []);
+                }, function (error) {
+                    logError('Error getting organizations', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function loadOrganizationTypes() {
+            vm.organizationTypes = localValueSets.organizationType();
+        }
+
+        vm.loadOrganizationTypes = loadOrganizationTypes;
 
         function actions($event) {
             $mdBottomSheet.show({
@@ -6612,7 +6668,7 @@
                         $location.path('/organization/edit/new');
                         break;
                     case 1:
-                        $location.path('/organization/organization-detailed-search');
+                        $location.path('/organization/detailed-search');
                         break;
                     case 2:
                         $location.path('/organization');
@@ -6633,27 +6689,87 @@
         }
 
         vm.actions = actions;
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.organizationSearch.name) {
+                queryParam.param = "name";
+                queryParam.value = vm.organizationSearch.name;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.organizationSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.organizationSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.organizationSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.organizationSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.identifier.system && vm.organizationSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.organizationSearch.identifier.system.concat("|", vm.organizationSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.type) {
+                queryParam.param = "type";
+                queryParam.value = vm.organizationSearch.type;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.organizationSearch.partOf) {
+                queryParam.param = "partOf";
+                queryParam.value = vm.organizationSearch.partOf.reference;
+                queryParams.push(_.clone(queryParam));
+            }
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            searchOrganizations(queryString);
+        }
+
+        vm.detailSearch = detailSearch;
+
         vm.activeServer = null;
         vm.isBusy = false;
         vm.organizations = [];
         vm.errorOutcome = null;
+        vm.organizationTypes = null;
+        vm.organizationSearch = {
+            name: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            identifier: {system: undefined, value: undefined},
+            type: undefined,
+            partOf: undefined
+        };
         vm.paging = {
             currentPage: 1,
             totalResults: 0,
             links: null
         };
-        vm.querySearch = querySearch;
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'Organizations';
-        vm.dereferenceLink = dereferenceLink;
-        vm.goToDetail = goToDetail;
-
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'fhirServers', 'organizationService', organizationSearch]);
+        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
 })();
 (function () {
     'use strict';
@@ -6816,6 +6932,23 @@
             return deferred.promise;
         }
 
+        function searchOrganizations(baseUrl, filter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(filter)) {
+                deferred.reject('Invalid search input');
+            }
+
+            fhirClient.getResource(baseUrl + '/Organization?' + filter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function getOrganizationsByLink(url) {
             var deferred = $q.defer();
             fhirClient.getResource(url)
@@ -6922,6 +7055,7 @@
             getOrganizationsByLink: getOrganizationsByLink,
             getOrganizationReference: getOrganizationReference,
             initializeNewOrganization: initializeNewOrganization,
+            searchOrganizations: searchOrganizations,
             updateOrganization: updateOrganization
         };
 
@@ -7297,7 +7431,7 @@
                         $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
                         break;
                     case 2:
-                        $location.path('/patient/smart/growth-chart/' + vm.patient.id);
+                        $location.path('/patient/smart/meducation/' + vm.patient.id);
                         break;
                     case 3:
                         $location.path('/patient/edit/new');
@@ -7313,9 +7447,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Consult', icon: 'rx', index: 0},
-                    {name: 'Cardiac Risk', icon: 'smart', index: 1},
-                    {name: 'Growth Chart', icon: 'smart', index: 2},
-                    {name: 'Add new patient', icon: 'add', index: 3},
+                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
+                    {name: 'Add new patient', icon: 'personAdd', index: 3},
                     {name: 'Edit patient', icon: 'edit', index: 4},
                     {name: 'Delete patient', icon: 'delete', index: 5}
                 ];
@@ -7387,7 +7520,7 @@
                         scope.trustedUri = $sce.trustAsResourceUrl(scope.smartUrl);
 
                         var iFrameHtml = '<iframe src="{{trustedUri}}" style="height: 1280px; width: 800px;" allowfullscreen="" frameborder="0"></iframe>';
-
+                     //   var iFrameHtml = '<a href="{{trustedUri}}" target="_blank">SMART App</a>';
                         var markup = $compile(iFrameHtml)(scope);
                         element.empty();
                         element.append(markup);
@@ -7752,7 +7885,7 @@
                         $location.path('/patient/edit/new');
                         break;
                     case 1:
-                        $location.path('/patient/patient-detailed-search');
+                        $location.path('/patient/detailed-search');
                         break;
                     case 2:
                         $location.path('/patient');
@@ -7765,7 +7898,7 @@
              */
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new patient', icon: 'add', index: 0},
+                    {name: 'Add new patient', icon: 'personAdd', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
                     {name: 'Quick find', icon: 'person', index: 2}
                 ];
@@ -8098,9 +8231,9 @@
             return deferred.promise;
         }
 
-        function seedRandomPatients(resourceId, organizationName) {
+        function seedRandomPatients(organizationId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=100')
+            $http.get('http://api.randomuser.me/?results=100&?nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
@@ -8144,10 +8277,13 @@
                                     "value": user.registered,
                                     "use": "official",
                                     "label": organizationName + " master Id",
-                                    "assigner": {"reference": resourceId, "display": organizationName}
+                                    "assigner": {"display": organizationName}
                                 }
                             ],
-                            "managingOrganization": {"reference": resourceId, "display": organizationName},
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
                             "link": [],
                             "active": true
                         };

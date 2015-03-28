@@ -72,6 +72,15 @@
         };
     });
 
+    app.filter('idFromURL', function () {
+        return function (uri) {
+            if (uri.length > 5) {
+                var pathArray = uri.split('/');
+                return pathArray[pathArray.length - 1];
+            }
+        }
+    });
+
     app.filter('periodText', function () {
         return function (period) {
             if (period) {

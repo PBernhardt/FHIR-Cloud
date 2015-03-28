@@ -254,7 +254,7 @@
                         $location.path('/patient/edit/new');
                         break;
                     case 1:
-                        $location.path('/patient/patient-detailed-search');
+                        $location.path('/patient/detailed-search');
                         break;
                     case 2:
                         $location.path('/patient');
@@ -267,7 +267,7 @@
              */
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new patient', icon: 'add', index: 0},
+                    {name: 'Add new patient', icon: 'personAdd', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
                     {name: 'Quick find', icon: 'person', index: 2}
                 ];

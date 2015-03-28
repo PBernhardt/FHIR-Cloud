@@ -273,9 +273,9 @@
             return deferred.promise;
         }
 
-        function seedRandomPatients(resourceId, organizationName) {
+        function seedRandomPatients(organizationId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=100')
+            $http.get('http://api.randomuser.me/?results=100&?nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
@@ -319,10 +319,13 @@
                                     "value": user.registered,
                                     "use": "official",
                                     "label": organizationName + " master Id",
-                                    "assigner": {"reference": resourceId, "display": organizationName}
+                                    "assigner": {"display": organizationName}
                                 }
                             ],
-                            "managingOrganization": {"reference": resourceId, "display": organizationName},
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
                             "link": [],
                             "active": true
                         };

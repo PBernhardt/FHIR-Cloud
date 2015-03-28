@@ -159,6 +159,23 @@
             return deferred.promise;
         }
 
+        function searchOrganizations(baseUrl, filter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(filter)) {
+                deferred.reject('Invalid search input');
+            }
+
+            fhirClient.getResource(baseUrl + '/Organization?' + filter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function getOrganizationsByLink(url) {
             var deferred = $q.defer();
             fhirClient.getResource(url)
@@ -265,6 +282,7 @@
             getOrganizationsByLink: getOrganizationsByLink,
             getOrganizationReference: getOrganizationReference,
             initializeNewOrganization: initializeNewOrganization,
+            searchOrganizations: searchOrganizations,
             updateOrganization: updateOrganization
         };
 

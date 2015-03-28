@@ -3,7 +3,7 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($location, $mdBottomSheet, $mdSidenav, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
+    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -137,7 +137,8 @@
                 logWarning("Organization saved, but location is unavailable. CORS is not implemented correctly at remote host.");
             } else {
                 vm.organization.resourceId = common.setResourceId(vm.organization.resourceId, resourceVersionId);
-                logSuccess("Organization saved at " + resourceVersionId);
+                vm.organization.id = $filter('idFromURL')(vm.organization.resourceId);
+                    logSuccess("Organization saved at " + resourceVersionId);
             }
             // vm.organization.fullName = organization.name;
             vm.isEditing = true;
@@ -159,6 +160,7 @@
             organization.identifier = identifierService.getAll();
             organization.active = vm.organization.active;
             if (vm.isEditing) {
+                organization.id = vm.organization.id;
                 organizationService.updateOrganization(vm.organization.resourceId, organization)
                     .then(processResult,
                     function (error) {
@@ -189,8 +191,8 @@
 
         function createRandomPatients(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logSuccess("Creating random patients for " + vm.organization.resourceId);
-            patientService.seedRandomPatients(vm.organization.resourceId, vm.organization.name).then(
+            logSuccess("Creating random patients for " + vm.organization.name);
+            patientService.seedRandomPatients(vm.organization.id, vm.organization.name).then(
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
@@ -226,7 +228,7 @@
                         createRandomPatients();
                         break;
                     case 2:
-                        $location.path('/organization/organization-detailed-search');
+                        $location.path('/organization/detailed-search');
                         break;
                     case 3:
                         $location.path('/organization');
@@ -278,7 +280,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
+        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
 
 })
 ();

@@ -365,7 +365,7 @@
                         $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
                         break;
                     case 2:
-                        $location.path('/patient/smart/growth-chart/' + vm.patient.id);
+                        $location.path('/patient/smart/meducation/' + vm.patient.id);
                         break;
                     case 3:
                         $location.path('/patient/edit/new');
@@ -381,9 +381,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Consult', icon: 'rx', index: 0},
-                    {name: 'Cardiac Risk', icon: 'smart', index: 1},
-                    {name: 'Growth Chart', icon: 'smart', index: 2},
-                    {name: 'Add new patient', icon: 'add', index: 3},
+                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
+                    {name: 'Add new patient', icon: 'personAdd', index: 3},
                     {name: 'Edit patient', icon: 'edit', index: 4},
                     {name: 'Delete patient', icon: 'delete', index: 5}
                 ];

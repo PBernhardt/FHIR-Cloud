@@ -22,7 +22,7 @@
                         scope.trustedUri = $sce.trustAsResourceUrl(scope.smartUrl);
 
                         var iFrameHtml = '<iframe src="{{trustedUri}}" style="height: 1280px; width: 800px;" allowfullscreen="" frameborder="0"></iframe>';
-
+                     //   var iFrameHtml = '<a href="{{trustedUri}}" target="_blank">SMART App</a>';
                         var markup = $compile(iFrameHtml)(scope);
                         element.empty();
                         element.append(markup);

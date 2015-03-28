@@ -1,0 +1,102 @@
+﻿<div ng-controller="organizationSearch as vm" layout="column" layout-wrap>
+    <div flex="100">
+        <h3>Organization Detailed Search</h3>
+    </div>
+    <div flex="20">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex>
+        <md-tabs md-selected="vm.selectedTab">
+            <md-tab label="Search Options">
+                <md-content class="md-padding">
+                    <form name="organizationSearch">
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>Name</label>
+                                <input ng-model="vm.organizationSearch.name">
+                            </md-input-container>
+
+                            <div flex="30" layout="column" layout-align="center center" style="height: 100px">
+                                <md-select ng-model="vm.organizationSearch.type" md-on-open="vm.loadOrganizationTypes()">
+                                    <md-option ng-value="orgType.code" ng-repeat="orgType in vm.organizationTypes">{{orgType.display}}</md-option>
+                                </md-select>
+                                <p class="result">Type</p>
+                            </div>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>Identifier system</label>
+                                <input ng-model="vm.organizationSearch.identifier.system"
+                                       placeholder="Should be a valid URI">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Identifier value</label>
+                                <input ng-model="vm.organizationSearch.identifier.value">
+                            </md-input-container>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>Street address</label>
+                                <input ng-model="vm.organizationSearch.address.street">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>City</label>
+                                <input ng-model="vm.organizationSearch.address.city">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>State</label>
+                                <input ng-model="vm.organizationSearch.address.state">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Postal code</label>
+                                <input ng-model="vm.organizationSearch.address.postalCode">
+                            </md-input-container>
+                        </div>
+
+                        <div flex="80" style="min-height: 100px">
+                            <label>Parent Organization</label>
+                            <md-autocomplete flex
+                                             md-selected-item="vm.organizationSearch.partOf"
+                                             md-search-text="vm.searchText"
+                                             md-items="org in vm.getOrganizationReference(vm.searchText)"
+                                             md-delay="200"
+                                             md-item-text="org.display"
+                                             md-min-length="3"
+                                             placeholder="Search by the parent organization?">
+                                <span md-highlight-text="vm.searchText">{{org.display}}</span>
+                            </md-autocomplete>
+                        </div>
+                    </form>
+                    <md-button ng-click="vm.detailSearch()" aria-label="Execute search">
+                        <md-icon md-svg-icon="search" alt="Search"></md-icon>
+                    </md-button>
+                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                </md-content>
+            </md-tab>
+            <md-tab id="results" label="Search Results">
+                <section>
+                    <md-subheader class="md-primary">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
+                    <md-list layout="column">
+                        <md-item ng-repeat="p in vm.organizations">
+                            <md-item-content>
+                                <div class="md-tile-content">
+                                    <md-button data-ng-click="vm.goToOrganization(p)">{{p.resource.name}}
+                                    </md-button>
+                                    <p>{{p.resource.partOf.display ||
+                                        p.resource.partOf.reference || "Root Organization"}}</p>
+                                </div>
+                            </md-item-content>
+                            <md-divider data-ng-if="!$last"></md-divider>
+                        </md-item>
+                    </md-list>
+                </section>
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                <fs-pagination on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
+            </md-tab>
+        </md-tabs>
+    </div>
+</div>

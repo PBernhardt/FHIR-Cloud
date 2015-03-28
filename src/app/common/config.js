@@ -185,6 +185,8 @@
                 templateUrl: 'operationDefinition/operationDefinition-edit.html'
             }).when('/organization', {
                 templateUrl: 'organization/organization-search.html'
+            }).when('/organization/detailed-search', {
+                templateUrl: 'organization/organization-detailed-search.html'
             }).when('/organization/view/:hashKey', {
                 templateUrl: 'organization/organization-view.html'
             }).when('/organization/edit/:hashKey', {
@@ -197,8 +199,8 @@
                 templateUrl: 'patient/patient-view.html'
             }).when('/patient/edit/:hashKey', {
                 templateUrl: 'patient/patient-edit.html'
-            }).when('/patient/patient-detailed-search', {
-                templateUrl: 'patient/patient-detailed-search.html'
+            }).when('/patient/detail-search', {
+                templateUrl: 'patient/detailed-search.html'
             }).when('/patient/smart/:smartApp/:patientId', {
                 templateUrl: 'patient/patient-smart.html'
             }).when('/practitioner', {
@@ -243,6 +245,7 @@
             .icon("actions", "./assets/svg/actions.svg", 24)
             .icon("account", "./assets/svg/account.svg", 24)
             .icon("add", "./assets/svg/add.svg", 24)
+            .icon("cardio", "./assets/svg/cardio2.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
@@ -256,6 +259,7 @@
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
             .icon("person", "./assets/svg/person.svg", 24)
+            .icon("personAdd", "./assets/svg/personAdd.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
