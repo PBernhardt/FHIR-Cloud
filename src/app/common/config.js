@@ -167,43 +167,45 @@
      */
 
     app.config(['$routeProvider', function ($routeProvider) {
-            $routeProvider.when('/conformance', {
-                templateUrl: 'conformance/conformance-search.html'
-            }).when('/conformance/view/:hashKey', {
-                templateUrl: 'conformance/conformance-view.html'
-            }).when('/extensionDefinition', {
-                templateUrl: 'extensionDefinition/extensionDefinition-search.html'
-            }).when('/extensionDefinition/view/:hashKey', {
-                templateUrl: 'extensionDefinition/extensionDefinition-view.html'
-            }).when('/extensionDefinition/edit/:hashKey', {
-                templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
-            }).when('/operationDefinition', {
-                templateUrl: 'operationDefinition/operationDefinition-search.html'
-            }).when('/operationDefinition/view/:hashKey', {
-                templateUrl: 'operationDefinition/operationDefinition-view.html'
-            }).when('/operationDefinition/edit/:hashKey', {
-                templateUrl: 'operationDefinition/operationDefinition-edit.html'
-            }).when('/organization', {
-                templateUrl: 'organization/organization-search.html'
-            }).when('/organization/detailed-search', {
-                templateUrl: 'organization/organization-detailed-search.html'
-            }).when('/organization/view/:hashKey', {
-                templateUrl: 'organization/organization-view.html'
-            }).when('/organization/edit/:hashKey', {
-                templateUrl: 'organization/organization-edit.html'
-            }).when('/patients/:orgId', {
-                templateUrl: 'patient/patient-search.html'
-            }).when('/patient', {
-                templateUrl: 'patient/patient-search.html'
-            }).when('/patient/view/:hashKey', {
-                templateUrl: 'patient/patient-view.html'
-            }).when('/patient/edit/:hashKey', {
-                templateUrl: 'patient/patient-edit.html'
-            }).when('/patient/detail-search', {
-                templateUrl: 'patient/detailed-search.html'
-            }).when('/patient/smart/:smartApp/:patientId', {
-                templateUrl: 'patient/patient-smart.html'
-            }).when('/practitioner', {
+        $routeProvider.when('/conformance', {
+            templateUrl: 'conformance/conformance-search.html'
+        }).when('/conformance/view/:hashKey', {
+            templateUrl: 'conformance/conformance-view.html'
+        }).when('/extensionDefinition', {
+            templateUrl: 'extensionDefinition/extensionDefinition-search.html'
+        }).when('/extensionDefinition/view/:hashKey', {
+            templateUrl: 'extensionDefinition/extensionDefinition-view.html'
+        }).when('/extensionDefinition/edit/:hashKey', {
+            templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/operationDefinition', {
+            templateUrl: 'operationDefinition/operationDefinition-search.html'
+        }).when('/operationDefinition/view/:hashKey', {
+            templateUrl: 'operationDefinition/operationDefinition-view.html'
+        }).when('/operationDefinition/edit/:hashKey', {
+            templateUrl: 'operationDefinition/operationDefinition-edit.html'
+        }).when('/organization', {
+            templateUrl: 'organization/organization-search.html'
+        }).when('/organization/detailed-search', {
+            templateUrl: 'organization/organization-detailed-search.html'
+        }).when('/organization/view/:hashKey', {
+            templateUrl: 'organization/organization-view.html'
+        }).when('/organization/edit/:hashKey', {
+            templateUrl: 'organization/organization-edit.html'
+        })
+            .when('/patients/:orgId', {
+            templateUrl: 'patient/patient-search.html'
+        }).when('/patient', {
+            templateUrl: 'patient/patient-search.html'
+        }).when('/patient/view/:hashKey', {
+            templateUrl: 'patient/patient-view.html'
+        }).when('/patient/edit/:hashKey', {
+            templateUrl: 'patient/patient-edit.html'
+        }).when('/patient/detailed-search', {
+            templateUrl: 'patient/patient-detailed-search.html'
+        }).when('/patient/smart/:smartApp/:patientId', {
+            templateUrl: 'patient/patient-smart.html'
+        })
+            .when('/practitioner', {
                 templateUrl: 'practitioner/practitioner-search.html'
             }).when('/person', {
                 templateUrl: 'person/person-search.html'
@@ -234,7 +236,7 @@
             }).otherwise({
                 redirectTo: '/home'
             });
-        }]);
+    }]);
 
     app.config(['$mdThemingProvider', '$mdIconProvider', function ($mdThemingProvider, $mdIconProvider) {
         $mdThemingProvider.theme('default')

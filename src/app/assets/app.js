@@ -466,8 +466,8 @@
                 templateUrl: 'patient/patient-view.html'
             }).when('/patient/edit/:hashKey', {
                 templateUrl: 'patient/patient-edit.html'
-            }).when('/patient/detail-search', {
-                templateUrl: 'patient/detailed-search.html'
+            }).when('/patient/detailed-search', {
+                templateUrl: 'patient/patient-detailed-search.html'
             }).when('/patient/smart/:smartApp/:patientId', {
                 templateUrl: 'patient/patient-smart.html'
             }).when('/practitioner', {
