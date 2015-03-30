@@ -2,7 +2,7 @@
     <div layout-gt-lg="row" layout-align="space-between center" layout-wrap>
         <md-input-container flex>
             <label>Birth date</label>
-            <input ng-model="vm.demographics.birthDate" id="dob" type="date">
+            <input ng-model="vm.demographics.birthDate" ng-change="vm.updateBirthDate()" id="dob" type="date">
         </md-input-container>
 
         <md-input-container flex>

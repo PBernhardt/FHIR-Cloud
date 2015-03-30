@@ -1,6 +1,6 @@
 ﻿<div ng-controller="organizationSearch as vm" layout="column" layout-wrap>
     <div flex="100">
-        <h3 class="md-headline">Organization Detailed Search</h3>
+        <h3 class="md-title">Organization Detailed Search</h3>
     </div>
     <div flex="20">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
@@ -19,8 +19,11 @@
                             </md-input-container>
 
                             <div flex="30" layout="column" layout-align="center center" style="height: 100px">
-                                <md-select ng-model="vm.organizationSearch.type" md-on-open="vm.loadOrganizationTypes()">
-                                    <md-option ng-value="orgType.code" ng-repeat="orgType in vm.organizationTypes">{{orgType.display}}</md-option>
+                                <md-select ng-model="vm.organizationSearch.type"
+                                           md-on-open="vm.loadOrganizationTypes()">
+                                    <md-option ng-value="orgType.code" ng-repeat="orgType in vm.organizationTypes">
+                                        {{orgType.display}}
+                                    </md-option>
                                 </md-select>
                                 <p class="result">Type</p>
                             </div>
@@ -70,11 +73,12 @@
                                 <span md-highlight-text="vm.searchText">{{org.display}}</span>
                             </md-autocomplete>
                         </div>
+                        <md-button ng-click="vm.detailSearch()" aria-label="Execute search">
+                            <md-icon md-svg-icon="search" alt="Search"></md-icon>
+                        </md-button>
+                        <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                     </form>
-                    <md-button ng-click="vm.detailSearch()" aria-label="Execute search">
-                        <md-icon md-svg-icon="search" alt="Search"></md-icon>
-                    </md-button>
-                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+
                 </md-content>
             </md-tab>
             <md-tab id="results" label="Search Results">

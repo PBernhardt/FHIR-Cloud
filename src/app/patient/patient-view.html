@@ -13,8 +13,8 @@
     <div flex="100">
         <md-tabs md-selected="selectedIndex">
             <md-tab label="Administration Detail">
-                <md-content>
-                    <table class="table table-striped table-hover">
+                <div flex="100" class="table-responsive-vertical shadow-z-1">
+                    <table id="patientView" class="table table-hover table-mc-blue">
                         <tr>
                             <td>Resource Id</td>
                             <td>
@@ -25,12 +25,10 @@
                             <td>Name</td>
                             <td>{{vm.patient.name | fullName }}</td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.birthDate">
                             <td>Date of Birth</td>
                             <td>
-                                <div ng-show="vm.patient.birthDate">
-                                    {{vm.patient.birthDate | date: longDate}}
-                                </div>
+                                {{vm.patient.birthDate | date: longDate}}
                             </td>
                         </tr>
                         <tr>
@@ -39,7 +37,7 @@
                                 {{vm.patient.gender}}
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.address">
                             <td>Addresses</td>
                             <td>
                                 <p class="small" ng-repeat="a in vm.patient.address">
@@ -47,7 +45,7 @@
                                 </p>
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.telecom">
                             <td>Telecommunication</td>
                             <td>
                                 <p class="small" ng-repeat="t in vm.patient.telecom">
@@ -55,7 +53,7 @@
                                 </p>
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.contact">
                             <td>Contact</td>
                             <td>
                                 <p class="small" ng-repeat="c in vm.patient.contact">
@@ -64,7 +62,7 @@
                                 </p>
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.link">
                             <td>Links</td>
                             <td>
                                 <div ng-repeat="l in vm.patient.link">
@@ -72,7 +70,7 @@
                                 </div>
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.communication">
                             <td>Languages</td>
                             <td>
                                 <div ng-if="vm.patient.communication">
@@ -82,25 +80,25 @@
                                 </div>
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.maritalStatus">
                             <td>Marital Status</td>
                             <td>
                                 {{vm.patient.maritalStatus | codeableConcept}}
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.multipleBirthInteger || vm.patient.multipleBirthBoolean">
                             <td>Multiple Birth</td>
                             <td>
                                 {{vm.patient.multipleBirthInteger || vm.patient.multipleBirthBoolean}}
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.deceasedDateTime || vm.patient.deceasedBoolean">
                             <td>Deceased</td>
                             <td>
                                 {{vm.patient.deceasedDateTime || vm.patient.deceasedBoolean}}
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.managingOrganization">
                             <td>Managing Organization</td>
                             <td>
                                 <a href="{{vm.patient.managingOrganization.reference}}">{{vm.patient.managingOrganization.display}}</a>
@@ -109,7 +107,7 @@
                         <tr ng-show="vm.patient.identifier">
                             <td>Identifiers</td>
                             <td>
-                                <table class="table table-striped table-hover small">
+                                <table class="table table-hover">
                                     <thead>
                                     <tr>
                                         <th>System</th>
@@ -129,14 +127,14 @@
                                 </table>
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.active">
                             <td>Active</td>
                             <td>
-                                <i data-fs-true-check="vm.patient.active"></i>
+                                {{vm.patient.active}}
                             </td>
                         </tr>
                     </table>
-                </md-content>
+                </div>
             </md-tab>
             <md-tab label="Clinical Summary">
                 <md-list>

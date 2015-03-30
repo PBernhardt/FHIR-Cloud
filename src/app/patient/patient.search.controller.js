@@ -69,6 +69,11 @@
             var queryString = '';
             var queryParam = {param: '', value: ''};
             var queryParams = [];
+            if (vm.patientSearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.patientSearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
             if (vm.patientSearch.name.given) {
                 queryParam.param = "given";
                 queryParam.value = vm.patientSearch.name.given;
@@ -153,6 +158,7 @@
                 queryParam.value = localValueSets.ethnicity().system.concat("|", vm.patientSearch.ethnicity.code);
                 queryParams.push(_.clone(queryParam));
             }
+
             _.forEach(queryParams, function (item) {
                 queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
             });
@@ -311,7 +317,9 @@
             race: undefined,
             gender: undefined,
             ethnicity: undefined,
-            language: undefined
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
         };
         vm.paging = {
             currentPage: 1,

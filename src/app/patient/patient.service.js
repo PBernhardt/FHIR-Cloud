@@ -96,7 +96,8 @@
                 for (var i = 0, len = cachedPatients.length; i < len; i++) {
                     if (cachedPatients[i].$$hashKey === hashKey) {
                         cachedPatient = cachedPatients[i].resource;
-                        cachedPatient.resourceId = (searchResults.base + cachedPatient.resourceType + '/' + cachedPatient.id);
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedPatient.resourceId = (baseUrl + cachedPatient.resourceType + '/' + cachedPatient.id);
                         cachedPatient.hashKey = hashKey;
                         break;
                     }
@@ -109,13 +110,17 @@
             }
 
             var deferred = $q.defer();
+            var activeServer;
             getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
                 .then(getPatient,
                 function () {
                     deferred.reject('Patient search results not found in cache.');
                 });
             return deferred.promise;
-
         }
 
         function getCachedSearchResults() {
@@ -275,7 +280,7 @@
 
         function seedRandomPatients(organizationId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=100&?nat=us')
+            $http.get('http://api.randomuser.me/?results=100&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;

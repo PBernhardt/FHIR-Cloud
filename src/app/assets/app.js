@@ -10,8 +10,7 @@
         'ngMessages',
         'ngCookies',
         'common',
-        'ui.bootstrap',
-        'AdalAngular'
+        'ui.bootstrap'
     ]);
 })();
 (function () {
@@ -434,43 +433,45 @@
      */
 
     app.config(['$routeProvider', function ($routeProvider) {
-            $routeProvider.when('/conformance', {
-                templateUrl: 'conformance/conformance-search.html'
-            }).when('/conformance/view/:hashKey', {
-                templateUrl: 'conformance/conformance-view.html'
-            }).when('/extensionDefinition', {
-                templateUrl: 'extensionDefinition/extensionDefinition-search.html'
-            }).when('/extensionDefinition/view/:hashKey', {
-                templateUrl: 'extensionDefinition/extensionDefinition-view.html'
-            }).when('/extensionDefinition/edit/:hashKey', {
-                templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
-            }).when('/operationDefinition', {
-                templateUrl: 'operationDefinition/operationDefinition-search.html'
-            }).when('/operationDefinition/view/:hashKey', {
-                templateUrl: 'operationDefinition/operationDefinition-view.html'
-            }).when('/operationDefinition/edit/:hashKey', {
-                templateUrl: 'operationDefinition/operationDefinition-edit.html'
-            }).when('/organization', {
-                templateUrl: 'organization/organization-search.html'
-            }).when('/organization/detailed-search', {
-                templateUrl: 'organization/organization-detailed-search.html'
-            }).when('/organization/view/:hashKey', {
-                templateUrl: 'organization/organization-view.html'
-            }).when('/organization/edit/:hashKey', {
-                templateUrl: 'organization/organization-edit.html'
-            }).when('/patients/:orgId', {
-                templateUrl: 'patient/patient-search.html'
-            }).when('/patient', {
-                templateUrl: 'patient/patient-search.html'
-            }).when('/patient/view/:hashKey', {
-                templateUrl: 'patient/patient-view.html'
-            }).when('/patient/edit/:hashKey', {
-                templateUrl: 'patient/patient-edit.html'
-            }).when('/patient/detailed-search', {
-                templateUrl: 'patient/patient-detailed-search.html'
-            }).when('/patient/smart/:smartApp/:patientId', {
-                templateUrl: 'patient/patient-smart.html'
-            }).when('/practitioner', {
+        $routeProvider.when('/conformance', {
+            templateUrl: 'conformance/conformance-search.html'
+        }).when('/conformance/view/:hashKey', {
+            templateUrl: 'conformance/conformance-view.html'
+        }).when('/extensionDefinition', {
+            templateUrl: 'extensionDefinition/extensionDefinition-search.html'
+        }).when('/extensionDefinition/view/:hashKey', {
+            templateUrl: 'extensionDefinition/extensionDefinition-view.html'
+        }).when('/extensionDefinition/edit/:hashKey', {
+            templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/operationDefinition', {
+            templateUrl: 'operationDefinition/operationDefinition-search.html'
+        }).when('/operationDefinition/view/:hashKey', {
+            templateUrl: 'operationDefinition/operationDefinition-view.html'
+        }).when('/operationDefinition/edit/:hashKey', {
+            templateUrl: 'operationDefinition/operationDefinition-edit.html'
+        }).when('/organization', {
+            templateUrl: 'organization/organization-search.html'
+        }).when('/organization/detailed-search', {
+            templateUrl: 'organization/organization-detailed-search.html'
+        }).when('/organization/view/:hashKey', {
+            templateUrl: 'organization/organization-view.html'
+        }).when('/organization/edit/:hashKey', {
+            templateUrl: 'organization/organization-edit.html'
+        })
+            .when('/patients/:orgId', {
+            templateUrl: 'patient/patient-search.html'
+        }).when('/patient', {
+            templateUrl: 'patient/patient-search.html'
+        }).when('/patient/view/:hashKey', {
+            templateUrl: 'patient/patient-view.html'
+        }).when('/patient/edit/:hashKey', {
+            templateUrl: 'patient/patient-edit.html'
+        }).when('/patient/detailed-search', {
+            templateUrl: 'patient/patient-detailed-search.html'
+        }).when('/patient/smart/:smartApp/:patientId', {
+            templateUrl: 'patient/patient-smart.html'
+        })
+            .when('/practitioner', {
                 templateUrl: 'practitioner/practitioner-search.html'
             }).when('/person', {
                 templateUrl: 'person/person-search.html'
@@ -501,7 +502,7 @@
             }).otherwise({
                 redirectTo: '/home'
             });
-        }]);
+    }]);
 
     app.config(['$mdThemingProvider', '$mdIconProvider', function ($mdThemingProvider, $mdIconProvider) {
         $mdThemingProvider.theme('default')
@@ -980,7 +981,7 @@
                     {
                         "id": 5,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice"
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice"
                     },
                     {
                         "id": 6,
@@ -6648,6 +6649,13 @@
 
         vm.getOrganizationReference = getOrganizationReference;
 
+        function goToOrganization(organization) {
+            if (organization && organization.$$hashKey) {
+                $location.path('/organization/view/' + organization.$$hashKey);
+            }
+        }
+        vm.goToOrganization = goToOrganization;
+
         function loadOrganizationTypes() {
             vm.organizationTypes = localValueSets.organizationType();
         }
@@ -7237,7 +7245,7 @@
                 }
                 var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
 
-                // vm.smartLaunchUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
+                // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
                 vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + vm.patient.id;
                 return;
             }
@@ -7700,6 +7708,11 @@
             var queryString = '';
             var queryParam = {param: '', value: ''};
             var queryParams = [];
+            if (vm.patientSearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.patientSearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
             if (vm.patientSearch.name.given) {
                 queryParam.param = "given";
                 queryParam.value = vm.patientSearch.name.given;
@@ -7784,6 +7797,7 @@
                 queryParam.value = localValueSets.ethnicity().system.concat("|", vm.patientSearch.ethnicity.code);
                 queryParams.push(_.clone(queryParam));
             }
+
             _.forEach(queryParams, function (item) {
                 queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
             });
@@ -7942,7 +7956,9 @@
             race: undefined,
             gender: undefined,
             ethnicity: undefined,
-            language: undefined
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
         };
         vm.paging = {
             currentPage: 1,
@@ -8054,7 +8070,8 @@
                 for (var i = 0, len = cachedPatients.length; i < len; i++) {
                     if (cachedPatients[i].$$hashKey === hashKey) {
                         cachedPatient = cachedPatients[i].resource;
-                        cachedPatient.resourceId = (searchResults.base + cachedPatient.resourceType + '/' + cachedPatient.id);
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedPatient.resourceId = (baseUrl + cachedPatient.resourceType + '/' + cachedPatient.id);
                         cachedPatient.hashKey = hashKey;
                         break;
                     }
@@ -8067,13 +8084,17 @@
             }
 
             var deferred = $q.defer();
+            var activeServer;
             getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
                 .then(getPatient,
                 function () {
                     deferred.reject('Patient search results not found in cache.');
                 });
             return deferred.promise;
-
         }
 
         function getCachedSearchResults() {
@@ -8233,7 +8254,7 @@
 
         function seedRandomPatients(organizationId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=100&?nat=us')
+            $http.get('http://api.randomuser.me/?results=100&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;

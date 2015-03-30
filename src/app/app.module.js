@@ -10,7 +10,6 @@
         'ngMessages',
         'ngCookies',
         'common',
-        'ui.bootstrap',
-        'AdalAngular'
+        'ui.bootstrap'
     ]);
 })();

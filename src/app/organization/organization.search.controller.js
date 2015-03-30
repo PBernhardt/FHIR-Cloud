@@ -111,6 +111,13 @@
 
         vm.getOrganizationReference = getOrganizationReference;
 
+        function goToOrganization(organization) {
+            if (organization && organization.$$hashKey) {
+                $location.path('/organization/view/' + organization.$$hashKey);
+            }
+        }
+        vm.goToOrganization = goToOrganization;
+
         function loadOrganizationTypes() {
             vm.organizationTypes = localValueSets.organizationType();
         }

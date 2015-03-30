@@ -4,10 +4,11 @@
     <title>FHIR Cloud</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="shortcut icon" href="favicon.ico"/>
-    <link rel="stylesheet" href="assets/angular-material.css">
+    <link rel="stylesheet" href="lib/angular-material/angular-material.css">
     <link rel="stylesheet" href="assets/app.css"/>
     <link rel="stylesheet" href="lib/angular/angular-csp.css">
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/tables.css">
 </head>
 
 <body ng-app="FHIRCloud" layout="column" ng-controller="mainController as vm">
@@ -56,7 +57,8 @@
             <md-content>
                 <md-list>
                     <md-item ng-repeat="server in vm.FHIRServers">
-                        <md-button ng-click="vm.selectServer(server)" ng-class="{'selected' : server === server.selected }">
+                        <md-button ng-click="vm.selectServer(server)"
+                                   ng-class="{'selected' : server === server.selected }">
                             {{server.name}}
                         </md-button>
                     </md-item>
@@ -65,20 +67,18 @@
     </md-content>
 </div>
 
-<script src="lib/jquery/dist/jquery.min.js"></script>
-<script src="lib/angular/angular.js"></script>
-<script src="lib/angular-animate/angular-animate.min.js"></script>
-<script src="lib/angular-aria/angular-aria.min.js"></script>
-<script src="assets/angular-material.js"></script>
-<script src="lib/angular-route/angular-route.min.js"></script>
-<script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
-<script src="lib/angular-messages/angular-messages.min.js"></script>
-<script src="lib/angular-cookies/angular-cookies.min.js"></script>
-<script src="lib/moment/min/moment.min.js"></script>
-<script src="lib/lodash/lodash.min.js"></script>
-<script src="lib/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-<script src="lib/adal-angular/lib/adal.js"></script>
-<script src="lib/adal-angular/lib/adal-angular.js"></script>
+<script src="assets/lib/jquery.min.js"></script>
+<script src="assets/lib/angular.min.js"></script>
+<script src="assets/lib/angular-animate.min.js"></script>
+<script src="assets/lib/angular-aria.min.js"></script>
+<script src="assets/lib/angular-material.min.js"></script>
+<script src="assets/lib/angular-messages.min.js"></script>
+<script src="assets/lib/angular-route.min.js"></script>
+<script src="assets/lib/ui-bootstrap-tpls.min.js"></script>
+<script src="assets/lib/angular-cookies.min.js"></script>
+<script src="assets/lib/angular-sanitize.min.js"></script>
+<script src="assets/lib/lodash.min.js"></script>
+<script src="assets/lib/moment.min.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

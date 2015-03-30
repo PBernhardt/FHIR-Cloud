@@ -37,6 +37,19 @@
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
+                                <label>Managing Organization</label>
+                                <input ng-model="vm.patientSearch.organization"
+                                       placeholder="Id of organization">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Care Provider</label>
+                                <input ng-model="vm.patientSearch.careProvider"
+                                        placeholder="Id of practitioner">
+                            </md-input-container>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
                                 <label>Street address</label>
                                 <input ng-model="vm.patientSearch.address.street">
                             </md-input-container>
