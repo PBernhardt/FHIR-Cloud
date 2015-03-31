@@ -3904,7 +3904,7 @@
 
         function searchGoogle(input) {
             var deferred = $q.defer();
-            $http.get('http://maps.googleapis.com/maps/api/geocode/json', {
+            $http.get('https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyCtbVf7g-kQmMQjF_kAfGawAZabKcq4rdo', {
                 params: {
                     address: input
                 }
