@@ -233,7 +233,11 @@
                 templateUrl: 'valueSet/valueSet-view.html'
             }).when('/valueSet/edit/:hashKey', {
                 templateUrl: 'valueSet/valueSet-edit.html'
-            }).otherwise({
+            })
+            .when('/daf/:profile', {
+                templateUrl: 'templates/daf.html'
+            })
+            .otherwise({
                 redirectTo: '/home'
             });
     }]);

@@ -149,6 +149,7 @@ module.exports = function (grunt) {
                     'app/relatedPerson/relatedPerson.search.controller.js',
                     'app/relatedPerson/relatedPerson.service.js',                    
                     'app/templates/bottomSheet.controller.js',
+                    'app/templates/daf.controller.js',
                     'app/templates/rawData.controller.js',
                     'app/templates/valueSet-popup.controller.js',
                     'app/valueSet/valueSet.detail.controller.js',
