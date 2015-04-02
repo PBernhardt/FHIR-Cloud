@@ -126,14 +126,22 @@
         //TODO: add support for summary when DSTU2 server implementers have support
         function getOrganizationReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Organization?name=' + input + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Organization?name=' + input + '&_count=10')
                 .then(function (results) {
                     var organizations = [];
                     if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                organizations.push({display: item.resource.name, reference: baseUrl + '/Organization/' + item.resource.id});
-                            });
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'Organization') {
+                                organizations.push({
+                                    display: item.resource.name,
+                                    reference: baseUrl + '/Organization/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
                     }
                     if (organizations.length === 0) {
                         organizations.push({display: "No matches", reference: ''});

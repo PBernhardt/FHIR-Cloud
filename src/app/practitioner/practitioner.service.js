@@ -145,19 +145,22 @@
 
         function getPractitionerReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Practitioner?name=' + input + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Practitioner?name=' + input + '&_count=10')
                 .then(function (results) {
                     var practitioners = [];
                     if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                if (item.content && item.content.resourceType === 'Practitioner') {
-                                    practitioners.push({
-                                        display: $filter('fullName')(item.content.name),
-                                        reference: item.id
-                                    });
-                                }
-                            });
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'Practitioner') {
+                                practitioners.push({
+                                    display: $filter('fullName')(item.resource.name),
+                                    reference: baseUrl + '/Practitioner/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
                     }
                     if (practitioners.length === 0) {
                         practitioners.push({display: "No matches", reference: ''});

@@ -42,7 +42,7 @@
 
         function goTopractitioner(practitioner) {
             if (practitioner && practitioner.$$hashKey) {
-                $location.path('/practitioner/view/' + practitioner.$$hashKey);
+                $location.path('/practitionerReference/view/' + practitioner.$$hashKey);
             }
         }
 

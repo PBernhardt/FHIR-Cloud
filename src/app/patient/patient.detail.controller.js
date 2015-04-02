@@ -4,8 +4,8 @@
     var controllerId = 'patientDetail';
 
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
-                           common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService, localValueSets) {
+        common, demographicsService, fhirServers, humanNameService, identifierService,
+        organizationService, patientService, contactPointService, practitionerService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -101,18 +101,37 @@
 
         function getOrganizationReference(input) {
             var deferred = $q.defer();
-            vm.loadingOrganizations = true;
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    vm.loadingOrganizations = false;
                     deferred.resolve(data);
                 }, function (error) {
-                    vm.loadingOrganizations = false;
                     logError(common.unexpectedOutcome(error), null, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
         }
+
+        function getPractitionerReference(input) {
+            var deferred = $q.defer();
+            practitionerService.getPractitionerReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getPractitionerReference = getPractitionerReference;
+
+        function addToCareProviderList(practitioner) {
+            if (practitioner) {
+                logInfo("Adding " + practitioner.reference + " to list", null, noToast);
+            }
+        }
+
+        vm.addToCareProviderList = addToCareProviderList;
 
         function getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
@@ -417,7 +436,9 @@
         vm.loadErrors = loadErrors;
         vm.loadingOrganizations = false;
         vm.patient = undefined;
+        vm.practitionerSearchText = '';
         vm.save = save;
+        vm.selectedPractitioner = null;
         vm.smartLaunchUrl = '';
         vm.title = 'Patient Detail';
         vm.showAuditData = showAuditData;
@@ -429,5 +450,5 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', 'localValueSets', patientDetail]);
+            'organizationService', 'patientService', 'contactPointService', 'practitionerService', patientDetail]);
 })();

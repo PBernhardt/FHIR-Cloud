@@ -1,0 +1,42 @@
+<div ng-controller="practitionerReference as vm">
+    <md-content class="md-padding">
+        <md-divider>
+            <div ng-if="vm.practitioners.length > 0">
+                <md-subheader>Selected Practitioners</md-subheader>
+                <md-list>
+                    <md-item ng-repeat="dr in vm.practitioners track by $index">
+                        <md-item-content>
+                            <div class="md-tile-left">
+                                <md-button ng-click="vm.removeFromList(dr)" aria-label="Remove from list">
+                                    <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <h3>{{::dr.display}}</h3>
+                                <p>{{::dr.reference}}</p>
+                            </div>
+                        </md-item-content>
+                    </md-item>
+                </md-list>
+            </div>
+
+            <div flex>
+                <ng-form name="practitionerListForm" ng-model="vm.practitioner">
+                    <div flex style="height: 300px">
+                        <md-autocomplete
+                                md-no-cache="true"
+                                md-selected-item-change="vm.addToList(vm.selectedPractitioner)"
+                                md-selected-item="vm.selectedPractitioner"
+                                md-search-text="vm.practitionerSearchText"
+                                md-items="practitioner in vm.getPractitionerReference(vm.practitionerSearchText)"
+                                md-delay="300"
+                                md-min-length="3"
+                                placeholder="What practitioner are you looking for?">
+                            <span md-highlight-text="vm.practitionerSearchText">{{practitioner.display}}</span>
+                        </md-autocomplete>
+                    </div>
+                </ng-form>
+            </div>
+        </md-divider>
+    </md-content>
+</div>

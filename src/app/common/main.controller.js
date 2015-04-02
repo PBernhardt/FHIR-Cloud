@@ -49,8 +49,8 @@
         ];
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
-            {name: 'Conformance', id: 2, pages: _conformancePages},
-            {name: 'Documents', id: 3, pages: _documentsPages},
+       //     {name: 'Conformance', id: 2, pages: _conformancePages},
+       //     {name: 'Documents', id: 3, pages: _documentsPages},
             {name: 'DAF Profiles', id: 3, pages: _dafResources}
         ];
         var noToast = false;

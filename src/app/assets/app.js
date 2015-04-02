@@ -2811,8 +2811,8 @@
         ];
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
-            {name: 'Conformance', id: 2, pages: _conformancePages},
-            {name: 'Documents', id: 3, pages: _documentsPages},
+       //     {name: 'Conformance', id: 2, pages: _conformancePages},
+       //     {name: 'Documents', id: 3, pages: _documentsPages},
             {name: 'DAF Profiles', id: 3, pages: _dafResources}
         ];
         var noToast = false;
@@ -5148,6 +5148,357 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'organizationReference';
+
+    function organizationReference(common, fhirServers, organizationReferenceService) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId).then(function () {
+            });
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function addToList(organization) {
+            if (organization) {
+                logInfo("Adding " + organization.reference + " to list", null, noToast);
+                organizationReferenceService.add(organization);
+                vm.organizations = organizationReferenceService.getAll();
+            }
+        }
+        vm.addToList = addToList;
+
+        function removeFromList(organization) {
+            organizationReferenceService.remove(organization);
+            vm.organizations = organizationReferenceService.getAll();
+        }
+
+        vm.removeFromList = removeFromList;
+
+
+        vm.activeServer = null;
+        vm.activate = activate;
+        vm.isBusy = false;
+        vm.organizations = [];
+        vm.organizationSearchText = '';
+        vm.selectedOrganization = null;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['common', 'fhirServers', 'organizationReferenceService', organizationReference]);
+})();(function () {
+    'use strict';
+
+    var serviceId = 'organizationReferenceService';
+
+    function organizationReferenceService($filter, common, fhirClient) {
+        var organizationList = [];
+        var $q = common.$q;
+
+        function add(item) {
+            var index = getIndex(item.$$hashKey);
+            if (index > -1) {
+                organizationList[index] = item;
+            } else {
+                organizationList.push(item);
+            }
+        }
+
+        function getAll() {
+            return _.compact(organizationList);
+        }
+
+        function getIndex(hashKey) {
+            if (angular.isUndefined(hashKey) === false) {
+                for (var i = 0, len = organizationList.length; i < len; i++) {
+                    if (organizationList[i].$$hashKey === hashKey) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        function remoteLookup(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Organization?name=' + input + '&_count=10')
+                .then(function (results) {
+                    var organizations = [];
+                    if (results.data.entry) {
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'Organization') {
+                                organizations.push({
+                                    display: item.resource.name,
+                                    reference: baseUrl + '/Organization/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
+                    }
+                    if (organizations.length === 0) {
+                        organizations.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(organizations);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function init(items) {
+            if (angular.isArray(items)) {
+                organizationList = [];
+                _.forEach(items, function (item) {
+                    if (item) {
+                        organizationList.push(item);
+                    }
+                });
+            } else {
+                organizationList = [];
+            }
+            return organizationList;
+        }
+
+
+        function remove(item) {
+            var index = getIndex(item.$$hashKey);
+            organizationList.splice(index, 1);
+            return organizationList;
+        }
+
+        function reset() {
+            while (organizationList.length > 0) {
+                organizationList.pop();
+            }
+        }
+
+
+        var service = {
+            add: add,
+            remove: remove,
+            getAll: getAll,
+            remoteLookup: remoteLookup,
+            init: init,
+            reset: reset
+        };
+
+        return service;
+
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', 'common', 'fhirClient', organizationReferenceService]);
+
+})();(function () {
+    'use strict';
+
+    var controllerId = 'practitionerReference';
+
+    function practitionerReference(common, fhirServers, practitionerReferenceService) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId).then(function () {
+            });
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getPractitionerReference(input) {
+            var deferred = $q.defer();
+            practitionerReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getPractitionerReference = getPractitionerReference;
+
+        function addToList(practitioner) {
+            if (practitioner) {
+                logInfo("Adding " + practitioner.reference + " to list", null, noToast);
+                practitionerReferenceService.add(practitioner);
+                vm.practitioners = practitionerReferenceService.getAll();
+            }
+        }
+        vm.addToList = addToList;
+
+        function removeFromList(practitioner) {
+            practitionerReferenceService.remove(practitioner);
+            vm.practitioners = practitionerReferenceService.getAll();
+        }
+
+        vm.removeFromList = removeFromList;
+
+
+        vm.activeServer = null;
+        vm.activate = activate;
+        vm.isBusy = false;
+        vm.practitioners = [];
+        vm.practitionerSearchText = '';
+        vm.selectedPractitioner = null;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['common', 'fhirServers', 'practitionerReferenceService', practitionerReference]);
+})();(function () {
+    'use strict';
+
+    var serviceId = 'practitionerReferenceService';
+
+    function practitionerReferenceService($filter, common, fhirClient) {
+        var practitionerList = [];
+        var $q = common.$q;
+
+        function add(item) {
+            var index = getIndex(item.$$hashKey);
+            if (index > -1) {
+                practitionerList[index] = item;
+            } else {
+                practitionerList.push(item);
+            }
+        }
+
+        function getAll() {
+            return _.compact(practitionerList);
+        }
+
+        function getIndex(hashKey) {
+            if (angular.isUndefined(hashKey) === false) {
+                for (var i = 0, len = practitionerList.length; i < len; i++) {
+                    if (practitionerList[i].$$hashKey === hashKey) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        function remoteLookup(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Practitioner?name=' + input + '&_count=10')
+                .then(function (results) {
+                    var practitioners = [];
+                    if (results.data.entry) {
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'Practitioner') {
+                                practitioners.push({
+                                    display: $filter('fullName')(item.resource.name),
+                                    reference: baseUrl + '/Practitioner/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
+                    }
+                    if (practitioners.length === 0) {
+                        practitioners.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(practitioners);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function init(items) {
+            if (angular.isArray(items)) {
+                practitionerList = [];
+                _.forEach(items, function (item) {
+                    if (item) {
+                        practitionerList.push(item);
+                    }
+                });
+            } else {
+                practitionerList = [];
+            }
+            return practitionerList;
+        }
+
+
+        function remove(item) {
+            var index = getIndex(item.$$hashKey);
+            practitionerList.splice(index, 1);
+            return practitionerList;
+        }
+
+        function reset() {
+            while (practitionerList.length > 0) {
+                practitionerList.pop();
+            }
+        }
+
+
+        var service = {
+            add: add,
+            remove: remove,
+            getAll: getAll,
+            remoteLookup: remoteLookup,
+            init: init,
+            reset: reset
+        };
+
+        return service;
+
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', 'common', 'fhirClient', practitionerReferenceService]);
+
+})();(function () {
+    'use strict';
+
     var controllerId = 'extensionDefinitionDetail';
 
     function extensionDefinitionDetail($location, $mdDialog, $routeParams, common, fhirServers, identifierService, extensionDefinitionService, contactPointService) {
@@ -6911,14 +7262,22 @@
         //TODO: add support for summary when DSTU2 server implementers have support
         function getOrganizationReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Organization?name=' + input + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Organization?name=' + input + '&_count=10')
                 .then(function (results) {
                     var organizations = [];
                     if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                organizations.push({display: item.resource.name, reference: baseUrl + '/Organization/' + item.resource.id});
-                            });
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'Organization') {
+                                organizations.push({
+                                    display: item.resource.name,
+                                    reference: baseUrl + '/Organization/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
                     }
                     if (organizations.length === 0) {
                         organizations.push({display: "No matches", reference: ''});
@@ -7082,8 +7441,8 @@
     var controllerId = 'patientDetail';
 
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
-                           common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService, localValueSets) {
+        common, demographicsService, fhirServers, humanNameService, identifierService,
+        organizationService, patientService, contactPointService, practitionerService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -7179,18 +7538,37 @@
 
         function getOrganizationReference(input) {
             var deferred = $q.defer();
-            vm.loadingOrganizations = true;
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    vm.loadingOrganizations = false;
                     deferred.resolve(data);
                 }, function (error) {
-                    vm.loadingOrganizations = false;
                     logError(common.unexpectedOutcome(error), null, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
         }
+
+        function getPractitionerReference(input) {
+            var deferred = $q.defer();
+            practitionerService.getPractitionerReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getPractitionerReference = getPractitionerReference;
+
+        function addToCareProviderList(practitioner) {
+            if (practitioner) {
+                logInfo("Adding " + practitioner.reference + " to list", null, noToast);
+            }
+        }
+
+        vm.addToCareProviderList = addToCareProviderList;
 
         function getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
@@ -7495,7 +7873,9 @@
         vm.loadErrors = loadErrors;
         vm.loadingOrganizations = false;
         vm.patient = undefined;
+        vm.practitionerSearchText = '';
         vm.save = save;
+        vm.selectedPractitioner = null;
         vm.smartLaunchUrl = '';
         vm.title = 'Patient Detail';
         vm.showAuditData = showAuditData;
@@ -7507,7 +7887,7 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', 'localValueSets', patientDetail]);
+            'organizationService', 'patientService', 'contactPointService', 'practitionerService', patientDetail]);
 })();(function () {
     'use strict';
 
@@ -9172,7 +9552,7 @@
 
         function goTopractitioner(practitioner) {
             if (practitioner && practitioner.$$hashKey) {
-                $location.path('/practitioner/view/' + practitioner.$$hashKey);
+                $location.path('/practitionerReference/view/' + practitioner.$$hashKey);
             }
         }
 
@@ -9400,19 +9780,22 @@
 
         function getPractitionerReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Practitioner?name=' + input + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Practitioner?name=' + input + '&_count=10')
                 .then(function (results) {
                     var practitioners = [];
                     if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                if (item.content && item.content.resourceType === 'Practitioner') {
-                                    practitioners.push({
-                                        display: $filter('fullName')(item.content.name),
-                                        reference: item.id
-                                    });
-                                }
-                            });
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'Practitioner') {
+                                practitioners.push({
+                                    display: $filter('fullName')(item.resource.name),
+                                    reference: baseUrl + '/Practitioner/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
                     }
                     if (practitioners.length === 0) {
                         practitioners.push({display: "No matches", reference: ''});
