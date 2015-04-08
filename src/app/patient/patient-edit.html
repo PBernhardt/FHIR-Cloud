@@ -34,11 +34,11 @@
                 <md-tab label="Identifier">
                     <div ng-include="'elements/identifier/identifier.html'"></div>
                 </md-tab>
+                <md-tab label="Languages">
+                    <div ng-include="'elements/communication/communication.html'"></div>
+                </md-tab>
                 <md-tab label="Care Providers">
-                    <div layout="row" layout-sm="column">
-                        <div flex="50" ng-include="'elements/practitionerReference/practitioner-reference.html'"></div>
-                        <div flex="50" ng-include="'elements/organizationReference/organization-reference.html'"></div>
-                    </div>
+                    <div ng-include="'elements/careProvider/careProvider.html'"></div>
                 </md-tab>
             </md-tabs>
             <div layout="row" layout-align="end end">

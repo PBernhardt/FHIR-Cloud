@@ -30,8 +30,9 @@
         }
 
         function loadEthnicities() {
-            return vm.ethnicities = localValueSets.ethnicity().concept;
+            return vm.ethnicities = localValueSets.ethnicity();
         }
+
         vm.loadEthnicities = loadEthnicities;
 
         function loadGenders() {
@@ -53,13 +54,15 @@
         vm.loadMaritalStatuses = loadMaritalStatuses;
 
         function loadReligions() {
-            return vm.religions = localValueSets.religion().concept;
+            return vm.religions = localValueSets.religion();
         }
+
         vm.loadReligions = loadReligions;
 
         function loadRaces() {
-            return vm.races = localValueSets.race().concept;
+            return vm.races = localValueSets.race();
         }
+
         vm.loadRaces = loadRaces;
 
         function initData() {
@@ -72,18 +75,16 @@
             vm.demographics.maritalStatus = demographicsService.getMaritalStatus();
             vm.demographics.multipleBirth = demographicsService.getMultipleBirth();
             // Known extensions
-            vm.demographics.race = null;
-            vm.demographics.religion = null;
-            vm.demographics.ethnicity = null;
-            vm.demographics.mothersMaidenName = null;
-            vm.demographics.placeOfBirth = null;
-        }
+            vm.demographics.race = demographicsService.getRace();
+            vm.demographics.religion = demographicsService.getReligion();
+            vm.demographics.ethnicity = demographicsService.getEthnicity();
+            vm.demographics.mothersMaidenName = demographicsService.getMothersMaidenName();
+            vm.demographics.placeOfBirth = demographicsService.getBirthPlace();
 
-        function removeLanguage(item) {
-            _.remove(vm.demographics.language, function (removedItem) {
-                return removedItem.$$hashKey === item.$$hashKey;
-            });
-            updateLanguage();
+            loadMaritalStatuses();
+            loadRaces();
+            loadEthnicities();
+            loadReligions();
         }
 
         function updateBirthDate() {
@@ -109,29 +110,56 @@
             demographicsService.setGender(vm.demographics.gender);
         }
 
-        function updateLanguage() {
-            demographicsService.setLanguage(vm.demographics.language);
-        }
-
-
-        function updateMaritalStatus() {
-            demographicsService.setMaritalStatus(vm.demographics.maritalStatus);
+        function updateMaritalStatus(maritalStatusCoding) {
+            var codeableConcept = {
+                "text": maritalStatusCoding.display,
+                "coding": [{
+                    "system": maritalStatusCoding.system,
+                    "code": maritalStatusCoding.code,
+                    "display": maritalStatusCoding.display
+                }]
+            };
+            demographicsService.setMaritalStatus(codeableConcept);
         }
 
         function updateMultipleBirth() {
             demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
         }
 
-        function updateRace() {
-            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        function updateRace(raceCoding) {
+            var codeableConcept = {
+                "text": raceCoding.display,
+                "coding": [{
+                    "system": vm.races.system,
+                    "code": raceCoding.code,
+                    "display": raceCoding.display
+                }]
+            };
+            demographicsService.setRace(codeableConcept);
         }
 
-        function updateReligion() {
-            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        function updateReligion(religionCoding) {
+            var codeableConcept = {
+                "text": religionCoding.display,
+                "coding": [{
+                    "system": vm.religions.system,
+                    "code": religionCoding.code,
+                    "display": religionCoding.display
+                }]
+            };
+            demographicsService.setReligion(codeableConcept);
         }
 
-        function updateEthnicity() {
-            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        function updateEthnicity(ethnicityCoding) {
+            var codeableConcept = {
+                "text": ethnicityCoding.display,
+                "coding": [{
+                    "system": vm.ethnicities.system,
+                    "code": ethnicityCoding.code,
+                    "display": ethnicityCoding.display
+                }]
+            };
+            demographicsService.setEthnicity(codeableConcept);
         }
 
         vm.addLanguage = addLanguage;
@@ -146,19 +174,20 @@
             "multipleBirth": false
         };
         vm.genders = [];
-        vm.languages = [];
         vm.maritalStatuses = [];
         vm.religions = [];
-        vm.races = [];
+        vm.races = null;
+        vm.ethnicityCoding = null;
+        vm.raceCoding = null;
+        vm.religionCoding = null;
+        vm.raceCoding = null;
+        vm.maritalStatusCoding = null;
         vm.ethnicities = [];
-        vm.removeLanguage = removeLanguage;
-        vm.selectedLanguage = null;
         vm.updateBirthDate = updateBirthDate;
         vm.updateBirthOrder = updateBirthOrder;
         vm.updateDeceased = updateDeceased;
         vm.updateDeceasedDate = updateDeceasedDate;
         vm.updateGender = updateGender;
-        vm.updateLanguage = updateLanguage;
         vm.updateMaritalStatus = updateMaritalStatus;
         vm.updateMultipleBirth = updateMultipleBirth;
         vm.updateRace = updateRace;

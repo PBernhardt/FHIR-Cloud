@@ -79,13 +79,14 @@
         }
 
         function getRequestedOrganization() {
-            function intitializeRelatedData(data) {
-                vm.organization = data.resource;
+            function initializeRelatedData(data) {
+                vm.organization = data.resource || data;
                 if (angular.isUndefined(vm.organization.type)) {
                     vm.organization.type = {"coding": []};
                 }
+                vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
                 vm.title = vm.organization.name;
-                identifierService.init(vm.organization.identifier);
+                identifierService.init(vm.organization.identifier, "multi", "organization");
                 addressService.init(vm.organization.address, false);
                 contactService.init(vm.organization.contact);
                 contactPointService.init(vm.organization.telecom, false, false);
@@ -93,24 +94,35 @@
 
             if ($routeParams.hashKey === 'new') {
                 var data = organizationService.initializeNewOrganization();
-                intitializeRelatedData(data);
+                initializeRelatedData(data);
                 vm.title = 'Add New Organization';
                 vm.isEditing = false;
+            } else if (angular.isDefined($routeParams.resourceId)) {
+                var fullPath = vm.activeServer.baseUrl + '/Organization/' + $routeParams.resourceId;
+                logInfo("Fetching " + fullPath, null, noToast);
+                organizationService.getOrganization(fullPath)
+                    .then(initializeRelatedData).then(function () {
+                        var session = sessionService.getSession();
+                        session.organization = vm.organization;
+                        sessionService.updateSession(session);
+                    }, function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                    });
             } else {
                 if ($routeParams.hashKey) {
                     organizationService.getCachedOrganization($routeParams.hashKey)
-                        .then(intitializeRelatedData).then(function () {
+                        .then(initializeRelatedData).then(function () {
                             var session = sessionService.getSession();
                             session.organization = vm.organization;
                             sessionService.updateSession(session);
                         }, function (error) {
-                            logError(error);
+                            logError($filter('unexpectedOutcome')(error));
                         });
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/Organization/' + $routeParams.id;
                     organizationService.getOrganization(resourceId)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error);
+                        .then(initializeRelatedData, function (error) {
+                            logError($filter('unexpectedOutcome')(error));
                         });
                 }
             }
@@ -134,13 +146,12 @@
         function processResult(results) {
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Organization saved, but location is unavailable. CORS is not implemented correctly at remote host.");
+                logInfo("Organization saved, but location is unavailable. CORS is not implemented correctly at " + vm.activeServer.name);
             } else {
+                logInfo("Organization saved at " + resourceVersionId);
+                vm.organization.resourceVersionId = resourceVersionId;
                 vm.organization.resourceId = common.setResourceId(vm.organization.resourceId, resourceVersionId);
-                vm.organization.id = $filter('idFromURL')(vm.organization.resourceId);
-                    logSuccess("Organization saved at " + resourceVersionId);
             }
-            // vm.organization.fullName = organization.name;
             vm.isEditing = true;
             getTitle();
         }
@@ -164,13 +175,13 @@
                 organizationService.updateOrganization(vm.organization.resourceId, organization)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError($filter('unexpectedOutcome')(error));
                     });
             } else {
                 organizationService.addOrganization(organization)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError($filter('unexpectedOutcome')(error));
                     });
             }
         }
@@ -196,7 +207,7 @@
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
-                    logError(error);
+                    logError($filter('unexpectedOutcome')(error));
                 });
         }
 
@@ -207,7 +218,7 @@
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
-                    logError(error);
+                    logError($filter('unexpectedOutcome')(error));
                 });
         }
 

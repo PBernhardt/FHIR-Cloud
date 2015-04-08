@@ -215,13 +215,13 @@
         }
 
         function unexpectedOutcome(error) {
-            var message = 'Unexpected response from server<br/>';
+            var message = 'Unexpected response from server - ';
             if (error.status) {
                 message = message + 'HTTP Status: ' + error.status;
             }
             if (error.outcome && error.outcome.issue) {
                 _.forEach(error.outcome.issue, function (item) {
-                    message = message + '<br/>' + item.severity + ' - ' + item.details;
+                    message = message + ': ' + item.severity + ' - ' + item.details;
                 });
             }
             return message;
@@ -233,6 +233,23 @@
             for( var i=0; i < 5; i++ )
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
             return text;
+        }
+
+        function shuffle(array) {
+            var currentIndex = array.length, temporaryValue, randomIndex ;
+            // While there remain elements to shuffle...
+            while (0 !== currentIndex) {
+
+                // Pick a remaining element...
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex -= 1;
+
+                // And swap it with the current element.
+                temporaryValue = array[currentIndex];
+                array[currentIndex] = array[randomIndex];
+                array[randomIndex] = temporaryValue;
+            }
+            return array;
         }
 
         var service = {
@@ -254,6 +271,7 @@
             randomHash: randomHash,
             removeNullProperties: removeNullProperties,
             setResourceId: setResourceId,
+            shuffle: shuffle,
             textContains: textContains,
             toggleProgressBar: toggleProgressBar,
             unexpectedOutcome: unexpectedOutcome
@@ -437,6 +455,8 @@
             templateUrl: 'conformance/conformance-search.html'
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
+        }).when('/consultation/:hashKey', {
+            templateUrl: 'consultation/consultation-edit.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
         }).when('/extensionDefinition/view/:hashKey', {
@@ -457,8 +477,9 @@
             templateUrl: 'organization/organization-view.html'
         }).when('/organization/edit/:hashKey', {
             templateUrl: 'organization/organization-edit.html'
-        })
-            .when('/patients/:orgId', {
+        }).when('/organization/get/:resourceId', {
+            templateUrl: 'organization/organization-view.html'
+        }).when('/patients/:orgId', {
             templateUrl: 'patient/patient-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html'
@@ -470,36 +491,35 @@
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient/smart/:smartApp/:patientId', {
             templateUrl: 'patient/patient-smart.html'
+        }).when('/practitioner', {
+            templateUrl: 'practitioner/practitioner-search.html'
+        }).when('/person', {
+            templateUrl: 'person/person-search.html'
+        }).when('/person/view/:hashKey', {
+            templateUrl: 'person/person-view.html'
+        }).when('/person/edit/:hashKey', {
+            templateUrl: 'person/person-edit.html'
+        }).when('/profile', {
+            templateUrl: 'profile/profile-search.html'
+        }).when('/profile/view/:hashKey', {
+            templateUrl: 'profile/profile-view.html'
+        }).when('/profile/edit/:hashKey', {
+            templateUrl: 'profile/profile-edit.html'
+        }).when('/healthcareService', {
+            templateUrl: 'templates/home.html'
+        }).when('/relatedPerson', {
+            templateUrl: 'relatedPerson/relatedPerson-search.html'
+        }).when('/relatedPerson/view/:hashKey', {
+            templateUrl: 'relatedPerson/relatedPerson-view.html'
+        }).when('/relatedPerson/edit/:hashKey', {
+            templateUrl: 'person/person-edit.html'
+        }).when('/valueSet', {
+            templateUrl: 'valueSet/valueSet-search.html'
+        }).when('/valueSet/view/:hashKey', {
+            templateUrl: 'valueSet/valueSet-view.html'
+        }).when('/valueSet/edit/:hashKey', {
+            templateUrl: 'valueSet/valueSet-edit.html'
         })
-            .when('/practitioner', {
-                templateUrl: 'practitioner/practitioner-search.html'
-            }).when('/person', {
-                templateUrl: 'person/person-search.html'
-            }).when('/person/view/:hashKey', {
-                templateUrl: 'person/person-view.html'
-            }).when('/person/edit/:hashKey', {
-                templateUrl: 'person/person-edit.html'
-            }).when('/profile', {
-                templateUrl: 'profile/profile-search.html'
-            }).when('/profile/view/:hashKey', {
-                templateUrl: 'profile/profile-view.html'
-            }).when('/profile/edit/:hashKey', {
-                templateUrl: 'profile/profile-edit.html'
-            }).when('/healthcareService', {
-                templateUrl: 'templates/home.html'
-            }).when('/relatedPerson', {
-                templateUrl: 'relatedPerson/relatedPerson-search.html'
-            }).when('/relatedPerson/view/:hashKey', {
-                templateUrl: 'relatedPerson/relatedPerson-view.html'
-            }).when('/relatedPerson/edit/:hashKey', {
-                templateUrl: 'person/person-edit.html'
-            }).when('/valueSet', {
-                templateUrl: 'valueSet/valueSet-search.html'
-            }).when('/valueSet/view/:hashKey', {
-                templateUrl: 'valueSet/valueSet-view.html'
-            }).when('/valueSet/edit/:hashKey', {
-                templateUrl: 'valueSet/valueSet-edit.html'
-            })
             .when('/daf/:profile', {
                 templateUrl: 'templates/daf.html'
             })
@@ -2480,13 +2500,13 @@
                 {"code": "ms", "display": "Malay", "system": "urn:std:iso:639-1"},
                 {"code": "ml", "display": "Malayalam", "system": "urn:std:iso:639-1"},
                 {"code": "mt", "display": "Maltese", "system": "urn:std:iso:639-1"},
-                {"code": "mi", "display": "Māori", "system": "urn:std:iso:639-1"},
+                {"code": "mi", "display": "Maori", "system": "urn:std:iso:639-1"},
                 {"code": "mr", "display": "Marathi (Marāṭhī)", "system": "urn:std:iso:639-1"},
                 {"code": "mh", "display": "Marshallese", "system": "urn:std:iso:639-1"},
                 {"code": "mn", "display": "Mongolian", "system": "urn:std:iso:639-1"},
                 {"code": "na", "display": "Nauru", "system": "urn:std:iso:639-1"},
                 {"code": "nv", "display": "Navajo, Navaho", "system": "urn:std:iso:639-1"},
-                {"code": "nb", "display": "Norwegian Bokmål", "system": "urn:std:iso:639-1"},
+                {"code": "nb", "display": "Norwegian Bokm\u00e5l", "system": "urn:std:iso:639-1"},
                 {"code": "nd", "display": "North Ndebele", "system": "urn:std:iso:639-1"},
                 {"code": "ne", "display": "Nepali", "system": "urn:std:iso:639-1"},
                 {"code": "ng", "display": "Ndonga", "system": "urn:std:iso:639-1"},
@@ -2501,7 +2521,7 @@
                 {"code": "or", "display": "Oriya", "system": "urn:std:iso:639-1"},
                 {"code": "os", "display": "Ossetian, Ossetic", "system": "urn:std:iso:639-1"},
                 {"code": "pa", "display": "Panjabi, Punjabi", "system": "urn:std:iso:639-1"},
-                {"code": "pi", "display": "Pāli", "system": "urn:std:iso:639-1"},
+                {"code": "pi", "display": "Pali", "system": "urn:std:iso:639-1"},
                 {"code": "fa", "display": "Persian", "system": "urn:std:iso:639-1"},
                 {"code": "pl", "display": "Polish", "system": "urn:std:iso:639-1"},
                 {"code": "ps", "display": "Pashto, Pushto", "system": "urn:std:iso:639-1"},
@@ -2511,7 +2531,7 @@
                 {"code": "rn", "display": "Kirundi", "system": "urn:std:iso:639-1"},
                 {"code": "ro", "display": "Romanian, Moldavian, Moldovan", "system": "urn:std:iso:639-1"},
                 {"code": "ru", "display": "Russian", "system": "urn:std:iso:639-1"},
-                {"code": "sa", "display": "Sanskrit (Saṁskṛta)", "system": "urn:std:iso:639-1"},
+                {"code": "sa", "display": "Sanskrit (Samskrta)", "system": "urn:std:iso:639-1"},
                 {"code": "sc", "display": "Sardinian", "system": "urn:std:iso:639-1"},
                 {"code": "sd", "display": "Sindhi", "system": "urn:std:iso:639-1"},
                 {"code": "se", "display": "Northern Sami", "system": "urn:std:iso:639-1"},
@@ -2551,7 +2571,7 @@
                 {"code": "uz", "display": "Uzbek", "system": "urn:std:iso:639-1"},
                 {"code": "ve", "display": "Venda", "system": "urn:std:iso:639-1"},
                 {"code": "vi", "display": "Vietnamese", "system": "urn:std:iso:639-1"},
-                {"code": "vo", "display": "Volapük", "system": "urn:std:iso:639-1"},
+                {"code": "vo", "display": "Volapuk", "system": "urn:std:iso:639-1"},
                 {"code": "wa", "display": "Walloon", "system": "urn:std:iso:639-1"},
                 {"code": "cy", "display": "Welsh", "system": "urn:std:iso:639-1"},
                 {"code": "wo", "display": "Wolof", "system": "urn:std:iso:639-1"},
@@ -2648,6 +2668,29 @@
             ];
         }
 
+        function smokingStatus() {
+            return [
+                {"code": "449868002", "display": "Smokes tobacco daily", "system": "http://snomed.info/sct"},
+                {"code": "428041000124106", "display": "Occasional tobacco smoker", "system": "http://snomed.info/sct"},
+                {"code": "8517006", "display": "Ex-smoker", "system": "http://snomed.info/sct"},
+                {"code": "266919005", "display": "Never smoked tobacco", "system": "http://snomed.info/sct"},
+                {"code": "77176002", "display": "Smoker, current status unknown", "system": "http://snomed.info/sct"},
+                {"code": "266927001", "display": "Unknown if ever smoked", "system": "http://snomed.info/sct"},
+                {"code": "428071000124103", "display": "Heavy tobacco smoker", "system": "http://snomed.info/sct"},
+                {"code": "428061000124105", "display": "Light tobacco smoker", "system": "http://snomed.info/sct"}
+            ];
+            /*
+             449868002	Smokes tobacco daily (finding)
+             428041000124106	Occasional tobacco smoker (finding)
+             8517006	Ex-smoker (finding)
+             266919005	Never smoked tobacco (finding)
+             77176002	Smoker (finding)
+             266927001	Tobacco smoking consumption unknown (finding)
+             428071000124103	Heavy tobacco smoker (finding)
+             428061000124105	Light tobacco smoker (finding)
+             */
+        }
+
         var service = {
             administrativeGender: administrativeGender,
             contactEntityType: contactEntityType,
@@ -2659,6 +2702,7 @@
             organizationType: organizationType,
             questionnaireAnswerStatus: questionnaireAnswerStatus,
             religion: religion,
+            smokingStatus: smokingStatus,
             ethnicity: ethnicity,
             race: race
         };
@@ -3958,6 +4002,374 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'careProvider';
+
+    function careProvider(common, fhirServers, organizationReferenceService, practitionerReferenceService, careProviderService) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var noToast = false;
+        var $q = common.$q;
+
+        function activate() {
+            common.activateController([getActiveServer(), initializeReferences()], controllerId).then(function () {
+            });
+        }
+        vm.activate = activate;
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function initializeReferences()
+        {
+            var careProviders = careProviderService.getAll();
+            for (var i = 0, len = careProviders.length; i < len; i++) {
+                var item = careProviders[i];
+                if (item.reference.indexOf('Practitioner/') !== -1) {
+                    practitionerReferenceService.add(item);
+                } else {
+                    organizationReferenceService.add(item);
+                }
+            }
+            vm.practitioners = practitionerReferenceService.getAll();
+            vm.organizations = organizationReferenceService.getAll();
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function addToOrganizationList(organization) {
+            if (organization) {
+                organizationReferenceService.add(organization);
+                vm.organizations = organizationReferenceService.getAll();
+                careProviderService.add(organization);
+            }
+        }
+
+        vm.addToOrganizationList = addToOrganizationList;
+
+        function removeFromOrganizationList(organization) {
+            organizationReferenceService.remove(organization);
+            vm.organizations = organizationReferenceService.getAll();
+            careProviderService.remove(organization);
+        }
+
+        vm.removeFromOrganizationList = removeFromOrganizationList;
+
+        function getPractitionerReference(input) {
+            var deferred = $q.defer();
+            practitionerReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getPractitionerReference = getPractitionerReference;
+
+        function addToPractitionerList(practitioner) {
+            if (practitioner) {
+                practitionerReferenceService.add(practitioner);
+                vm.practitioners = practitionerReferenceService.getAll();
+                careProviderService.add(practitioner);
+            }
+        }
+
+        vm.addToPractitionerList = addToPractitionerList;
+
+        function removeFromPractitionerList(practitioner) {
+            practitionerReferenceService.remove(practitioner);
+            vm.practitioners = practitionerReferenceService.getAll();
+            careProviderService.remove(practitioner);
+        }
+
+        vm.removeFromPractitionerList = removeFromPractitionerList;
+
+        vm.activeServer = null;
+        vm.organizations = [];
+        vm.organizationSearchText = '';
+        vm.practitioners = [];
+        vm.practitionerSearchText = '';
+        vm.selectedOrganization = null;
+        vm.selectedPractitioner = null;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['common', 'fhirServers', 'organizationReferenceService', 'practitionerReferenceService', 'careProviderService', careProvider]);
+})();(function () {
+    'use strict';
+
+    var serviceId = 'careProviderService';
+
+    function careProviderService(common) {
+        var careProviders = [];
+
+        function add(item) {
+            var index = getIndex(item.$$hashKey);
+            if (index > -1) {
+                careProviders[index] = item;
+            } else {
+                careProviders.push(item);
+            }
+        }
+
+        function getAll() {
+            return _.compact(careProviders);
+        }
+
+        function getIndex(hashKey) {
+            if (angular.isUndefined(hashKey) === false) {
+                for (var i = 0, len = careProviders.length; i < len; i++) {
+                    if (careProviders[i].$$hashKey === hashKey) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        function init(items) {
+            if (angular.isArray(items)) {
+                careProviders = items;
+            } else if (angular.isObject(items)) {
+                careProviders = [];
+                careProviders.push(items);
+            }
+            return careProviders;
+        }
+
+        function remove(item) {
+            var index = getIndex(item.$$hashKey);
+            careProviders.splice(index, 1);
+        }
+
+        var service = {
+            add: add,
+            remove: remove,
+            getAll: getAll,
+            init: init
+        };
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['common', careProviderService]);
+
+})();(function () {
+    'use strict';
+
+    var controllerId = 'communication';
+
+    function communication(common, communicationService, localValueSets) {
+        /* jshint validthis:true */
+        var vm = this;
+
+        function activate() {
+            common.activateController([getCommunications(), loadLanguageValues()], controllerId)
+                .then(function () {
+                });
+        }
+
+        function addToList(form, item) {
+            if (item) {
+                vm.communication.language.coding.push(item);
+                vm.communication.preferred = false;
+                vm.communication.$$hashKey = item.$$hashKey;
+                communicationService.add(_.clone(vm.communication));
+                vm.communications = communicationService.getAll();
+                vm.communication = initCommunication();
+                form.$setPristine();
+                form.$setUntouched();
+            }
+        }
+
+        vm.addToList = addToList;
+
+        function getCommunications() {
+            return vm.communications = communicationService.getAll();
+        }
+
+        function changePreferred(language) {
+            communicationService.update(language);
+            vm.communications = communicationService.getAll();
+        }
+
+        vm.changePreferred = changePreferred;
+
+        function querySearch(query) {
+            var results = query ? vm.languageValues.filter(createFilterFor(query)) : [];
+            return results;
+        }
+
+        vm.querySearch = querySearch;
+
+        function createFilterFor(query) {
+            var lowercaseQuery = angular.lowercase(query);
+            return function filterFn(language) {
+                return (angular.lowercase(language.display).indexOf(lowercaseQuery) === 0);
+            };
+        }
+
+        function loadLanguageValues() {
+            return vm.languageValues = localValueSets.iso6391Languages();
+        }
+
+        function removeFromList(language) {
+            communicationService.remove(language);
+            vm.communications = communicationService.getAll();
+        }
+
+        vm.removeFromList = removeFromList;
+
+        function reset(form) {
+            form.$setPristine();
+        }
+
+        vm.reset = reset;
+
+        function updateLanguage() {
+            communicationService.setSingle(_.clone(vm.language));
+        }
+
+        function initCommunication() {
+            return vm.communication = { "language": {"coding": [], "text": undefined}, "preferred": false };
+        }
+
+        vm.updateLanguage = updateLanguage;
+        vm.communication = initCommunication();
+        vm.communications = [];
+        vm.languageSearchText = '';
+        vm.languageValues = [];
+        vm.selectedLanguage = {};
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'communicationService', 'localValueSets', communication]);
+
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'communicationService';
+
+    function communicationService(common) {
+        var communications = [];
+        var _mode = 'multi';
+        var _communication = { "language": null, "preferred": false };
+
+        function add(item) {
+            var index = getIndex(item.$$hashKey);
+            if (index > -1) {
+                communications[index] = item;
+            } else {
+                communications.push(item);
+            }
+        }
+
+        function getAll() {
+            return _.compact(communications);
+        }
+
+        function getIndex(hashKey) {
+            if (angular.isUndefined(hashKey) === false) {
+                for (var i = 0, len = communications.length; i < len; i++) {
+                    if (communications[i].$$hashKey === hashKey) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        function getMode() {
+            return _mode;
+        }
+
+        function getSingle() {
+            return _communication;
+        }
+
+        function init(items, mode) {
+            _mode = mode ? mode : 'multi';
+            if (angular.isArray(items)) {
+                communications = items;
+            } else if (angular.isObject(items)) {
+                communications = [];
+                communications.push(items);
+            }
+            _communication = communications[0];
+            return communications;
+        }
+
+        function remove(item) {
+            var index = getIndex(item.$$hashKey);
+            communications.splice(index, 1);
+        }
+
+        function update(item) {
+            if (angular.isUndefined(item.$$hashKey) === false) {
+                for (var i = 0, len = communications.length; i < len; i++) {
+                    if (communications[i].$$hashKey === item.$$hashKey) {
+                        communications[i] = item;
+                    } else if (item.preferred == true) {
+                        communications[i].preferred = false;
+                    }
+                }
+            }
+        }
+
+        function reset() {
+            while (communications.length > 0) {
+                communications.pop();
+            }
+        }
+
+        function setSingle(item) {
+            _communication = item;
+        }
+
+        var service = {
+            add: add,
+            remove: remove,
+            update: update,
+            getAll: getAll,
+            getMode: getMode,
+            getSingle: getSingle,
+            init: init,
+            reset: reset,
+            setSingle: setSingle
+        };
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['common', communicationService]);
+
+})();(function () {
+    'use strict';
+
     var controllerId = 'contact';
 
     function contact(common, contactService, localValueSets) {
@@ -4230,56 +4642,10 @@
         }
 
         function init(items, showHome, showMobile) {
-            function mapToViewModel(items) {
-                var modelView = [];
-                var workFiltered = _.filter(items, {"use": "work"});
-                var homeFiltered = _.filter(items, {"use": "home"});
-                var tempFiltered = _.filter(items, {"use": "temp"});
-                var oldFiltered = _.filter(items, {"use": "old"});  // TODO: add period filter
-                var mobileFiltered = _.filter(items, {"use": "mobile"});
-                var noUseFiltered = _.filter(items, {"use": undefined});
-
-                function buildContactPoint(filteredArray, useName) {
-                    var contactPoint;
-                    if (filteredArray && filteredArray.length > 0) {
-                        contactPoint = {"use": useName};
-                        var phone = _.find(filteredArray, {"system": "phone"});
-                        if (phone) {
-                            contactPoint.phone = phone.value;
-                        }
-                        var fax = _.find(filteredArray, {"system": "fax"});
-                        if (fax) {
-                            contactPoint.fax = fax.value;
-                        }
-                        var email = _.find(filteredArray, {"system": "email"});
-                        if (email) {
-                            contactPoint.email = email.value;
-                        }
-                        var url = _.find(filteredArray, {"system": "url"});
-                        if (url) {
-                            contactPoint.url = url.value;
-                        }
-                    }
-                    if (contactPoint) {
-                        modelView.push(contactPoint);
-                    }
-                }
-
-                // use first found item
-                buildContactPoint(workFiltered, "work");
-                buildContactPoint(homeFiltered, "home");
-                buildContactPoint(tempFiltered, "temp");
-                buildContactPoint(oldFiltered, "old");
-                buildContactPoint(mobileFiltered, "mobile");
-                buildContactPoint(noUseFiltered, undefined);
-
-                return modelView;
-            }
-
             home = showHome;
             mobile = showMobile;
             if (angular.isArray(items)) {
-                contactPoints = mapToViewModel(items);
+                contactPoints = items;
             } else {
                 contactPoints = [];
             }
@@ -4332,7 +4698,7 @@
                     }
                 }
             }
-            return mappedContactPoints;
+            return contactPoints;
         }
 
         function remove(item) {
@@ -4402,8 +4768,9 @@
         }
 
         function loadEthnicities() {
-            return vm.ethnicities = localValueSets.ethnicity().concept;
+            return vm.ethnicities = localValueSets.ethnicity();
         }
+
         vm.loadEthnicities = loadEthnicities;
 
         function loadGenders() {
@@ -4425,13 +4792,15 @@
         vm.loadMaritalStatuses = loadMaritalStatuses;
 
         function loadReligions() {
-            return vm.religions = localValueSets.religion().concept;
+            return vm.religions = localValueSets.religion();
         }
+
         vm.loadReligions = loadReligions;
 
         function loadRaces() {
-            return vm.races = localValueSets.race().concept;
+            return vm.races = localValueSets.race();
         }
+
         vm.loadRaces = loadRaces;
 
         function initData() {
@@ -4444,18 +4813,16 @@
             vm.demographics.maritalStatus = demographicsService.getMaritalStatus();
             vm.demographics.multipleBirth = demographicsService.getMultipleBirth();
             // Known extensions
-            vm.demographics.race = null;
-            vm.demographics.religion = null;
-            vm.demographics.ethnicity = null;
-            vm.demographics.mothersMaidenName = null;
-            vm.demographics.placeOfBirth = null;
-        }
+            vm.demographics.race = demographicsService.getRace();
+            vm.demographics.religion = demographicsService.getReligion();
+            vm.demographics.ethnicity = demographicsService.getEthnicity();
+            vm.demographics.mothersMaidenName = demographicsService.getMothersMaidenName();
+            vm.demographics.placeOfBirth = demographicsService.getBirthPlace();
 
-        function removeLanguage(item) {
-            _.remove(vm.demographics.language, function (removedItem) {
-                return removedItem.$$hashKey === item.$$hashKey;
-            });
-            updateLanguage();
+            loadMaritalStatuses();
+            loadRaces();
+            loadEthnicities();
+            loadReligions();
         }
 
         function updateBirthDate() {
@@ -4481,29 +4848,56 @@
             demographicsService.setGender(vm.demographics.gender);
         }
 
-        function updateLanguage() {
-            demographicsService.setLanguage(vm.demographics.language);
-        }
-
-
-        function updateMaritalStatus() {
-            demographicsService.setMaritalStatus(vm.demographics.maritalStatus);
+        function updateMaritalStatus(maritalStatusCoding) {
+            var codeableConcept = {
+                "text": maritalStatusCoding.display,
+                "coding": [{
+                    "system": maritalStatusCoding.system,
+                    "code": maritalStatusCoding.code,
+                    "display": maritalStatusCoding.display
+                }]
+            };
+            demographicsService.setMaritalStatus(codeableConcept);
         }
 
         function updateMultipleBirth() {
             demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
         }
 
-        function updateRace() {
-            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        function updateRace(raceCoding) {
+            var codeableConcept = {
+                "text": raceCoding.display,
+                "coding": [{
+                    "system": vm.races.system,
+                    "code": raceCoding.code,
+                    "display": raceCoding.display
+                }]
+            };
+            demographicsService.setRace(codeableConcept);
         }
 
-        function updateReligion() {
-            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        function updateReligion(religionCoding) {
+            var codeableConcept = {
+                "text": religionCoding.display,
+                "coding": [{
+                    "system": vm.religions.system,
+                    "code": religionCoding.code,
+                    "display": religionCoding.display
+                }]
+            };
+            demographicsService.setReligion(codeableConcept);
         }
 
-        function updateEthnicity() {
-            //  demographicsService.setMultipleBirth(vm.demographics.multipleBirth);
+        function updateEthnicity(ethnicityCoding) {
+            var codeableConcept = {
+                "text": ethnicityCoding.display,
+                "coding": [{
+                    "system": vm.ethnicities.system,
+                    "code": ethnicityCoding.code,
+                    "display": ethnicityCoding.display
+                }]
+            };
+            demographicsService.setEthnicity(codeableConcept);
         }
 
         vm.addLanguage = addLanguage;
@@ -4518,19 +4912,20 @@
             "multipleBirth": false
         };
         vm.genders = [];
-        vm.languages = [];
         vm.maritalStatuses = [];
         vm.religions = [];
-        vm.races = [];
+        vm.races = null;
+        vm.ethnicityCoding = null;
+        vm.raceCoding = null;
+        vm.religionCoding = null;
+        vm.raceCoding = null;
+        vm.maritalStatusCoding = null;
         vm.ethnicities = [];
-        vm.removeLanguage = removeLanguage;
-        vm.selectedLanguage = null;
         vm.updateBirthDate = updateBirthDate;
         vm.updateBirthOrder = updateBirthOrder;
         vm.updateDeceased = updateDeceased;
         vm.updateDeceasedDate = updateDeceasedDate;
         vm.updateGender = updateGender;
-        vm.updateLanguage = updateLanguage;
         vm.updateMaritalStatus = updateMaritalStatus;
         vm.updateMultipleBirth = updateMultipleBirth;
         vm.updateRace = updateRace;
@@ -4556,12 +4951,12 @@
         var _language = [];
         var _multipleBirth = false;
         var _gender = null;
-        var _maritalStatus = {"coding": []};
-        var _race = {"coding": []};
-        var _religion = {"coding": []};
-        var _ethnicity = {"coding": []};
-        var _birthPlace = {"address": {"text": null}};
-        var _mothersMaidenName = null;
+        var _maritalStatus = undefined;
+        var _race = undefined;
+        var _religion = undefined;
+        var _ethnicity = undefined;
+        var _birthPlace = undefined;
+        var _mothersMaidenName = undefined;
 
         function getRace() {
             return _race;
@@ -4646,7 +5041,32 @@
         }
 
         function initializeKnownExtensions(extensions) {
-            //TODO: Set DAF properties here
+            if (extensions) {
+                for (var i = 0, len = extensions.length; i < len; i++) {
+                    var ext = extensions[i];
+                    if (ext.url) {
+                        switch (ext.url) {
+                            case "http://hl7.org/fhir/StructureDefinition/us-core-race":
+                                _race = ext.valueCodeableConcept;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/us-core-religion":
+                                _religion = ext.valueCodeableConcept;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity":
+                                _ethnicity = ext.valueCodeableConcept;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName":
+                                _mothersMaidenName = ext.valueString;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/birthPlace":
+                                _mothersMaidenName = ext.valueAddress;
+                                break;
+                            default:
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         function setRace(value) {
@@ -5098,17 +5518,25 @@
             return _identifier;
         }
 
-        function init(items, mode) {
-            _mode = mode ? mode: 'multi';
+        function init(items, mode, type) {
+            _mode = mode ? mode : 'multi';
             if (angular.isArray(items)) {
                 identifiers = items;
-            } else if (angular.isObject(items)){
+            } else if (angular.isObject(items)) {
                 identifiers = [];
                 identifiers.push(items);
             }
             else {
                 identifiers = [];
-                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Cloud identifier"};
+                var system = "urn:fhir-cloud:id";
+                if (type) {
+                    system = "urn:fhir-cloud:" + type + ":id";
+                }
+                var defaultId = {
+                    "use": "usual",
+                    "system": system,
+                    "value": common.generateUUID()
+                };
                 identifiers.push(defaultId);
             }
             _identifier = identifiers[0];
@@ -6043,6 +6471,1450 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'consultationDetail';
+
+    function consultationDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window,
+                                common, fhirServers, localValueSets, identifierService, observationService,
+                                observationValueSets, practitionerService, careProviderService, patientService) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([getActiveServer(), loadSmokingStatuses(), loadInterpretations(), loadBPInterpretations()],
+                controllerId).then(function () {
+                    vm.vitals.date = new Date();
+                    getPatientContext();
+
+                });
+        }
+
+        function initializeBP() {
+            vm.vitals.date = new Date();
+            vm.vitals.bp.diastolic = 0;
+            vm.vitals.bp.systolic = 0;
+            vm.vitals.bp.interpretationCode = undefined;
+            vm.vitals.bp.interpretationText = "Enter new reading";
+        }
+
+        function calculateBMI() {
+            if (vm.vitals.bmi.height && vm.vitals.bmi.weight && vm.vitals.bmi.height > 0 && vm.vitals.bmi.weight > 0) {
+                var _height = (vm.vitals.bmi.height / 39.3700787);
+                var _weight = (vm.vitals.bmi.weight / 2.20462);
+                vm.vitals.bmi.calculated = (Math.floor((_weight / Math.pow(_height, 2)) * 100) / 100);
+            }
+
+            switch (true) {
+                case (vm.vitals.bmi.calculated <= 18.5):
+                    vm.vitals.bmi.interpretationText = "Underweight";
+                    vm.vitals.bmi.color = "blue";
+                    break;
+                case (vm.vitals.bmi.calculated >= 30):
+                    vm.vitals.bmi.interpretationText = "Obese";
+                    vm.vitals.bmi.color = "red";
+                    break;
+                case ((vm.vitals.bmi.calculated > 18.5) && (vm.vitals.bmi.calculated < 25)):
+                    vm.vitals.bmi.interpretationText = "Healthy weight";
+                    vm.vitals.bmi.color = "green";
+                    break;
+                case ((vm.vitals.bmi.calculated >= 25) && (vm.vitals.bmi.calculated < 30)):
+                    vm.vitals.bmi.interpretationText = "Overweight";
+                    vm.vitals.bmi.color = "orange";
+                    break;
+                default:
+                    vm.vitals.bmi.interpretationText = "";
+                    vm.vitals.bmi.color = "grey";
+                    break;
+            }
+        }
+
+        vm.calculateBMI = calculateBMI;
+
+        function calculateAge(birthDate) {
+            if (birthDate) {
+                var dob = birthDate;
+                if (angular.isDate(dob) === false) {
+                    dob = new Date(birthDate);
+                }
+                var ageDifMs = Date.now() - dob.getTime();
+                var ageDate = new Date(ageDifMs); // miliseconds from epoch
+                return Math.abs(ageDate.getUTCFullYear() - 1970);
+            } else {
+                return "unknown";
+            }
+        }
+
+        function loadSmokingStatuses() {
+            return vm.smokingStatuses = observationValueSets.smokingStatus();
+        }
+
+        function loadBPInterpretations() {
+            return vm.bpInterpretations = observationValueSets.bpInterpretation();
+        }
+
+        function loadInterpretations() {
+            return vm.interpretations = observationValueSets.interpretation();
+        }
+
+        function getPatientContext() {
+            patientService.getCachedPatient($routeParams.hashKey).then(function (data) {
+                vm.consultation.patient = data;
+                vm.consultation.patient.age = calculateAge(vm.consultation.patient.birthDate);
+            }, function (error) {
+                logError("You must first select a patient before initiating a consultation", error);
+                $location.path('/patient');
+            });
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getPractitionerReference(input) {
+            var deferred = $q.defer();
+            practitionerService.getPractitionerReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getPractitionerReference = getPractitionerReference;
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        //TODO
+                        break;
+                    case 1:
+                        $location.path('/observation/smart/cardiac-risk/' + vm.observation.id);
+                        break;
+                    case 2:
+                        $location.path('/observation/smart/meducation/' + vm.observation.id);
+                        break;
+                    case 3:
+                        $location.path('/observation/edit/new');
+                        break;
+                    case 4:
+                        $location.path('/observation/edit/' + vm.observation.hashKey);
+                        break;
+                    case 5:
+                        deleteObservation(vm.observation);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Consult', icon: 'rx', index: 0},
+                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
+                    {name: 'Add new observation', icon: 'personAdd', index: 3},
+                    {name: 'Edit observation', icon: 'edit', index: 4},
+                    {name: 'Delete observation', icon: 'delete', index: 5}
+                ];
+                this.title = 'Observation options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        function buildSystolic() {
+            var systolicObs = observationService.initializeNewObservation();
+            systolicObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "271649006",
+                    "display": "Systolic blood pressure"
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "8480-6",
+                    "display": "Systolic blood pressure"
+                }],
+                "text": "Systolic blood pressure"
+            };
+            systolicObs.valueQuantity = {
+                "value": vm.vitals.bp.systolic,
+                "units": "mm[Hg]"
+            };
+            systolicObs.status = "final";
+            systolicObs.reliability = "ok";
+            systolicObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": $filter('fullName')(vm.consultation.patient.name)
+            };
+            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return systolicObs;
+        }
+
+        function buildDiastolic() {
+            var diastolicObs = observationService.initializeNewObservation();
+            diastolicObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "271650006",
+                    "display": "Diastolic blood pressure"
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "8462-4",
+                    "display": "Diastolic blood pressure"
+                }],
+                "text": "Diastolic blood pressure"
+            };
+            diastolicObs.valueQuantity = {
+                "value": vm.vitals.bp.diastolic,
+                "units": "mm[Hg]"
+            };
+            diastolicObs.status = "final";
+            diastolicObs.reliability = "ok";
+            diastolicObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": $filter('fullName')(vm.consultation.patient.name)
+            };
+            diastolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return diastolicObs;
+        }
+
+        function buildBPInterpretation() {
+            if (vm.vitals.bp.interpretationCode) {
+                var bpInterpretationObs = observationService.initializeNewObservation();
+                bpInterpretationObs.code = {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "55284-4",
+                            "display": "Blood pressure systolic & diastolic"
+                        }], "text": "Blood pressure systolic & diastolic"
+                };
+                bpInterpretationObs.interpretation = {
+                    "coding": [],
+                    "text": vm.vitals.bp.interpretationText
+                };
+                var coding = angular.fromJson(vm.vitals.bp.interpretationCode);
+                coding.system = vm.interpretations.system;
+                bpInterpretationObs.interpretation.coding.push(coding);
+                bpInterpretationObs.status = "final";
+                bpInterpretationObs.reliability = "ok";
+                bpInterpretationObs.subject = {
+                    "reference": 'Patient/' + vm.consultation.patient.id,
+                    "display": $filter('fullName')(vm.consultation.patient.name)
+                };
+                bpInterpretationObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+
+                return bpInterpretationObs;
+            } else {
+                return undefined;
+            }
+        }
+
+        function updateBP() {
+            var s = vm.vitals.bp.systolic;
+            if (vm.vitals.bp.diastolic < 60 || s <= 90) {
+                vm.vitals.bp.interpretationText = "Low reading";
+                vm.vitals.bp.color = "blue";
+            } else if (vm.vitals.bp.diastolic > 90 || s >= 140) {
+                vm.vitals.bp.interpretationText = "High reading";
+                vm.vitals.bp.color = "red";
+            } else if (vm.vitals.bp.diastolic >= 60 && vm.vitals.bp.diastolic <= 80) {
+                switch (true) {
+                    case (s <= 120):
+                        vm.vitals.bp.interpretationText = "Reading is ideal and healthy"
+                        vm.vitals.bp.color = "green";
+                        break;
+                    case (s <= 140):
+                        vm.vitals.bp.interpretationText = "A little higher than it should be";
+                        vm.vitals.bp.color = "orange";
+                        break;
+                    default:
+                        vm.vitals.bp.interpretationText = "Inconclusive";
+                        vm.vitals.bp.color = "grey";
+                        break;
+                }
+            } else if (vm.vitals.bp.diastolic > 80 && vm.vitals.bp.diastolic <= 90) {
+                switch (true) {
+                    case (s <= 140):
+                        vm.vitals.bp.interpretationText = "A little higher than it should be";
+                        vm.vitals.bp.color = "orange";
+                        break;
+                    default:
+                        vm.vitals.bp.interpretationText = "Inconclusive";
+                        vm.vitals.bp.color = "grey";
+                        break;
+                }
+
+            }
+        }
+
+        vm.updateBP = updateBP;
+
+        function updatePulse() {
+            switch (true) {
+                case (vm.vitals.hr.pulse < 60):
+                    vm.vitals.hr.interpretationText = "Heart rate below normal";
+                    vm.vitals.hr.color = "blue";
+                    break;
+                case (vm.vitals.hr.pulse > 100):
+                    vm.vitals.hr.interpretationText = "Heart rate above";
+                    vm.vitals.hr.color = "red";
+                    break;
+                case (vm.vitals.hr.pulse <= 100 && vm.vitals.hr.pulse >= 60):
+                    vm.vitals.hr.interpretationText = "Normal heart rate";
+                    vm.vitals.hr.color = "green";
+                    break;
+                default:
+                    vm.vitals.hr.interpretationText = "Indeterminate";
+                    vm.vitals.hr.color = "grey";
+            }
+        }
+
+        vm.updatePulse = updatePulse;
+
+        function saveBloodPressure(form) {
+            function processBPResult(results) {
+                var deferred = $q.defer();
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
+                    deferred.resolve(undefined);
+                } else {
+                    logInfo("Observation saved at " + resourceVersionId, null, noToast);
+                    deferred.resolve($filter('idFromURL')(resourceVersionId));
+                }
+                return deferred.promise;
+            }
+
+            function savePrimaryObs(observations) {
+                var deferred = $q.defer();
+                var completed = 0;
+                var interpretationObs = buildBPInterpretation();
+                for (var i = 0, len = observations.length; i <= len; i++) {
+                    if (observations[i] !== undefined) {
+                        vm.isBusy = true;
+                        observationService.addObservation(observations[i])
+                            .then(processBPResult,
+                            function (error) {
+                                logError(common.unexpectedOutcome(error));
+                                vm.isBusy = false;
+                                deferred.reject(error);
+                            })
+                            .then(function (observationId) {
+                                if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
+                                    var relatedItem = {"type": "has-component"};
+                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    interpretationObs.related.push(relatedItem);
+                                    completed = completed + 1;
+                                }
+                                if (completed === observations.length) {
+                                    deferred.resolve(interpretationObs);
+                                }
+                            })
+                    }
+                }
+                return deferred.promise;
+            }
+
+            logInfo("Saving vital signs to " + vm.activeServer.name);
+            var observations = [];
+            observations.push(buildDiastolic());
+            observations.push(buildSystolic());
+
+            savePrimaryObs(observations)
+                .then(function (interpretationObs) {
+                    //TODO: if either sys/dia failed, compensate transaction
+                    if (angular.isDefined(interpretationObs)) {
+                        observationService.addObservation(interpretationObs)
+                            .then(processBPResult,
+                            function (error) {
+                                logError(common.unexpectedOutcome(error));
+                            })
+                    }
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error));
+                }).then(function () {
+                    initializeBP();
+                    form.$setPristine();
+                })
+        }
+
+        vm.saveBloodPressure = saveBloodPressure;
+
+        function saveHeartRate(form) {
+            function savePrimaryObs(observations) {
+                var deferred = $q.defer();
+                var completed = 0;
+                var interpretationObs = buildBPInterpretation();
+                for (var i = 0, len = observations.length; i <= len; i++) {
+                    if (observations[i] !== undefined) {
+                        vm.isBusy = true;
+                        observationService.addObservation(observations[i])
+                            .then(processBPResult,
+                            function (error) {
+                                logError(common.unexpectedOutcome(error));
+                                vm.isBusy = false;
+                                deferred.reject(error);
+                            })
+                            .then(function (observationId) {
+                                if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
+                                    var relatedItem = {"type": "has-component"};
+                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    interpretationObs.related.push(relatedItem);
+                                    completed = completed + 1;
+                                }
+                                if (completed === observations.length) {
+                                    deferred.resolve(interpretationObs);
+                                }
+                            })
+                    }
+                }
+                return deferred.promise;
+            }
+
+            logInfo("Saving heart rate to " + vm.activeServer.name);
+            var observations = [];
+            observations.push(buildDiastolic());
+            observations.push(buildSystolic());
+
+            savePrimaryObs(observations)
+                .then(function (interpretationObs) {
+                    //TODO: if either sys/dia failed, compensate transaction
+                    if (angular.isDefined(interpretationObs)) {
+                        observationService.addObservation(interpretationObs)
+                            .then(_processCreateResponse,
+                            function (error) {
+                                logError(common.unexpectedOutcome(error));
+                            })
+                    }
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error));
+                }).then(function () {
+                    initializeBP();
+                    form.$setPristine();
+                })
+        }
+
+        vm.saveHeartRate = saveHeartRate;
+
+        function saveBMI(form) {
+            function savePrimaryObs(observations) {
+                var deferred = $q.defer();
+                var completed = 0;
+                var interpretationObs = buildBPInterpretation();
+                for (var i = 0, len = observations.length; i <= len; i++) {
+                    if (observations[i] !== undefined) {
+                        vm.isBusy = true;
+                        observationService.addObservation(observations[i])
+                            .then(processBPResult,
+                            function (error) {
+                                logError(common.unexpectedOutcome(error));
+                                vm.isBusy = false;
+                                deferred.reject(error);
+                            })
+                            .then(function (observationId) {
+                                if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
+                                    var relatedItem = {"type": "has-component"};
+                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    interpretationObs.related.push(relatedItem);
+                                    completed = completed + 1;
+                                }
+                                if (completed === observations.length) {
+                                    deferred.resolve(interpretationObs);
+                                }
+                            })
+                    }
+                }
+                return deferred.promise;
+            }
+
+            logInfo("Saving heart rate to " + vm.activeServer.name);
+            var observations = [];
+            observations.push(buildDiastolic());
+            observations.push(buildSystolic());
+
+            savePrimaryObs(observations)
+                .then(function (interpretationObs) {
+                    //TODO: if either sys/dia failed, compensate transaction
+                    if (angular.isDefined(interpretationObs)) {
+                        observationService.addObservation(interpretationObs)
+                            .then(_processCreateResponse,
+                            function (error) {
+                                logError(common.unexpectedOutcome(error));
+                            })
+                    }
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error));
+                }).then(function () {
+                    initializeBP();
+                    form.$setPristine();
+                })
+        }
+
+        vm.saveBMI = saveBMI;
+
+        function saveSmokingStatus() {
+
+        }
+
+        vm.saveSmokingStatus = saveSmokingStatus;
+
+        function _processCreateResponse(results) {
+            var deferred = $q.defer();
+            var resourceVersionId = results.headers.location || results.headers["content-location"];
+            if (angular.isUndefined(resourceVersionId)) {
+                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
+                deferred.resolve(undefined);
+            } else {
+                logInfo("Observation saved at " + resourceVersionId, null, noToast);
+                deferred.resolve($filter('idFromURL')(resourceVersionId));
+            }
+            return deferred.promise;
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.calculateAge = calculateAge;
+        vm.activate = activate;
+        vm.observation = null;
+        vm.isBusy = false;
+        vm.observation = undefined;
+        vm.practitionerSearchText = '';
+        vm.selectedPractitioner = null;
+        vm.smartLaunchUrl = '';
+        vm.consultation = {};
+        vm.smokingStatuses = [];
+        vm.bpInterpretations = [];
+        vm.interpretations = [];
+        vm.vitals = {
+            "bp": {
+                "systolic": undefined,
+                "diastolic": undefined,
+                "interpretationCode": undefined,
+                "color": "black",
+                "interpretationText": undefined
+            },
+            "hr": {
+                "pulse": undefined,
+                "interpretationCode": undefined,
+                "color": "black",
+                "interpretationText": undefined
+            },
+            "bmi": {
+                "height": undefined,
+                "heightMeasured": "Standing",
+                "weight": undefined,
+                "calculated": undefined,
+                "interpretationCode": undefined,
+                "color": "black",
+                "interpretationText": undefined
+            },
+            "smokingStatus": undefined,
+            "temperature": undefined
+        };
+        vm.consultation.patient = undefined;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'common', 'fhirServers', 'localValueSets', 'identifierService', 'observationService',
+            'observationValueSets', 'practitionerService', 'careProviderService', 'patientService', consultationDetail]);
+
+})();(function () {
+    'use strict';
+
+    var serviceId = 'observationService';
+
+    function observationService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+        var dataCacheKey = 'localObservations';
+        var itemCacheKey = 'contextObservation';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var $q = common.$q;
+
+        function addObservation(resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/Observation";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedObservation(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                if (searchResults && searchResults.entry) {
+                    var cachedObservations = searchResults.entry;
+                    searchResults.entry = _.remove(cachedObservations, function (item) {
+                        return item.$$hashKey !== hashKey;
+                    });
+                    searchResults.totalResults = (searchResults.totalResults - 1);
+                    dataCache.addToCache(dataCacheKey, searchResults);
+                }
+                deferred.resolve();
+            }
+
+            var deferred = $q.defer();
+            deleteObservation(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteObservation(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedObservation(hashKey) {
+            function getObservation(searchResults) {
+                var cachedObservation;
+                var cachedObservations = searchResults.entry;
+                for (var i = 0, len = cachedObservations.length; i < len; i++) {
+                    if (cachedObservations[i].$$hashKey === hashKey) {
+                        cachedObservation = cachedObservations[i].resource;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedObservation.resourceId = (baseUrl + cachedObservation.resourceType + '/' + cachedObservation.id);
+                        cachedObservation.hashKey = hashKey;
+                        break;
+                    }
+                }
+                if (cachedObservation) {
+                    deferred.resolve(cachedObservation);
+                } else {
+                    deferred.reject('Observation not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            var activeServer;
+            getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
+                .then(getObservation,
+                function () {
+                    deferred.reject('Observation search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getObservation(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (data) {
+                    dataCache.addToCache(dataCacheKey, data);
+                    deferred.resolve(data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getObservationContext() {
+            return dataCache.readFromCache(dataCacheKey);
+        }
+
+        function getObservationReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Observation?code=' + input + '&_count=20')
+                .then(function (results) {
+                    var observations = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'Observation') {
+                                    observations.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
+                    }
+                    if (observations.length === 0) {
+                        observations.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(observations);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchObservations(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/Observation?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getObservations(baseUrl, searchFilter, organizationId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Observation?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getObservationsByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewObservation() {
+            return {
+                "resourceType": "Observation",
+                "code": null, // CodeableConcept
+
+                // value[x]: Actual result. One of these 10:
+                "valueQuantity": null,
+                "valueCodeableConcept": null,
+                "valueString": null,
+                "valueRange": null,
+                "valueRatio": null,
+                "valueSampledData": null,
+                "valueAttachment": null,
+                "valueTime": null,
+                "valueDateTime": null,
+                "valuePeriod": null,
+
+                "dataAbsentReason": null, // CodeableConcept
+                "interpretation": null, // CodeableConcept
+                "comments": null,
+
+                // applies[x]: Physiologically Relevant time/time-period for observation. One of these 2:
+                "appliesDateTime": null,
+                "appliesPeriod": null,
+
+                "issued": null, // instant
+                "status": null, // code: registered | preliminary | final | amended
+                "reliability": null, // code:  ok | ongoing | early | questionable | calibrating | error
+
+                // bodySite[x]: Observed body part. One of these 2:
+                "bodySiteCodeableConcept": null,
+                "bodySiteReference": null, // Reference(BodySite),
+
+                "method": null, // CodeableConcept
+                "identifier": [{
+                    "system": "urn:fhir-cloud:observation",
+                    "value": common.randomHash(),
+                    "use": "official",
+                    "assigner": {"display": "FHIR Cloud"}
+                }],
+                "subject": null, // Reference(Patient | Group | Device | Location)
+                "specimen": null, // Reference(Specimen)
+                "performer": [], // [Reference(Practitioner | Organization | Patient | RelatedPerson)]
+                "device": null, // Reference(Device | DeviceMetric)
+                "encounter": null, // Reference(Encounter)
+
+                "referenceRange": [
+                    //   "low": null, // Quantity
+                    //   "high": null, // Quantity
+                    //   "meaning": null, // CodeableConcept
+                    //   "age": null, // Range, applicable age range, if relevant
+                    //   "text": null
+                ],
+
+                "related": [
+                    //  "type": null, // code:  has-component | has-member | derived-from | sequel-to | replaces | qualified-by | interfered-by
+                    //  "target": null // Reference(Observation)
+                ]
+            };
+        }
+
+        function setObservationContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updateObservation(resourceVersionId, resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomObservations(organizationId, organizationName) {
+            var deferred = $q.defer();
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
+                .success(function (data) {
+                    angular.forEach(data.results, function (result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "Observation",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": stringDOB,
+                            "contact": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": [{"url": user.picture.large}],
+                            "identifier": [
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "official",
+                                    "label": "Social Security Number",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "label": organizationName + " master Id",
+                                    "assigner": {"display": organizationName}
+                                }
+                            ],
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
+                            "link": [],
+                            "active": true,
+                            "extension": []
+                        };
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push([$filter('titleCase')(user.name.last)]);
+                        birthPlace.push(resource.address[0].city + ', ' + resource.address[0].state);
+
+                        var timer = $timeout(function () {
+                        }, 3000);
+                        timer.then(function () {
+                            addObservation(resource).then(function (results) {
+                                logInfo("Created observation " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create observation " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
+                    });
+                    deferred.resolve();
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/observation-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueAddress = {"text": array[0]};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        function _randomEthnicity() {
+            var ethnicities = localValueSets.ethnicity();
+            common.shuffle(ethnicities.concept);
+            var ethnicity = ethnicities.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicities.system,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.performer.length === 0) {
+                resource.performer = null;
+            }
+            if (resource.referenceRange.length === 0) {
+                resource.referenceRange = null;
+            }
+            if (resource.related.length === 0) {
+                resource.related = null;
+            }
+            return $q.when(resource);
+        }
+
+        var service = {
+            addObservation: addObservation,
+            clearCache: clearCache,
+            deleteCachedObservation: deleteCachedObservation,
+            deleteObservation: deleteObservation,
+            getCachedObservation: getCachedObservation,
+            getCachedSearchResults: getCachedSearchResults,
+            getObservation: getObservation,
+            getObservationContext: getObservationContext,
+            getObservationReference: getObservationReference,
+            getObservations: getObservations,
+            getObservationsByLink: getObservationsByLink,
+            initializeNewObservation: initializeNewObservation,
+            setObservationContext: setObservationContext,
+            updateObservation: updateObservation,
+            seedRandomObservations: seedRandomObservations,
+            searchObservations: searchObservations
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
+        observationService]);
+})();(function () {
+    'use strict';
+
+    var serviceId = 'observationValueSets';
+
+    function observationValueSets() {
+
+        function bpInterpretation() {
+            return {
+                "system": "http://hl7.org/fhir/v2/0078",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "<",
+                        "display": "Below absolute low-off instrument scale"
+                    },
+                    {
+                        "code": ">",
+                        "display": "Above absolute high-off instrument scale"
+                    },
+                    {
+                        "code": "A",
+                        "display": "Abnormal (applies to non-numeric results)"
+                    },
+                    {
+                        "code": "AA",
+                        "display": "Very abnormal (applies to non-numeric units, analogous to panic limits for numeric units)"
+                    },
+                    {
+                        "code": "B",
+                        "display": "Better-use when direction not relevant"
+                    },
+                    {
+                        "code": "D",
+                        "display": "Significant change down"
+                    },
+                    {
+                        "code": "H",
+                        "display": "Above high normal"
+                    },
+                    {
+                        "code": "HH",
+                        "display": "Above upper panic limits"
+                    },
+                    {
+                        "code": "L",
+                        "display": "Below low normal"
+                    },
+                    {
+                        "code": "LL",
+                        "display": "Below lower panic limits"
+                    },
+                    {
+                        "code": "N",
+                        "display": "Normal"
+                    },
+                    {
+                        "code": "NEG",
+                        "display": "Negative"
+                    },
+                    {
+                        "code": "POS",
+                        "display": "Positive"
+                    },
+                    {
+                        "code": "U",
+                        "display": "Significant change up"
+                    },
+                    {
+                        "code": "null",
+                        "display": "No range defined, or normal ranges don't apply"
+                    }
+                ]
+            }
+        }
+
+        function interpretation()  {
+            return {
+                "system": "http://hl7.org/fhir/v2/0078",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "<",
+                        "display": "Below absolute low-off instrument scale"
+                    },
+                    {
+                        "code": ">",
+                        "display": "Above absolute high-off instrument scale"
+                    },
+                    {
+                        "code": "A",
+                        "display": "Abnormal (applies to non-numeric results)"
+                    },
+                    {
+                        "code": "AA",
+                        "display": "Very abnormal (applies to non-numeric units, analogous to panic limits for numeric units)"
+                    },
+                    {
+                        "code": "AC",
+                        "display": "Anti-complementary substances present"
+                    },
+                    {
+                        "code": "B",
+                        "display": "Better-use when direction not relevant"
+                    },
+                    {
+                        "code": "D",
+                        "display": "Significant change down"
+                    },
+                    {
+                        "code": "DET",
+                        "display": "Detected"
+                    },
+                    {
+                        "code": "H",
+                        "display": "Above high normal"
+                    },
+                    {
+                        "code": "HH",
+                        "display": "Above upper panic limits"
+                    },
+                    {
+                        "code": "I",
+                        "display": "Intermediate. Indicates for microbiology susceptibilities only."
+                    },
+                    {
+                        "code": "IND",
+                        "display": "Indeterminate"
+                    },
+                    {
+                        "code": "L",
+                        "display": "Below low normal"
+                    },
+                    {
+                        "code": "LL",
+                        "display": "Below lower panic limits"
+                    },
+                    {
+                        "code": "MS",
+                        "display": "Moderately susceptible. Indicates for microbiology susceptibilities only."
+                    },
+                    {
+                        "code": "N",
+                        "display": "Normal (applies to non-numeric results)"
+                    },
+                    {
+                        "code": "ND",
+                        "display": "Not Detected"
+                    },
+                    {
+                        "code": "NEG",
+                        "display": "Negative"
+                    },
+                    {
+                        "code": "NR",
+                        "display": "Non-reactive"
+                    },
+                    {
+                        "code": "POS",
+                        "display": "Positive"
+                    },
+                    {
+                        "code": "QCF",
+                        "display": "Quality Control Failure"
+                    },
+                    {
+                        "code": "R",
+                        "display": "Resistant. Indicates for microbiology susceptibilities only."
+                    },
+                    {
+                        "code": "RR",
+                        "display": "Reactive"
+                    },
+                    {
+                        "code": "S",
+                        "display": "Susceptible. Indicates for microbiology susceptibilities only."
+                    },
+                    {
+                        "code": "TOX",
+                        "display": "Cytotoxic substance present"
+                    },
+                    {
+                        "code": "U",
+                        "display": "Significant change up"
+                    },
+                    {
+                        "code": "VS",
+                        "display": "Very susceptible. Indicates for microbiology susceptibilities only."
+                    },
+                    {
+                        "code": "W",
+                        "display": "Worse-use when direction not relevant"
+                    },
+                    {
+                        "code": "WR",
+                        "display": "Weakly reactive"
+                    },
+                    {
+                        "code": "null",
+                        "display": "No range defined, or normal ranges don't apply"
+                    }
+                ]
+            }
+        }
+
+        function reliability() {
+            return {
+                "system": "http://hl7.org/fhir/observation-reliability",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "ok",
+                        "display": "Ok",
+                        "definition": "The result has no reliability concerns."
+                    },
+                    {
+                        "code": "ongoing",
+                        "display": "Ongoing",
+                        "definition": "An early estimate of value; measurement is still occurring."
+                    },
+                    {
+                        "code": "early",
+                        "display": "Early",
+                        "definition": "An early estimate of value; processing is still occurring."
+                    },
+                    {
+                        "code": "questionable",
+                        "display": "Questionable",
+                        "definition": "The observation value should be treated with care."
+                    },
+                    {
+                        "code": "calibrating",
+                        "display": "Calibrating",
+                        "definition": "The result has been generated while calibration is occurring."
+                    },
+                    {
+                        "code": "error",
+                        "display": "Error",
+                        "definition": "The observation could not be completed because of an error."
+                    },
+                    {
+                        "code": "unknown",
+                        "display": "Unknown",
+                        "definition": "No observation  reliability value was available."
+                    }
+                ]
+            }
+        }
+
+        function smokingStatus() {
+            return {
+                "system": "http://snomed.info/sct",
+                "concept": [
+                    {"code": "449868002", "display": "Smokes tobacco daily"},
+                    {"code": "428041000124106", "display": "Occasional tobacco smoker"},
+                    {"code": "8517006", "display": "Ex-smoker"},
+                    {"code": "266919005", "display": "Never smoked tobacco"},
+                    {"code": "77176002", "display": "Smoker, current status unknown"},
+                    {"code": "266927001", "display": "Unknown if ever smoked"},
+                    {"code": "428071000124103", "display": "Heavy tobacco smoker"},
+                    {"code": "428061000124105", "display": "Light tobacco smoker"}
+                ]
+            }
+        }
+
+        function status() {
+            return {
+                "system": "http://hl7.org/fhir/observation-status",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "registered",
+                        "display": "Registered",
+                        "definition": "The existence of the observation is registered, but there is no result yet available."
+                    },
+                    {
+                        "code": "preliminary",
+                        "display": "Preliminary",
+                        "definition": "This is an initial or interim observation: data may be incomplete or unverified."
+                    },
+                    {
+                        "code": "final",
+                        "display": "Final",
+                        "definition": "The observation is complete and verified by an authorized person."
+                    },
+                    {
+                        "code": "amended",
+                        "display": "Amended",
+                        "definition": "The observation has been modified subsequent to being Final, and is complete and verified by an authorized person."
+                    },
+                    {
+                        "code": "cancelled",
+                        "display": "Cancelled",
+                        "definition": "The observation is unavailable because the measurement was not started or not completed (also sometimes called \"aborted\")."
+                    },
+                    {
+                        "code": "entered-in-error",
+                        "display": "Entered In Error",
+                        "definition": "The observation has been withdrawn following previous Final release."
+                    },
+                    {
+                        "code": "unknown",
+                        "display": "Unknown",
+                        "definition": "The observation status is unknown.  Note that \"unknown\" is a value of last resort and every attempt should be made to provide a meaningful value other than \"unknown\"."
+                    }
+                ]
+            }
+        }
+
+        /*
+         Vital Signs
+         Include these codes as defined in http://loinc.org
+         Code	Display
+         9279-1	Respiratory rate
+         8867-4	Heart rate
+         2710-2	Oxygen saturation in Capillary blood by Oximetry
+     x    55284-4	Blood pressure systolic and diastolic
+     x    8480-6	Systolic blood pressure
+     x    8462-4	Diastolic blood pressure
+         8310-5	Body temperature
+         8302-2	Body height
+         8306-3	Body height --lying
+         8287-5	Head Occipital-frontal circumference by Tape measure
+         3141-9	Body weight Measured
+         39156-5	Body mass index (BMI) [Ratio]
+         3140-1	Body surface area Derived from formula
+         */
+
+        var service = {
+            bpInterpretation: bpInterpretation,
+            interpretation: interpretation,
+            reliability: reliability,
+            smokingStatus: smokingStatus,
+            status: status
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, [observationValueSets]);
+
+})();
+(function () {
+    'use strict';
+
     var controllerId = 'operationDefinitionDetail';
 
     function operationDefinitionDetail($location, $routeParams, $window, $mdDialog, common, contactPointService, fhirServers, operationDefinitionService) {
@@ -6687,13 +8559,14 @@
         }
 
         function getRequestedOrganization() {
-            function intitializeRelatedData(data) {
-                vm.organization = data.resource;
+            function initializeRelatedData(data) {
+                vm.organization = data.resource || data;
                 if (angular.isUndefined(vm.organization.type)) {
                     vm.organization.type = {"coding": []};
                 }
+                vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
                 vm.title = vm.organization.name;
-                identifierService.init(vm.organization.identifier);
+                identifierService.init(vm.organization.identifier, "multi", "organization");
                 addressService.init(vm.organization.address, false);
                 contactService.init(vm.organization.contact);
                 contactPointService.init(vm.organization.telecom, false, false);
@@ -6701,24 +8574,35 @@
 
             if ($routeParams.hashKey === 'new') {
                 var data = organizationService.initializeNewOrganization();
-                intitializeRelatedData(data);
+                initializeRelatedData(data);
                 vm.title = 'Add New Organization';
                 vm.isEditing = false;
+            } else if (angular.isDefined($routeParams.resourceId)) {
+                var fullPath = vm.activeServer.baseUrl + '/Organization/' + $routeParams.resourceId;
+                logInfo("Fetching " + fullPath, null, noToast);
+                organizationService.getOrganization(fullPath)
+                    .then(initializeRelatedData).then(function () {
+                        var session = sessionService.getSession();
+                        session.organization = vm.organization;
+                        sessionService.updateSession(session);
+                    }, function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                    });
             } else {
                 if ($routeParams.hashKey) {
                     organizationService.getCachedOrganization($routeParams.hashKey)
-                        .then(intitializeRelatedData).then(function () {
+                        .then(initializeRelatedData).then(function () {
                             var session = sessionService.getSession();
                             session.organization = vm.organization;
                             sessionService.updateSession(session);
                         }, function (error) {
-                            logError(error);
+                            logError($filter('unexpectedOutcome')(error));
                         });
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/Organization/' + $routeParams.id;
                     organizationService.getOrganization(resourceId)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error);
+                        .then(initializeRelatedData, function (error) {
+                            logError($filter('unexpectedOutcome')(error));
                         });
                 }
             }
@@ -6742,13 +8626,12 @@
         function processResult(results) {
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Organization saved, but location is unavailable. CORS is not implemented correctly at remote host.");
+                logInfo("Organization saved, but location is unavailable. CORS is not implemented correctly at " + vm.activeServer.name);
             } else {
+                logInfo("Organization saved at " + resourceVersionId);
+                vm.organization.resourceVersionId = resourceVersionId;
                 vm.organization.resourceId = common.setResourceId(vm.organization.resourceId, resourceVersionId);
-                vm.organization.id = $filter('idFromURL')(vm.organization.resourceId);
-                    logSuccess("Organization saved at " + resourceVersionId);
             }
-            // vm.organization.fullName = organization.name;
             vm.isEditing = true;
             getTitle();
         }
@@ -6772,13 +8655,13 @@
                 organizationService.updateOrganization(vm.organization.resourceId, organization)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError($filter('unexpectedOutcome')(error));
                     });
             } else {
                 organizationService.addOrganization(organization)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError($filter('unexpectedOutcome')(error));
                     });
             }
         }
@@ -6804,7 +8687,7 @@
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
-                    logError(error);
+                    logError($filter('unexpectedOutcome')(error));
                 });
         }
 
@@ -6815,7 +8698,7 @@
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
-                    logError(error);
+                    logError($filter('unexpectedOutcome')(error));
                 });
         }
 
@@ -7441,8 +9324,8 @@
     var controllerId = 'patientDetail';
 
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
-        common, demographicsService, fhirServers, humanNameService, identifierService,
-        organizationService, patientService, contactPointService, practitionerService) {
+                           common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, patientService, contactPointService, practitionerService, communicationService, careProviderService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -7590,11 +9473,21 @@
                 demographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger);
                 demographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
                 demographicsService.setBirthDate(vm.patient.birthDate);
-                demographicsService.initializeKnownExtensions(vm.patient.extensions);
+                demographicsService.initializeKnownExtensions(vm.patient.extension);
+                vm.patient.race = demographicsService.getRace();
+                vm.patient.religion = demographicsService.getReligion();
+                vm.patient.ethnicity = demographicsService.getEthnicity();
+                vm.patient.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.patient.birthPlace = demographicsService.getBirthPlace();
                 attachmentService.init(vm.patient.photo, "Photos");
-                identifierService.init(vm.patient.identifier);
+                identifierService.init(vm.patient.identifier, "multi", "patient");
                 addressService.init(vm.patient.address, true);
                 contactPointService.init(vm.patient.telecom, true, true);
+                careProviderService.init(vm.patient.careProvider);
+                if (vm.patient.communication) {
+                    communicationService.init(vm.patient.communication, "multi");
+                }
+
                 vm.patient.fullName = humanNameService.getFullName();
                 if (vm.patient.managingOrganization && vm.patient.managingOrganization.reference) {
                     var reference = vm.patient.managingOrganization.reference;
@@ -7735,6 +9628,7 @@
             }
             patient.name = humanNameService.mapFromViewModel();
             patient.photo = attachmentService.getAll();
+
             patient.birthDate = $filter('dateString')(demographicsService.getBirthDate());
             patient.gender = demographicsService.getGender();
             patient.maritalStatus = demographicsService.getMaritalStatus();
@@ -7742,11 +9636,18 @@
             patient.multipleBirthInteger = demographicsService.getBirthOrder();
             patient.deceasedBoolean = demographicsService.getDeceased();
             patient.deceasedDateTime = demographicsService.getDeceasedDate();
-            patient.communication = demographicsService.getLanguage();
+            patient.race = demographicsService.getRace();
+            patient.religion = demographicsService.getReligion();
+            patient.ethnicity = demographicsService.getEthnicity();
+            patient.mothersMaidenName = demographicsService.getMothersMaidenName();
+            patient.birthPlace = demographicsService.getBirthPlace();
+
             patient.address = addressService.mapFromViewModel();
             patient.telecom = contactPointService.mapFromViewModel();
             patient.identifier = identifierService.getAll();
             patient.managingOrganization = vm.patient.managingOrganization;
+            patient.communication = communicationService.getAll();
+            patient.careProvider = careProviderService.getAll();
 
             patient.active = vm.patient.active;
             vm.isBusy = true;
@@ -7815,7 +9716,7 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        //TODO
+                        $location.path('/consultation/' + vm.patient.hashKey);
                         break;
                     case 1:
                         $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
@@ -7887,7 +9788,7 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', 'practitionerService', patientDetail]);
+            'organizationService', 'patientService', 'contactPointService', 'practitionerService', 'communicationService', 'careProviderService', patientDetail]);
 })();(function () {
     'use strict';
 
@@ -8361,7 +10262,7 @@
 
     var serviceId = 'patientService';
 
-    function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
+    function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
         var dataCacheKey = 'localPatients';
         var itemCacheKey = 'contextPatient';
         var logError = common.logger.getLogFn(serviceId, 'error');
@@ -8540,7 +10441,6 @@
             if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
-
             fhirClient.getResource(baseUrl + '/Patient?' + searchFilter + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
@@ -8638,7 +10538,9 @@
 
         function seedRandomPatients(organizationId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=100&nat=us')
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
@@ -8655,8 +10557,8 @@
                             "gender": user.gender,
                             "birthDate": stringDOB,
                             "contact": [],
-                            "communication": [],
-                            "maritalStatus": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
                             "telecom": [
                                 {"system": "email", "value": user.email, "use": "home"},
                                 {"system": "phone", "value": user.cell, "use": "mobile"},
@@ -8673,16 +10575,20 @@
                                 {
                                     "system": "urn:oid:2.16.840.1.113883.4.1",
                                     "value": user.SSN,
-                                    "use": "official",
-                                    "label": "Social Security Number",
+                                    "use": "secondary",
                                     "assigner": {"display": "Social Security Administration"}
                                 },
                                 {
                                     "system": "urn:oid:2.16.840.1.113883.15.18",
                                     "value": user.registered,
                                     "use": "official",
-                                    "label": organizationName + " master Id",
                                     "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:patient",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
                                 }
                             ],
                             "managingOrganization": {
@@ -8690,8 +10596,18 @@
                                 "display": organizationName
                             },
                             "link": [],
-                            "active": true
+                            "active": true,
+                            "extension": []
                         };
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' + resource.address[0].state);
+
                         var timer = $timeout(function () {
                         }, 3000);
                         timer.then(function () {
@@ -8708,6 +10624,110 @@
                     deferred.reject(error);
                 });
             return deferred.promise;
+        }
+
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
+                "valueString": ''};
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null};
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueAddress = { "text": array[0]  };
+            } else {
+                extension.valueAddress = { "text": "New York, NY", "city": "New York", "state": "NY", "country": "USA" };
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        function _randomEthnicity() {
+            var ethnicities = localValueSets.ethnicity();
+            common.shuffle(ethnicities.concept);
+            var ethnicity = ethnicities.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicities.system,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = { "language": {"text": languages[1].display, "coding": [] }, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
         }
 
         function _prepArrays(resource) {
@@ -8732,8 +10752,10 @@
             if (resource.link.length === 0) {
                 resource.link = null;
             }
-            if (resource.maritalStatus.coding && resource.maritalStatus.coding.length === 0) {
-                resource.maritalStatus = null;
+            if (resource.maritalStatus !== null) {
+                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
+                    resource.maritalStatus = null;
+                }
             }
             return $q.when(resource);
         }
@@ -8761,7 +10783,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
         patientService]);
 })();(function () {
     'use strict';
@@ -8850,7 +10872,7 @@
                 vm.person = data;
                 attachmentService.init([vm.person.photo], 'Photo');
                 humanNameService.init(vm.person.name);
-                identifierService.init(vm.person.identifier);
+                identifierService.init(vm.person.identifier, "multi", "person");
                 addressService.init(vm.person.address, true);
                 contactPointService.init(vm.person.telecom, true, true);
                 vm.person.fullName = humanNameService.getFullName();
@@ -10679,7 +12701,7 @@
                 vm.relatedPerson = data;
                 attachmentService.init([vm.relatedPerson.photo], 'Photo');
                 humanNameService.init(vm.relatedPerson.name);
-                identifierService.init(vm.relatedPerson.identifier);
+                identifierService.init(vm.relatedPerson.identifier, "multi", "relatedPerson");
                 addressService.init(vm.relatedPerson.address, true);
                 contactPointService.init(vm.relatedPerson.telecom, true, true);
                 vm.relatedPerson.fullName = humanNameService.getFullName();

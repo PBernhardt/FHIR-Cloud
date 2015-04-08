@@ -33,56 +33,10 @@
         }
 
         function init(items, showHome, showMobile) {
-            function mapToViewModel(items) {
-                var modelView = [];
-                var workFiltered = _.filter(items, {"use": "work"});
-                var homeFiltered = _.filter(items, {"use": "home"});
-                var tempFiltered = _.filter(items, {"use": "temp"});
-                var oldFiltered = _.filter(items, {"use": "old"});  // TODO: add period filter
-                var mobileFiltered = _.filter(items, {"use": "mobile"});
-                var noUseFiltered = _.filter(items, {"use": undefined});
-
-                function buildContactPoint(filteredArray, useName) {
-                    var contactPoint;
-                    if (filteredArray && filteredArray.length > 0) {
-                        contactPoint = {"use": useName};
-                        var phone = _.find(filteredArray, {"system": "phone"});
-                        if (phone) {
-                            contactPoint.phone = phone.value;
-                        }
-                        var fax = _.find(filteredArray, {"system": "fax"});
-                        if (fax) {
-                            contactPoint.fax = fax.value;
-                        }
-                        var email = _.find(filteredArray, {"system": "email"});
-                        if (email) {
-                            contactPoint.email = email.value;
-                        }
-                        var url = _.find(filteredArray, {"system": "url"});
-                        if (url) {
-                            contactPoint.url = url.value;
-                        }
-                    }
-                    if (contactPoint) {
-                        modelView.push(contactPoint);
-                    }
-                }
-
-                // use first found item
-                buildContactPoint(workFiltered, "work");
-                buildContactPoint(homeFiltered, "home");
-                buildContactPoint(tempFiltered, "temp");
-                buildContactPoint(oldFiltered, "old");
-                buildContactPoint(mobileFiltered, "mobile");
-                buildContactPoint(noUseFiltered, undefined);
-
-                return modelView;
-            }
-
             home = showHome;
             mobile = showMobile;
             if (angular.isArray(items)) {
-                contactPoints = mapToViewModel(items);
+                contactPoints = items;
             } else {
                 contactPoints = [];
             }
@@ -135,7 +89,7 @@
                     }
                 }
             }
-            return mappedContactPoints;
+            return contactPoints;
         }
 
         function remove(item) {

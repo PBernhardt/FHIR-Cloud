@@ -9,15 +9,17 @@
             </md-button>
         </div>
 
-        <div flex="100" class="table-responsive-vertical shadow-z-1">
-            <table id="orgView" class="table table-hover table-mc-light-blue">
-                <tr ng-if="vm.organization.type">
+        <div flex="100" class="table-responsive-vertical shadow-z-1" ng-if="vm.organization">
+            <table id="orgView" class="table table-hover table-mc-blue">
+                <tr ng-if="vm.organization.resourceId">
+                    <td>Resource Id</td>
+                    <td>
+                        {{vm.organization.resourceId}}
+                    </td>
+                </tr>
+                <tr ng-if="vm.organization.type && vm.organization.type.coding[0]">
                     <td>Type</td>
                     <td>{{vm.organization.type.coding[0].display}}</td>
-                </tr>
-                <tr ng-if="vm.organization.active">
-                    <td>Active</td>
-                    <td>{{vm.organization.active}}</td>
                 </tr>
                 <tr ng-if="vm.organization.address">
                     <td>Addresses</td>
@@ -72,10 +74,10 @@
                 <tr ng-if="vm.organization.partOf">
                     <td>Parent Organization</td>
                     <td>
-                        <a href="{{vm.organization.partOf.reference}}">{{vm.organization.partOf.display}}</a>
+                        <a ng-href="#/organization/get/{{vm.organization.partOf.reference | idFromURL }}">{{vm.organization.partOf.display}}</a>
                     </td>
                 </tr>
-                <tr>
+                <tr ng-if="vm.organization.identifier">
                     <td>Identifiers</td>
                     <td>
                         <table ng-show="vm.organization.identifier" class="table table-hover table-mc-light-blue">
@@ -83,18 +85,20 @@
                             <tr>
                                 <th>System</th>
                                 <th>Value</th>
-                                <th>Label</th>
                                 <th>Use</th>
                             </tr>
                             </thead>
                             <tr ng-repeat="id in vm.organization.identifier">
                                 <td>{{id.system}}</td>
                                 <td>{{id.value}}</td>
-                                <td>{{id.label}}</td>
                                 <td>{{id.use}}</td>
                             </tr>
                         </table>
                     </td>
+                </tr>
+                <tr ng-if="vm.organization.active">
+                    <td>Active</td>
+                    <td>{{vm.organization.active}}</td>
                 </tr>
             </table>
         </div>

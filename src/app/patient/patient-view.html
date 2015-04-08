@@ -80,6 +80,24 @@
                                 </div>
                             </td>
                         </tr>
+                        <tr ng-if="vm.patient.ethnicity">
+                            <td>Ethnicity</td>
+                            <td>
+                                {{vm.patient.ethnicity | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.race">
+                            <td>Race</td>
+                            <td>
+                                {{vm.patient.race | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.religion">
+                            <td>Religion</td>
+                            <td>
+                                {{vm.patient.religion | codeableConcept}}
+                            </td>
+                        </tr>
                         <tr ng-if="vm.patient.maritalStatus">
                             <td>Marital Status</td>
                             <td>
@@ -101,7 +119,15 @@
                         <tr ng-if="vm.patient.managingOrganization">
                             <td>Managing Organization</td>
                             <td>
-                                <a href="{{vm.patient.managingOrganization.reference}}">{{vm.patient.managingOrganization.display}}</a>
+                                <a ng-href="#/organization/get/{{vm.patient.managingOrganization.reference | idFromURL }}">{{vm.patient.managingOrganization.display}}</a>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.careProvider">
+                            <td>Care Provider</td>
+                            <td>
+                                <p ng-repeat="cp in vm.patient.careProvider">
+                                    <a ng-href="#/practitioner/get/{{cp.reference | idFromURL }}">{{cp.display}}</a>
+                                </p>
                             </td>
                         </tr>
                         <tr ng-show="vm.patient.identifier">
@@ -112,7 +138,6 @@
                                     <tr>
                                         <th>System</th>
                                         <th>Value</th>
-                                        <th>Label</th>
                                         <th>Use</th>
                                     </tr>
                                     </thead>
@@ -120,7 +145,6 @@
                                     <tr ng-repeat="id in vm.patient.identifier">
                                         <td>{{id.system}}</td>
                                         <td>{{id.value}}</td>
-                                        <td>{{id.label}}</td>
                                         <td>{{id.use}}</td>
                                     </tr>
                                     </tbody>

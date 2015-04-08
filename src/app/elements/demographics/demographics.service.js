@@ -11,12 +11,12 @@
         var _language = [];
         var _multipleBirth = false;
         var _gender = null;
-        var _maritalStatus = {"coding": []};
-        var _race = {"coding": []};
-        var _religion = {"coding": []};
-        var _ethnicity = {"coding": []};
-        var _birthPlace = {"address": {"text": null}};
-        var _mothersMaidenName = null;
+        var _maritalStatus = undefined;
+        var _race = undefined;
+        var _religion = undefined;
+        var _ethnicity = undefined;
+        var _birthPlace = undefined;
+        var _mothersMaidenName = undefined;
 
         function getRace() {
             return _race;
@@ -101,7 +101,32 @@
         }
 
         function initializeKnownExtensions(extensions) {
-            //TODO: Set DAF properties here
+            if (extensions) {
+                for (var i = 0, len = extensions.length; i < len; i++) {
+                    var ext = extensions[i];
+                    if (ext.url) {
+                        switch (ext.url) {
+                            case "http://hl7.org/fhir/StructureDefinition/us-core-race":
+                                _race = ext.valueCodeableConcept;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/us-core-religion":
+                                _religion = ext.valueCodeableConcept;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity":
+                                _ethnicity = ext.valueCodeableConcept;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName":
+                                _mothersMaidenName = ext.valueString;
+                                break;
+                            case "http://hl7.org/fhir/StructureDefinition/birthPlace":
+                                _mothersMaidenName = ext.valueAddress;
+                                break;
+                            default:
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         function setRace(value) {

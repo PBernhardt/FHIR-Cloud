@@ -4,8 +4,8 @@
     var controllerId = 'patientDetail';
 
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
-        common, demographicsService, fhirServers, humanNameService, identifierService,
-        organizationService, patientService, contactPointService, practitionerService) {
+                           common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, patientService, contactPointService, practitionerService, communicationService, careProviderService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -153,11 +153,21 @@
                 demographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger);
                 demographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
                 demographicsService.setBirthDate(vm.patient.birthDate);
-                demographicsService.initializeKnownExtensions(vm.patient.extensions);
+                demographicsService.initializeKnownExtensions(vm.patient.extension);
+                vm.patient.race = demographicsService.getRace();
+                vm.patient.religion = demographicsService.getReligion();
+                vm.patient.ethnicity = demographicsService.getEthnicity();
+                vm.patient.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.patient.birthPlace = demographicsService.getBirthPlace();
                 attachmentService.init(vm.patient.photo, "Photos");
-                identifierService.init(vm.patient.identifier);
+                identifierService.init(vm.patient.identifier, "multi", "patient");
                 addressService.init(vm.patient.address, true);
                 contactPointService.init(vm.patient.telecom, true, true);
+                careProviderService.init(vm.patient.careProvider);
+                if (vm.patient.communication) {
+                    communicationService.init(vm.patient.communication, "multi");
+                }
+
                 vm.patient.fullName = humanNameService.getFullName();
                 if (vm.patient.managingOrganization && vm.patient.managingOrganization.reference) {
                     var reference = vm.patient.managingOrganization.reference;
@@ -298,6 +308,7 @@
             }
             patient.name = humanNameService.mapFromViewModel();
             patient.photo = attachmentService.getAll();
+
             patient.birthDate = $filter('dateString')(demographicsService.getBirthDate());
             patient.gender = demographicsService.getGender();
             patient.maritalStatus = demographicsService.getMaritalStatus();
@@ -305,11 +316,18 @@
             patient.multipleBirthInteger = demographicsService.getBirthOrder();
             patient.deceasedBoolean = demographicsService.getDeceased();
             patient.deceasedDateTime = demographicsService.getDeceasedDate();
-            patient.communication = demographicsService.getLanguage();
+            patient.race = demographicsService.getRace();
+            patient.religion = demographicsService.getReligion();
+            patient.ethnicity = demographicsService.getEthnicity();
+            patient.mothersMaidenName = demographicsService.getMothersMaidenName();
+            patient.birthPlace = demographicsService.getBirthPlace();
+
             patient.address = addressService.mapFromViewModel();
             patient.telecom = contactPointService.mapFromViewModel();
             patient.identifier = identifierService.getAll();
             patient.managingOrganization = vm.patient.managingOrganization;
+            patient.communication = communicationService.getAll();
+            patient.careProvider = careProviderService.getAll();
 
             patient.active = vm.patient.active;
             vm.isBusy = true;
@@ -378,7 +396,7 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        //TODO
+                        $location.path('/consultation/' + vm.patient.hashKey);
                         break;
                     case 1:
                         $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
@@ -450,5 +468,5 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
             'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', 'practitionerService', patientDetail]);
+            'organizationService', 'patientService', 'contactPointService', 'practitionerService', 'communicationService', 'careProviderService', patientDetail]);
 })();

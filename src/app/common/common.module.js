@@ -200,13 +200,13 @@
         }
 
         function unexpectedOutcome(error) {
-            var message = 'Unexpected response from server<br/>';
+            var message = 'Unexpected response from server - ';
             if (error.status) {
                 message = message + 'HTTP Status: ' + error.status;
             }
             if (error.outcome && error.outcome.issue) {
                 _.forEach(error.outcome.issue, function (item) {
-                    message = message + '<br/>' + item.severity + ' - ' + item.details;
+                    message = message + ': ' + item.severity + ' - ' + item.details;
                 });
             }
             return message;
@@ -218,6 +218,23 @@
             for( var i=0; i < 5; i++ )
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
             return text;
+        }
+
+        function shuffle(array) {
+            var currentIndex = array.length, temporaryValue, randomIndex ;
+            // While there remain elements to shuffle...
+            while (0 !== currentIndex) {
+
+                // Pick a remaining element...
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex -= 1;
+
+                // And swap it with the current element.
+                temporaryValue = array[currentIndex];
+                array[currentIndex] = array[randomIndex];
+                array[randomIndex] = temporaryValue;
+            }
+            return array;
         }
 
         var service = {
@@ -239,6 +256,7 @@
             randomHash: randomHash,
             removeNullProperties: removeNullProperties,
             setResourceId: setResourceId,
+            shuffle: shuffle,
             textContains: textContains,
             toggleProgressBar: toggleProgressBar,
             unexpectedOutcome: unexpectedOutcome

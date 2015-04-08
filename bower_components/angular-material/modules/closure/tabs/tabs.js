@@ -2,7 +2,7 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.8.3-master-f086de1
+ * v0.8.3-master-bffa15a
  */
 goog.provide('ng.material.components.tabs');
 goog.require('ng.material.components.icon');
@@ -149,7 +149,9 @@ angular.module('material.components.tabs', [
       scope: {
         label:    '@',
         active:   '=?mdActive',
-        disabled: '=?ngDisabled'
+        disabled: '=?ngDisabled',
+        select:   '&?mdOnSelect',
+        deselect: '&?mdOnDeselect'
       },
       link: link
     };
@@ -158,11 +160,11 @@ angular.module('material.components.tabs', [
       var tabs = element.parent()[0].getElementsByTagName('md-tab'),
           index = Array.prototype.indexOf.call(tabs, element[0]),
           data = ctrl.insertTab({
-            scope: scope,
-            parent: scope.$parent,
-            index: index,
+            scope:    scope,
+            parent:   scope.$parent,
+            index:    index,
             template: getTemplate(),
-            label: getLabel()
+            label:    getLabel()
           }, index);
 
       scope.$watch('active', function (active) { if (active) ctrl.select(data.getIndex()); });
@@ -210,22 +212,20 @@ angular.module('material.components.tabs', [
   angular.module('material.components.tabs')
       .directive('mdTabScroll', MdTabScroll);
 
-  function MdTabScroll () {
+  function MdTabScroll ($parse) {
     return {
       restrict: 'A',
-      link: function (scope, element, attr) {
-        element.on('mousewheel', function (event) {
-          var newScope = scope.$new();
-          newScope.$event = event;
-          newScope.$element = element;
-          newScope.$apply(function () {
-            newScope.$eval(attr.mdTabScroll);
+      compile: function ($element, attr) {
+        var fn = $parse(attr.mdTabScroll, null, true);
+        return function ngEventHandler (scope, element) {
+          element.on('mousewheel', function (event) {
+            scope.$apply(function () { fn(scope, { $event: event }); });
           });
-        });
+        };
       }
-
     }
   }
+  MdTabScroll.$inject = ["$parse"];
 })();
 (function () {
   'use strict';
@@ -252,6 +252,7 @@ angular.module('material.components.tabs', [
     ctrl.attachRipple = attachRipple;
     ctrl.shouldStretchTabs = shouldStretchTabs;
     ctrl.shouldPaginate = shouldPaginate;
+    ctrl.shouldCenterTabs = shouldCenterTabs;
     ctrl.insertTab = insertTab;
     ctrl.removeTab = removeTab;
     ctrl.select = select;
@@ -273,15 +274,24 @@ angular.module('material.components.tabs', [
       $scope.$watch('$mdTabsCtrl.offsetLeft', handleOffsetChange);
       angular.element($window).on('resize', function () { $scope.$apply(handleWindowResize); });
       $timeout(updateInkBarStyles, 0, false);
+      $timeout(updateHeightFromContent, 0, false);
     }
 
     function getElements () {
-      var elements = {};
-      elements.canvas = $element[0].getElementsByTagName('md-tabs-canvas')[0];
-      elements.wrapper = elements.canvas.getElementsByTagName('md-pagination-wrapper')[0];
-      elements.tabs    = elements.wrapper.getElementsByTagName('md-tab-item');
-      elements.dummies = elements.canvas.getElementsByTagName('md-dummy-tab');
-      elements.inkBar  = elements.wrapper.getElementsByTagName('md-ink-bar')[0];
+      var elements      = {};
+
+      //-- gather tab bar elements
+      elements.wrapper  = $element[0].getElementsByTagName('md-tabs-wrapper')[0];
+      elements.canvas   = elements.wrapper.getElementsByTagName('md-tabs-canvas')[0];
+      elements.paging   = elements.canvas.getElementsByTagName('md-pagination-wrapper')[0];
+      elements.tabs     = elements.paging.getElementsByTagName('md-tab-item');
+      elements.dummies  = elements.canvas.getElementsByTagName('md-dummy-tab');
+      elements.inkBar   = elements.paging.getElementsByTagName('md-ink-bar')[0];
+
+      //-- gather tab content elements
+      elements.contentsWrapper = $element[0].getElementsByTagName('md-tabs-content-wrapper')[0];
+      elements.contents = elements.contentsWrapper.getElementsByTagName('md-tab-content');
+
       return elements;
     }
 
@@ -317,7 +327,8 @@ angular.module('material.components.tabs', [
     }
 
     function handleOffsetChange (left) {
-      angular.element(elements.wrapper).css('left', '-' + left + 'px');
+      var newValue = shouldCenterTabs() ? '' : '-' + left + 'px';
+      angular.element(elements.paging).css('left', newValue);
       $scope.$broadcast('$mdTabsPaginationChanged');
     }
 
@@ -333,6 +344,7 @@ angular.module('material.components.tabs', [
     }
 
     function adjustOffset () {
+      if (shouldCenterTabs()) return;
       var tab = elements.tabs[ctrl.focusIndex],
           left = tab.offsetLeft,
           right = tab.offsetWidth + left;
@@ -342,6 +354,7 @@ angular.module('material.components.tabs', [
 
     function handleWindowResize () {
       ctrl.lastSelectedIndex = $scope.selectedIndex;
+      updateHeightFromContent();
       updateInkBarStyles();
       ctrl.offsetLeft = fixOffset(ctrl.offsetLeft);
     }
@@ -356,7 +369,7 @@ angular.module('material.components.tabs', [
             id:       $mdUtil.nextUid()
           },
           tab = angular.extend(proto, tabData);
-      if (!angular.isString(tabData.template)) {
+      if (!tabData.template) {
         ctrl.hasContent = false;
         $element.addClass('md-no-tab-content');
       }
@@ -387,7 +400,10 @@ angular.module('material.components.tabs', [
       $scope.selectedIndex = getNearestSafeIndex(newValue);
       ctrl.lastSelectedIndex = oldValue;
       updateInkBarStyles();
+      updateHeightFromContent();
       $scope.$broadcast('$mdTabsChanged');
+      ctrl.tabs[oldValue] && ctrl.tabs[oldValue].scope.deselect();
+      ctrl.tabs[newValue].scope.select();
     }
 
     function handleResizeWhenVisible () {
@@ -411,19 +427,27 @@ angular.module('material.components.tabs', [
       });
     }
 
+    function updateHeightFromContent () {
+      if (!$scope.dynamicHeight) return $element.css('height', '');
+      var tabContent = elements.contents[$scope.selectedIndex],
+          contentHeight = tabContent.offsetHeight,
+          tabsHeight    = elements.wrapper.offsetHeight,
+          newHeight     = contentHeight + tabsHeight;
+      $element.css('height', newHeight + 'px');
+    }
+
     function updateInkBarStyles () {
       if (!ctrl.tabs.length) return;
       //-- if the element is not visible, we will not be able to calculate sizes until it is
       //-- we should treat that as a resize event rather than just updating the ink bar
       if (!$element.prop('offsetParent')) return handleResizeWhenVisible();
       var index = $scope.selectedIndex,
-          totalWidth = elements.wrapper.offsetWidth,
+          totalWidth = elements.paging.offsetWidth,
           tab = elements.tabs[index],
           left = tab.offsetLeft,
           right = totalWidth - left - tab.offsetWidth;
       updateInkBarClassName();
       angular.element(elements.inkBar).css({ left: left + 'px', right: right + 'px' });
-
     }
 
     function updateInkBarClassName () {
@@ -459,7 +483,12 @@ angular.module('material.components.tabs', [
       }
     }
 
+    function shouldCenterTabs () {
+      return $scope.centerTabs && !shouldPaginate();
+    }
+
     function shouldPaginate () {
+      if ($scope.noPagination) return false;
       var canvasWidth = $element.prop('clientWidth');
       angular.forEach(elements.tabs, function (tab) { canvasWidth -= tab.offsetWidth; });
       return canvasWidth < 0;
@@ -578,6 +607,9 @@ angular.module('material.components.tabs', [
  * @param {boolean=} md-no-bar If present, disables the selection ink bar.
  * @param {string=}  md-align-tabs Attribute to indicate position of tab buttons: `bottom` or `top`; default is `top`
  * @param {string=} md-stretch-tabs Attribute to indicate whether or not to stretch tabs: `auto`, `always`, or `never`; default is `auto`
+ * @param {boolean=} md-dynamic-height When enabled, the tab wrapper will resize based on the contents of the selected tab
+ * @param {boolean=} md-center-tabs When enabled, tabs will be centered provided there is no need for pagination
+ * @param {boolean=} md-no-pagination When enabled, pagination will remain off
  *
  * @usage
  * <hljs lang="html">
@@ -611,6 +643,9 @@ angular.module('material.components.tabs', [
   function MdTabs ($mdTheming) {
     return {
       scope: {
+        noPagination:  '=?mdNoPagination',
+        dynamicHeight: '=?mdDynamicHeight',
+        centerTabs:    '=?mdCenterTabs',
         selectedIndex: '=?mdSelected',
         stretchTabs: '@?mdStretchTabs'
       },
@@ -646,6 +681,7 @@ angular.module('material.components.tabs', [
               ng-keydown="$mdTabsCtrl.keydown($event)"\
               role="tablist">\
             <md-pagination-wrapper\
+                ng-class="{ \'md-center-tabs\': $mdTabsCtrl.shouldCenterTabs() }"\
                 md-tab-scroll="$mdTabsCtrl.scroll($event)">\
               <md-tab-item\
                   tabindex="-1"\
@@ -681,26 +717,33 @@ angular.module('material.components.tabs', [
             </div>\
           </md-tabs-canvas>\
         </md-tabs-wrapper>\
-        <md-tabs-content-wrapper ng-if="$mdTabsCtrl.hasContent">\
+        <md-tabs-content-wrapper ng-show="$mdTabsCtrl.hasContent">\
           <md-tab-content\
-              ng-repeat="(index, tab) in $mdTabsCtrl.tabs" \
-              md-tab-data="tab"\
               id="tab-content-{{tab.id}}"\
-              aria-labelledby="tab-item-{{tab.id}}"\
               role="tabpanel"\
+              aria-labelledby="tab-item-{{tab.id}}"\
+              md-tab-data="tab"\
               md-swipe-left="$mdTabsCtrl.incrementSelectedIndex(1)"\
               md-swipe-right="$mdTabsCtrl.incrementSelectedIndex(-1)"\
+              ng-if="$mdTabsCtrl.hasContent"\
+              ng-repeat="(index, tab) in $mdTabsCtrl.tabs" \
               ng-class="{\
                 \'md-no-transition\': $mdTabsCtrl.lastSelectedIndex == null,\
                 \'md-active\': tab.isActive(),\
                 \'md-left\':   tab.isLeft(),\
-                \'md-right\':  tab.isRight()\
+                \'md-right\':  tab.isRight(),\
+                \'md-no-scroll\': dynamicHeight\
               }"></md-tab-content>\
         </md-tabs-content-wrapper>\
       ',
       controller: 'MdTabsController',
       controllerAs: '$mdTabsCtrl',
       link: function (scope, element, attr) {
+        angular.forEach(scope.$$isolateBindings, function (binding, key) {
+          if (binding.optional && angular.isUndefined(scope[key])) {
+            scope[key] = attr.hasOwnProperty(attr.$normalize(binding.attrName));
+          }
+        });
         //-- watch attributes
         attr.$observe('mdNoBar', function (value) { scope.noInkBar = angular.isDefined(value); });
         //-- set default value for selectedIndex

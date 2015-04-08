@@ -1,0 +1,44 @@
+<div ng-controller="communication as vm">
+    <md-content class="md-padding">
+        <md-divider>
+            <div ng-if="vm.communications.length > 0">
+                <md-subheader>Selected languages</md-subheader>
+                <md-list>
+                    <md-item ng-repeat="comm in vm.communications track by $index">
+                        <md-item-content>
+                            <div class="md-tile-left">
+                                <md-button ng-click="vm.removeFromList(comm)" aria-label="Remove from list">
+                                    <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content" layout="row" layout-align="space-between center">
+                                <h3>{{comm.language.coding[0].display}}</h3>
+                                <md-checkbox aria-label="Preferred language" ng-change="vm.changePreferred(comm)" md-no-ink class="md-primary" ng-model="comm.preferred">
+                                    Preferred
+                                </md-checkbox>
+                            </div>
+                        </md-item-content>
+                    </md-item>
+                </md-list>
+            </div>
+
+            <div flex>
+                <ng-form name="languageListForm" ng-model="vm.communication">
+                    <div flex style="height: 300px">
+                        <md-autocomplete
+                                md-no-cache="true"
+                                md-selected-item-change="vm.addToList(languageListForm, vm.selectedLanguage)"
+                                md-selected-item="vm.selectedLanguage"
+                                md-search-text="vm.languageSearchText"
+                                md-items="language in vm.querySearch(vm.languageSearchText)"
+                                md-delay="300"
+                                md-min-length="3"
+                                placeholder="What language are you looking for?">
+                            <span md-highlight-text="vm.languageSearchText">{{language.display}}</span>
+                        </md-autocomplete>
+                    </div>
+                </ng-form>
+            </div>
+        </md-divider>
+    </md-content>
+</div>
