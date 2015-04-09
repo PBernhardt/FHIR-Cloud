@@ -455,7 +455,7 @@
             templateUrl: 'conformance/conformance-search.html'
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
-        }).when('/consultation/:hashKey', {
+        }).when('/consultation', {
             templateUrl: 'consultation/consultation-edit.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
@@ -483,6 +483,8 @@
             templateUrl: 'patient/patient-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html'
+        }).when('/patient/get/:id', {
+            templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/edit/:hashKey', {
@@ -553,6 +555,7 @@
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
+            .icon("refresh", "./assets/svg/refresh.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
             .icon("saveToList", "./assets/svg/saveToList.svg", 24)
@@ -2818,7 +2821,7 @@
         var logInfo = getLogFn(controllerId, 'info');
         var _adminPages = [
             {name: 'Organization', href: 'organization'},
-            {name: 'Patient', href: 'patient'},
+            {name: 'Patient', href: 'patient/view/current'},
             {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},
             {name: 'Related Person', href: 'relatedPerson'}
@@ -6487,20 +6490,28 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([getActiveServer(), loadSmokingStatuses(), loadInterpretations(), loadBPInterpretations()],
+            common.activateController([_getActiveServer(), _loadSmokingStatuses(), _loadInterpretations(),
+                    _loadBPInterpretations(), _loadBMIRange(), _loadBodyTempMethods()],
                 controllerId).then(function () {
                     vm.vitals.date = new Date();
-                    getPatientContext();
+                    _getPatientContext();
 
                 });
         }
 
-        function initializeBP() {
+        function _initializeBP() {
             vm.vitals.date = new Date();
             vm.vitals.bp.diastolic = 0;
             vm.vitals.bp.systolic = 0;
             vm.vitals.bp.interpretationCode = undefined;
             vm.vitals.bp.interpretationText = "Enter new reading";
+        }
+
+        function _initializeBMI() {
+            vm.vitals.bmi.height = undefined;
+            vm.vitals.bmi.weight = undefined;
+            vm.vitals.bmi.interpretationCode = undefined;
+            vm.vitals.bmi.interpretationText = "Enter new reading";
         }
 
         function calculateBMI() {
@@ -6515,9 +6526,13 @@
                     vm.vitals.bmi.interpretationText = "Underweight";
                     vm.vitals.bmi.color = "blue";
                     break;
-                case (vm.vitals.bmi.calculated >= 30):
+                case ((vm.vitals.bmi.calculated >= 30) && (vm.vitals.bmi.calculated < 40)):
                     vm.vitals.bmi.interpretationText = "Obese";
                     vm.vitals.bmi.color = "red";
+                    break;
+                case (vm.vitals.bmi.calculated >= 40):
+                    vm.vitals.bmi.interpretationText = "Severely Obese";
+                    vm.vitals.bmi.color = "purple";
                     break;
                 case ((vm.vitals.bmi.calculated > 18.5) && (vm.vitals.bmi.calculated < 25)):
                     vm.vitals.bmi.interpretationText = "Healthy weight";
@@ -6536,7 +6551,7 @@
 
         vm.calculateBMI = calculateBMI;
 
-        function calculateAge(birthDate) {
+        function _calculateAge(birthDate) {
             if (birthDate) {
                 var dob = birthDate;
                 if (angular.isDate(dob) === false) {
@@ -6550,29 +6565,38 @@
             }
         }
 
-        function loadSmokingStatuses() {
+        function _loadSmokingStatuses() {
             return vm.smokingStatuses = observationValueSets.smokingStatus();
         }
 
-        function loadBPInterpretations() {
+        function _loadBMIRange() {
+            return vm.bmiInterpretations = observationValueSets.bmiRange();
+        }
+
+        function _loadBPInterpretations() {
             return vm.bpInterpretations = observationValueSets.bpInterpretation();
         }
 
-        function loadInterpretations() {
+        function _loadBodyTempMethods() {
+            return vm.bodyTempMethods = observationValueSets.bodyTempMethods();
+        }
+
+        function _loadInterpretations() {
             return vm.interpretations = observationValueSets.interpretation();
         }
 
-        function getPatientContext() {
-            patientService.getCachedPatient($routeParams.hashKey).then(function (data) {
-                vm.consultation.patient = data;
-                vm.consultation.patient.age = calculateAge(vm.consultation.patient.birthDate);
-            }, function (error) {
+        function _getPatientContext() {
+            if (angular.isDefined($window.localStorage.patient)) {
+                vm.consultation.patient = JSON.parse($window.localStorage.patient);
+                vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
+                vm.consultation.patient.age = _calculateAge(vm.consultation.patient.birthDate);
+            } else {
                 logError("You must first select a patient before initiating a consultation", error);
                 $location.path('/patient');
-            });
+            }
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
@@ -6618,9 +6642,6 @@
                     case 4:
                         $location.path('/observation/edit/' + vm.observation.hashKey);
                         break;
-                    case 5:
-                        deleteObservation(vm.observation);
-                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -6638,94 +6659,6 @@
             }
         }
 
-        function buildSystolic() {
-            var systolicObs = observationService.initializeNewObservation();
-            systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271649006",
-                    "display": "Systolic blood pressure"
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "8480-6",
-                    "display": "Systolic blood pressure"
-                }],
-                "text": "Systolic blood pressure"
-            };
-            systolicObs.valueQuantity = {
-                "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]"
-            };
-            systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": $filter('fullName')(vm.consultation.patient.name)
-            };
-            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return systolicObs;
-        }
-
-        function buildDiastolic() {
-            var diastolicObs = observationService.initializeNewObservation();
-            diastolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271650006",
-                    "display": "Diastolic blood pressure"
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "8462-4",
-                    "display": "Diastolic blood pressure"
-                }],
-                "text": "Diastolic blood pressure"
-            };
-            diastolicObs.valueQuantity = {
-                "value": vm.vitals.bp.diastolic,
-                "units": "mm[Hg]"
-            };
-            diastolicObs.status = "final";
-            diastolicObs.reliability = "ok";
-            diastolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": $filter('fullName')(vm.consultation.patient.name)
-            };
-            diastolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return diastolicObs;
-        }
-
-        function buildBPInterpretation() {
-            if (vm.vitals.bp.interpretationCode) {
-                var bpInterpretationObs = observationService.initializeNewObservation();
-                bpInterpretationObs.code = {
-                    "coding": [
-                        {
-                            "system": "http://loinc.org",
-                            "code": "55284-4",
-                            "display": "Blood pressure systolic & diastolic"
-                        }], "text": "Blood pressure systolic & diastolic"
-                };
-                bpInterpretationObs.interpretation = {
-                    "coding": [],
-                    "text": vm.vitals.bp.interpretationText
-                };
-                var coding = angular.fromJson(vm.vitals.bp.interpretationCode);
-                coding.system = vm.interpretations.system;
-                bpInterpretationObs.interpretation.coding.push(coding);
-                bpInterpretationObs.status = "final";
-                bpInterpretationObs.reliability = "ok";
-                bpInterpretationObs.subject = {
-                    "reference": 'Patient/' + vm.consultation.patient.id,
-                    "display": $filter('fullName')(vm.consultation.patient.name)
-                };
-                bpInterpretationObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-
-                return bpInterpretationObs;
-            } else {
-                return undefined;
-            }
-        }
-
         function updateBP() {
             var s = vm.vitals.bp.systolic;
             if (vm.vitals.bp.diastolic < 60 || s <= 90) {
@@ -6737,7 +6670,7 @@
             } else if (vm.vitals.bp.diastolic >= 60 && vm.vitals.bp.diastolic <= 80) {
                 switch (true) {
                     case (s <= 120):
-                        vm.vitals.bp.interpretationText = "Reading is ideal and healthy"
+                        vm.vitals.bp.interpretationText = "Reading is ideal and healthy";
                         vm.vitals.bp.color = "green";
                         break;
                     case (s <= 140):
@@ -6769,11 +6702,11 @@
         function updatePulse() {
             switch (true) {
                 case (vm.vitals.hr.pulse < 60):
-                    vm.vitals.hr.interpretationText = "Heart rate below normal";
+                    vm.vitals.hr.interpretationText = "Heart rate is below normal";
                     vm.vitals.hr.color = "blue";
                     break;
                 case (vm.vitals.hr.pulse > 100):
-                    vm.vitals.hr.interpretationText = "Heart rate above";
+                    vm.vitals.hr.interpretationText = "Heart rate is above normal";
                     vm.vitals.hr.color = "red";
                     break;
                 case (vm.vitals.hr.pulse <= 100 && vm.vitals.hr.pulse >= 60):
@@ -6788,29 +6721,39 @@
 
         vm.updatePulse = updatePulse;
 
-        function saveBloodPressure(form) {
-            function processBPResult(results) {
-                var deferred = $q.defer();
-                var resourceVersionId = results.headers.location || results.headers["content-location"];
-                if (angular.isUndefined(resourceVersionId)) {
-                    logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
-                    deferred.resolve(undefined);
-                } else {
-                    logInfo("Observation saved at " + resourceVersionId, null, noToast);
-                    deferred.resolve($filter('idFromURL')(resourceVersionId));
-                }
-                return deferred.promise;
+        function updateRespiration() {
+            //TODO: normalize for age
+            switch (true) {
+                case (vm.vitals.respiration.rate < 12):
+                    vm.vitals.respiration.interpretationText = "Respiration is lower than normal";
+                    vm.vitals.respiration.color = "blue";
+                    break;
+                case (vm.vitals.respiration.rate > 16):
+                    vm.vitals.respiration.interpretationText = "Respiration is higher than normal";
+                    vm.vitals.respiration.color = "red";
+                    break;
+                case (vm.vitals.respiration.rate >= 12 && vm.vitals.respiration.rate <= 16):
+                    vm.vitals.respiration.interpretationText = "Respiration is normal";
+                    vm.vitals.respiration.color = "green";
+                    break;
+                default:
+                    vm.vitals.respiration.interpretationText = "Indeterminate";
+                    vm.vitals.respiration.color = "grey";
             }
+        }
 
+        vm.updateRespiration = updateRespiration;
+
+        function saveBloodPressure(form) {
             function savePrimaryObs(observations) {
                 var deferred = $q.defer();
                 var completed = 0;
-                var interpretationObs = buildBPInterpretation();
+                var interpretationObs = _buildBPInterpretation();
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
                         vm.isBusy = true;
                         observationService.addObservation(observations[i])
-                            .then(processBPResult,
+                            .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
                                 vm.isBusy = false;
@@ -6832,10 +6775,10 @@
                 return deferred.promise;
             }
 
-            logInfo("Saving vital signs to " + vm.activeServer.name);
+            logInfo("Saving blood pressure readings to " + vm.activeServer.name);
             var observations = [];
-            observations.push(buildDiastolic());
-            observations.push(buildSystolic());
+            observations.push(_buildDiastolic());
+            observations.push(_buildSystolic());
 
             savePrimaryObs(observations)
                 .then(function (interpretationObs) {
@@ -6850,23 +6793,23 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    initializeBP();
+                    _initializeBP();
                     form.$setPristine();
                 })
         }
 
         vm.saveBloodPressure = saveBloodPressure;
 
-        function saveHeartRate(form) {
+        function savePulseAndRespiration(form) {
             function savePrimaryObs(observations) {
                 var deferred = $q.defer();
                 var completed = 0;
-                var interpretationObs = buildBPInterpretation();
+                var interpretationObs = _buildBPInterpretation();
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
                         vm.isBusy = true;
                         observationService.addObservation(observations[i])
-                            .then(processBPResult,
+                            .then(_processCreateResponse(),
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
                                 vm.isBusy = false;
@@ -6888,10 +6831,10 @@
                 return deferred.promise;
             }
 
-            logInfo("Saving heart rate to " + vm.activeServer.name);
+            logInfo("Saving heart and respiration results to " + vm.activeServer.name);
             var observations = [];
-            observations.push(buildDiastolic());
-            observations.push(buildSystolic());
+            observations.push(_buildHeartRate());
+            observations.push(_buildRespiration());
 
             savePrimaryObs(observations)
                 .then(function (interpretationObs) {
@@ -6906,37 +6849,37 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    initializeBP();
+                    _initializeBP();
                     form.$setPristine();
                 })
         }
 
-        vm.saveHeartRate = saveHeartRate;
+        vm.savePulseAndRespiration = savePulseAndRespiration;
 
         function saveBMI(form) {
             function savePrimaryObs(observations) {
                 var deferred = $q.defer();
                 var completed = 0;
-                var interpretationObs = buildBPInterpretation();
+                var bmiObservation = _buildBMIObs();
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
                         vm.isBusy = true;
                         observationService.addObservation(observations[i])
-                            .then(processBPResult,
+                            .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
                                 vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
-                                if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
+                                if (angular.isDefined(observationId) && angular.isDefined(bmiObservation)) {
                                     var relatedItem = {"type": "has-component"};
                                     relatedItem.target = {"reference": 'Observation/' + observationId};
-                                    interpretationObs.related.push(relatedItem);
+                                    bmiObservation.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
                                 if (completed === observations.length) {
-                                    deferred.resolve(interpretationObs);
+                                    deferred.resolve(bmiObservation);
                                 }
                             })
                     }
@@ -6944,16 +6887,15 @@
                 return deferred.promise;
             }
 
-            logInfo("Saving heart rate to " + vm.activeServer.name);
+            logInfo("Saving height, weight and BMI to " + vm.activeServer.name);
             var observations = [];
-            observations.push(buildDiastolic());
-            observations.push(buildSystolic());
+            observations.push(_buildHeightObs());
+            observations.push(_buildWeightObs());
 
             savePrimaryObs(observations)
-                .then(function (interpretationObs) {
-                    //TODO: if either sys/dia failed, compensate transaction
-                    if (angular.isDefined(interpretationObs)) {
-                        observationService.addObservation(interpretationObs)
+                .then(function (bmiObs) {
+                    if (angular.isDefined(bmiObs)) {
+                        observationService.addObservation(bmiObs)
                             .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
@@ -6962,7 +6904,7 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    initializeBP();
+                    _initializeBMI();
                     form.$setPristine();
                 })
         }
@@ -6970,10 +6912,420 @@
         vm.saveBMI = saveBMI;
 
         function saveSmokingStatus() {
-
+            var smokingObservation = _buildSmokingStatus();
+            logInfo("Saving smoking status to " + vm.activeServer.name);
+            observationService.addObservation(smokingObservation)
+                .then(_processCreateResponse,
+                function (error) {
+                    logError(common.unexpectedOutcome(error));
+                }).then(function () {
+                    _initializeBMI();
+                    form.$setPristine();
+                })
         }
 
         vm.saveSmokingStatus = saveSmokingStatus;
+
+        function _buildSmokingStatus() {
+            var smokingStatusObs = observationService.initializeNewObservation();
+            smokingStatusObs.code = {
+                "coding": [],
+                "text": "Smoking status"
+            };
+            var coding = angular.fromJson(vm.vitals.smokingStatus);
+            coding.system = vm.smokingStatuses.system;
+            smokingStatusObs.code.coding.push(coding);
+            smokingStatusObs.status = "final";
+            smokingStatusObs.reliability = "ok";
+            smokingStatusObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            smokingStatusObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return smokingStatusObs;
+        }
+
+        function _buildHeartRate() {
+            var systolicObs = observationService.initializeNewObservation();
+            systolicObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "",
+                    "display": ""
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "8867-4",
+                    "display": "Heart rate"
+                }],
+                "text": "Heart rate"
+            };
+            systolicObs.valueQuantity = {
+                "value": vm.vitals.bp.systolic,
+                "units": "mm[Hg]"
+            };
+            systolicObs.status = "final";
+            systolicObs.reliability = "ok";
+            systolicObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return systolicObs;
+        }
+
+        function _buildRespiration() {
+            var systolicObs = observationService.initializeNewObservation();
+            systolicObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "86290005",
+                    "display": "Respiratory rate"
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "9279-1",
+                    "display": "Respiratory rate"
+                }],
+                "text": "Respiratory rate"
+            };
+            systolicObs.valueQuantity = {
+                "value": vm.vitals.respiration.rate,
+                "units": "breaths/min",
+                "code": "258984001",
+                "system": "http://snomed.info/sct"
+            };
+            systolicObs.status = "final";
+            systolicObs.reliability = "ok";
+            systolicObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+
+            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return systolicObs;
+        }
+
+        function _buildBodyTemp() {
+            var bodyTempObs = observationService.initializeNewObservation();
+            bodyTempObs.code = {
+                "coding": [
+                    {
+                        "system": "http://snomed.info/sct",
+                        "code": "415945006",
+                        "display": "Oral temperature"
+                    },
+                    {
+                        "system": "http://loinc.org",
+                        "code": "8310-5",
+                        "display": "Body temperature"
+                    }
+                ],
+                "text": "Body temperature"
+            };
+            bodyTempObs.valueQuantity = {
+                "value": vm.vitals.bp.bodyTemp,
+                "units": "mm[Hg]"
+            };
+            bodyTempObs.status = "final";
+            bodyTempObs.reliability = "ok";
+            bodyTempObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            bodyTempObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return bodyTempObs;
+        }
+
+        function _buildSystolic() {
+            var systolicObs = observationService.initializeNewObservation();
+            systolicObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "271649006",
+                    "display": "Systolic blood pressure"
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "8480-6",
+                    "display": "Systolic blood pressure"
+                }],
+                "text": "Systolic blood pressure"
+            };
+            systolicObs.valueQuantity = {
+                "value": vm.vitals.bp.systolic,
+                "units": "mm[Hg]"
+            };
+            systolicObs.status = "final";
+            systolicObs.reliability = "ok";
+            systolicObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return systolicObs;
+        }
+
+        function _buildDiastolic() {
+            var diastolicObs = observationService.initializeNewObservation();
+            diastolicObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "271650006",
+                    "display": "Diastolic blood pressure"
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "8462-4",
+                    "display": "Diastolic blood pressure"
+                }],
+                "text": "Diastolic blood pressure"
+            };
+            diastolicObs.valueQuantity = {
+                "value": vm.vitals.bp.diastolic,
+                "units": "mm[Hg]"
+            };
+            diastolicObs.status = "final";
+            diastolicObs.reliability = "ok";
+            diastolicObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            diastolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return diastolicObs;
+        }
+
+        function _buildBPInterpretation() {
+            if (vm.vitals.bp.interpretationCode) {
+                var bpInterpretationObs = observationService.initializeNewObservation();
+                bpInterpretationObs.code = {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "55284-4",
+                            "display": "Blood pressure systolic & diastolic"
+                        }], "text": "Blood pressure systolic & diastolic"
+                };
+                bpInterpretationObs.interpretation = {
+                    "coding": [],
+                    "text": vm.vitals.bp.interpretationText
+                };
+                var coding = angular.fromJson(vm.vitals.bp.interpretationCode);
+                coding.system = vm.interpretations.system;
+                bpInterpretationObs.interpretation.coding.push(coding);
+                bpInterpretationObs.status = "final";
+                bpInterpretationObs.reliability = "ok";
+                bpInterpretationObs.subject = {
+                    "reference": 'Patient/' + vm.consultation.patient.id,
+                    "display": vm.consultation.patient.fullName
+                };
+                bpInterpretationObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+
+                return bpInterpretationObs;
+            } else {
+                return undefined;
+            }
+        }
+
+        function _buildBMIObs() {
+            var bmiObs = observationService.initializeNewObservation();
+            bmiObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "60621009",
+                    "display": "Body mass index"
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "39156-5",
+                    "display": "Body mass index (BMI) [Ratio]"
+                }],
+                "text": "Body mass index"
+            };
+            bmiObs.bodySite = {
+                "coding": [
+                    {
+                        "system": "http://snomed.info/sct",
+                        "code": "38266002",
+                        "display": "Entire body as a whole"
+                    }
+                ]
+            };
+            bmiObs.referenceRange =
+                [
+                    {
+                        "high": {
+                            "value": 20
+                        },
+                        "meaning": {
+                            "coding": [
+                                {
+                                    "system": "http://snomed.info/sct",
+                                    "code": "310252000",
+                                    "display": "Low BMI"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "low": {
+                            "value": 20
+                        },
+                        "high": {
+                            "value": 25
+                        },
+                        "meaning": {
+                            "coding": [
+                                {
+                                    "system": "http://snomed.info/sct",
+                                    "code": "412768003",
+                                    "display": "Normal BMI"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "low": {
+                            "value": 25
+                        },
+                        "high": {
+                            "value": 30
+                        },
+                        "meaning": {
+                            "coding": [
+                                {
+                                    "system": "http://snomed.info/sct",
+                                    "code": "162863004",
+                                    "display": "Overweight"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "low": {
+                            "value": 30
+                        },
+                        "high": {
+                            "value": 40
+                        },
+                        "meaning": {
+                            "coding": [
+                                {
+                                    "system": "http://snomed.info/sct",
+                                    "code": "162864005",
+                                    "display": "Obesity"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "low": {
+                            "value": 40
+                        },
+                        "meaning": {
+                            "coding": [
+                                {
+                                    "system": "http://snomed.info/sct",
+                                    "code": "162864005",
+                                    "display": "Severe obesity"
+                                }
+                            ]
+                        }
+                    }
+                ];
+            bmiObs.valueQuantity = {
+                "value": vm.vitals.bmi.calculated
+            };
+            bmiObs.status = "final";
+            bmiObs.reliability = "ok";
+            bmiObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            bmiObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+
+            if (vm.vitals.bmi.interpretationCode) {
+                bmiObs.interpretation = {
+                    "coding": [],
+                    "text": vm.vitals.bmi.interpretationText
+                };
+                var coding = angular.fromJson(vm.vitals.bmi.interpretationCode);
+                coding.system = vm.interpretations.system;
+                bmiObs.interpretation.coding.push(coding);
+            }
+            return bmiObs;
+        }
+
+        function _buildHeightObs() {
+            var heightObs = observationService.initializeNewObservation();
+            if (vm.vitals.bmi.heightMeasured === "Standing") {
+                heightObs.code = {
+                    "coding": [{
+                        "system": "http://loinc.org",
+                        "code": "8302-2",
+                        "display": "Body height"
+                    }, {
+                        "system": "http://snomed.info/sct",
+                        "code": "248333004",
+                        "display": "Standing height"
+                    }],
+                    "text": "Standing body height"
+                };
+            } else {
+                heightObs.code = {
+                    "coding": [{
+                        "system": "http://loinc.org",
+                        "code": "8306-3",
+                        "display": "Body height - lying"
+                    }, {
+                        "system": "http://snomed.info/sct",
+                        "code": "248334005",
+                        "display": "Length of body"
+                    }],
+                    "text": "Lying body height"
+                };
+            }
+            heightObs.valueQuantity = {
+                "value": vm.vitals.bmi.height,
+                "units": "inch",
+                "system": "http://snomed.info/sct",
+                "code": "258677007"
+            };
+            heightObs.status = "final";
+            heightObs.reliability = "ok";
+            heightObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            heightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+
+            return heightObs;
+        }
+
+        function _buildWeightObs() {
+            var weightObs = observationService.initializeNewObservation();
+            weightObs.code = {
+                "coding": [{
+                    "system": "http://snomed.info/sct",
+                    "code": "27113001",
+                    "display": "Body weight"
+                }, {
+                    "system": "http://loinc.org",
+                    "code": "3141-9",
+                    "display": "Body weight Measured"
+                }],
+                "text": "Body weight"
+            };
+            weightObs.valueQuantity = {
+                "value": vm.vitals.bmi.weight,
+                "units": "pounds",
+                "system": "http://snomed.info/sct",
+                "code": "258693003"
+            };
+            weightObs.status = "final";
+            weightObs.reliability = "ok";
+            weightObs.subject = {
+                "reference": 'Patient/' + vm.consultation.patient.id,
+                "display": vm.consultation.patient.fullName
+            };
+            weightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            return weightObs;
+        }
 
         function _processCreateResponse(results) {
             var deferred = $q.defer();
@@ -6990,7 +7342,6 @@
 
         vm.actions = actions;
         vm.activeServer = null;
-        vm.calculateAge = calculateAge;
         vm.activate = activate;
         vm.observation = null;
         vm.isBusy = false;
@@ -7001,7 +7352,9 @@
         vm.consultation = {};
         vm.smokingStatuses = [];
         vm.bpInterpretations = [];
+        vm.bmiInterpretations = [];
         vm.interpretations = [];
+        vm.bodyTempMethods = undefined;
         vm.vitals = {
             "bp": {
                 "systolic": undefined,
@@ -7012,6 +7365,12 @@
             },
             "hr": {
                 "pulse": undefined,
+                "interpretationCode": undefined,
+                "color": "black",
+                "interpretationText": undefined
+            },
+            "respiration": {
+                "rate": undefined,
                 "interpretationCode": undefined,
                 "color": "black",
                 "interpretationText": undefined
@@ -7213,33 +7572,25 @@
             return deferred.promise;
         }
 
-        function getObservations(baseUrl, searchFilter, organizationId) {
+        function getObservations(baseUrl, searchFilter, patientId) {
             var deferred = $q.defer();
             var params = '';
 
-            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(patientId)) {
                 deferred.reject('Invalid search input');
             }
 
-            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
-                var names = searchFilter.split(' ');
-                if (names.length === 1) {
-                    params = 'name=' + names[0];
-                } else {
-                    params = 'given=' + names[0] + '&family=' + names[1];
-                }
-            }
 
-            if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:=' + organizationId;
+            if (angular.isDefined(patientId)) {
+                var patientParam = 'subject:Patient=' + patientId;
                 if (params.length > 1) {
-                    params = params + '&' + orgParam;
+                    params = params + '&' + patientParam;
                 } else {
-                    params = orgParam;
+                    params = patientParam;
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Observation?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Observation/_filter?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -7646,7 +7997,96 @@
             }
         }
 
-        function interpretation()  {
+        function bmiRange() {
+            return {
+                "system": "http://snomed.info/sct",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "310252000",
+                        "display": "Low BMI"
+                    }, {
+                        "code": "412768003",
+                        "display": "Normal BMI"
+                    }, {
+                        "code": "162863004",
+                        "display": "Overweight"
+                    }, {
+                        "code": "162864005",
+                        "display": "Obesity"
+                    }, {
+                        "code": "162864005",
+                        "display": "Severe obesity"
+                    }]
+            }
+        }
+
+        function bodyTempFindings() {
+            return {
+                "system": "http://snomed.info/sct",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "164301009",
+                        "display": "O/E - temperature low"
+                    },
+                    {
+                        "code": "164300005",
+                        "display": "O/E - temperature normal"
+                    },
+                    {
+                        "code": "164303007",
+                        "display": "O/E - temperature elevated"
+                    },
+                    {
+                        "code": "271897009",
+                        "display": "O/E - temperature fever"
+                    },
+                    {
+                        "code": "164288004",
+                        "display": "O/E - pyrexia of unknown origin"
+                    },
+                    {
+                        "code": "274307008",
+                        "display": "O/E - hypothermia"
+                    },
+                    {
+                        "code": "274308003",
+                        "display": "O/E - hyperpyrexia"
+                    }]
+            }
+        }
+
+        function bodyTempMethods() {
+            return {
+                "system": "http://snomed.info/sct",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "164292006",
+                        "display": "O/E - axillary temperature",
+                        "$$label": "Axillary"
+                    }, {
+                        "code": "275874003",
+                        "display": "O/E - oral temperature",
+                        "$$label": "Oral"
+                    }, {
+                        "code": "164294007",
+                        "display": "O/E - rectal temperature",
+                        "$$label": "Rectal"
+                    }, {
+                        "code": "164296009",
+                        "display": "O/E - skin strip temperature",
+                        "$$label": "By skin"
+                    }, {
+                        "code": "315632006",
+                        "display": "O/E - tympanic temperature",
+                        "$$label": "By ear"
+                    }]
+            }
+        }
+
+        function interpretation() {
             return {
                 "system": "http://hl7.org/fhir/v2/0078",
                 "caseSensitive": true,
@@ -7883,22 +8323,25 @@
          Vital Signs
          Include these codes as defined in http://loinc.org
          Code	Display
-         9279-1	Respiratory rate
-         8867-4	Heart rate
+         x    9279-1	Respiratory rate
+         x    8867-4	Heart rate
          2710-2	Oxygen saturation in Capillary blood by Oximetry
-     x    55284-4	Blood pressure systolic and diastolic
-     x    8480-6	Systolic blood pressure
-     x    8462-4	Diastolic blood pressure
-         8310-5	Body temperature
-         8302-2	Body height
-         8306-3	Body height --lying
+         x    55284-4	Blood pressure systolic and diastolic
+         x    8480-6	Systolic blood pressure
+         x    8462-4	Diastolic blood pressure
+         x    8310-5	Body temperature
+         x    8302-2	Body height
+         x    8306-3	Body height --lying
          8287-5	Head Occipital-frontal circumference by Tape measure
-         3141-9	Body weight Measured
-         39156-5	Body mass index (BMI) [Ratio]
+         x    3141-9	Body weight Measured
+         x    39156-5	Body mass index (BMI) [Ratio]
          3140-1	Body surface area Derived from formula
          */
 
         var service = {
+            bmiRange: bmiRange,
+            bodyTempFindings: bodyTempFindings,
+            bodyTempMethods: bodyTempMethods,
             bpInterpretation: bpInterpretation,
             interpretation: interpretation,
             reliability: reliability,
@@ -9323,9 +9766,10 @@
 
     var controllerId = 'patientDetail';
 
-    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
-                           common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService, practitionerService, communicationService, careProviderService) {
+    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, patientService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -9340,16 +9784,6 @@
             common.activateController([getActiveServer()], controllerId).then(function () {
                 getRequestedPatient();
             });
-        }
-
-        function calculateAge(birthDate) {
-            if (birthDate) {
-                var ageDifMs = Date.now() - birthDate.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return undefined;
-            }
         }
 
         function clearErrors() {
@@ -9460,7 +9894,18 @@
                     vm.history = data.history;
                     logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
                 }, function (error) {
-                    vm.loadingOrganizations = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //work around for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for patient at " + vm.patient.resourceId, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
                     logError(common.unexpectedOutcome(error), null, noToast);
                 });
         }
@@ -9498,13 +9943,12 @@
                         vm.patient.managingOrganization.display = reference;
                     }
                 }
-                vm.title = getTitle();
                 $window.localStorage.patient = JSON.stringify(vm.patient);
             }
 
             vm.lookupKey = $routeParams.hashKey;
 
-            if ($routeParams.smartApp !== undefined) {
+            if (angular.isDefined($routeParams.smartApp)) {
                 var appUrl = '';
                 vm.patient = {};
                 vm.patient.id = $routeParams.patientId;
@@ -9522,12 +9966,10 @@
 
                 // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
                 vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + vm.patient.id;
-                return;
-            }
-            if (vm.lookupKey === "current") {
+
+            } else if (vm.lookupKey === "current") {
                 if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
                     if (angular.isUndefined($routeParams.id)) {
-                        //redirect to search
                         $location.path('/patient');
                     }
                 } else {
@@ -9535,69 +9977,35 @@
                     vm.patient.hashKey = "current";
                     initializeAdministrationData(vm.patient);
                 }
-            }
-            if (vm.lookupKey === 'new') {
+            } else if (angular.isDefined($routeParams.id)) {
+                var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
+                patientService.getPatient(resourceId)
+                    .then(function(resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.patient) {
+                            getEverything(resourceId);
+                        }
+                    }, function (error) {
+                            logError(common.unexpectedOutcome(error));
+                    });
+            } else if (vm.lookupKey === 'new') {
                 var data = patientService.initializeNewPatient();
                 initializeAdministrationData(data);
                 vm.title = 'Add New Patient';
                 vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                patientService.getCachedPatient(vm.lookupKey)
+                    .then(function(data) {
+                        initializeAdministrationData(data);
+                        if (vm.patient && vm.patient.resourceId) {
+                            getEverything(vm.patient.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
             } else {
-                if (vm.lookupKey !== "current") {
-                    patientService.getCachedPatient(vm.lookupKey)
-                        .then(initializeAdministrationData, function (error) {
-                            logError(common.unexpectedOutcome(error));
-                        }).then(function () {
-                            if (vm.patient && vm.patient.resourceId) {
-                                getEverything(vm.patient.resourceId);
-                            }
-                        });
-                } else if ($routeParams.id) {
-                    var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
-                    patientService.getPatient(resourceId)
-                        .then(initializeAdministrationData, function (error) {
-                            logError(common.unexpectedOutcome(error));
-                        });
-                }
+                logError("Unable to resolve patient lookup");
             }
-        }
-
-        function initStoredVitals() {
-            if ($window.localStorage.vitals) {
-                if ($window.localStorage.vitals.length > 0) {
-                    vm.vitals = JSON.parse($window.localStorage.vitals);
-                }
-            }
-            if ($window.localStorage.allergy) {
-                if ($window.localStorage.allergy.length > 0) {
-                    vm.history.allergy.list = JSON.parse($window.localStorage.allergy);
-                }
-            }
-            if ($window.localStorage.medication) {
-                if ($window.localStorage.medication.length > 0) {
-                    vm.history.medication.list = JSON.parse($window.localStorage.medication);
-                }
-            }
-            if ($window.localStorage.condition) {
-                if ($window.localStorage.condition.length > 0) {
-                    vm.history.condition.list = JSON.parse($window.localStorage.condition);
-                }
-            }
-            if ($window.localStorage.dataEvents) {
-                if ($window.localStorage.dataEvents.length > 0) {
-                    vm.dataEvents = JSON.parse($window.localStorage.dataEvents);
-                }
-            }
-        }
-
-        function getTitle() {
-            var title = '';
-            if (vm.patient) {
-                title = 'Edit ' + (vm.patient.fullName || 'Unknown');
-            } else {
-                title = 'Add New Patient';
-            }
-            return title;
-
         }
 
         function goBack() {
@@ -9716,19 +10124,20 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/consultation/' + vm.patient.hashKey);
+                        $location.path('/consultation');
                         break;
                     case 1:
-                        $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
+                        logInfo("Refreshing patient data from " + vm.activeServer.name);
+                        $location.path('/patient/get/' + vm.patient.id);
                         break;
                     case 2:
-                        $location.path('/patient/smart/meducation/' + vm.patient.id);
+                        $location.path('/patient');
                         break;
                     case 3:
                         $location.path('/patient/edit/new');
                         break;
                     case 4:
-                        $location.path('/patient/edit/' + vm.patient.hashKey);
+                        $location.path('/patient/edit/current');
                         break;
                     case 5:
                         deletePatient(vm.patient);
@@ -9738,8 +10147,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Consult', icon: 'rx', index: 0},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Add new patient', icon: 'personAdd', index: 3},
+                    {name: 'Refresh data', icon: 'refresh', index: 1},
+                    {name: 'Find another patient', icon: 'person', index: 2},
                     {name: 'Edit patient', icon: 'edit', index: 4},
                     {name: 'Delete patient', icon: 'delete', index: 5}
                 ];
@@ -9752,7 +10161,6 @@
 
         vm.actions = actions;
         vm.activeServer = null;
-        vm.calculateAge = calculateAge;
         vm.clearErrors = clearErrors;
         vm.activate = activate;
         vm.delete = deletePatient;
@@ -9763,10 +10171,7 @@
         vm.summary = [];
         vm.edit = edit;
         vm.getOrganizationReference = getOrganizationReference;
-        vm.getTitle = getTitle;
         vm.goBack = goBack;
-        //  vm.history = {"allergy": {"list": []}, "medication": {"list": []}, "condition": {"list": []}};
-        vm.vitals = {"allergy": [], "medication": [], "condition": []};
         vm.lookupKey = undefined;
         vm.isBusy = false;
         vm.isSaving = false;
@@ -9786,9 +10191,10 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
-            'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', 'practitionerService', 'communicationService', 'careProviderService', patientDetail]);
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
 })();(function () {
     'use strict';
 

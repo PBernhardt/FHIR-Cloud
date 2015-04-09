@@ -173,33 +173,25 @@
             return deferred.promise;
         }
 
-        function getObservations(baseUrl, searchFilter, organizationId) {
+        function getObservations(baseUrl, searchFilter, patientId) {
             var deferred = $q.defer();
             var params = '';
 
-            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(patientId)) {
                 deferred.reject('Invalid search input');
             }
 
-            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
-                var names = searchFilter.split(' ');
-                if (names.length === 1) {
-                    params = 'name=' + names[0];
-                } else {
-                    params = 'given=' + names[0] + '&family=' + names[1];
-                }
-            }
 
-            if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:=' + organizationId;
+            if (angular.isDefined(patientId)) {
+                var patientParam = 'subject:Patient=' + patientId;
                 if (params.length > 1) {
-                    params = params + '&' + orgParam;
+                    params = params + '&' + patientParam;
                 } else {
-                    params = orgParam;
+                    params = patientParam;
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Observation?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Observation/_filter?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);

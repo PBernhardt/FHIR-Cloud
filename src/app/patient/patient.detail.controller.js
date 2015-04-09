@@ -3,9 +3,10 @@
 
     var controllerId = 'patientDetail';
 
-    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService, attachmentService,
-                           common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService, practitionerService, communicationService, careProviderService) {
+    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, patientService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -20,16 +21,6 @@
             common.activateController([getActiveServer()], controllerId).then(function () {
                 getRequestedPatient();
             });
-        }
-
-        function calculateAge(birthDate) {
-            if (birthDate) {
-                var ageDifMs = Date.now() - birthDate.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return undefined;
-            }
         }
 
         function clearErrors() {
@@ -140,7 +131,18 @@
                     vm.history = data.history;
                     logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
                 }, function (error) {
-                    vm.loadingOrganizations = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //work around for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for patient at " + vm.patient.resourceId, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
                     logError(common.unexpectedOutcome(error), null, noToast);
                 });
         }
@@ -178,13 +180,12 @@
                         vm.patient.managingOrganization.display = reference;
                     }
                 }
-                vm.title = getTitle();
                 $window.localStorage.patient = JSON.stringify(vm.patient);
             }
 
             vm.lookupKey = $routeParams.hashKey;
 
-            if ($routeParams.smartApp !== undefined) {
+            if (angular.isDefined($routeParams.smartApp)) {
                 var appUrl = '';
                 vm.patient = {};
                 vm.patient.id = $routeParams.patientId;
@@ -202,12 +203,10 @@
 
                 // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
                 vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + vm.patient.id;
-                return;
-            }
-            if (vm.lookupKey === "current") {
+
+            } else if (vm.lookupKey === "current") {
                 if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
                     if (angular.isUndefined($routeParams.id)) {
-                        //redirect to search
                         $location.path('/patient');
                     }
                 } else {
@@ -215,69 +214,35 @@
                     vm.patient.hashKey = "current";
                     initializeAdministrationData(vm.patient);
                 }
-            }
-            if (vm.lookupKey === 'new') {
+            } else if (angular.isDefined($routeParams.id)) {
+                var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
+                patientService.getPatient(resourceId)
+                    .then(function(resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.patient) {
+                            getEverything(resourceId);
+                        }
+                    }, function (error) {
+                            logError(common.unexpectedOutcome(error));
+                    });
+            } else if (vm.lookupKey === 'new') {
                 var data = patientService.initializeNewPatient();
                 initializeAdministrationData(data);
                 vm.title = 'Add New Patient';
                 vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                patientService.getCachedPatient(vm.lookupKey)
+                    .then(function(data) {
+                        initializeAdministrationData(data);
+                        if (vm.patient && vm.patient.resourceId) {
+                            getEverything(vm.patient.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
             } else {
-                if (vm.lookupKey !== "current") {
-                    patientService.getCachedPatient(vm.lookupKey)
-                        .then(initializeAdministrationData, function (error) {
-                            logError(common.unexpectedOutcome(error));
-                        }).then(function () {
-                            if (vm.patient && vm.patient.resourceId) {
-                                getEverything(vm.patient.resourceId);
-                            }
-                        });
-                } else if ($routeParams.id) {
-                    var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
-                    patientService.getPatient(resourceId)
-                        .then(initializeAdministrationData, function (error) {
-                            logError(common.unexpectedOutcome(error));
-                        });
-                }
+                logError("Unable to resolve patient lookup");
             }
-        }
-
-        function initStoredVitals() {
-            if ($window.localStorage.vitals) {
-                if ($window.localStorage.vitals.length > 0) {
-                    vm.vitals = JSON.parse($window.localStorage.vitals);
-                }
-            }
-            if ($window.localStorage.allergy) {
-                if ($window.localStorage.allergy.length > 0) {
-                    vm.history.allergy.list = JSON.parse($window.localStorage.allergy);
-                }
-            }
-            if ($window.localStorage.medication) {
-                if ($window.localStorage.medication.length > 0) {
-                    vm.history.medication.list = JSON.parse($window.localStorage.medication);
-                }
-            }
-            if ($window.localStorage.condition) {
-                if ($window.localStorage.condition.length > 0) {
-                    vm.history.condition.list = JSON.parse($window.localStorage.condition);
-                }
-            }
-            if ($window.localStorage.dataEvents) {
-                if ($window.localStorage.dataEvents.length > 0) {
-                    vm.dataEvents = JSON.parse($window.localStorage.dataEvents);
-                }
-            }
-        }
-
-        function getTitle() {
-            var title = '';
-            if (vm.patient) {
-                title = 'Edit ' + (vm.patient.fullName || 'Unknown');
-            } else {
-                title = 'Add New Patient';
-            }
-            return title;
-
         }
 
         function goBack() {
@@ -396,19 +361,20 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/consultation/' + vm.patient.hashKey);
+                        $location.path('/consultation');
                         break;
                     case 1:
-                        $location.path('/patient/smart/cardiac-risk/' + vm.patient.id);
+                        logInfo("Refreshing patient data from " + vm.activeServer.name);
+                        $location.path('/patient/get/' + vm.patient.id);
                         break;
                     case 2:
-                        $location.path('/patient/smart/meducation/' + vm.patient.id);
+                        $location.path('/patient');
                         break;
                     case 3:
                         $location.path('/patient/edit/new');
                         break;
                     case 4:
-                        $location.path('/patient/edit/' + vm.patient.hashKey);
+                        $location.path('/patient/edit/current');
                         break;
                     case 5:
                         deletePatient(vm.patient);
@@ -418,8 +384,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Consult', icon: 'rx', index: 0},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Add new patient', icon: 'personAdd', index: 3},
+                    {name: 'Refresh data', icon: 'refresh', index: 1},
+                    {name: 'Find another patient', icon: 'person', index: 2},
                     {name: 'Edit patient', icon: 'edit', index: 4},
                     {name: 'Delete patient', icon: 'delete', index: 5}
                 ];
@@ -432,7 +398,6 @@
 
         vm.actions = actions;
         vm.activeServer = null;
-        vm.calculateAge = calculateAge;
         vm.clearErrors = clearErrors;
         vm.activate = activate;
         vm.delete = deletePatient;
@@ -443,10 +408,7 @@
         vm.summary = [];
         vm.edit = edit;
         vm.getOrganizationReference = getOrganizationReference;
-        vm.getTitle = getTitle;
         vm.goBack = goBack;
-        //  vm.history = {"allergy": {"list": []}, "medication": {"list": []}, "condition": {"list": []}};
-        vm.vitals = {"allergy": [], "medication": [], "condition": []};
         vm.lookupKey = undefined;
         vm.isBusy = false;
         vm.isSaving = false;
@@ -466,7 +428,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'addressService', 'attachmentService',
-            'common', 'demographicsService', 'fhirServers', 'humanNameService', 'identifierService',
-            'organizationService', 'patientService', 'contactPointService', 'practitionerService', 'communicationService', 'careProviderService', patientDetail]);
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
 })();

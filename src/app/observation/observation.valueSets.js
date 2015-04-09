@@ -74,7 +74,96 @@
             }
         }
 
-        function interpretation()  {
+        function bmiRange() {
+            return {
+                "system": "http://snomed.info/sct",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "310252000",
+                        "display": "Low BMI"
+                    }, {
+                        "code": "412768003",
+                        "display": "Normal BMI"
+                    }, {
+                        "code": "162863004",
+                        "display": "Overweight"
+                    }, {
+                        "code": "162864005",
+                        "display": "Obesity"
+                    }, {
+                        "code": "162864005",
+                        "display": "Severe obesity"
+                    }]
+            }
+        }
+
+        function bodyTempFindings() {
+            return {
+                "system": "http://snomed.info/sct",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "164301009",
+                        "display": "O/E - temperature low"
+                    },
+                    {
+                        "code": "164300005",
+                        "display": "O/E - temperature normal"
+                    },
+                    {
+                        "code": "164303007",
+                        "display": "O/E - temperature elevated"
+                    },
+                    {
+                        "code": "271897009",
+                        "display": "O/E - temperature fever"
+                    },
+                    {
+                        "code": "164288004",
+                        "display": "O/E - pyrexia of unknown origin"
+                    },
+                    {
+                        "code": "274307008",
+                        "display": "O/E - hypothermia"
+                    },
+                    {
+                        "code": "274308003",
+                        "display": "O/E - hyperpyrexia"
+                    }]
+            }
+        }
+
+        function bodyTempMethods() {
+            return {
+                "system": "http://snomed.info/sct",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "164292006",
+                        "display": "O/E - axillary temperature",
+                        "$$label": "Axillary"
+                    }, {
+                        "code": "275874003",
+                        "display": "O/E - oral temperature",
+                        "$$label": "Oral"
+                    }, {
+                        "code": "164294007",
+                        "display": "O/E - rectal temperature",
+                        "$$label": "Rectal"
+                    }, {
+                        "code": "164296009",
+                        "display": "O/E - skin strip temperature",
+                        "$$label": "By skin"
+                    }, {
+                        "code": "315632006",
+                        "display": "O/E - tympanic temperature",
+                        "$$label": "By ear"
+                    }]
+            }
+        }
+
+        function interpretation() {
             return {
                 "system": "http://hl7.org/fhir/v2/0078",
                 "caseSensitive": true,
@@ -311,22 +400,25 @@
          Vital Signs
          Include these codes as defined in http://loinc.org
          Code	Display
-         9279-1	Respiratory rate
-         8867-4	Heart rate
+         x    9279-1	Respiratory rate
+         x    8867-4	Heart rate
          2710-2	Oxygen saturation in Capillary blood by Oximetry
-     x    55284-4	Blood pressure systolic and diastolic
-     x    8480-6	Systolic blood pressure
-     x    8462-4	Diastolic blood pressure
-         8310-5	Body temperature
-         8302-2	Body height
-         8306-3	Body height --lying
+         x    55284-4	Blood pressure systolic and diastolic
+         x    8480-6	Systolic blood pressure
+         x    8462-4	Diastolic blood pressure
+         x    8310-5	Body temperature
+         x    8302-2	Body height
+         x    8306-3	Body height --lying
          8287-5	Head Occipital-frontal circumference by Tape measure
-         3141-9	Body weight Measured
-         39156-5	Body mass index (BMI) [Ratio]
+         x    3141-9	Body weight Measured
+         x    39156-5	Body mass index (BMI) [Ratio]
          3140-1	Body surface area Derived from formula
          */
 
         var service = {
+            bmiRange: bmiRange,
+            bodyTempFindings: bodyTempFindings,
+            bodyTempMethods: bodyTempMethods,
             bpInterpretation: bpInterpretation,
             interpretation: interpretation,
             reliability: reliability,

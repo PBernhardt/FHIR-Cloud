@@ -171,7 +171,7 @@
             templateUrl: 'conformance/conformance-search.html'
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
-        }).when('/consultation/:hashKey', {
+        }).when('/consultation', {
             templateUrl: 'consultation/consultation-edit.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
@@ -199,6 +199,8 @@
             templateUrl: 'patient/patient-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html'
+        }).when('/patient/get/:id', {
+            templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/edit/:hashKey', {
@@ -269,6 +271,7 @@
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
+            .icon("refresh", "./assets/svg/refresh.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
             .icon("saveToList", "./assets/svg/saveToList.svg", 24)
