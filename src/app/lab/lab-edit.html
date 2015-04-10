@@ -26,7 +26,7 @@
                                          type="number"
                                          placeholder="mg/Dl"
                                          ng-change="vm.updateHdlCholesterol()"
-                                         min="30" max="80"/>
+                                         min="30" max="80" ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
@@ -59,7 +59,8 @@
                                          type="number"
                                          placeholder="mg/Dl"
                                          ng-change="vm.updateLdlCholesterol()"
-                                         min="80" max="200"/>
+                                         min="80" max="200"
+                                         ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
@@ -92,7 +93,8 @@
                                          type="number"
                                          placeholder="mg/Dl"
                                          ng-change="vm.updateTriglyceride()"
-                                         min="50" max="600"/>
+                                         min="50" max="600"
+                                         ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
@@ -124,7 +126,8 @@
                                          aria-controls="total-cholesterol-slider"
                                          type="number"
                                          placeholder="mg/Dl"
-                                         readonly/>
+                                         readonly
+                                         ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>

@@ -667,7 +667,9 @@
             };
             systolicObs.valueQuantity = {
                 "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]"
+                "units": "mm[Hg]",
+                "system": "http://loinc.org",
+                "code": "20053-5"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
@@ -697,7 +699,9 @@
             };
             diastolicObs.valueQuantity = {
                 "value": vm.vitals.bp.diastolic,
-                "units": "mm[Hg]"
+                "units": "mm[Hg]",
+                "system": "http://loinc.org",
+                "code": "20053-5"
             };
             diastolicObs.status = "final";
             diastolicObs.reliability = "ok";
@@ -897,11 +901,13 @@
                     "coding": [{
                         "system": "http://loinc.org",
                         "code": "8306-3",
-                        "display": "Body height - lying"
+                        "display": "Body height - lying",
+                        "primary": true
                     }, {
                         "system": "http://snomed.info/sct",
                         "code": "248334005",
-                        "display": "Length of body"
+                        "display": "Length of body",
+                        "primary": false
                     }],
                     "text": "Lying body height"
                 };
