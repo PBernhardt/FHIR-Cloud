@@ -135,7 +135,8 @@
 
     var events = {
         controllerActivateSuccess: 'controller.activateSuccess',
-        progressToggle: 'progress.toggle'
+        progressToggle: 'progress.toggle',
+        serverChanged: 'server.changed'
     };
 
     var config = {
@@ -267,6 +268,7 @@
             .icon("group", "./assets/svg/group.svg", 24)
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
+            .icon("https", "./assets/svg/https.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
@@ -295,6 +297,7 @@
     app.config(['commonConfigProvider', function (cfg) {
         cfg.config.controllerActivateSuccessEvent = config.events.controllerActivateSuccess;
         cfg.config.progressToggleEvent = config.events.progressToggle;
+        cfg.config.serverChangeEvent = config.events.serverChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {

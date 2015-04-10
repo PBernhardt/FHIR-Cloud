@@ -33,48 +33,55 @@
                     {
                         "id": 0,
                         "name": "Health Directions",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
+                        "secure": false
+                    },
+                    {
+                        "id": 1,
+                        "name": "SMART",
+                        "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org",
+                        "secure": true
                     },
                     {
                         "id": 2,
-                        "name": "SMART on FHIR",
-                        "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org"
+                        "name": "HAPI",
+                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2",
+                        "secure": false
+                    },
+                    {
+                        "id": 3,
+                        "name": "RelayHealth",
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        "secure": true
+                        //"baseUrl": "http://rhc-fhirservice-stage.cloudapp.net"
                     },
                     {
                         "id": 4,
-                        "name": "HAPI",
-                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2"
-                    },
-                    {
-                        "id": 5,
-                        "name": "RelayHealth",
-                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice"
-                    },
-                    {
-                        "id": 6,
-                        "name": "HealthConnex",
-                        "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
-                    },
-                    {
-                        "id": 7,
                         "name": "Argonaut Reference",
-                        "baseUrl": "http://argonaut.healthintersections.com.au/open"
-                    },
-                    {
-                        "id": 8,
-                        "name": "EPIC",
-                        "baseUrl": "http://open.epic.com/Clinical/FHIR"
-                    },
-                    {
-                        "id": 9,
-                        "name": "Cerner",
-                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
-                    },
-                    {
-                        "id": 10,
-                        "name": "AEGIS",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                        "baseUrl": "http://argonaut.healthintersections.com.au/open",
+                        "secure": false
                     }
+                    /*                   , {
+                     "id": 7,
+                     "name": "HealthConnex",
+                     "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
+                     },
+
+                     {
+                     "id": 8,
+                     "name": "EPIC",
+                     "baseUrl": "http://open.epic.com/Clinical/FHIR"
+                     },
+                     {
+                     "id": 9,
+                     "name": "Cerner",
+                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                     },
+                     {
+                     "id": 10,
+                     "name": "AEGIS",
+                     "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                     }*/
                 ];
                 var servers = dataCache.readFromCache('servers');
                 if (angular.isUndefined(servers)) {

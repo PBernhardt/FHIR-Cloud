@@ -3,7 +3,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, $routeParams, common, fhirServers, localValueSets, patientService) {
+    function patientSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -12,6 +12,13 @@
         var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
         var $q = common.$q;
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
 
         function activate() {
             common.activateController([getActiveServer()], controllerId)
@@ -331,5 +338,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
 })();

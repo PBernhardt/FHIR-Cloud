@@ -3,7 +3,7 @@
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdBottomSheet, $mdSidenav, common, fhirServers, localValueSets, organizationService) {
+    function organizationSearch($location, $mdBottomSheet, $mdSidenav, $scope, common, fhirServers, localValueSets, organizationService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -12,6 +12,13 @@
 
         /* jshint validthis:true */
         var vm = this;
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
 
         function getActiveServer() {
             fhirServers.getActiveServer()
@@ -239,5 +246,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
+        ['$location', '$mdBottomSheet', '$mdSidenav', '$scope', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
 })();

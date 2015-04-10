@@ -71,7 +71,7 @@
                 $mdToast.show($mdToast.simple()
                     .content(message)
                     .position('right bottom')
-                    .hideDelay(2000));
+                    .hideDelay(write === $log.error ? 4000 : 2000));
             }
         }
 

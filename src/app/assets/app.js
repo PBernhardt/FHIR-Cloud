@@ -46,6 +46,13 @@
             });
         }
 
+        function changeServer(server) {
+            if (angular.isDefined(server)) {
+                var data = { "activeServer": server };
+                $broadcast(commonConfig.config.serverChangeEvent, data);
+            }
+        }
+
         function toggleProgressBar(show) {
             var data = { show: show };
             $broadcast(commonConfig.config.progressToggleEvent, data);
@@ -260,6 +267,7 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeServer: changeServer,
             createSearchThrottle: createSearchThrottle,
             debouncedThrottle: debouncedThrottle,
             generateUUID: generateUUID,
@@ -419,7 +427,8 @@
 
     var events = {
         controllerActivateSuccess: 'controller.activateSuccess',
-        progressToggle: 'progress.toggle'
+        progressToggle: 'progress.toggle',
+        serverChanged: 'server.changed'
     };
 
     var config = {
@@ -551,6 +560,7 @@
             .icon("group", "./assets/svg/group.svg", 24)
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
+            .icon("https", "./assets/svg/https.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
@@ -579,6 +589,7 @@
     app.config(['commonConfigProvider', function (cfg) {
         cfg.config.controllerActivateSuccessEvent = config.events.controllerActivateSuccess;
         cfg.config.progressToggleEvent = config.events.progressToggle;
+        cfg.config.serverChangeEvent = config.events.serverChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {
@@ -998,48 +1009,55 @@
                     {
                         "id": 0,
                         "name": "Health Directions",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
+                        "secure": false
+                    },
+                    {
+                        "id": 1,
+                        "name": "SMART",
+                        "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org",
+                        "secure": true
                     },
                     {
                         "id": 2,
-                        "name": "SMART on FHIR",
-                        "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org"
+                        "name": "HAPI",
+                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2",
+                        "secure": false
+                    },
+                    {
+                        "id": 3,
+                        "name": "RelayHealth",
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        "secure": true
+                        //"baseUrl": "http://rhc-fhirservice-stage.cloudapp.net"
                     },
                     {
                         "id": 4,
-                        "name": "HAPI",
-                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2"
-                    },
-                    {
-                        "id": 5,
-                        "name": "RelayHealth",
-                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice"
-                    },
-                    {
-                        "id": 6,
-                        "name": "HealthConnex",
-                        "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
-                    },
-                    {
-                        "id": 7,
                         "name": "Argonaut Reference",
-                        "baseUrl": "http://argonaut.healthintersections.com.au/open"
-                    },
-                    {
-                        "id": 8,
-                        "name": "EPIC",
-                        "baseUrl": "http://open.epic.com/Clinical/FHIR"
-                    },
-                    {
-                        "id": 9,
-                        "name": "Cerner",
-                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
-                    },
-                    {
-                        "id": 10,
-                        "name": "AEGIS",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                        "baseUrl": "http://argonaut.healthintersections.com.au/open",
+                        "secure": false
                     }
+                    /*                   , {
+                     "id": 7,
+                     "name": "HealthConnex",
+                     "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
+                     },
+
+                     {
+                     "id": 8,
+                     "name": "EPIC",
+                     "baseUrl": "http://open.epic.com/Clinical/FHIR"
+                     },
+                     {
+                     "id": 9,
+                     "name": "Cerner",
+                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                     },
+                     {
+                     "id": 10,
+                     "name": "AEGIS",
+                     "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                     }*/
                 ];
                 var servers = dataCache.readFromCache('servers');
                 if (angular.isUndefined(servers)) {
@@ -2794,7 +2812,7 @@
                 $mdToast.show($mdToast.simple()
                     .content(message)
                     .position('right bottom')
-                    .hideDelay(2000));
+                    .hideDelay(write === $log.error ? 4000 : 2000));
             }
         }
 
@@ -2943,10 +2961,11 @@
                             }
                         })
                     }
+                    common.changeServer(fhirServer);
                 }, function (error) {
-                    logInfo('Error returning conformance statement for ' + fhirServer.name, error);
-                })
-            logInfo('Setting server to ' + fhirServer.name + ' ...');
+                    logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
+                });
+            logInfo('Requesting access to server ' + fhirServer.name + ' ...');
         }
 
         function isSectionSelected(section) {
@@ -7146,7 +7165,9 @@
             };
             systolicObs.valueQuantity = {
                 "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]"
+                "units": "mm[Hg]",
+                "system": "http://loinc.org",
+                "code": "20053-5"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
@@ -7176,7 +7197,9 @@
             };
             diastolicObs.valueQuantity = {
                 "value": vm.vitals.bp.diastolic,
-                "units": "mm[Hg]"
+                "units": "mm[Hg]",
+                "system": "http://loinc.org",
+                "code": "20053-5"
             };
             diastolicObs.status = "final";
             diastolicObs.reliability = "ok";
@@ -7376,11 +7399,13 @@
                     "coding": [{
                         "system": "http://loinc.org",
                         "code": "8306-3",
-                        "display": "Body height - lying"
+                        "display": "Body height - lying",
+                        "primary": true
                     }, {
                         "system": "http://snomed.info/sct",
                         "code": "248334005",
-                        "display": "Length of body"
+                        "display": "Length of body",
+                        "primary": false
                     }],
                     "text": "Lying body height"
                 };
@@ -9623,7 +9648,7 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
+    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -9632,6 +9657,13 @@
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var $q = common.$q;
         var noToast = false;
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
 
         function cancel() {
 
@@ -9911,7 +9943,9 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
+        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
+            'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService',
+            'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
 
 })
 ();(function () {
@@ -9919,7 +9953,7 @@
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdBottomSheet, $mdSidenav, common, fhirServers, localValueSets, organizationService) {
+    function organizationSearch($location, $mdBottomSheet, $mdSidenav, $scope, common, fhirServers, localValueSets, organizationService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -9928,6 +9962,13 @@
 
         /* jshint validthis:true */
         var vm = this;
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
 
         function getActiveServer() {
             fhirServers.getActiveServer()
@@ -10155,7 +10196,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
+        ['$location', '$mdBottomSheet', '$mdSidenav', '$scope', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
 })();
 (function () {
     'use strict';
@@ -10466,7 +10507,7 @@
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
                            attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, practitionerService, communicationService,
-                           careProviderService, observationService) {
+                           careProviderService, observationService, config) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -10728,6 +10769,13 @@
             return !vm.isEditing;
         }
 
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
         function canSave() {
             return !vm.isSaving;
         }
@@ -10819,7 +10867,7 @@
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', patientDetail]);
 })();(function () {
     'use strict';
 
@@ -10958,7 +11006,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, $routeParams, common, fhirServers, localValueSets, patientService) {
+    function patientSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -10967,6 +11015,13 @@
         var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
         var $q = common.$q;
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
 
         function activate() {
             common.activateController([getActiveServer()], controllerId)
@@ -11286,7 +11341,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
 })();
 (function () {
     'use strict';
@@ -14430,7 +14485,7 @@
 
     var controllerId = 'dafController';
 
-    function dafController($routeParams, $sce, common) {
+    function dafController($routeParams, $sce, common, fhirServers) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -14441,61 +14496,68 @@
         }
 
         function setDAFUrl() {
-            switch ($routeParams.profile) {
-                case 'patient':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/patient-daf.html");
-                    break;
-                case 'allergyIntolerance':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/allergyintolerance-daf.html");
-                    break;
-                case 'diagnosticOrder':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/diagnosticorder-daf.html");
-                    break;
-                case 'diagnosticReport':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/diagnosticreport-daf.html");
-                    break;
-                case 'encounter':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/encounter-daf.html");
-                    break;
-                case 'familyHistory':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/familymemberhistory-daf.html");
-                    break;
-                case 'immunization':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/immunization-daf.html");
-                    break;
-                case 'results':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/observation-daf-results.html");
-                    break;
-                case 'medication':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/medication-daf.html");
-                    break;
-                case 'condition':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/condition-daf.html");
-                    break;
-                case 'medicationAdministration':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/medicationadministration-daf.html");
-                    break;
-                case 'medicationStatement':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/medicationstatement-daf.html");
-                    break;
-                case 'procedure':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/procedure-daf.html");
-                    break;
-                case 'smokingStatus':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/observation-daf-smokingstatus.html");
-                    break;
-                case 'vitalSigns':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/observation-daf-vitalsigns.html");
-                    break;
-                case 'list':
-                    vm.dafUrl = $sce.trustAsResourceUrl("http://hl7-fhir.github.io/list-daf.html");
-                    break;
-                case 'organization':
-                    vm.dafUrl = "http://hl7-fhir.github.io/patient-daf-dafpatient.html";
-                    break;
-                default:
-                    vm.dafUrl = "http://hl7-fhir.github.io/patient-daf-dafpatient.html";
-            }
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return server.secure ? "https" : "http";
+                })
+                .then(function (scheme) {
+                switch ($routeParams.profile) {
+                    case 'patient':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/patient-daf.html");
+                        break;
+                    case 'allergyIntolerance':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/allergyintolerance-daf.html");
+                        break;
+                    case 'diagnosticOrder':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/diagnosticorder-daf.html");
+                        break;
+                    case 'diagnosticReport':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/diagnosticreport-daf.html");
+                        break;
+                    case 'encounter':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/encounter-daf.html");
+                        break;
+                    case 'familyHistory':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/familymemberhistory-daf.html");
+                        break;
+                    case 'immunization':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/immunization-daf.html");
+                        break;
+                    case 'results':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/observation-daf-results.html");
+                        break;
+                    case 'medication':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/medication-daf.html");
+                        break;
+                    case 'condition':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/condition-daf.html");
+                        break;
+                    case 'medicationAdministration':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/medicationadministration-daf.html");
+                        break;
+                    case 'medicationStatement':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/medicationstatement-daf.html");
+                        break;
+                    case 'procedure':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/procedure-daf.html");
+                        break;
+                    case 'smokingStatus':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/observation-daf-smokingstatus.html");
+                        break;
+                    case 'vitalSigns':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/observation-daf-vitalsigns.html");
+                        break;
+                    case 'list':
+                        vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/list-daf.html");
+                        break;
+                    case 'organization':
+                        vm.dafUrl = scheme + "://hl7-fhir.github.io/patient-daf-dafpatient.html";
+                        break;
+                    default:
+                        vm.dafUrl = scheme + "://hl7-fhir.github.io/patient-daf-dafpatient.html";
+                }
+            });
         }
 
         vm.dafUrl = '';
@@ -14505,7 +14567,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$routeParams', '$sce', 'common', dafController]);
+        ['$routeParams', '$sce', 'common', 'fhirServers', dafController]);
 })();(function () {
     'use strict';
 

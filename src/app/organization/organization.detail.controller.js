@@ -3,7 +3,7 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
+    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -12,6 +12,13 @@
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var $q = common.$q;
         var noToast = false;
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
 
         function cancel() {
 
@@ -291,7 +298,9 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$window', 'addressService', '$mdDialog', 'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
+        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
+            'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService',
+            'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
 
 })
 ();

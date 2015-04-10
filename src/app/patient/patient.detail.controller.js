@@ -6,7 +6,7 @@
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
                            attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, practitionerService, communicationService,
-                           careProviderService, observationService) {
+                           careProviderService, observationService, config) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -268,6 +268,13 @@
             return !vm.isEditing;
         }
 
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
         function canSave() {
             return !vm.isSaving;
         }
@@ -359,5 +366,5 @@
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', patientDetail]);
 })();

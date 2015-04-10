@@ -195,6 +195,9 @@
                                 <div ng-show="item.resource.emptyReason.text">
                                     <p> {{ item.resource.emptyReason.text }}</p>
                                 </div>
+                                <div ng-show="item.resource.appliesDateTime">
+                                    <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
+                                </div>
                             </div>
                         </md-item-content>
                         <md-divider ng-if="!$last"></md-divider>

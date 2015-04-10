@@ -129,10 +129,11 @@
                             }
                         })
                     }
+                    common.changeServer(fhirServer);
                 }, function (error) {
-                    logInfo('Error returning conformance statement for ' + fhirServer.name, error);
-                })
-            logInfo('Setting server to ' + fhirServer.name + ' ...');
+                    logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
+                });
+            logInfo('Requesting access to server ' + fhirServer.name + ' ...');
         }
 
         function isSectionSelected(section) {

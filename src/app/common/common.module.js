@@ -31,6 +31,13 @@
             });
         }
 
+        function changeServer(server) {
+            if (angular.isDefined(server)) {
+                var data = { "activeServer": server };
+                $broadcast(commonConfig.config.serverChangeEvent, data);
+            }
+        }
+
         function toggleProgressBar(show) {
             var data = { show: show };
             $broadcast(commonConfig.config.progressToggleEvent, data);
@@ -245,6 +252,7 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeServer: changeServer,
             createSearchThrottle: createSearchThrottle,
             debouncedThrottle: debouncedThrottle,
             generateUUID: generateUUID,

@@ -19,9 +19,9 @@
         <md-icon md-svg-src="menu"></md-icon>
     </md-button>
     <h1 hide-sm>FHIR Cloud</h1>
-    <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
+<!--    <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
         <md-icon md-svg-src="account"></md-icon>
-    </md-button>
+    </md-button>-->
     <md-button class="menu" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
         <md-icon md-svg-src="fire"></md-icon>
     </md-button>
@@ -60,7 +60,8 @@
                     <md-item ng-repeat="server in vm.FHIRServers">
                         <md-button ng-click="vm.selectServer(server)"
                                    ng-class="{'selected' : server === server.selected }">
-                            {{server.name}}
+                            <span class="md-inline-list-icon-label">{{ server.name }}</span>
+                            <md-icon ng-if="server.secure" md-svg-src="https" style="width: 12px; height: 12px;"></md-icon>
                         </md-button>
                     </md-item>
                 </md-list>
