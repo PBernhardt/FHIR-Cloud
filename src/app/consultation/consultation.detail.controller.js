@@ -542,13 +542,10 @@
             var systolicObs = observationService.initializeNewObservation();
             systolicObs.code = {
                 "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "",
-                    "display": ""
-                }, {
                     "system": "http://loinc.org",
                     "code": "8867-4",
-                    "display": "Heart rate"
+                    "display": "Heart rate",
+                    "primary": true
                 }],
                 "text": "Heart rate"
             };
@@ -658,7 +655,8 @@
                 "coding": [{
                     "system": "http://snomed.info/sct",
                     "code": "271649006",
-                    "display": "Systolic blood pressure"
+                    "display": "Systolic blood pressure",
+                    "primary": false
                 }, {
                     "system": "http://loinc.org",
                     "code": "8480-6",
@@ -687,7 +685,8 @@
                 "coding": [{
                     "system": "http://snomed.info/sct",
                     "code": "271650006",
-                    "display": "Diastolic blood pressure"
+                    "display": "Diastolic blood pressure",
+                    "primary": false
                 }, {
                     "system": "http://loinc.org",
                     "code": "8462-4",
@@ -749,7 +748,8 @@
                 "coding": [{
                     "system": "http://snomed.info/sct",
                     "code": "60621009",
-                    "display": "Body mass index"
+                    "display": "Body mass index",
+                    "primary": false
                 }, {
                     "system": "http://loinc.org",
                     "code": "39156-5",
@@ -882,11 +882,13 @@
                     "coding": [{
                         "system": "http://loinc.org",
                         "code": "8302-2",
-                        "display": "Body height"
+                        "display": "Body height",
+                        "primary": true
                     }, {
                         "system": "http://snomed.info/sct",
                         "code": "248333004",
-                        "display": "Standing height"
+                        "display": "Standing height",
+                        "primary": false
                     }],
                     "text": "Standing body height"
                 };
@@ -927,11 +929,13 @@
                 "coding": [{
                     "system": "http://snomed.info/sct",
                     "code": "27113001",
-                    "display": "Body weight"
+                    "display": "Body weight",
+                    "primary": false
                 }, {
                     "system": "http://loinc.org",
                     "code": "3141-9",
-                    "display": "Body weight Measured"
+                    "display": "Body weight Measured",
+                    "primary": true
                 }],
                 "text": "Body weight"
             };
