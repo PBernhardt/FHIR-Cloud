@@ -1,6 +1,7 @@
 <div ng-controller="labDetail as vm" layout="row" layout-wrap>
     <div flex="100">
-        <h3>Diagnostic Report for {{vm.lab.patient.fullName}} ({{vm.lab.patient.gender}}, age {{vm.lab.patient.age}})</h3>
+        <h3>Diagnostic Report for {{vm.lab.patient.fullName}} ({{vm.lab.patient.gender}}, age
+            {{vm.lab.patient.age}})</h3>
     </div>
     <div flex="20">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
@@ -44,7 +45,7 @@
                         <p class="result" ng-attr-style="color: {{vm.lab.lipid.hdlCholesterol.color}}">
                             {{vm.lab.lipid.hdlCholesterol.interpretationText}}</p>
                     </div>
-
+                    <md-divider></md-divider>
                     <!-- begin total ldl cholesterol-->
                     <div layout-sm="column" layout="row" layout-align="space-between center">
 
@@ -77,7 +78,7 @@
                         <p class="result" ng-attr-style="color: {{vm.lab.lipid.ldlCholesterol.color}}">
                             {{vm.lab.lipid.ldlCholesterol.interpretationText}}</p>
                     </div>
-
+                    <md-divider></md-divider>
                     <!-- begin triglyceride-->
                     <div layout-sm="column" layout="row" layout-align="space-between center">
 
@@ -110,7 +111,7 @@
                         <p class="result" ng-attr-style="color: {{vm.lab.lipid.triglyceride.color}}">
                             {{vm.lab.lipid.triglyceride.interpretationText}}</p>
                     </div>
-                    
+                    <md-divider></md-divider>
                     <!-- begin total cholesterol-->
                     <div layout-sm="column" layout="row" layout-align="space-between center">
 
