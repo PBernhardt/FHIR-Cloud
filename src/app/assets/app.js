@@ -465,6 +465,8 @@
             templateUrl: 'extensionDefinition/extensionDefinition-view.html'
         }).when('/extensionDefinition/edit/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/lab', {
+            templateUrl: 'lab/lab-edit.html'
         }).when('/operationDefinition', {
             templateUrl: 'operationDefinition/operationDefinition-search.html'
         }).when('/operationDefinition/view/:hashKey', {
@@ -539,14 +541,17 @@
             .icon("actions", "./assets/svg/actions.svg", 24)
             .icon("account", "./assets/svg/account.svg", 24)
             .icon("add", "./assets/svg/add.svg", 24)
-            .icon("cardio", "./assets/svg/cardio2.svg", 24)
+            .icon("cardio", "./assets/svg/cardio3.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
+            .icon("consult", "./assets/svg/caduceus2.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
             .icon("error", "./assets/svb/error.svg", 48)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
+            .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
+            .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
@@ -2822,9 +2827,9 @@
         var _adminPages = [
             {name: 'Organization', href: 'organization'},
             {name: 'Patient', href: 'patient/view/current'},
-            {name: 'Practitioner', href: 'practitioner'},
+  /*          {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},
-            {name: 'Related Person', href: 'relatedPerson'}
+            {name: 'Related Person', href: 'relatedPerson'}*/
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance'},
@@ -7050,7 +7055,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "9279-1",
-                    "display": "Respiratory rate"
+                    "display": "Respiratory rate",
+                    "primary": true
                 }],
                 "text": "Respiratory rate"
             };
@@ -7135,7 +7141,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "8480-6",
-                    "display": "Systolic blood pressure"
+                    "display": "Systolic blood pressure",
+                    "primary": true
                 }],
                 "text": "Systolic blood pressure"
             };
@@ -7163,7 +7170,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "8462-4",
-                    "display": "Diastolic blood pressure"
+                    "display": "Diastolic blood pressure",
+                    "primary": true
                 }],
                 "text": "Diastolic blood pressure"
             };
@@ -7189,7 +7197,8 @@
                         {
                             "system": "http://loinc.org",
                             "code": "55284-4",
-                            "display": "Blood pressure systolic & diastolic"
+                            "display": "Blood pressure systolic & diastolic",
+                            "primary": true
                         }], "text": "Blood pressure systolic & diastolic"
                 };
                 bpInterpretationObs.interpretation = {
@@ -7223,7 +7232,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "39156-5",
-                    "display": "Body mass index (BMI) [Ratio]"
+                    "display": "Body mass index (BMI) [Ratio]",
+                    "primary": true
                 }],
                 "text": "Body mass index"
             };
@@ -8023,6 +8033,588 @@
     angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
         observationService]);
 })();(function () {
+    'use strict';
+
+    var controllerId = 'labDetail';
+
+    function labDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window,
+                       common, fhirServers, localValueSets, identifierService, observationService,
+                       observationValueSets, practitionerService, careProviderService, patientService) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([_getActiveServer(), _loadLipidFindings()],
+                controllerId).then(function () {
+                    vm.lab.date = new Date();
+                    _getPatientContext();
+
+                });
+        }
+
+        function _initializeBMI() {
+            vm.lab.bmi.height = undefined;
+            vm.lab.bmi.weight = undefined;
+            vm.lab.bmi.interpretationCode = undefined;
+            vm.lab.bmi.interpretationText = "Enter new reading";
+        }
+
+        function _calculateAge(birthDate) {
+            if (birthDate) {
+                var dob = birthDate;
+                if (angular.isDate(dob) === false) {
+                    dob = new Date(birthDate);
+                }
+                var ageDifMs = Date.now() - dob.getTime();
+                var ageDate = new Date(ageDifMs); // miliseconds from epoch
+                return Math.abs(ageDate.getUTCFullYear() - 1970);
+            } else {
+                return "unknown";
+            }
+        }
+
+        function _loadLipidFindings() {
+            vm.bodyTempMethods = observationValueSets.bodyTempMethods();
+            vm.bodyTempFinding = observationValueSets.bodyTempFindings();
+        }
+
+        function _getPatientContext() {
+            if (angular.isDefined($routeParams.smartApp)) {
+                var appUrl = '';
+                switch ($routeParams.smartApp) {
+                    case 'cardiac-risk':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
+                        break;
+                    case 'growth-chart':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
+                        break;
+                    default:
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
+                }
+                var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
+
+                // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
+                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + $routeParams.patientId;
+
+            } else if (angular.isDefined($window.localStorage.patient)) {
+                vm.lab.patient = JSON.parse($window.localStorage.patient);
+                vm.lab.patient.fullName = $filter('fullName')(vm.lab.patient.name);
+                vm.lab.patient.age = _calculateAge(vm.lab.patient.birthDate);
+            } else {
+                logError("You must first select a patient before initiating a lab", error);
+                $location.path('/patient');
+            }
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getPractitionerReference(input) {
+            var deferred = $q.defer();
+            practitionerService.getPractitionerReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getPractitionerReference = getPractitionerReference;
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('patient/view/current');
+                        break;
+                    case 1:
+                        $location.path('consultation/smart/cardiac-risk/' + vm.lab.patient.id);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Back to face sheet', icon: 'person', index: 0},
+                    {name: 'Cardiac Risk report', icon: 'cardio', index: 1}
+                ];
+                this.title = 'Lab options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        function updateTriglyceride() {
+            /*
+             Normal: Less than 150 mg/dL
+             Borderline High: 150 - 199 mg/dL
+             High: 200 - 499 mg/dL
+             Very High: 500 mg/dL or above
+             */
+            switch (true) {
+                case (vm.lab.lipid.triglyceride.value < 150):
+                    vm.lab.lipid.triglyceride.interpretationText = "Normal";
+                    vm.lab.lipid.triglyceride.color = "green";
+                    break;
+                case ((vm.lab.lipid.triglyceride.value >= 150) && (vm.lab.lipid.triglyceride.value < 199)):
+                    vm.lab.lipid.triglyceride.interpretationText = "Borderline High";
+                    vm.lab.lipid.triglyceride.color = "orange";
+                    break;
+                case ((vm.lab.lipid.triglyceride.value >= 200) && (vm.lab.lipid.triglyceride.value < 499)):
+                    vm.lab.lipid.triglyceride.interpretationText = "High";
+                    vm.lab.lipid.triglyceride.color = "red";
+                    break;
+                case (vm.lab.lipid.triglyceride.value >= 500):
+                    vm.lab.lipid.triglyceride.interpretationText = "Very High";
+                    vm.lab.lipid.triglyceride.color = "purple";
+                    break;
+                default:
+                    vm.lab.lipid.triglyceride.interpretationText = "Indeterminate";
+                    vm.lab.lipid.triglyceride.color = "grey";
+                    break;
+            }
+            _calculateTotalCholesterol();
+        }
+
+        vm.updateTriglyceride = updateTriglyceride;
+
+        function updateLdlCholesterol() {
+            /*
+             Less than 100 mg/dL (2.59 mmol/L) — Optimal
+             100-129 mg/dL (2.59-3.34 mmol/L) — Near optimal, above optimal
+             130-159 mg/dL (3.37-4.12 mmol/L) — Borderline high
+             160-189 mg/dL (4.15-4.90 mmol/L) — High
+             Greater than 189 mg/dL (4.90 mmol/L) — Very high
+             */
+            switch (true) {
+                case (vm.lab.lipid.ldlCholesterol.value < 100):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Optimal";
+                    vm.lab.lipid.ldlCholesterol.color = "green";
+                    break;
+                case ((vm.lab.lipid.ldlCholesterol.value >= 100) && (vm.lab.lipid.ldlCholesterol.value < 129)):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Near Optimal";
+                    vm.lab.lipid.ldlCholesterol.color = "blue";
+                    break;
+                case ((vm.lab.lipid.ldlCholesterol.value >= 130) && (vm.lab.lipid.ldlCholesterol.value < 159)):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Borderline High";
+                    vm.lab.lipid.ldlCholesterol.color = "orange";
+                    break;
+                case ((vm.lab.lipid.ldlCholesterol.value >= 160) && (vm.lab.lipid.ldlCholesterol.value <= 189)):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "High";
+                    vm.lab.lipid.ldlCholesterol.color = "red";
+                    break;
+                case (vm.lab.lipid.ldlCholesterol.value > 189):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Very High";
+                    vm.lab.lipid.ldlCholesterol.color = "purple";
+                    break;
+                default:
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Indeterminate";
+                    vm.lab.lipid.ldlCholesterol.color = "grey";
+                    break;
+            }
+            _calculateTotalCholesterol();
+        }
+
+        vm.updateLdlCholesterol = updateLdlCholesterol;
+
+        function updateHdlCholesterol() {
+            /*
+             Over 60 - Optimal
+             Between 50-60 Borderline optimal
+             Under 50 - Low for men
+             Under 40 - Low for women
+             */
+            switch (true) {
+                case (vm.lab.lipid.hdlCholesterol.value >= 60):
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Optimal";
+                    vm.lab.lipid.hdlCholesterol.color = "green";
+                    break;
+                case ((vm.lab.lipid.hdlCholesterol.value < 60) && (vm.lab.lipid.hdlCholesterol.value >= 50)):
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Near Optimal";
+                    vm.lab.lipid.hdlCholesterol.color = "blue";
+                    break;
+                case ((vm.lab.lipid.hdlCholesterol.value < 50) && (vm.lab.lipid.hdlCholesterol.value >= 40)):
+                    if (vm.lab.patient.gender === 'male') {
+                        vm.lab.lipid.hdlCholesterol.interpretationText = "Low";
+                        vm.lab.lipid.hdlCholesterol.color = "red";
+                    } else {
+                        vm.lab.lipid.hdlCholesterol.interpretationText = "Borderline";
+                        vm.lab.lipid.hdlCholesterol.color = "orange";
+                    }
+                    break;
+                case (vm.lab.lipid.hdlCholesterol.value < 40):
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Low";
+                    vm.lab.lipid.hdlCholesterol.color = "red";
+                    break;
+                default:
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Indeterminate";
+                    vm.lab.lipid.hdlCholesterol.color = "grey";
+                    break;
+            }
+            _calculateTotalCholesterol();
+        }
+
+        vm.updateHdlCholesterol = updateHdlCholesterol;
+
+        function _calculateTotalCholesterol() {
+            if (angular.isDefined(vm.lab.lipid.hdlCholesterol.value)
+                && angular.isDefined(vm.lab.lipid.ldlCholesterol.value)
+                && angular.isDefined(vm.lab.lipid.triglyceride.value)) {
+                vm.lab.lipid.cholesterol.value = (vm.lab.lipid.hdlCholesterol.value + vm.lab.lipid.ldlCholesterol.value)
+                + (.2 * vm.lab.lipid.triglyceride.value);
+
+                /*
+                 Adults:
+                 below 200 mg/Dl - desirable
+                 200 > 239 - borderline high
+                 >= 240 - high risk
+
+                 Children:
+                 below 170 mg/Dl - desirable
+                 170 > 199 - borderline high
+                 >= 200 - high risk
+
+                 */
+                if (vm.lab.patient.age < 18) {
+                    switch (true) {
+                        case (vm.lab.lipid.cholesterol.value < 170):
+                            vm.lab.lipid.cholesterol.interpretationText = "Optimal";
+                            vm.lab.lipid.cholesterol.color = "green";
+                            break;
+                        case ((vm.lab.lipid.cholesterol.value >= 170) && (vm.lab.lipid.cholesterol.value < 200)):
+                            vm.lab.lipid.cholesterol.interpretationText = "Borderline High";
+                            vm.lab.lipid.cholesterol.color = "orange";
+                            break;
+                        case (vm.lab.lipid.cholesterol.value >= 200):
+                            vm.lab.lipid.cholesterol.interpretationText = "High Risk";
+                            vm.lab.lipid.cholesterol.color = "red";
+                            break;
+                        default:
+                            vm.lab.lipid.cholesterol.interpretationText = "Indeterminate";
+                            vm.lab.lipid.cholesterol.color = "grey";
+                            break;
+                    }
+                } else {
+                    switch (true) {
+                        case (vm.lab.lipid.cholesterol.value < 200):
+                            vm.lab.lipid.cholesterol.interpretationText = "Optimal";
+                            vm.lab.lipid.cholesterol.color = "green";
+                            break;
+                        case ((vm.lab.lipid.cholesterol.value >= 200) && (vm.lab.lipid.cholesterol.value < 240)):
+                            vm.lab.lipid.cholesterol.interpretationText = "Borderline High";
+                            vm.lab.lipid.cholesterol.color = "orange";
+                            break;
+                        case (vm.lab.lipid.cholesterol.value >= 240):
+                            vm.lab.lipid.cholesterol.interpretationText = "High Risk";
+                            vm.lab.lipid.cholesterol.color = "red";
+                            break;
+                        default:
+                            vm.lab.lipid.cholesterol.interpretationText = "Indeterminate";
+                            vm.lab.lipid.cholesterol.color = "grey";
+                            break;
+                    }
+                }
+            }
+        }
+
+        function saveLipid(form) {
+            function savePrimaryObs(observations) {
+                var deferred = $q.defer();
+                var completed = 0;
+                var lipidReport = _buildDiagnosticReport(); //TODO: implement Diagnostic Report
+                for (var i = 0, len = observations.length; i <= len; i++) {
+                    if (observations[i] !== undefined) {
+                        observationService.addObservation(observations[i])
+                            .then(_processCreateResponse,
+                            function (error) {
+                                logError(common.unexpectedOutcome(error));
+                                deferred.reject(error);
+                            })
+                            .then(function (observationId) {
+                                if (angular.isDefined(observationId) && angular.isDefined(lipidReport)) {
+                                    var relatedItem = {"type": "has-component"};
+                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    lipidReport.related.push(relatedItem);
+                                    completed = completed + 1;
+                                }
+                                if (completed === observations.length) {
+                                    deferred.resolve(lipidReport);
+                                }
+                            })
+                    }
+                }
+                return deferred.promise;
+            }
+
+            logInfo("Saving lipid results to " + vm.activeServer.name);
+            var observations = [];
+            observations.push(_buildLdlCResult());
+            observations.push(_buildHdlCResult());
+            observations.push(_buildTriglycerideResult());
+            observations.push(_buildTotalCResult());
+            vm.isBusy = true;
+
+            savePrimaryObs(observations)
+                .then(function () {
+                    logInfo("Lipid profile results saved successfully");
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error));
+                }).then(function () {
+                    vm.isBusy = false;
+                    form.$setPristine();
+                })
+        }
+
+        vm.saveLipid = saveLipid;
+
+        function _buildTriglycerideResult() {
+            var triglycerideResult = observationService.initializeNewObservation();
+            triglycerideResult.code = {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "35217-9",
+                        "primary": true
+                    }
+                ],
+                "text": "Triglyceride"
+            };
+            triglycerideResult.valueQuantity = {
+                "value": vm.lab.lipid.triglyceride.value,
+                "units": "mg/Dl",
+                "system": "http://snomed.info/sct",
+                "code": "258797006"
+            };
+            triglycerideResult.referenceRange = [
+                {
+                    "high": {
+                        "value": 200,
+                        "units": "mg/Dl",
+                        "system": "http://snomed.info/sct",
+                        "code": "258797006"
+                    }
+                }
+            ];
+            triglycerideResult.status = "final";
+            triglycerideResult.reliability = "ok";
+            triglycerideResult.subject = {
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
+            };
+            triglycerideResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            return triglycerideResult;
+        }
+
+        function _buildTotalCResult() {
+            var cholesterolResult = observationService.initializeNewObservation();
+            cholesterolResult.code = {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "35200-5"
+                    }
+                ],
+                "text": "Cholesterol"
+            };
+            cholesterolResult.valueQuantity = {
+                "value": vm.lab.lipid.cholesterol.value,
+                "units": "mg/Dl",
+                "system": "http://snomed.info/sct",
+                "code": "258797006"
+            };
+            cholesterolResult.referenceRange = [
+                {
+                    "high": {
+                        "value": (vm.lab.patient.age < 18 ? 200 : 240),
+                        "units": "mg/Dl",
+                        "system": "http://snomed.info/sct",
+                        "code": "258797006"
+                    }
+                }
+            ];
+            cholesterolResult.status = "final";
+            cholesterolResult.reliability = "ok";
+            cholesterolResult.subject = {
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
+            };
+            cholesterolResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            return cholesterolResult;
+        }
+
+        function _buildDiagnosticReport() {
+            var diagnosticReport = observationService.initializeNewObservation();
+
+            return diagnosticReport;
+        }
+
+        function _buildLdlCResult() {
+            var ldlCResult = observationService.initializeNewObservation();
+            ldlCResult.code = {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "13457-7",
+                        "primary": true
+                    }
+                ],
+                "text": "Cholesterol in LDL"
+            };
+            ldlCResult.valueQuantity = {
+                "value": vm.lab.lipid.ldlCholesterol.value,
+                "units": "mg/Dl",
+                "system": "http://snomed.info/sct",
+                "code": "258797006"
+            };
+            ldlCResult.referenceRange = [
+                {
+                    "high": {
+                        "value": 160,
+                        "units": "mg/Dl",
+                        "system": "http://snomed.info/sct",
+                        "code": "258797006"
+                    }
+                }
+            ];
+            ldlCResult.status = "final";
+            ldlCResult.reliability = "ok";
+            ldlCResult.subject = {
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
+            };
+            ldlCResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+
+            return ldlCResult;
+        }
+
+        function _buildHdlCResult() {
+            var hdlCResult = observationService.initializeNewObservation();
+            hdlCResult.code = {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "2085-9",
+                        "primary": true
+                    }
+                ],
+                "text": "Cholesterol in HDL"
+            };
+            hdlCResult.valueQuantity = {
+                "value": vm.lab.lipid.hdlCholesterol.value,
+                "units": "mg/Dl",
+                "system": "http://snomed.info/sct",
+                "code": "258797006"
+            };
+            hdlCResult.referenceRange = [
+                {
+                    "low": {
+                        "value": (vm.lab.patient.gender === 'male' ? 50 : 40),
+                        "units": "mg/Dl",
+                        "system": "http://snomed.info/sct",
+                        "code": "258797006"
+                    }
+                }
+            ];
+            hdlCResult.status = "final";
+            hdlCResult.reliability = "ok";
+            hdlCResult.subject = {
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
+            };
+            hdlCResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+
+            return hdlCResult;
+        }
+
+        function _processCreateResponse(results) {
+            var deferred = $q.defer();
+            var resourceVersionId = results.headers.location || results.headers["content-location"];
+            if (angular.isUndefined(resourceVersionId)) {
+                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                deferred.resolve(undefined);
+            } else {
+                logInfo("Observation recorded at " + resourceVersionId);
+                deferred.resolve($filter('idFromURL')(resourceVersionId));
+            }
+            return deferred.promise;
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.activate = activate;
+        vm.observation = null;
+        vm.isBusy = false;
+        vm.observation = undefined;
+        vm.practitionerSearchText = '';
+        vm.selectedPractitioner = null;
+        vm.smartLaunchUrl = '';
+        vm.smokingStatuses = [];
+        vm.bpInterpretations = [];
+        vm.bmiInterpretations = [];
+        vm.interpretations = [];
+        vm.bodyTempFinding = undefined;
+        vm.bodyTempMethods = undefined;
+        vm.lab = {
+            "lipid": {
+                "cholesterol": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                },
+                "hdlCholesterol": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                },
+                "ldlCholesterol": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                },
+                "triglyceride": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                }
+            }
+        };
+        vm.lab.patient = undefined;
+        vm.smartLaunchUrl = '';
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'common', 'fhirServers', 'localValueSets', 'identifierService', 'observationService',
+            'observationValueSets', 'practitionerService', 'careProviderService', 'patientService', labDetail]);
+
+})
+();(function () {
     'use strict';
 
     var serviceId = 'observationValueSets';
@@ -10158,30 +10750,34 @@
                         $location.path('/consultation');
                         break;
                     case 1:
+                        $location.path('/lab');
+                        break;
+                    case 2:
                         logInfo("Refreshing patient data from " + vm.activeServer.name);
                         $location.path('/patient/get/' + vm.patient.id);
                         break;
-                    case 2:
+                    case 3:
                         $location.path('/patient');
                         break;
-                    case 3:
+                    case 4:
                         $location.path('/patient/edit/new');
                         break;
-                    case 4:
+                    case 5:
                         $location.path('/patient/edit/current');
                         break;
-                    case 5:
+                    case 6:
                         deletePatient(vm.patient);
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Consult', icon: 'rx', index: 0},
-                    {name: 'Refresh data', icon: 'refresh', index: 1},
-                    {name: 'Find another patient', icon: 'person', index: 2},
-                    {name: 'Edit patient', icon: 'edit', index: 4},
-                    {name: 'Delete patient', icon: 'delete', index: 5}
+                    {name: 'Consult', icon: 'healing', index: 0},
+                    {name: 'Lab', icon: 'lab', index: 1},
+                    {name: 'Refresh data', icon: 'refresh', index: 2},
+                    {name: 'Find another patient', icon: 'person', index: 3},
+                    {name: 'Edit patient', icon: 'edit', index: 5},
+                    {name: 'Delete patient', icon: 'delete', index: 6}
                 ];
                 this.title = 'Patient options';
                 this.performAction = function (action) {

@@ -1,6 +1,6 @@
 <div ng-controller="labDetail as vm" layout="row" layout-wrap>
     <div flex="100">
-        <h3>Lab Result for {{vm.lab.patient.fullName}} (age {{vm.lab.patient.age}})</h3>
+        <h3>Diagnostic Report for {{vm.lab.patient.fullName}} ({{vm.lab.patient.gender}}, age {{vm.lab.patient.age}})</h3>
     </div>
     <div flex="20">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
@@ -9,368 +9,154 @@
     </div>
     <div flex="100">
         <md-tabs>
-            <md-tab label="Blood Pressure">
-                <form name="bloodPressureForm" class="form-horizontal"
+            <md-tab label="Lipid Profile">
+                <form name="lipidForm" class="form-horizontal"
                       ng-model="vm.vitals.bp">
+                    <!-- begin total hdl cholesterol-->
                     <div layout-sm="column" layout="row" layout-align="space-between center">
 
                         <div flex="15" layout layout-align="center center">
                             <span>
                               <md-input-container>
-                                  <label>Systolic</label>
-                                  <input ng-model="vm.vitals.bp.systolic" name="systolic"
-                                         type="number" placeholder="mmHg" max="190" min="70" ng-change="vm.updateBP()"
-                                         required/>
+                                  <label>HDL Cholesterol</label>
+                                  <input ng-model="vm.lab.lipid.hdlCholesterol.value"
+                                         name="hdl-cholesterol"
+                                         aria-controls="hdl-cholesterol-slider"
+                                         type="number"
+                                         placeholder="mg/Dl"
+                                         ng-change="vm.updateHdlCholesterol()"
+                                         min="30" max="80"/>
                               </md-input-container>
                             </span>
                         </div>
-                        <md-slider flex="85" min="70" max="190" ng-model="vm.vitals.bp.systolic"
-                                   ng-change="vm.updateBP()"
-                                   aria-label="systolic"
-                                   id="systolic" class="md-primary"></md-slider>
+                        <md-slider flex="85"
+                                   md-discrete="true"
+                                   step="5"
+                                   min="30" max="80"
+                                   ng-model="vm.lab.lipid.hdlCholesterol.value"
+                                   aria-label="hdl cholesterol"
+                                   id="hdl-cholesterol-slider"
+                                   ng-change="vm.updateHdlCholesterol()"
+                                   class="md-accent"></md-slider>
                     </div>
 
+                    <div flex="100" layout="row" layout-align="center start">
+                        <p class="result" ng-attr-style="color: {{vm.lab.lipid.hdlCholesterol.color}}">
+                            {{vm.lab.lipid.hdlCholesterol.interpretationText}}</p>
+                    </div>
+
+                    <!-- begin total ldl cholesterol-->
                     <div layout-sm="column" layout="row" layout-align="space-between center">
+
                         <div flex="15" layout layout-align="center center">
                             <span>
-                                <md-input-container>
-                                    <label>Diastolic</label>
-                                    <input ng-model="vm.vitals.bp.diastolic" type="number" name="diastolic"
-                                           placeholder="mmHg" max="100" min="40" ng-change="vm.updateBP()" required/>
-                                </md-input-container>
+                              <md-input-container>
+                                  <label>LDL Cholesterol</label>
+                                  <input ng-model="vm.lab.lipid.ldlCholesterol.value"
+                                         name="ldl-cholesterol"
+                                         aria-controls="ldl-cholesterol-slider"
+                                         type="number"
+                                         placeholder="mg/Dl"
+                                         ng-change="vm.updateLdlCholesterol()"
+                                         min="80" max="200"/>
+                              </md-input-container>
                             </span>
                         </div>
-                        <md-slider flex="85" min="40" max="100" ng-model="vm.vitals.bp.diastolic"
-                                   ng-change="vm.updateBP()"
-                                   aria-label="diastolic"
-                                   id="diastolic" class="md-primary"></md-slider>
+                        <md-slider flex="85"
+                                   md-discrete="true"
+                                   step="20"
+                                   min="80" max="200"
+                                   ng-model="vm.lab.lipid.ldlCholesterol.value"
+                                   aria-label="ldl cholesterol"
+                                   id="ldl-cholesterol-slider"
+                                   ng-change="vm.updateLdlCholesterol()"
+                                   class="md-warn"></md-slider>
                     </div>
 
-                    <div layout="row" layout-align="center center">
-                        <p class="result" ng-attr-style="color: {{vm.vitals.bp.color}}">
-                            {{vm.vitals.bp.interpretationText}}</p>
+                    <div flex="100" layout="row" layout-align="center start">
+                        <p class="result" ng-attr-style="color: {{vm.lab.lipid.ldlCholesterol.color}}">
+                            {{vm.lab.lipid.ldlCholesterol.interpretationText}}</p>
                     </div>
 
+                    <!-- begin triglyceride-->
                     <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div layout="column" layout-align="center center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.bp.interpretationCode" name="interpretationCode">
-                                <md-option ng-repeat="interpretation in vm.bpInterpretations.concept"
-                                           value="{{interpretation}}">
-                                    {{interpretation.display}}
-                                </md-option>
-                            </md-select>
 
-                            <p class="result">Interpretation</p>
+                        <div flex="15" layout layout-align="center center">
+                            <span>
+                              <md-input-container>
+                                  <label>Triglyceride</label>
+                                  <input ng-model="vm.lab.lipid.triglyceride.value"
+                                         name="triglyceride"
+                                         aria-controls="triglyceride-slider"
+                                         type="number"
+                                         placeholder="mg/Dl"
+                                         ng-change="vm.updateTriglyceride()"
+                                         min="50" max="600"/>
+                              </md-input-container>
+                            </span>
                         </div>
+                        <md-slider flex="85"
+                                   md-discrete="true"
+                                   step="20"
+                                   min="50" max="600"
+                                   ng-model="vm.lab.lipid.triglyceride.value"
+                                   aria-label="triglyceride"
+                                   id="triglyceride-slider"
+                                   ng-change="vm.updateTriglyceride()"
+                                   class="md-primary"></md-slider>
+                    </div>
+
+                    <div flex="100" layout="row" layout-align="center start">
+                        <p class="result" ng-attr-style="color: {{vm.lab.lipid.triglyceride.color}}">
+                            {{vm.lab.lipid.triglyceride.interpretationText}}</p>
+                    </div>
+                    
+                    <!-- begin total cholesterol-->
+                    <div layout-sm="column" layout="row" layout-align="space-between center">
+
+                        <div flex="15" layout layout-align="center center">
+                            <span>
+                              <md-input-container>
+                                  <label>Total Cholesterol (calculated)</label>
+                                  <input ng-model="vm.lab.lipid.cholesterol.value"
+                                         name="total-cholesterol"
+                                         aria-controls="total-cholesterol-slider"
+                                         type="number"
+                                         placeholder="mg/Dl"
+                                         readonly/>
+                              </md-input-container>
+                            </span>
+                        </div>
+                        <md-slider flex="85"
+                                   min="120" max="300"
+                                   ng-model="vm.lab.lipid.cholesterol.value"
+                                   aria-label="total cholesterol"
+                                   id="total-cholesterol-slider"
+                                   class="md-primary" data-ng-disabled="true"></md-slider>
+                    </div>
+
+                    <div flex="100" layout="row" layout-align="center start">
+                        <p class="result" ng-attr-style="color: {{vm.lab.lipid.cholesterol.color}}">
+                            {{vm.lab.lipid.cholesterol.interpretationText}}</p>
+                    </div>
+
+                    <div layout-sm="column" layout="row" layout-align="end start">
                         <md-input-container>
-                            <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" id="bpDate" type="datetime-local" required/>
+                            <label>Date Processed</label>
+                            <input ng-model="vm.lab.date" id="date-prepared" type="datetime-local"/>
                         </md-input-container>
                     </div>
 
-                    <md-button ng-disabled="bloodPressureForm.$invalid"
-                               ng-click="vm.saveBloodPressure(bloodPressureForm)" aria-label="Execute save">
+                    <md-button ng-disabled="lipidForm.$invalid"
+                               ng-click="vm.saveLipid(lipidForm)" aria-label="Execute save">
                         <md-icon md-svg-icon="saveToCloud" aria-label="save blood pressure"
                                  alt="Save blood pressure"></md-icon>
                     </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 </form>
             </md-tab>
-            <md-tab label="Pulse and Respiration">
-                <ng-form name="pulseAndRespirationForm" class="form-horizontal"
-                         ng-model="vm.vitals">
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div flex="15" layout layout-align="center center">
-                            <span>
-                                <md-input-container>
-                                    <label>Pulse</label>
-                                    <input ng-model="vm.vitals.hr.pulse" type="number" name="pulse"
-                                           ng-change="vm.updatePulse()" aria-controls="pulse"
-                                           placeholder="bpm" min="10" max="200" required>
-                                </md-input-container>
-                            </span>
-                        </div>
-                        <md-slider flex="85" min="10" max="200" ng-model="vm.vitals.hr.pulse"
-                                   aria-label="heart rate"
-                                   id="pulse" class="md-primary"></md-slider>
-                    </div>
-
-                    <div layout="row" layout-align="center start">
-                        <p class="result" ng-attr-style="color: {{vm.vitals.hr.color}}">
-                            {{vm.vitals.hr.interpretationText}}</p>
-                    </div>
-
-                    <div layout="row" layout-align="start start">
-                        <div layout="column" layout-align="start center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.hr.interpretationCode" name="interpretationCode">
-                                <md-option ng-repeat="interpretation in vm.interpretations.concept"
-                                           value="{{interpretation}}">
-                                    {{interpretation.display}}
-                                </md-option>
-                            </md-select>
-                            <p class="result">Heart Rate Interpretation</p>
-                        </div>
-                    </div>
-
-                    <md-divider></md-divider>
-
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div flex="15" layout layout-align="center center">
-                            <span>
-                                <md-input-container>
-                                    <label>Respiration</label>
-                                    <input ng-model="vm.vitals.respiration.rate"
-                                           aria-label="respiration rate"
-                                           aria-controls="respiration-slider"
-                                           ng-change="vm.updateRespiration()"
-                                           placeholder="bpm" min="0" max="150" required>
-                                </md-input-container>
-                            </span>
-                        </div>
-                        <md-slider flex="85" min="0" max="150" ng-model="vm.vitals.respiration.rate"
-                                   aria-label="respiration rate"
-                                   ng-change="vm.updateRespiration()"
-                                   id="respiration-slider" class="md-primary"></md-slider>
-                    </div>
-                    <div layout="row" layout-align="center start">
-                        <p class="result" ng-attr-style="color: {{vm.vitals.respiration.color}}">
-                            {{vm.vitals.respiration.interpretationText}}</p>
-                    </div>
-
-                    <div layout="row" layout-align="start start">
-                        <div layout="column" layout-align="end center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.respiration.interpretationCode" name="interpretationCode">
-                                <md-option ng-repeat="interpretation in vm.interpretations.concept"
-                                           value="{{interpretation}}">
-                                    {{interpretation.display}}
-                                </md-option>
-                            </md-select>
-                            <p class="result">Respiration Interpretation</p>
-                        </div>
-                    </div>
-
-                    <div layout-sm="column" layout="row" layout-align="end center">
-                        <md-input-container>
-                            <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" id="hrDate" type="datetime-local" required/>
-                        </md-input-container>
-                    </div>
-
-                    <md-button ng-disabled="pulseAndRespirationForm.$invalid"
-                               ng-click="vm.savePulseAndRespiration(pulseAndRespirationForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save heart rate"
-                                 alt="Save heart rate"></md-icon>
-                    </md-button>
-                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                </ng-form>
-            </md-tab>
-            <md-tab label="Height and Weight">
-                <form name="bmiForm" class="form-horizontal"
-                      ng-model="vm.vitals.bmi">
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div flex="25" layout layout-align="center center">
-                            <span>
-                                <md-input-container>
-                                    <label>Weight (pounds)</label>
-                                    <input tabindex="1" ng-model="vm.vitals.bmi.weight" type="number" name="weight"
-                                           ng-change="vm.calculateBMI()"
-                                           placeholder="lbs" min="10" max="600" required/>
-                                </md-input-container>
-                            </span>
-                        </div>
-                        <md-slider flex="75" min="10" max="600" ng-model="vm.vitals.bmi.weight"
-                                   aria-label="weight"
-                                   ng-change="vm.calculateBMI()"
-                                   id="weight" class="md-primary"></md-slider>
-                    </div>
-
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div flex="25" layout layout-align="center center">
-                            <span>
-                                <md-input-container>
-                                    <label>Height (inches)</label>
-                                    <input tabindex="2" ng-model="vm.vitals.bmi.height" type="number" name="height"
-                                           ng-change="vm.calculateBMI()"
-                                           placeholder="in" min="20" max="100" required/>
-                                </md-input-container>
-                            </span>
-                        </div>
-                        <md-slider flex="60" min="20" max="100" ng-model="vm.vitals.bmi.height"
-                                   aria-label="height"
-                                   ng-change="vm.calculateBMI()"
-                                   id="height" class="md-primary"></md-slider>
-
-                        <md-switch flex="15" ng-model="vm.vitals.bmi.heightMeasured" ng-true-value="'Lying'"
-                                   ng-false-value="'Standing'" aria-label="height measured">
-                            {{vm.vitals.bmi.heightMeasured}}
-                        </md-switch>
-                    </div>
-
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div flex="25" layout layout-align="center center">
-                            <span>
-                                <md-input-container>
-                                    <label>BMI (computed)</label>
-                                    <input ng-model="vm.vitals.bmi.calculated" type="number" name="bmi"
-                                           placeholder="bmi" min="10" max="50" readonly/>
-                                </md-input-container>
-                            </span>
-                        </div>
-                        <md-slider flex="75" min="10" max="50" ng-model="vm.vitals.bmi.calculated"
-                                   aria-label="bmi"
-                                   id="bmi" class="md-primary" ng-disabled="true"></md-slider>
-                    </div>
-
-                    <div layout="row" layout-align="center center">
-                        <p class="result" ng-attr-style="color: {{vm.vitals.bmi.color}}">
-                            {{vm.vitals.bmi.interpretationText}}</p>
-                    </div>
-
-
-                    <div layout-sm="column" layout="row" layout-align="space-between start">
-                        <div layout="column" layout-align="start center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.bmi.interpretationCode" name="interpretationCode">
-                                <md-option ng-repeat="interpretation in vm.bmiInterpretations.concept"
-                                           value="{{interpretation}}">
-                                    {{interpretation.display}}
-                                </md-option>
-                            </md-select>
-                            <p class="result">BMI Interpretation</p>
-                        </div>
-
-                        <md-input-container>
-                            <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" type="datetime-local"/>
-                        </md-input-container>
-
-                    </div>
-                    <md-button ng-disabled="bmiForm.$invalid" ng-click="vm.saveBMI(bmiForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save BMI"
-                                 alt="Save BMI"></md-icon>
-                    </md-button>
-                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                </form>
-            </md-tab>
-            <md-tab label="Other">
-                <form name="otherForm" class="form-horizontal"
-                      ng-model="vm.vitals">
-
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div flex="20" layout layout-align="center center">
-                            <span>
-                                <md-input-container>
-                                    <label>Temperature (F)</label>
-                                    <input ng-model="vm.vitals.temperature.value"
-                                           type="number" step=".1"
-                                           name="bodyTemp"
-                                           placeholder="F"
-                                           min="85" max="110"
-                                           aria-controls="temp-slider"
-                                           ng-change="vm.updateTemperature()"/>
-                                </md-input-container>
-                            </span>
-                        </div>
-                        <md-slider flex="80"
-                                   min="85" max="110"
-                                   ng-model="vm.vitals.temperature.value"
-                                   ng-change="vm.updateTemperature()"
-                                   aria-label="body temp"
-                                   id="temp-slider" class="md-warn" step=".1"></md-slider>
-                    </div>
-
-                    <div flex="100" layout="row" layout-align="center start">
-                        <p class="result" ng-attr-style="color: {{vm.vitals.temperature.color}}">
-                            {{vm.vitals.temperature.interpretationText}}</p>
-                    </div>
-
-                    <div layout="row" layout-align="space-between start">
-
-                        <md-radio-group layout-gt-md="row"
-                                        ng-model="vm.vitals.temperature.method"
-                                        ng-required="(vm.vitals.temperature.value > 0)">
-                            <md-radio-button ng-repeat="m in vm.bodyTempMethods.concept"
-                                             ng-value="m">
-                                {{ m.$$label }}
-                            </md-radio-button>
-                        </md-radio-group>
-
-                        <div flex layout="column" layout-align="end center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.temperature.interpretationCode" name="interpretationCode">
-                                <md-option ng-repeat="f in vm.bodyTempFinding.concept"
-                                           value="{{f}}">
-                                    {{f.display}}
-                                </md-option>
-                            </md-select>
-                            <p class="result">Temperature Interpretation</p>
-                        </div>
-                    </div>
-
-                    <md-divider></md-divider>
-
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
-                        <div flex="15" layout layout-align="center center">
-                            <span>
-                                <md-input-container>
-                                    <label>Head Size (in)</label>
-                                    <input ng-model="vm.vitals.circumfrence" type="number"
-                                           name="circumfrence"
-                                           placeholder="in"
-                                           min="8" max="25"
-                                           aria-controls="circumfrence-slider" />
-                                </md-input-container>
-                            </span>
-                        </div>
-                        <md-slider flex="85" min="8" max="25" ng-model="vm.vitals.circumfrence"
-                                   aria-label="circumfrence"
-                                   id="circumfrence-slider"
-                                   class="md-accent"></md-slider>
-                    </div>
-
-                    <div layout-sm="column" layout="row" layout-align="start center">
-                        <md-input-container>
-                            <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" type="datetime-local" />
-                        </md-input-container>
-
-                    </div>
-                    <md-button ng-disabled="otherForm.$invalid" ng-click="vm.saveOther(otherForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save other vital signs"
-                                 alt="Save other vitals"></md-icon>
-                    </md-button>
-                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                </form>
-            </md-tab>
-            <md-tab label="Smoking Status">
-                <form name="smokingStatusForm" class="form-horizontal"
-                      ng-model="vm.vitals.smokingStatus">
-                    <div layout-sm="column" layout="row" layout-align="space-between center" layout-wrap>
-                        <div layout="column" layout-align="center center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.smokingStatus">
-                                <md-option ng-repeat="status in vm.smokingStatuses.concept"
-                                           ng-value="status">
-                                    {{status.display}}
-                                </md-option>
-                            </md-select>
-
-                            <p class="result">Smoking Status</p>
-                        </div>
-
-                        <md-input-container>
-                            <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" type="datetime-local"/>
-                        </md-input-container>
-                    </div>
-                    <md-button ng-disabled="smokingStatusForm.$invalid"
-                               ng-click="vm.saveSmokingStatus(smokingStatusForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save smoking status"
-                                 alt="Save smoking status"></md-icon>
-                    </md-button>
-                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                </form>
+            <md-tab label="Blood Glucose">
+                <h3>Coming soon</h3>
             </md-tab>
         </md-tabs>
     </div>

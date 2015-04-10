@@ -294,30 +294,34 @@
                         $location.path('/consultation');
                         break;
                     case 1:
+                        $location.path('/lab');
+                        break;
+                    case 2:
                         logInfo("Refreshing patient data from " + vm.activeServer.name);
                         $location.path('/patient/get/' + vm.patient.id);
                         break;
-                    case 2:
+                    case 3:
                         $location.path('/patient');
                         break;
-                    case 3:
+                    case 4:
                         $location.path('/patient/edit/new');
                         break;
-                    case 4:
+                    case 5:
                         $location.path('/patient/edit/current');
                         break;
-                    case 5:
+                    case 6:
                         deletePatient(vm.patient);
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Consult', icon: 'rx', index: 0},
-                    {name: 'Refresh data', icon: 'refresh', index: 1},
-                    {name: 'Find another patient', icon: 'person', index: 2},
-                    {name: 'Edit patient', icon: 'edit', index: 4},
-                    {name: 'Delete patient', icon: 'delete', index: 5}
+                    {name: 'Consult', icon: 'healing', index: 0},
+                    {name: 'Lab', icon: 'lab', index: 1},
+                    {name: 'Refresh data', icon: 'refresh', index: 2},
+                    {name: 'Find another patient', icon: 'person', index: 3},
+                    {name: 'Edit patient', icon: 'edit', index: 5},
+                    {name: 'Delete patient', icon: 'delete', index: 6}
                 ];
                 this.title = 'Patient options';
                 this.performAction = function (action) {
