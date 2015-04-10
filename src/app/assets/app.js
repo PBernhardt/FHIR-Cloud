@@ -457,6 +457,8 @@
             templateUrl: 'conformance/conformance-view.html'
         }).when('/consultation', {
             templateUrl: 'consultation/consultation-edit.html'
+        }).when('/consultation/smart/:smartApp/:patientId', {
+            templateUrl: 'consultation/consultation-smart.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
         }).when('/extensionDefinition/view/:hashKey', {
@@ -491,8 +493,6 @@
             templateUrl: 'patient/patient-edit.html'
         }).when('/patient/detailed-search', {
             templateUrl: 'patient/patient-detailed-search.html'
-        }).when('/patient/smart/:smartApp/:patientId', {
-            templateUrl: 'patient/patient-smart.html'
         }).when('/practitioner', {
             templateUrl: 'practitioner/practitioner-search.html'
         }).when('/person', {
@@ -4946,7 +4946,7 @@
 
     var serviceId = 'demographicsService';
 
-    function demographicsService() {
+    function demographicsService($filter) {
         var _birthDate = null;
         var _birthOrder = null;
         var _deceased = false;
@@ -5062,7 +5062,8 @@
                                 _mothersMaidenName = ext.valueString;
                                 break;
                             case "http://hl7.org/fhir/StructureDefinition/birthPlace":
-                                _mothersMaidenName = ext.valueAddress;
+                                _birthPlace = ext.valueAddress;
+                                _birthPlace.text = $filter('singleLineAddress')(ext.valueAddress);
                                 break;
                             default:
                             break;
@@ -5174,7 +5175,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, [demographicsService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', demographicsService]);
 
 })();(function () {
     'use strict';
@@ -6578,7 +6579,8 @@
         }
 
         function _loadBodyTempMethods() {
-            return vm.bodyTempMethods = observationValueSets.bodyTempMethods();
+            vm.bodyTempMethods = observationValueSets.bodyTempMethods();
+            vm.bodyTempFinding = observationValueSets.bodyTempFindings();
         }
 
         function _loadInterpretations() {
@@ -6586,7 +6588,24 @@
         }
 
         function _getPatientContext() {
-            if (angular.isDefined($window.localStorage.patient)) {
+            if (angular.isDefined($routeParams.smartApp)) {
+                var appUrl = '';
+                switch ($routeParams.smartApp) {
+                    case 'cardiac-risk':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
+                        break;
+                    case 'growth-chart':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
+                        break;
+                    default:
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
+                }
+                var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
+
+                // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
+                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + $routeParams.patientId;
+
+            } else if (angular.isDefined($window.localStorage.patient)) {
                 vm.consultation.patient = JSON.parse($window.localStorage.patient);
                 vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
                 vm.consultation.patient.age = _calculateAge(vm.consultation.patient.birthDate);
@@ -6628,29 +6647,29 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        //TODO
+                        $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('/observation/smart/cardiac-risk/' + vm.observation.id);
+                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
                         break;
                     case 2:
-                        $location.path('/observation/smart/meducation/' + vm.observation.id);
+                        logInfo("Add a condition coming soon...");
                         break;
                     case 3:
-                        $location.path('/observation/edit/new');
+                        logInfo("Add a medication coming soon...");
                         break;
                     case 4:
-                        $location.path('/observation/edit/' + vm.observation.hashKey);
+                        logInfo("Add an allergy coming soon...");
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Consult', icon: 'rx', index: 0},
+                    {name: 'Back to face sheet', icon: 'person', index: 0},
                     {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Add new observation', icon: 'personAdd', index: 3},
-                    {name: 'Edit observation', icon: 'edit', index: 4},
-                    {name: 'Delete observation', icon: 'delete', index: 5}
+                    {name: 'Add a condition', icon: 'rx', index: 2},
+                    {name: 'Add a medication', icon: 'rx', index: 3},
+                    {name: 'Add an allergy', icon: 'rx', index: 4}
                 ];
                 this.title = 'Observation options';
                 this.performAction = function (action) {
@@ -6698,6 +6717,37 @@
         }
 
         vm.updateBP = updateBP;
+
+        function updateTemperature() {
+            switch (true) {
+                case (vm.vitals.temperature.value < 95.0):
+                    vm.vitals.temperature.interpretationText = "Hypothermia";
+                    vm.vitals.temperature.color = "blue";
+                    break;
+                case ((vm.vitals.temperature.value >= 95.0) && (vm.vitals.temperature.value < 97.7)):
+                    vm.vitals.temperature.interpretationText = "Below normal";
+                    vm.vitals.temperature.color = "orange";
+                    break;
+                case ((vm.vitals.temperature.value >= 97.7) && (vm.vitals.temperature.value <= 99.5)):
+                    vm.vitals.temperature.interpretationText = "Normal";
+                    vm.vitals.temperature.color = "green";
+                    break;
+                case ((vm.vitals.temperature.value > 99.5) && (vm.vitals.temperature.value <= 100.9)):
+                    vm.vitals.temperature.interpretationText = "Fever";
+                    vm.vitals.temperature.color = "red";
+                    break;
+                case (vm.vitals.temperature.value > 100.9):
+                    vm.vitals.temperature.interpretationText = "Hyperpyrexia";
+                    vm.vitals.temperature.color = "purple";
+                    break;
+                default:
+                    vm.vitals.temperature.interpretationText = "Indeterminate";
+                    vm.vitals.temperature.color = "grey";
+                    break;
+            }
+        }
+
+        vm.updateTemperature = updateTemperature;
 
         function updatePulse() {
             switch (true) {
@@ -6785,7 +6835,7 @@
                     //TODO: if either sys/dia failed, compensate transaction
                     if (angular.isDefined(interpretationObs)) {
                         observationService.addObservation(interpretationObs)
-                            .then(processBPResult,
+                            .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
                             })
@@ -6911,7 +6961,24 @@
 
         vm.saveBMI = saveBMI;
 
-        function saveSmokingStatus() {
+        function saveOther(form) {
+            if (angular.isDefined(vm.vitals.temperature.value)) {
+                var tempObservation = _buildBodyTemp();
+                logInfo("Saving body temperature to " + vm.activeServer.name);
+                observationService.addObservation(tempObservation)
+                    .then(_processCreateResponse,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        _initializeBMI();
+                        form.$setPristine();
+                    })
+            }
+        }
+
+        vm.saveOther = saveOther;
+
+        function saveSmokingStatus(form) {
             var smokingObservation = _buildSmokingStatus();
             logInfo("Saving smoking status to " + vm.activeServer.name);
             observationService.addObservation(smokingObservation)
@@ -7009,21 +7076,44 @@
             bodyTempObs.code = {
                 "coding": [
                     {
-                        "system": "http://snomed.info/sct",
-                        "code": "415945006",
-                        "display": "Oral temperature"
-                    },
-                    {
                         "system": "http://loinc.org",
                         "code": "8310-5",
-                        "display": "Body temperature"
+                        "display": "Body temperature",
+                        "primary": true
+                    },
+                    {
+                        "system": "http://snomed.info/sct",
+                        "code": "386725007",
+                        "display": "Body temperature",
+                        "primary": false
                     }
                 ],
                 "text": "Body temperature"
-            };
+            }
+            if (angular.isDefined(vm.vitals.temperature.method)) {
+                bodyTempObs.method = {
+                    "coding": []
+                };
+                var methodCoding = angular.fromJson(vm.vitals.temperature.method);
+                methodCoding.system = vm.bodyTempMethods.system;
+                methodCoding.primary = true;
+                bodyTempObs.method.coding.push(methodCoding);
+            }
+            if (angular.isDefined(vm.vitals.temperature.interpretationCode)) {
+                bodyTempObs.interpretation = {
+                    "coding": []
+                };
+                var findingCoding = angular.fromJson(vm.vitals.temperature.interpretationCode);
+                findingCoding.system = vm.bodyTempFinding.system;
+                findingCoding.primary = true;
+                bodyTempObs.interpretation.coding.push(findingCoding);
+            }
+
             bodyTempObs.valueQuantity = {
-                "value": vm.vitals.bp.bodyTemp,
-                "units": "mm[Hg]"
+                "value": vm.vitals.temperature.value,
+                "units": "F",
+                "code": "258712004",
+                "system": "http://snomed.info/sct"
             };
             bodyTempObs.status = "final";
             bodyTempObs.reliability = "ok";
@@ -7137,7 +7227,7 @@
                 }],
                 "text": "Body mass index"
             };
-            bmiObs.bodySite = {
+            bmiObs.bodySiteCodeableConcept = {
                 "coding": [
                     {
                         "system": "http://snomed.info/sct",
@@ -7229,7 +7319,10 @@
                     }
                 ];
             bmiObs.valueQuantity = {
-                "value": vm.vitals.bmi.calculated
+                "value": vm.vitals.bmi.calculated,
+                "units": "lb/in2",
+                "code": "362981000",  //TODO: find rights code
+                "system": "http://snomed.info/sct"
             };
             bmiObs.status = "final";
             bmiObs.reliability = "ok";
@@ -7282,7 +7375,7 @@
             }
             heightObs.valueQuantity = {
                 "value": vm.vitals.bmi.height,
-                "units": "inch",
+                "units": "in",
                 "system": "http://snomed.info/sct",
                 "code": "258677007"
             };
@@ -7313,7 +7406,7 @@
             };
             weightObs.valueQuantity = {
                 "value": vm.vitals.bmi.weight,
-                "units": "pounds",
+                "units": "lb",
                 "system": "http://snomed.info/sct",
                 "code": "258693003"
             };
@@ -7331,10 +7424,10 @@
             var deferred = $q.defer();
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
+                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.");
                 deferred.resolve(undefined);
             } else {
-                logInfo("Observation saved at " + resourceVersionId, null, noToast);
+                logInfo("Observation recorded at " + resourceVersionId);
                 deferred.resolve($filter('idFromURL')(resourceVersionId));
             }
             return deferred.promise;
@@ -7354,6 +7447,7 @@
         vm.bpInterpretations = [];
         vm.bmiInterpretations = [];
         vm.interpretations = [];
+        vm.bodyTempFinding = undefined;
         vm.bodyTempMethods = undefined;
         vm.vitals = {
             "bp": {
@@ -7385,9 +7479,16 @@
                 "interpretationText": undefined
             },
             "smokingStatus": undefined,
-            "temperature": undefined
+            "temperature": {
+                "value": undefined,
+                "method": undefined,
+                "interpretationCode": undefined,
+                "color": "black",
+                "interpretationText": undefined
+            }
         };
         vm.consultation.patient = undefined;
+        vm.smartLaunchUrl = '';
 
         activate();
     }
@@ -9782,13 +9883,8 @@
 
         function activate() {
             common.activateController([getActiveServer()], controllerId).then(function () {
-                getRequestedPatient();
+                _getRequestedPatient();
             });
-        }
-
-        function clearErrors() {
-            $window.localStorage.errors = JSON.stringify([]);
-            loadErrors();
         }
 
         function deletePatient(patient, event) {
@@ -9818,28 +9914,6 @@
                 });
         }
 
-        function loadErrors() {
-            if ($window.localStorage.errors) {
-                vm.errors = JSON.parse($window.localStorage.errors);
-            }
-        }
-
-        $scope.$on('vitalsUpdateEvent',
-            function (event, data) {
-                var clone = _.cloneDeep(data);
-                var dataEvent = {
-                    "profile": clone.group.linkId,
-                    "narrative": clone.$$narrative,
-                    "date": clone.$$eventDate,
-                    "user": clone.$$user,
-                    "resourceid": clone.$$resourceId
-                };
-                vm.dataEvents.push(dataEvent);
-                $window.localStorage.dataEvents = JSON.stringify(vm.dataEvents);
-                loadErrors();
-            }
-        );
-
         function edit(patient) {
             if (patient && patient.hashKey) {
                 $location.path('/patient/' + patient.hashKey);
@@ -9865,28 +9939,6 @@
             return deferred.promise;
         }
 
-        function getPractitionerReference(input) {
-            var deferred = $q.defer();
-            practitionerService.getPractitionerReference(vm.activeServer.baseUrl, input)
-                .then(function (data) {
-                    deferred.resolve(data);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    deferred.reject();
-                });
-            return deferred.promise;
-        }
-
-        vm.getPractitionerReference = getPractitionerReference;
-
-        function addToCareProviderList(practitioner) {
-            if (practitioner) {
-                logInfo("Adding " + practitioner.reference + " to list", null, noToast);
-            }
-        }
-
-        vm.addToCareProviderList = addToCareProviderList;
-
         function getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
                 .then(function (data) {
@@ -9895,7 +9947,7 @@
                     logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), null, noToast);
-                    _getObservations();  //work around for those servers that haven't implemented $everything operation
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
                 });
         }
 
@@ -9903,14 +9955,14 @@
             observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
                 .then(function (data) {
                     vm.summary = data.entry;
-                    logInfo("Retrieved observations for patient at " + vm.patient.resourceId, null, noToast);
+                    logInfo("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
                 }, function (error) {
                     vm.isBusy = false;
                     logError(common.unexpectedOutcome(error), null, noToast);
                 });
         }
 
-        function getRequestedPatient() {
+        function _getRequestedPatient() {
             function initializeAdministrationData(data) {
                 vm.patient = data;
                 humanNameService.init(vm.patient.name);
@@ -9932,8 +9984,10 @@
                 if (vm.patient.communication) {
                     communicationService.init(vm.patient.communication, "multi");
                 }
-
                 vm.patient.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.patient.id))  {
+                    vm.patient.resourceId = (vm.activeServer.baseUrl + '/Patient/' + vm.patient.id);
+                }
                 if (vm.patient.managingOrganization && vm.patient.managingOrganization.reference) {
                     var reference = vm.patient.managingOrganization.reference;
                     if (common.isAbsoluteUri(reference) === false) {
@@ -9948,26 +10002,7 @@
 
             vm.lookupKey = $routeParams.hashKey;
 
-            if (angular.isDefined($routeParams.smartApp)) {
-                var appUrl = '';
-                vm.patient = {};
-                vm.patient.id = $routeParams.patientId;
-                switch ($routeParams.smartApp) {
-                    case 'cardiac-risk':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
-                        break;
-                    case 'growth-chart':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
-                        break;
-                    default:
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
-                }
-                var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
-
-                // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
-                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + vm.patient.id;
-
-            } else if (vm.lookupKey === "current") {
+            if (vm.lookupKey === "current") {
                 if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
                     if (angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
@@ -10006,10 +10041,6 @@
             } else {
                 logError("Unable to resolve patient lookup");
             }
-        }
-
-        function goBack() {
-            $location.path('/patients');
         }
 
         function save() {
@@ -10161,8 +10192,6 @@
 
         vm.actions = actions;
         vm.activeServer = null;
-        vm.clearErrors = clearErrors;
-        vm.activate = activate;
         vm.delete = deletePatient;
         vm.dataEvents = [];
         vm.errors = [];
@@ -10171,18 +10200,14 @@
         vm.summary = [];
         vm.edit = edit;
         vm.getOrganizationReference = getOrganizationReference;
-        vm.goBack = goBack;
         vm.lookupKey = undefined;
         vm.isBusy = false;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.loadErrors = loadErrors;
-        vm.loadingOrganizations = false;
         vm.patient = undefined;
         vm.practitionerSearchText = '';
         vm.save = save;
         vm.selectedPractitioner = null;
-        vm.smartLaunchUrl = '';
         vm.title = 'Patient Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;
@@ -10961,7 +10986,7 @@
                                 "use": "usual"
                             }],
                             "gender": user.gender,
-                            "birthDate": stringDOB,
+                            "birthDate": _randomBirthDate(),
                             "contact": [],
                             "communication": _randomCommunication(),
                             "maritalStatus": _randomMaritalStatus(),
@@ -11035,7 +11060,8 @@
         function _randomMothersMaiden(array) {
             var extension = {
                 "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
-                "valueString": ''};
+                "valueString": ''
+            };
             if (array.length > 0) {
                 common.shuffle(array);
                 extension.valueString = array[0];
@@ -11045,15 +11071,24 @@
             return extension;
         }
 
+        function _randomBirthDate() {
+            var start = new Date(1965, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
         function _randomBirthPlace(array) {
             var extension = {
                 "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                "valueAddress": null};
+                "valueAddress": null
+            };
             if (array.length > 0) {
                 common.shuffle(array);
-                extension.valueAddress = { "text": array[0]  };
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
             } else {
-                extension.valueAddress = { "text": "New York, NY", "city": "New York", "state": "NY", "country": "USA" };
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
             }
             return extension;
         }
@@ -11111,7 +11146,7 @@
             common.shuffle(languages);
 
             var communication = [];
-            var primaryLanguage = { "language": {"text": languages[1].display, "coding": [] }, "preferred": true};
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
             primaryLanguage.language.coding.push({
                 "system": languages[1].system,
                 "code": languages[1].code,

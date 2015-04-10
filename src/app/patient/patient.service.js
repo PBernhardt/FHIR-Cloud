@@ -296,7 +296,7 @@
                                 "use": "usual"
                             }],
                             "gender": user.gender,
-                            "birthDate": stringDOB,
+                            "birthDate": _randomBirthDate(),
                             "contact": [],
                             "communication": _randomCommunication(),
                             "maritalStatus": _randomMaritalStatus(),
@@ -370,7 +370,8 @@
         function _randomMothersMaiden(array) {
             var extension = {
                 "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
-                "valueString": ''};
+                "valueString": ''
+            };
             if (array.length > 0) {
                 common.shuffle(array);
                 extension.valueString = array[0];
@@ -380,15 +381,24 @@
             return extension;
         }
 
+        function _randomBirthDate() {
+            var start = new Date(1965, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
         function _randomBirthPlace(array) {
             var extension = {
                 "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                "valueAddress": null};
+                "valueAddress": null
+            };
             if (array.length > 0) {
                 common.shuffle(array);
-                extension.valueAddress = { "text": array[0]  };
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
             } else {
-                extension.valueAddress = { "text": "New York, NY", "city": "New York", "state": "NY", "country": "USA" };
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
             }
             return extension;
         }
@@ -446,7 +456,7 @@
             common.shuffle(languages);
 
             var communication = [];
-            var primaryLanguage = { "language": {"text": languages[1].display, "coding": [] }, "preferred": true};
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
             primaryLanguage.language.coding.push({
                 "system": languages[1].system,
                 "code": languages[1].code,

@@ -173,6 +173,8 @@
             templateUrl: 'conformance/conformance-view.html'
         }).when('/consultation', {
             templateUrl: 'consultation/consultation-edit.html'
+        }).when('/consultation/smart/:smartApp/:patientId', {
+            templateUrl: 'consultation/consultation-smart.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
         }).when('/extensionDefinition/view/:hashKey', {
@@ -207,8 +209,6 @@
             templateUrl: 'patient/patient-edit.html'
         }).when('/patient/detailed-search', {
             templateUrl: 'patient/patient-detailed-search.html'
-        }).when('/patient/smart/:smartApp/:patientId', {
-            templateUrl: 'patient/patient-smart.html'
         }).when('/practitioner', {
             templateUrl: 'practitioner/practitioner-search.html'
         }).when('/person', {

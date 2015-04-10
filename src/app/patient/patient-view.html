@@ -31,6 +31,12 @@
                                 {{vm.patient.birthDate | date: longDate}}
                             </td>
                         </tr>
+                        <tr ng-if="vm.patient.birthPlace">
+                            <td>Birth Place</td>
+                            <td>
+                                {{vm.patient.birthPlace | singleLineAddress}}
+                            </td>
+                        </tr>
                         <tr>
                             <td>Gender</td>
                             <td>
@@ -38,7 +44,7 @@
                             </td>
                         </tr>
                         <tr ng-if="vm.patient.address">
-                            <td>Addresses</td>
+                            <td>Address</td>
                             <td>
                                 <p class="small" ng-repeat="a in vm.patient.address">
                                     <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
@@ -102,6 +108,12 @@
                             <td>Marital Status</td>
                             <td>
                                 {{vm.patient.maritalStatus | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.mothersMaidenName">
+                            <td>Mother's Maiden Name</td>
+                            <td>
+                                {{vm.patient.mothersMaidenName}}
                             </td>
                         </tr>
                         <tr ng-if="vm.patient.multipleBirthInteger || vm.patient.multipleBirthBoolean">

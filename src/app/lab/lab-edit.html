@@ -1,6 +1,6 @@
-<div ng-controller="consultationDetail as vm" layout="row" layout-wrap>
+<div ng-controller="labDetail as vm" layout="row" layout-wrap>
     <div flex="100">
-        <h3>Consultation for {{vm.consultation.patient.fullName}} (age {{vm.consultation.patient.age}})</h3>
+        <h3>Lab Result for {{vm.lab.patient.fullName}} (age {{vm.lab.patient.age}})</h3>
     </div>
     <div flex="20">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">

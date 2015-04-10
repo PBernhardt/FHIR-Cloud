@@ -1,9 +1,9 @@
 (function () {
     'use strict';
 
-    var controllerId = 'consultationDetail';
+    var controllerId = 'labDetail';
 
-    function consultationDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window,
+    function labDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window,
                                 common, fhirServers, localValueSets, identifierService, observationService,
                                 observationValueSets, practitionerService, careProviderService, patientService) {
 
@@ -132,11 +132,11 @@
                 vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + $routeParams.patientId;
 
             } else if (angular.isDefined($window.localStorage.patient)) {
-                vm.consultation.patient = JSON.parse($window.localStorage.patient);
-                vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
-                vm.consultation.patient.age = _calculateAge(vm.consultation.patient.birthDate);
+                vm.lab.patient = JSON.parse($window.localStorage.patient);
+                vm.lab.patient.fullName = $filter('fullName')(vm.lab.patient.name);
+                vm.lab.patient.age = _calculateAge(vm.lab.patient.birthDate);
             } else {
-                logError("You must first select a patient before initiating a consultation", error);
+                logError("You must first select a patient before initiating a lab", error);
                 $location.path('/patient');
             }
         }
@@ -176,7 +176,7 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
+                        $location.path('lab/smart/cardiac-risk/' + vm.lab.patient.id);
                         break;
                     case 2:
                         logInfo("Add a condition coming soon...");
@@ -531,8 +531,8 @@
             smokingStatusObs.status = "final";
             smokingStatusObs.reliability = "ok";
             smokingStatusObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             smokingStatusObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
             return smokingStatusObs;
@@ -559,8 +559,8 @@
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
             return systolicObs;
@@ -589,8 +589,8 @@
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
 
             systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
@@ -644,8 +644,8 @@
             bodyTempObs.status = "final";
             bodyTempObs.reliability = "ok";
             bodyTempObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             bodyTempObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
             return bodyTempObs;
@@ -672,8 +672,8 @@
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
             return systolicObs;
@@ -700,8 +700,8 @@
             diastolicObs.status = "final";
             diastolicObs.reliability = "ok";
             diastolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             diastolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
             return diastolicObs;
@@ -728,8 +728,8 @@
                 bpInterpretationObs.status = "final";
                 bpInterpretationObs.reliability = "ok";
                 bpInterpretationObs.subject = {
-                    "reference": 'Patient/' + vm.consultation.patient.id,
-                    "display": vm.consultation.patient.fullName
+                    "reference": 'Patient/' + vm.lab.patient.id,
+                    "display": vm.lab.patient.fullName
                 };
                 bpInterpretationObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
 
@@ -853,8 +853,8 @@
             bmiObs.status = "final";
             bmiObs.reliability = "ok";
             bmiObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             bmiObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
 
@@ -908,8 +908,8 @@
             heightObs.status = "final";
             heightObs.reliability = "ok";
             heightObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             heightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
 
@@ -939,8 +939,8 @@
             weightObs.status = "final";
             weightObs.reliability = "ok";
             weightObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
             };
             weightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
             return weightObs;
@@ -968,7 +968,7 @@
         vm.practitionerSearchText = '';
         vm.selectedPractitioner = null;
         vm.smartLaunchUrl = '';
-        vm.consultation = {};
+        vm.lab = {};
         vm.smokingStatuses = [];
         vm.bpInterpretations = [];
         vm.bmiInterpretations = [];
@@ -1013,7 +1013,7 @@
                 "interpretationText": undefined
             }
         };
-        vm.consultation.patient = undefined;
+        vm.lab.patient = undefined;
         vm.smartLaunchUrl = '';
 
         activate();
@@ -1022,6 +1022,6 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'common', 'fhirServers', 'localValueSets', 'identifierService', 'observationService',
-            'observationValueSets', 'practitionerService', 'careProviderService', 'patientService', consultationDetail]);
+            'observationValueSets', 'practitionerService', 'careProviderService', 'patientService', labDetail]);
 
 })();

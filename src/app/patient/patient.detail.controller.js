@@ -19,13 +19,8 @@
 
         function activate() {
             common.activateController([getActiveServer()], controllerId).then(function () {
-                getRequestedPatient();
+                _getRequestedPatient();
             });
-        }
-
-        function clearErrors() {
-            $window.localStorage.errors = JSON.stringify([]);
-            loadErrors();
         }
 
         function deletePatient(patient, event) {
@@ -55,28 +50,6 @@
                 });
         }
 
-        function loadErrors() {
-            if ($window.localStorage.errors) {
-                vm.errors = JSON.parse($window.localStorage.errors);
-            }
-        }
-
-        $scope.$on('vitalsUpdateEvent',
-            function (event, data) {
-                var clone = _.cloneDeep(data);
-                var dataEvent = {
-                    "profile": clone.group.linkId,
-                    "narrative": clone.$$narrative,
-                    "date": clone.$$eventDate,
-                    "user": clone.$$user,
-                    "resourceid": clone.$$resourceId
-                };
-                vm.dataEvents.push(dataEvent);
-                $window.localStorage.dataEvents = JSON.stringify(vm.dataEvents);
-                loadErrors();
-            }
-        );
-
         function edit(patient) {
             if (patient && patient.hashKey) {
                 $location.path('/patient/' + patient.hashKey);
@@ -102,28 +75,6 @@
             return deferred.promise;
         }
 
-        function getPractitionerReference(input) {
-            var deferred = $q.defer();
-            practitionerService.getPractitionerReference(vm.activeServer.baseUrl, input)
-                .then(function (data) {
-                    deferred.resolve(data);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    deferred.reject();
-                });
-            return deferred.promise;
-        }
-
-        vm.getPractitionerReference = getPractitionerReference;
-
-        function addToCareProviderList(practitioner) {
-            if (practitioner) {
-                logInfo("Adding " + practitioner.reference + " to list", null, noToast);
-            }
-        }
-
-        vm.addToCareProviderList = addToCareProviderList;
-
         function getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
                 .then(function (data) {
@@ -132,7 +83,7 @@
                     logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), null, noToast);
-                    _getObservations();  //work around for those servers that haven't implemented $everything operation
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
                 });
         }
 
@@ -140,14 +91,14 @@
             observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
                 .then(function (data) {
                     vm.summary = data.entry;
-                    logInfo("Retrieved observations for patient at " + vm.patient.resourceId, null, noToast);
+                    logInfo("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
                 }, function (error) {
                     vm.isBusy = false;
                     logError(common.unexpectedOutcome(error), null, noToast);
                 });
         }
 
-        function getRequestedPatient() {
+        function _getRequestedPatient() {
             function initializeAdministrationData(data) {
                 vm.patient = data;
                 humanNameService.init(vm.patient.name);
@@ -169,8 +120,10 @@
                 if (vm.patient.communication) {
                     communicationService.init(vm.patient.communication, "multi");
                 }
-
                 vm.patient.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.patient.id))  {
+                    vm.patient.resourceId = (vm.activeServer.baseUrl + '/Patient/' + vm.patient.id);
+                }
                 if (vm.patient.managingOrganization && vm.patient.managingOrganization.reference) {
                     var reference = vm.patient.managingOrganization.reference;
                     if (common.isAbsoluteUri(reference) === false) {
@@ -185,26 +138,7 @@
 
             vm.lookupKey = $routeParams.hashKey;
 
-            if (angular.isDefined($routeParams.smartApp)) {
-                var appUrl = '';
-                vm.patient = {};
-                vm.patient.id = $routeParams.patientId;
-                switch ($routeParams.smartApp) {
-                    case 'cardiac-risk':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
-                        break;
-                    case 'growth-chart':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
-                        break;
-                    default:
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
-                }
-                var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
-
-                // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
-                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + vm.patient.id;
-
-            } else if (vm.lookupKey === "current") {
+            if (vm.lookupKey === "current") {
                 if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
                     if (angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
@@ -243,10 +177,6 @@
             } else {
                 logError("Unable to resolve patient lookup");
             }
-        }
-
-        function goBack() {
-            $location.path('/patients');
         }
 
         function save() {
@@ -398,8 +328,6 @@
 
         vm.actions = actions;
         vm.activeServer = null;
-        vm.clearErrors = clearErrors;
-        vm.activate = activate;
         vm.delete = deletePatient;
         vm.dataEvents = [];
         vm.errors = [];
@@ -408,18 +336,14 @@
         vm.summary = [];
         vm.edit = edit;
         vm.getOrganizationReference = getOrganizationReference;
-        vm.goBack = goBack;
         vm.lookupKey = undefined;
         vm.isBusy = false;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.loadErrors = loadErrors;
-        vm.loadingOrganizations = false;
         vm.patient = undefined;
         vm.practitionerSearchText = '';
         vm.save = save;
         vm.selectedPractitioner = null;
-        vm.smartLaunchUrl = '';
         vm.title = 'Patient Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;

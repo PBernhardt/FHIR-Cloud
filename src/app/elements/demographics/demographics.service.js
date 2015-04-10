@@ -3,7 +3,7 @@
 
     var serviceId = 'demographicsService';
 
-    function demographicsService() {
+    function demographicsService($filter) {
         var _birthDate = null;
         var _birthOrder = null;
         var _deceased = false;
@@ -119,7 +119,8 @@
                                 _mothersMaidenName = ext.valueString;
                                 break;
                             case "http://hl7.org/fhir/StructureDefinition/birthPlace":
-                                _mothersMaidenName = ext.valueAddress;
+                                _birthPlace = ext.valueAddress;
+                                _birthPlace.text = $filter('singleLineAddress')(ext.valueAddress);
                                 break;
                             default:
                             break;
@@ -231,6 +232,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, [demographicsService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', demographicsService]);
 
 })();
