@@ -85,7 +85,7 @@
                 vm.person = data;
                 attachmentService.init([vm.person.photo], 'Photo');
                 humanNameService.init(vm.person.name);
-                identifierService.init(vm.person.identifier);
+                identifierService.init(vm.person.identifier, "multi", "person");
                 addressService.init(vm.person.address, true);
                 contactPointService.init(vm.person.telecom, true, true);
                 vm.person.fullName = humanNameService.getFullName();

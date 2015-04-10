@@ -2,7 +2,7 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.8.3-master-f086de1
+ * v0.8.3-master-bffa15a
  */
 goog.provide('ng.material.components.checkbox');
 goog.require('ng.material.core');
@@ -111,7 +111,7 @@ function MdCheckboxDirective(inputDirective, $mdInkRipple, $mdAria, $mdConstant,
       ngModelCtrl.$render = render;
 
       function keypressHandler(ev) {
-        if(ev.which === $mdConstant.KEY_CODE.SPACE) {
+        if(ev.which === $mdConstant.KEY_CODE.SPACE || ev.which === $mdConstant.KEY_CODE.ENTER) {
           ev.preventDefault();
           listener(ev);
         }

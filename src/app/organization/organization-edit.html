@@ -32,6 +32,7 @@
                         <div flex="80" style="min-height: 100px">
                             <label>Parent Organization</label>
                             <md-autocomplete flex
+                                             md-no-cache="true"
                                              md-selected-item="vm.organization.partOf"
                                              md-search-text="vm.searchText"
                                              md-items="org in vm.getOrganizationReference(vm.searchText)"

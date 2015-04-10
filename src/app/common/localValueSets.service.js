@@ -936,13 +936,13 @@
                 {"code": "ms", "display": "Malay", "system": "urn:std:iso:639-1"},
                 {"code": "ml", "display": "Malayalam", "system": "urn:std:iso:639-1"},
                 {"code": "mt", "display": "Maltese", "system": "urn:std:iso:639-1"},
-                {"code": "mi", "display": "Māori", "system": "urn:std:iso:639-1"},
+                {"code": "mi", "display": "Maori", "system": "urn:std:iso:639-1"},
                 {"code": "mr", "display": "Marathi (Marāṭhī)", "system": "urn:std:iso:639-1"},
                 {"code": "mh", "display": "Marshallese", "system": "urn:std:iso:639-1"},
                 {"code": "mn", "display": "Mongolian", "system": "urn:std:iso:639-1"},
                 {"code": "na", "display": "Nauru", "system": "urn:std:iso:639-1"},
                 {"code": "nv", "display": "Navajo, Navaho", "system": "urn:std:iso:639-1"},
-                {"code": "nb", "display": "Norwegian Bokmål", "system": "urn:std:iso:639-1"},
+                {"code": "nb", "display": "Norwegian Bokm\u00e5l", "system": "urn:std:iso:639-1"},
                 {"code": "nd", "display": "North Ndebele", "system": "urn:std:iso:639-1"},
                 {"code": "ne", "display": "Nepali", "system": "urn:std:iso:639-1"},
                 {"code": "ng", "display": "Ndonga", "system": "urn:std:iso:639-1"},
@@ -957,7 +957,7 @@
                 {"code": "or", "display": "Oriya", "system": "urn:std:iso:639-1"},
                 {"code": "os", "display": "Ossetian, Ossetic", "system": "urn:std:iso:639-1"},
                 {"code": "pa", "display": "Panjabi, Punjabi", "system": "urn:std:iso:639-1"},
-                {"code": "pi", "display": "Pāli", "system": "urn:std:iso:639-1"},
+                {"code": "pi", "display": "Pali", "system": "urn:std:iso:639-1"},
                 {"code": "fa", "display": "Persian", "system": "urn:std:iso:639-1"},
                 {"code": "pl", "display": "Polish", "system": "urn:std:iso:639-1"},
                 {"code": "ps", "display": "Pashto, Pushto", "system": "urn:std:iso:639-1"},
@@ -967,7 +967,7 @@
                 {"code": "rn", "display": "Kirundi", "system": "urn:std:iso:639-1"},
                 {"code": "ro", "display": "Romanian, Moldavian, Moldovan", "system": "urn:std:iso:639-1"},
                 {"code": "ru", "display": "Russian", "system": "urn:std:iso:639-1"},
-                {"code": "sa", "display": "Sanskrit (Saṁskṛta)", "system": "urn:std:iso:639-1"},
+                {"code": "sa", "display": "Sanskrit (Samskrta)", "system": "urn:std:iso:639-1"},
                 {"code": "sc", "display": "Sardinian", "system": "urn:std:iso:639-1"},
                 {"code": "sd", "display": "Sindhi", "system": "urn:std:iso:639-1"},
                 {"code": "se", "display": "Northern Sami", "system": "urn:std:iso:639-1"},
@@ -1007,7 +1007,7 @@
                 {"code": "uz", "display": "Uzbek", "system": "urn:std:iso:639-1"},
                 {"code": "ve", "display": "Venda", "system": "urn:std:iso:639-1"},
                 {"code": "vi", "display": "Vietnamese", "system": "urn:std:iso:639-1"},
-                {"code": "vo", "display": "Volapük", "system": "urn:std:iso:639-1"},
+                {"code": "vo", "display": "Volapuk", "system": "urn:std:iso:639-1"},
                 {"code": "wa", "display": "Walloon", "system": "urn:std:iso:639-1"},
                 {"code": "cy", "display": "Welsh", "system": "urn:std:iso:639-1"},
                 {"code": "wo", "display": "Wolof", "system": "urn:std:iso:639-1"},
@@ -1104,6 +1104,29 @@
             ];
         }
 
+        function smokingStatus() {
+            return [
+                {"code": "449868002", "display": "Smokes tobacco daily", "system": "http://snomed.info/sct"},
+                {"code": "428041000124106", "display": "Occasional tobacco smoker", "system": "http://snomed.info/sct"},
+                {"code": "8517006", "display": "Ex-smoker", "system": "http://snomed.info/sct"},
+                {"code": "266919005", "display": "Never smoked tobacco", "system": "http://snomed.info/sct"},
+                {"code": "77176002", "display": "Smoker, current status unknown", "system": "http://snomed.info/sct"},
+                {"code": "266927001", "display": "Unknown if ever smoked", "system": "http://snomed.info/sct"},
+                {"code": "428071000124103", "display": "Heavy tobacco smoker", "system": "http://snomed.info/sct"},
+                {"code": "428061000124105", "display": "Light tobacco smoker", "system": "http://snomed.info/sct"}
+            ];
+            /*
+             449868002	Smokes tobacco daily (finding)
+             428041000124106	Occasional tobacco smoker (finding)
+             8517006	Ex-smoker (finding)
+             266919005	Never smoked tobacco (finding)
+             77176002	Smoker (finding)
+             266927001	Tobacco smoking consumption unknown (finding)
+             428071000124103	Heavy tobacco smoker (finding)
+             428061000124105	Light tobacco smoker (finding)
+             */
+        }
+
         var service = {
             administrativeGender: administrativeGender,
             contactEntityType: contactEntityType,
@@ -1115,6 +1138,7 @@
             organizationType: organizationType,
             questionnaireAnswerStatus: questionnaireAnswerStatus,
             religion: religion,
+            smokingStatus: smokingStatus,
             ethnicity: ethnicity,
             race: race
         };

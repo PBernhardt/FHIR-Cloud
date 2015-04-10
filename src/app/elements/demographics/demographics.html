@@ -12,7 +12,7 @@
 
         <md-input-container flex>
             <label>Place of birth</label>
-            <input ng-model="vm.demographics.placeOfBirth">
+            <input ng-model="vm.demographics.placeOfBirth.text">
         </md-input-container>
 
         <md-input-container flex>
@@ -27,54 +27,85 @@
     </div>
     <div layout-gt-md="row" layout-align="space-between center" layout-wrap>
         <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select ng-model="vm.demographics.gender" ng-change="vm.updateGender()" ng-selected="vm.demographics.gender.code">
-                <md-option value="female">Female</md-option>
-                <md-option value="male">Male</md-option>
-                <md-option value="other">Other</md-option>
-                <md-option value="unknown">Unknown</md-option>
-            </md-select>
+            <select ng-model="vm.demographics.gender" ng-change="vm.updateGender()"
+                    ng-selected="vm.demographics.gender.code">
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+                <option value="unknown">Unknown</option>
+            </select>
+
             <p class="result">Gender</p>
-        </div>
-        <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select ng-model="vm.demographics.language" ng-change="vm.updateLanguage()" md-on-open="vm.loadLanguages()" ng-selected="vm.demographics.language.code">
-                <md-option ng-value="language" ng-repeat="language in vm.languages">
-                    {{language.display}}
-                </md-option>
-            </md-select>
-            <p class="result">Language</p>
         </div>
 
         <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select ng-model="vm.demographics.race" md-on-open="vm.loadRaces()" ng-selected="vm.demographics.race.code">
-                <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
-            </md-select>
+
+            <select ng-model="vm.maritalStatusCoding"
+                    ng-change="vm.updateMaritalStatus()">
+                <option ng-repeat="coding in vm.maritalStatuses"
+                        ng-value="coding"
+                        ng-selected="coding.code===vm.demographics.maritalStatus.coding[0].code">
+                    {{coding.display}}
+                </option>
+            </select>
+
+            <p class="result">Marital Status</p>
+        </div>
+
+        <!--        <div layout="column" layout-align="center center" style="height: 100px;">
+                    <select ng-model="vm.demographics.ethnicity"
+                            style="min-width: 200px;" ng-selected="vm.demographics.ethnicity.code">
+                        <optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
+                            <option ng-value="main">{{main.display}}</option>
+                            <optgroup ng-value="group" ng-repeat="group in main.concept">
+                                {{group.display}}
+                                <option ng-value="group">{{group.display}}</option>
+                                <option ng-value="class" ng-repeat="class in group.concept">
+                                    {{class.display}}
+                                </option>
+                            </optgroup>
+                        </optgroup>
+                    </select>
+
+                    <p class="result">Ethnicity</p>
+                </div>-->
+
+        <div layout="column" layout-align="center center" style="height: 100px;">
+            <select ng-model="vm.demographics.ethnicity">
+                <option ng-repeat="main in vm.ethnicities.concept"
+                        ng-value="main"
+                        ng-selected="main.coding===vm.demographics.ethnicity.coding[0].code">
+                    {{main.display}}
+                </option>
+            </select>
+
+            <p class="result">Ethnicity</p>
+        </div>
+
+        <div layout="column" layout-align="center center" style="height: 100px;">
+            <select ng-model="vm.raceCoding"
+                    ng-change="vm.updateRace(vm.raceCoding)">
+                <option ng-value="coding"
+                        ng-selected="coding.code===vm.demographics.race.coding[0].code"
+                        ng-repeat="coding in vm.races.concept">{{coding.display}}
+                </option>
+            </select>
+
             <p class="result">Race</p>
         </div>
 
         <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select ng-model="vm.demographics.religion" md-on-open="vm.loadReligions()" ng-selected="vm.demographics.religion.code">
-                <md-option ng-value="religion" ng-repeat="religion in vm.religions">
-                    {{religion.display}}
-                </md-option>
-            </md-select>
+            <select ng-model="vm.religionCoding"
+                    ng-change="vm.updateReligion(vm.religionCoding)">
+                <option ng-value="coding"
+                        ng-repeat="coding in vm.religions.concept"
+                        ng-selected="coding.code===vm.demographics.religion.coding[0].code">
+                    {{coding.display}}
+                </option>
+            </select>
+
             <p class="result">Religion</p>
         </div>
 
-        <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select ng-model="vm.demographics.ethnicity" md-on-open="vm.loadEthnicities()"
-                       style="min-width: 200px;" ng-selected="vm.demographics.ethnicity.code">
-                <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
-                    <md-option ng-value="main">{{main.display}}</md-option>
-                    <md-optgroup ng-value="group" ng-repeat="group in main.concept">
-                        {{group.display}}
-                        <md-option ng-value="group">{{group.display}}</md-option>
-                        <md-option ng-value="class" ng-repeat="class in group.concept">
-                            {{class.display}}
-                        </md-option>
-                    </md-optgroup>
-                </md-optgroup>
-            </md-select>
-            <p class="result">Ethnicity</p>
-        </div>
     </div>
 </div>

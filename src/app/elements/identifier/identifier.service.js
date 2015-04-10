@@ -40,17 +40,25 @@
             return _identifier;
         }
 
-        function init(items, mode) {
-            _mode = mode ? mode: 'multi';
+        function init(items, mode, type) {
+            _mode = mode ? mode : 'multi';
             if (angular.isArray(items)) {
                 identifiers = items;
-            } else if (angular.isObject(items)){
+            } else if (angular.isObject(items)) {
                 identifiers = [];
                 identifiers.push(items);
             }
             else {
                 identifiers = [];
-                var defaultId = {"use": "usual", "system": "urn:fhir-starter:id", "value": common.generateUUID(), "label": "Auto-generated FHIR Cloud identifier"};
+                var system = "urn:fhir-cloud:id";
+                if (type) {
+                    system = "urn:fhir-cloud:" + type + ":id";
+                }
+                var defaultId = {
+                    "use": "usual",
+                    "system": system,
+                    "value": common.generateUUID()
+                };
                 identifiers.push(defaultId);
             }
             _identifier = identifiers[0];

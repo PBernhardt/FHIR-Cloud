@@ -171,6 +171,10 @@
             templateUrl: 'conformance/conformance-search.html'
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
+        }).when('/consultation', {
+            templateUrl: 'consultation/consultation-edit.html'
+        }).when('/consultation/smart/:smartApp/:patientId', {
+            templateUrl: 'consultation/consultation-smart.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
         }).when('/extensionDefinition/view/:hashKey', {
@@ -191,49 +195,49 @@
             templateUrl: 'organization/organization-view.html'
         }).when('/organization/edit/:hashKey', {
             templateUrl: 'organization/organization-edit.html'
-        })
-            .when('/patients/:orgId', {
+        }).when('/organization/get/:resourceId', {
+            templateUrl: 'organization/organization-view.html'
+        }).when('/patients/:orgId', {
             templateUrl: 'patient/patient-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html'
+        }).when('/patient/get/:id', {
+            templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/edit/:hashKey', {
             templateUrl: 'patient/patient-edit.html'
         }).when('/patient/detailed-search', {
             templateUrl: 'patient/patient-detailed-search.html'
-        }).when('/patient/smart/:smartApp/:patientId', {
-            templateUrl: 'patient/patient-smart.html'
+        }).when('/practitioner', {
+            templateUrl: 'practitioner/practitioner-search.html'
+        }).when('/person', {
+            templateUrl: 'person/person-search.html'
+        }).when('/person/view/:hashKey', {
+            templateUrl: 'person/person-view.html'
+        }).when('/person/edit/:hashKey', {
+            templateUrl: 'person/person-edit.html'
+        }).when('/profile', {
+            templateUrl: 'profile/profile-search.html'
+        }).when('/profile/view/:hashKey', {
+            templateUrl: 'profile/profile-view.html'
+        }).when('/profile/edit/:hashKey', {
+            templateUrl: 'profile/profile-edit.html'
+        }).when('/healthcareService', {
+            templateUrl: 'templates/home.html'
+        }).when('/relatedPerson', {
+            templateUrl: 'relatedPerson/relatedPerson-search.html'
+        }).when('/relatedPerson/view/:hashKey', {
+            templateUrl: 'relatedPerson/relatedPerson-view.html'
+        }).when('/relatedPerson/edit/:hashKey', {
+            templateUrl: 'person/person-edit.html'
+        }).when('/valueSet', {
+            templateUrl: 'valueSet/valueSet-search.html'
+        }).when('/valueSet/view/:hashKey', {
+            templateUrl: 'valueSet/valueSet-view.html'
+        }).when('/valueSet/edit/:hashKey', {
+            templateUrl: 'valueSet/valueSet-edit.html'
         })
-            .when('/practitioner', {
-                templateUrl: 'practitioner/practitioner-search.html'
-            }).when('/person', {
-                templateUrl: 'person/person-search.html'
-            }).when('/person/view/:hashKey', {
-                templateUrl: 'person/person-view.html'
-            }).when('/person/edit/:hashKey', {
-                templateUrl: 'person/person-edit.html'
-            }).when('/profile', {
-                templateUrl: 'profile/profile-search.html'
-            }).when('/profile/view/:hashKey', {
-                templateUrl: 'profile/profile-view.html'
-            }).when('/profile/edit/:hashKey', {
-                templateUrl: 'profile/profile-edit.html'
-            }).when('/healthcareService', {
-                templateUrl: 'templates/home.html'
-            }).when('/relatedPerson', {
-                templateUrl: 'relatedPerson/relatedPerson-search.html'
-            }).when('/relatedPerson/view/:hashKey', {
-                templateUrl: 'relatedPerson/relatedPerson-view.html'
-            }).when('/relatedPerson/edit/:hashKey', {
-                templateUrl: 'person/person-edit.html'
-            }).when('/valueSet', {
-                templateUrl: 'valueSet/valueSet-search.html'
-            }).when('/valueSet/view/:hashKey', {
-                templateUrl: 'valueSet/valueSet-view.html'
-            }).when('/valueSet/edit/:hashKey', {
-                templateUrl: 'valueSet/valueSet-edit.html'
-            })
             .when('/daf/:profile', {
                 templateUrl: 'templates/daf.html'
             })
@@ -267,6 +271,7 @@
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
+            .icon("refresh", "./assets/svg/refresh.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
             .icon("saveToList", "./assets/svg/saveToList.svg", 24)

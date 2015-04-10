@@ -2,9 +2,10 @@
  * Angular Material Design
  * https://github.com/angular/material
  * @license MIT
- * v0.8.3-master-f086de1
+ * v0.8.3-master-bffa15a
  */
 goog.provide('ng.material.core');
+
 
 (function() {
 'use strict';
@@ -14,7 +15,7 @@ goog.provide('ng.material.core');
  * requirements.
  */
 angular
-  .module('material.core', [ 'material.core.theming' ])
+  .module('material.core', [ 'material.core.gestures', 'material.core.theming' ])
   .config( MdCoreConfigure );
 
 
@@ -800,7 +801,7 @@ function AriaService($$rAF, $log, $window) {
    * @param {optional} defaultValue What to set the attr to if no value is found
    */
   function expect(element, attrName, defaultValue) {
-    var node = element[0];
+    var node = element[0] || element;
 
     // if node exists and neither it nor its children have the attribute
     if (node &&
@@ -1002,418 +1003,446 @@ function mdCompilerService($q, $http, $injector, $compile, $controller, $templat
 mdCompilerService.$inject = ["$q", "$http", "$injector", "$compile", "$controller", "$templateCache"];
 })();
 
-(function() {
-'use strict';
+(function (jQuery) {
+  'use strict';
 
-/*
- * TODO: Add support for multiple fingers on the `pointer` object (enables pinch gesture)
- */
+  var HANDLERS = {};
+  var pointer, lastPointer; // The state of the current and previous 'pointer' (user's hand)
 
-var START_EVENTS = 'mousedown touchstart pointerdown';
-var MOVE_EVENTS = 'mousemove touchmove pointermove';
-var END_EVENTS = 'mouseup mouseleave touchend touchcancel pointerup pointercancel';
-var HANDLERS;
+  angular
+    .module('material.core.gestures', [ ])
+    .factory('$mdGesture', MdGesture)
+    .factory('$$MdGestureHandler', MdGestureHandler)
+    .run( attachToDocument );
 
-document.contains || (document.contains = function(node) {
-  return document.body.contains(node);
-});
+  /**
+   * MdGesture factory construction function
+   */
+  function MdGesture($$MdGestureHandler, $$rAF, $timeout) {
+    var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    var isIos = userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) || userAgent.match(/iPod/i);
+    var isAndroid = userAgent.match(/Android/i);
+    var shouldHijackClicks = isIos || isAndroid;
 
-// TODO add windows phone to this
-var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-var isIos = userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) || userAgent.match(/iPod/i);
-var isAndroid = userAgent.match(/Android/i);
-var shouldHijackClicks = isIos || isAndroid;
+    var self = {
+      handler: addHandler,
+      register: register
+    };
 
-if (shouldHijackClicks) {
-  document.addEventListener('click', function(ev) {
-    // Space/enter on a button, and submit events, can send clicks
-    var isKeyClick = ev.clientX === 0 && ev.clientY === 0;
-    if (isKeyClick || ev.$material) return;
-
-    // Prevent clicks unless they're sent by material
-    ev.preventDefault();
-    ev.stopPropagation();
-  }, true);
-}
-
-angular.element(document)
-  .on(START_EVENTS, gestureStart)
-  .on(MOVE_EVENTS, gestureMove)
-  .on(END_EVENTS, gestureEnd)
-  // For testing
-  .on('$$mdGestureReset', function() {
-    lastPointer = pointer = null;
-  });
-
-// The state of the current and previous 'pointer' (user's hand)
-var pointer, lastPointer;
-
-function runHandlers(handlerEvent, event) {
-  var handler;
-  for (var handlerName in HANDLERS) {
-    handler = HANDLERS[handlerName];
-    if (handlerEvent === 'start') {
-      // Run cancel to reset any handlers' state
-      handler.cancel();
-    }
-    handler[handlerEvent](event, pointer);
-  }
-}
-
-function gestureStart(ev) {
-  // If we're already touched down, abort
-  if (pointer) return;
-
-  var now = +Date.now();
-
-  // iOS & old android bug: after a touch event, a click event is sent 350 ms later.
-  // If <400ms have passed, don't allow an event of a different type than the previous event
-  if (lastPointer && !typesMatch(ev, lastPointer) && (now - lastPointer.endTime < 1500)) {
-    return;
-  }
-
-  pointer = makeStartPointer(ev);
-
-  runHandlers('start', ev);
-}
-
-function gestureMove(ev) {
-  if (!pointer || !typesMatch(ev, pointer)) return;
-
-  updatePointerState(ev, pointer);
-  runHandlers('move', ev);
-}
-
-function gestureEnd(ev) {
-  if (!pointer || !typesMatch(ev, pointer)) return;
-
-  updatePointerState(ev, pointer);
-  pointer.endTime = +Date.now();
-
-  runHandlers('end', ev);
-
-  lastPointer = pointer;
-  pointer = null;
-}
-
-/******** Helpers *********/
-function typesMatch(ev, pointer) {
-  return ev && pointer && ev.type.charAt(0) === pointer.type;
-}
-
-function getEventPoint(ev) {
-  ev = ev.originalEvent || ev; // support jQuery events
-  return (ev.touches && ev.touches[0]) ||
-    (ev.changedTouches && ev.changedTouches[0]) ||
-    ev;
-}
-
-function updatePointerState(ev, pointer) {
-  var point = getEventPoint(ev);
-  var x = pointer.x = point.pageX;
-  var y = pointer.y = point.pageY;
-
-  pointer.distanceX = x - pointer.startX;
-  pointer.distanceY = y - pointer.startY;
-  pointer.distance = Math.sqrt(
-    pointer.distanceX * pointer.distanceX + pointer.distanceY * pointer.distanceY
-  );
-
-  pointer.directionX = pointer.distanceX > 0 ? 'right' : pointer.distanceX < 0 ? 'left' : '';
-  pointer.directionY = pointer.distanceY > 0 ? 'up' : pointer.distanceY < 0 ? 'down' : '';
-
-  pointer.duration = +Date.now() - pointer.startTime;
-  pointer.velocityX = pointer.distanceX / pointer.duration;
-  pointer.velocityY = pointer.distanceY / pointer.duration;
-}
-
-
-function makeStartPointer(ev) {
-  var point = getEventPoint(ev);
-  var startPointer = {
-    startTime: +Date.now(),
-    target: ev.target,
-    // 'p' for pointer, 'm' for mouse, 't' for touch
-    type: ev.type.charAt(0)
-  };
-  startPointer.startX = startPointer.x = point.pageX;
-  startPointer.startY = startPointer.y = point.pageY;
-  return startPointer;
-}
-
-angular.module('material.core')
-.run(["$mdGesture", function($mdGesture) {}]) // make sure $mdGesture is always instantiated
-.factory('$mdGesture', ["$$MdGestureHandler", "$$rAF", "$timeout", function($$MdGestureHandler, $$rAF, $timeout) {
-  HANDLERS = {};
-
-  if (shouldHijackClicks) {
-    addHandler('click', {
-      options: {
-        maxDistance: 6
-      },
-      onEnd: function(ev, pointer) {
-        if (pointer.distance < this.state.options.maxDistance) {
-          this.dispatchEvent(ev, 'click');
+    if (self.$$hijackClicks = shouldHijackClicks) {
+      self.handler('click', {
+        options: {
+          maxDistance: 6
+        },
+        onEnd: function (ev, pointer) {
+          if (pointer.distance < this.state.options.maxDistance) {
+            this.dispatchEvent(ev, 'click');
+          }
         }
-      }
-    });
-  }
-
-  addHandler('press', {
-    onStart: function(ev, pointer) {
-      this.dispatchEvent(ev, '$md.pressdown');
-    },
-    onEnd: function(ev, pointer) {
-      this.dispatchEvent(ev, '$md.pressup');
+      });
     }
-  });
 
-
-  addHandler('hold', {
-    options: {
-      // If the user keeps his finger within the same <maxDistance> area for
-      // <delay> ms, dispatch a hold event.
-      maxDistance: 6,
-      delay: 500
-    },
-    onCancel: function() {
-      $timeout.cancel(this.state.timeout);
-    },
-    onStart: function(ev, pointer) {
-      // For hold, require a parent to be registered with $mdGesture.register()
-      // Because we prevent scroll events, this is necessary.
-      if (!this.state.registeredParent) return this.cancel();
-
-      this.state.pos = {x: pointer.x, y: pointer.y};
-      this.state.timeout = $timeout(angular.bind(this, function holdDelayFn() {
-        this.dispatchEvent(ev, '$md.hold');
-        this.cancel(); //we're done!
-      }), this.state.options.delay, false);
-    },
-    onMove: function(ev, pointer) {
-      // Don't scroll while waiting for hold
-      ev.preventDefault();
-      var dx = this.state.pos.x - pointer.x;
-      var dy = this.state.pos.y - pointer.y;
-      if (Math.sqrt(dx*dx + dy*dy) > this.options.maxDistance) {
-        this.cancel();
-      }
-    },
-    onEnd: function() { this.onCancel(); }
-  });
-
-  addHandler('drag', {
-    options: {
-      minDistance: 6,
-      horizontal: true
-    },
-    onStart: function(ev) {
-      // For drag, require a parent to be registered with $mdGesture.register()
-      if (!this.state.registeredParent) this.cancel();
-    },
-    onMove: function(ev, pointer) {
-      var shouldStartDrag, shouldCancel;
-      // Don't allow touch events to scroll while we're dragging or
-      // deciding if this touchmove is a proper drag
-      ev.preventDefault();
-
-      if (!this.state.dragPointer) {
-        if (this.state.options.horizontal) {
-          shouldStartDrag = Math.abs(pointer.distanceX) > this.state.options.minDistance;
-          shouldCancel = Math.abs(pointer.distanceY) > this.state.options.minDistance * 1.5;
-        } else {
-          shouldStartDrag = Math.abs(pointer.distanceY) > this.state.options.minDistance;
-          shouldCancel = Math.abs(pointer.distanceX) > this.state.options.minDistance * 1.5;
+    return self
+      .handler('press', {
+        onStart: function (ev, pointer) {
+          this.dispatchEvent(ev, '$md.pressdown');
+        },
+        onEnd: function (ev, pointer) {
+          this.dispatchEvent(ev, '$md.pressup');
         }
+      })
+      .handler('hold', {
+        options: {
+          // If the user keeps his finger within the same <maxDistance> area for
+          // <delay> ms, dispatch a hold event.
+          maxDistance: 6,
+          delay: 500
+        },
+        onCancel: function () {
+          $timeout.cancel(this.state.timeout);
+        },
+        onStart: function (ev, pointer) {
+          // For hold, require a parent to be registered with $mdGesture.register()
+          // Because we prevent scroll events, this is necessary.
+          if (!this.state.registeredParent) return this.cancel();
 
-        if (shouldStartDrag) {
-          // Create a new pointer, starting at this point where the drag started.
-          this.state.dragPointer = makeStartPointer(ev);
-          updatePointerState(ev, this.state.dragPointer);
-          this.dispatchEvent(ev, '$md.dragstart', this.state.dragPointer);
-
-        } else if (shouldCancel) {
-          this.cancel();
+          this.state.pos = {x: pointer.x, y: pointer.y};
+          this.state.timeout = $timeout(angular.bind(this, function holdDelayFn() {
+            this.dispatchEvent(ev, '$md.hold');
+            this.cancel(); //we're done!
+          }), this.state.options.delay, false);
+        },
+        onMove: function (ev, pointer) {
+          // Don't scroll while waiting for hold
+          ev.preventDefault();
+          var dx = this.state.pos.x - pointer.x;
+          var dy = this.state.pos.y - pointer.y;
+          if (Math.sqrt(dx * dx + dy * dy) > this.options.maxDistance) {
+            this.cancel();
+          }
+        },
+        onEnd: function () {
+          this.onCancel();
         }
-      } else {
-        this.dispatchDragMove(ev);
+      })
+      .handler('drag', {
+        options: {
+          minDistance: 6,
+          horizontal: true
+        },
+        onStart: function (ev) {
+          // For drag, require a parent to be registered with $mdGesture.register()
+          if (!this.state.registeredParent) this.cancel();
+        },
+        onMove: function (ev, pointer) {
+          var shouldStartDrag, shouldCancel;
+          // Don't allow touch events to scroll while we're dragging or
+          // deciding if this touchmove is a proper drag
+          ev.preventDefault();
+
+          if (!this.state.dragPointer) {
+            if (this.state.options.horizontal) {
+              shouldStartDrag = Math.abs(pointer.distanceX) > this.state.options.minDistance;
+              shouldCancel = Math.abs(pointer.distanceY) > this.state.options.minDistance * 1.5;
+            } else {
+              shouldStartDrag = Math.abs(pointer.distanceY) > this.state.options.minDistance;
+              shouldCancel = Math.abs(pointer.distanceX) > this.state.options.minDistance * 1.5;
+            }
+
+            if (shouldStartDrag) {
+              // Create a new pointer, starting at this point where the drag started.
+              this.state.dragPointer = makeStartPointer(ev);
+              updatePointerState(ev, this.state.dragPointer);
+              this.dispatchEvent(ev, '$md.dragstart', this.state.dragPointer);
+
+            } else if (shouldCancel) {
+              this.cancel();
+            }
+          } else {
+            this.dispatchDragMove(ev);
+          }
+        },
+        // Only dispatch these every frame; any more is unnecessray
+        dispatchDragMove: $$rAF.throttle(function (ev) {
+          // Make sure the drag didn't stop while waiting for the next frame
+          if (this.state.isRunning) {
+            updatePointerState(ev, this.state.dragPointer);
+            this.dispatchEvent(ev, '$md.drag', this.state.dragPointer);
+          }
+        }),
+        onEnd: function (ev, pointer) {
+          if (this.state.dragPointer) {
+            updatePointerState(ev, this.state.dragPointer);
+            this.dispatchEvent(ev, '$md.dragend', this.state.dragPointer);
+          }
+        }
+      })
+      .handler('swipe', {
+        options: {
+          minVelocity: 0.65,
+          minDistance: 10
+        },
+        onEnd: function (ev, pointer) {
+          if (Math.abs(pointer.velocityX) > this.state.options.minVelocity &&
+            Math.abs(pointer.distanceX) > this.state.options.minDistance) {
+            var eventType = pointer.directionX == 'left' ? '$md.swipeleft' : '$md.swiperight';
+            this.dispatchEvent(ev, eventType);
+          }
+        }
+      })
+
+    function register(element, handlerName, options) {
+      var handler = HANDLERS[handlerName.replace(/^\$md./, '')];
+      if (!handler) {
+        throw new Error('Failed to register element with handler ' + handlerName + '. ' +
+        'Available handlers: ' + Object.keys(HANDLERS).join(', '));
       }
-    },
-    // Only dispatch these every frame; any more is unnecessray
-    dispatchDragMove: $$rAF.throttle(function(ev) {
-      // Make sure the drag didn't stop while waiting for the next frame
-      if (this.state.isRunning) {
-        updatePointerState(ev, this.state.dragPointer);
-        this.dispatchEvent(ev, '$md.drag', this.state.dragPointer);
-      }
-    }),
-    onEnd: function(ev, pointer) {
-      if (this.state.dragPointer) {
-        updatePointerState(ev, this.state.dragPointer);
-        this.dispatchEvent(ev, '$md.dragend', this.state.dragPointer);
-      }
+      return handler.registerElement(element, options);
     }
-  });
 
-  addHandler('swipe', {
-    options: {
-      minVelocity: 0.65,
-      minDistance: 10
-    },
-    onEnd: function(ev, pointer) {
-      if (Math.abs(pointer.velocityX) > this.state.options.minVelocity &&
-          Math.abs(pointer.distanceX) > this.state.options.minDistance) {
-        var eventType = pointer.directionX == 'left' ? '$md.swipeleft' : '$md.swiperight';
-        this.dispatchEvent(ev, eventType);
-      }
+    function addHandler(name, definition) {
+      var handler = new $$MdGestureHandler(name);
+      angular.extend(handler, definition);
+      HANDLERS[name] = handler;
+
+      return self;
     }
-  });
-
-  var self;
-  return self = {
-    handler: addHandler,
-    register: register
-  };
-
-  function addHandler(name, definition) {
-    var handler = new $$MdGestureHandler(name);
-    angular.extend(handler, definition);
-    HANDLERS[name] = handler;
-    return self;
   }
+  MdGesture.$inject = ["$$MdGestureHandler", "$$rAF", "$timeout"];
 
-  function register(element, handlerName, options) {
-    var handler = HANDLERS[ handlerName.replace(/^\$md./, '') ];
-    if (!handler) {
-      throw new Error('Failed to register element with handler ' + handlerName + '. ' +
-                      'Available handlers: ' + Object.keys(HANDLERS).join(', '));
-    }
-    return handler.registerElement(element, options);
-  }
-}])
-.factory('$$MdGestureHandler', ["$$rAF", function($$rAF) {
-
-  function GestureHandler(name) {
+  /**
+   * MdGestureHandler factory construction function
+   */
+  function GestureHandler (name) {
     this.name = name;
     this.state = {};
   }
-  GestureHandler.prototype = {
-    onStart: angular.noop,
-    onMove: angular.noop,
-    onEnd: angular.noop,
-    onCancel: angular.noop,
-    options: {},
 
-    dispatchEvent: typeof window.jQuery !== 'undefined' && angular.element === window.jQuery ?
-      jQueryDispatchEvent :
-      nativeDispatchEvent,
+  function MdGestureHandler($$rAF) {
+    var hasJQuery =  typeof jQuery !== 'undefined' && angular.element === jQuery;
 
-    start: function(ev, pointer) {
-      if (this.state.isRunning) return;
-      var parentTarget = this.getNearestParent(ev.target);
-      var parentTargetOptions = parentTarget && parentTarget.$mdGesture[this.name] || {};
 
-      this.state = {
-        isRunning: true,
-        options: angular.extend({}, this.options, parentTargetOptions),
-        registeredParent: parentTarget
-      };
-      this.onStart(ev, pointer);
-    },
-    move: function(ev, pointer) {
-      if (!this.state.isRunning) return;
-      this.onMove(ev, pointer);
-    },
-    end: function(ev, pointer) {
-      if (!this.state.isRunning) return;
-      this.onEnd(ev, pointer);
-      this.state.isRunning = false;
-    },
-    cancel: function(ev, pointer) {
-      this.onCancel(ev, pointer);
-      this.state = {};
-    },
+    GestureHandler.prototype = {
+      options: {},
+      dispatchEvent: hasJQuery ?  jQueryDispatchEvent : nativeDispatchEvent,
 
-    // Find and return the nearest parent element that has been registered via
-    // $mdGesture.register(element, 'handlerName').
-    getNearestParent: function(node) {
-      var current = node;
-      while (current) {
-        if ( (current.$mdGesture || {})[this.name] ) {
-          return current;
+      onStart: angular.noop,
+      onMove: angular.noop,
+      onEnd: angular.noop,
+      onCancel: angular.noop,
+
+      start: function (ev, pointer) {
+        if (this.state.isRunning) return;
+        var parentTarget = this.getNearestParent(ev.target);
+        var parentTargetOptions = parentTarget && parentTarget.$mdGesture[this.name] || {};
+
+        this.state = {
+          isRunning: true,
+          options: angular.extend({}, this.options, parentTargetOptions),
+          registeredParent: parentTarget
+        };
+        this.onStart(ev, pointer);
+      },
+      move: function (ev, pointer) {
+        if (!this.state.isRunning) return;
+        this.onMove(ev, pointer);
+      },
+      end: function (ev, pointer) {
+        if (!this.state.isRunning) return;
+        this.onEnd(ev, pointer);
+        this.state.isRunning = false;
+      },
+      cancel: function (ev, pointer) {
+        this.onCancel(ev, pointer);
+        this.state = {};
+      },
+
+      // Find and return the nearest parent element that has been registered via
+      // $mdGesture.register(element, 'handlerName').
+      getNearestParent: function (node) {
+        var current = node;
+        while (current) {
+          if ((current.$mdGesture || {})[this.name]) {
+            return current;
+          }
+          current = current.parentNode;
         }
-        current = current.parentNode;
+      },
+
+      registerElement: function (element, options) {
+        var self = this;
+        element[0].$mdGesture = element[0].$mdGesture || {};
+        element[0].$mdGesture[this.name] = options || {};
+        element.on('$destroy', onDestroy);
+
+        return onDestroy;
+
+        function onDestroy() {
+          delete element[0].$mdGesture[self.name];
+          element.off('$destroy', onDestroy);
+        }
       }
-    },
+    };
 
-    registerElement: function(element, options) {
-      var self = this;
-      element[0].$mdGesture = element[0].$mdGesture || {};
-      element[0].$mdGesture[this.name] = options || {};
-      element.on('$destroy', onDestroy);
+    return GestureHandler;
 
-      return onDestroy;
+    /**
+     * Internal methods
+     */
+    function jQueryDispatchEvent(srcEvent, eventType, eventPointer) {
+      eventPointer = eventPointer || pointer;
+      var eventObj = new angular.element.Event(eventType);
 
-      function onDestroy() {
-        delete element[0].$mdGesture[self.name];
-        element.off('$destroy', onDestroy);
-      }
+      eventObj.$material = true;
+      eventObj.pointer = eventPointer;
+      eventObj.srcEvent = srcEvent;
+
+      angular.extend(eventObj, {
+        clientX: eventPointer.x,
+        clientY: eventPointer.y,
+        screenX: eventPointer.x,
+        screenY: eventPointer.y,
+        pageX: eventPointer.x,
+        pageY: eventPointer.y,
+        ctrlKey: srcEvent.ctrlKey,
+        altKey: srcEvent.altKey,
+        shiftKey: srcEvent.shiftKey,
+        metaKey: srcEvent.metaKey
+      });
+      angular.element(eventPointer.target).trigger(eventObj);
     }
-  };
 
-  function jQueryDispatchEvent(srcEvent, eventType, eventPointer) {
-    eventPointer = eventPointer || pointer;
-    var eventObj = new angular.element.Event(eventType);
+    /*
+     * NOTE: nativeDispatchEvent is very performance sensitive.
+     */
+    function nativeDispatchEvent(srcEvent, eventType, eventPointer) {
+      eventPointer = eventPointer || pointer;
+      var eventObj;
 
-    eventObj.$material = true;
-    eventObj.pointer = eventPointer;
-    eventObj.srcEvent = srcEvent;
+      if (eventType === 'click') {
+        eventObj = document.createEvent('MouseEvents');
+        eventObj.initMouseEvent(
+          'click', true, true, window, srcEvent.detail,
+          eventPointer.x, eventPointer.y, eventPointer.x, eventPointer.y,
+          srcEvent.ctrlKey, srcEvent.altKey, srcEvent.shiftKey, srcEvent.metaKey,
+          srcEvent.button, srcEvent.relatedTarget || null
+        );
 
-    angular.extend(eventObj, {
-      clientX: eventPointer.x,
-      clientY: eventPointer.y,
-      screenX: eventPointer.x,
-      screenY: eventPointer.y,
-      pageX: eventPointer.x,
-      pageY: eventPointer.y,
-      ctrlKey: srcEvent.ctrlKey,
-      altKey: srcEvent.altKey,
-      shiftKey: srcEvent.shiftKey,
-      metaKey: srcEvent.metaKey
-    });
-    angular.element(eventPointer.target).trigger(eventObj);
+      } else {
+        eventObj = document.createEvent('CustomEvent');
+        eventObj.initCustomEvent(eventType, true, true, {});
+      }
+      eventObj.$material = true;
+      eventObj.pointer = eventPointer;
+      eventObj.srcEvent = srcEvent;
+      eventPointer.target.dispatchEvent(eventObj);
+    }
+
   }
+  MdGestureHandler.$inject = ["$$rAF"];
 
-  /*
-   * NOTE: nativeDispatchEvent is very performance sensitive.
+  /**
+   * Attach Gestures: hook document and check shouldHijack clicks
    */
-  function nativeDispatchEvent(srcEvent, eventType, eventPointer) {
-    eventPointer = eventPointer || pointer;
-    var eventObj;
+  function attachToDocument( $mdGesture, $$MdGestureHandler ) {
 
-    if (eventType === 'click') {
-      eventObj = document.createEvent('MouseEvents');
-      eventObj.initMouseEvent(
-        'click', true, true, window, srcEvent.detail,
-        eventPointer.x, eventPointer.y, eventPointer.x, eventPointer.y,
-        srcEvent.ctrlKey, srcEvent.altKey, srcEvent.shiftKey, srcEvent.metaKey,
-        srcEvent.button, srcEvent.relatedTarget || null
-      );
+    document.contains || (document.contains = function (node) {
+      return document.body.contains(node);
+    });
 
-    } else {
-      eventObj = document.createEvent('CustomEvent');
-      eventObj.initCustomEvent(eventType, true, true, {});
+    if ( $mdGesture.$$hijackClicks ) {
+
+      // If hijacking use capture-phase to prevent non-key clicks
+      // unless they're sent by material
+
+      document.addEventListener('click', function (ev)
+      {
+        // Space/enter on a button, and submit events, can send clicks
+
+        var isKeyClick = ev.clientX === 0 && ev.clientY === 0;
+        if (isKeyClick || ev.$material) return;
+
+        ev.preventDefault();
+        ev.stopPropagation();
+
+      }, true);
+
     }
-    eventObj.$material = true;
-    eventObj.pointer = eventPointer;
-    eventObj.srcEvent = srcEvent;
-    eventPointer.target.dispatchEvent(eventObj);
+
+    var START_EVENTS = 'mousedown touchstart pointerdown';
+    var MOVE_EVENTS = 'mousemove touchmove pointermove';
+    var END_EVENTS = 'mouseup mouseleave touchend touchcancel pointerup pointercancel';
+
+    angular.element(document)
+      .on(START_EVENTS, gestureStart)
+      .on(MOVE_EVENTS, gestureMove)
+      .on(END_EVENTS, gestureEnd)
+      .on('$$mdGestureReset', gestureClearCache);  // For testing
+
+    function runHandlers(handlerEvent, event) {
+      var handler;
+      for (var name in HANDLERS) {
+        handler = HANDLERS[name];
+        if( handler instanceof $$MdGestureHandler ) {
+
+          if (handlerEvent === 'start') {
+            // Run cancel to reset any handlers' state
+            angular.isFunction(handler.cancel) && handler.cancel();
+          }
+          handler[handlerEvent](event, pointer);
+
+        }
+      }
+    }
+
+    function gestureStart(ev) {
+      // If we're already touched down, abort
+      if (pointer) return;
+
+      var now = +Date.now();
+
+      // iOS & old android bug: after a touch event, a click event is sent 350 ms later.
+      // If <400ms have passed, don't allow an event of a different type than the previous event
+      if (lastPointer && !typesMatch(ev, lastPointer) && (now - lastPointer.endTime < 1500)) {
+        return;
+      }
+
+      pointer = makeStartPointer(ev);
+
+      runHandlers('start', ev);
+    }
+    function gestureMove(ev) {
+      if (!pointer || !typesMatch(ev, pointer)) return;
+
+      updatePointerState(ev, pointer);
+      runHandlers('move', ev);
+    }
+    function gestureEnd(ev) {
+      if (!pointer || !typesMatch(ev, pointer)) return;
+
+      updatePointerState(ev, pointer);
+      pointer.endTime = +Date.now();
+
+      runHandlers('end', ev);
+
+      lastPointer = pointer;
+      pointer = null;
+    }
+    function gestureClearCache () {
+      lastPointer = pointer = null;
+    }
+
+  }
+  attachToDocument.$inject = ["$mdGesture", "$$MdGestureHandler"];
+
+  // ********************
+  // Module Functions
+  // ********************
+
+  function typesMatch(ev, pointer) {
+    return ev && pointer && ev.type.charAt(0) === pointer.type;
   }
 
-  return GestureHandler;
-}]);
+  function makeStartPointer(ev) {
+    var point = getEventPoint(ev);
+    var startPointer = {
+      startTime: +Date.now(),
+      target: ev.target,
+      // 'p' for pointer, 'm' for mouse, 't' for touch
+      type: ev.type.charAt(0)
+    };
+    startPointer.startX = startPointer.x = point.pageX;
+    startPointer.startY = startPointer.y = point.pageY;
+    return startPointer;
+  }
 
-})();
+  function updatePointerState(ev, pointer) {
+    var point = getEventPoint(ev);
+    var x = pointer.x = point.pageX;
+    var y = pointer.y = point.pageY;
+
+    pointer.distanceX = x - pointer.startX;
+    pointer.distanceY = y - pointer.startY;
+    pointer.distance = Math.sqrt(
+      pointer.distanceX * pointer.distanceX + pointer.distanceY * pointer.distanceY
+    );
+
+    pointer.directionX = pointer.distanceX > 0 ? 'right' : pointer.distanceX < 0 ? 'left' : '';
+    pointer.directionY = pointer.distanceY > 0 ? 'up' : pointer.distanceY < 0 ? 'down' : '';
+
+    pointer.duration = +Date.now() - pointer.startTime;
+    pointer.velocityX = pointer.distanceX / pointer.duration;
+    pointer.velocityY = pointer.distanceY / pointer.duration;
+  }
+
+  function getEventPoint(ev) {
+    ev = ev.originalEvent || ev; // support jQuery events
+    return (ev.touches && ev.touches[0]) ||
+      (ev.changedTouches && ev.changedTouches[0]) ||
+      ev;
+  }
+
+})(window.jQuery);
 
 (function() {
 'use strict';
@@ -3121,7 +3150,7 @@ function ThemableDirective($mdTheming) {
 }
 ThemableDirective.$inject = ["$mdTheming"];
 
-function parseRules(theme, colorType, rules) {
+function _parseRules(theme, colorType, rules) {
   checkValidPalette(theme, colorType);
 
   rules = rules.replace(/THEME_NAME/g, theme.name);
@@ -3163,7 +3192,11 @@ function parseRules(theme, colorType, rules) {
     generatedRules.push(newRule);
   });
 
-  return generatedRules.join('');
+  return generatedRules;
+}
+
+function parseRules(theme, colorType, rules) {
+  return _parseRules(theme, colorType, rules).join('');
 }
 
 // Generate our themes at run time given the state of THEMES and PALETTES
@@ -3209,28 +3242,30 @@ function generateThemes($injector) {
     return rulesByType[DEFAULT_COLOR_TYPE] += rule;
   });
 
-  var styleString = '';
-
   // For each theme, use the color palettes specified for `primary`, `warn` and `accent`
   // to generate CSS rules.
   angular.forEach(THEMES, function(theme) {
-    THEME_COLOR_TYPES.forEach(function(colorType) {
-      styleString += parseRules(theme, colorType, rulesByType[colorType] + '');
-    });
+      // Insert our newly minted styles into the DOM
+    if (!generationIsDone) {
+      var head = document.getElementsByTagName('head')[0];
+      var headFirstElementChild = head.firstElementChild;
+      THEME_COLOR_TYPES.forEach(function(colorType) {
+        var styleStrings = _parseRules(theme, colorType, rulesByType[colorType]);
+        while(styleStrings.length) {
+          var style = document.createElement('style');
+          style.setAttribute('type', 'text/css');
+          style.appendChild(document.createTextNode(styleStrings.shift()));
+          head.insertBefore(style, headFirstElementChild);
+        }
+      });
+      generationIsDone = true;
+    }
+
     if (theme.colors.primary.name == theme.colors.accent.name) {
       console.warn("$mdThemingProvider: Using the same palette for primary and" +
                    " accent. This violates the material design spec.");
     }
   });
-
-  // Insert our newly minted styles into the DOM
-  if (!generationIsDone) {
-    var style = document.createElement('style');
-    style.innerHTML = styleString;
-    var head = document.getElementsByTagName('head')[0];
-    head.insertBefore(style, head.firstElementChild);
-    generationIsDone = true;
-  }
 
   // The user specifies a 'default' contrast color as either light or dark,
   // then explicitly lists which hues are the opposite contrast (eg. A100 has dark, A200 has light)

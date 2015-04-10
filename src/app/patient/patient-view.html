@@ -1,4 +1,4 @@
-<div ng-controller="patientDetail as vm" layout="row" layout-wrap>
+<div ng-controller="patientDetail as vm" layout="row" layout-wrap ng-cloak>
     <div flex="25" hide-sm>
         <img data-fs-img-person="vm.patient.photo[0]" class="largeFace"/>
     </div>
@@ -31,6 +31,12 @@
                                 {{vm.patient.birthDate | date: longDate}}
                             </td>
                         </tr>
+                        <tr ng-if="vm.patient.birthPlace">
+                            <td>Birth Place</td>
+                            <td>
+                                {{vm.patient.birthPlace | singleLineAddress}}
+                            </td>
+                        </tr>
                         <tr>
                             <td>Gender</td>
                             <td>
@@ -38,7 +44,7 @@
                             </td>
                         </tr>
                         <tr ng-if="vm.patient.address">
-                            <td>Addresses</td>
+                            <td>Address</td>
                             <td>
                                 <p class="small" ng-repeat="a in vm.patient.address">
                                     <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
@@ -80,10 +86,34 @@
                                 </div>
                             </td>
                         </tr>
+                        <tr ng-if="vm.patient.ethnicity">
+                            <td>Ethnicity</td>
+                            <td>
+                                {{vm.patient.ethnicity | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.race">
+                            <td>Race</td>
+                            <td>
+                                {{vm.patient.race | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.religion">
+                            <td>Religion</td>
+                            <td>
+                                {{vm.patient.religion | codeableConcept}}
+                            </td>
+                        </tr>
                         <tr ng-if="vm.patient.maritalStatus">
                             <td>Marital Status</td>
                             <td>
                                 {{vm.patient.maritalStatus | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.mothersMaidenName">
+                            <td>Mother's Maiden Name</td>
+                            <td>
+                                {{vm.patient.mothersMaidenName}}
                             </td>
                         </tr>
                         <tr ng-if="vm.patient.multipleBirthInteger || vm.patient.multipleBirthBoolean">
@@ -101,7 +131,15 @@
                         <tr ng-if="vm.patient.managingOrganization">
                             <td>Managing Organization</td>
                             <td>
-                                <a href="{{vm.patient.managingOrganization.reference}}">{{vm.patient.managingOrganization.display}}</a>
+                                <a ng-href="#/organization/get/{{vm.patient.managingOrganization.reference | idFromURL }}">{{vm.patient.managingOrganization.display}}</a>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.patient.careProvider">
+                            <td>Care Provider</td>
+                            <td>
+                                <p ng-repeat="cp in vm.patient.careProvider">
+                                    <a ng-href="#/practitioner/get/{{cp.reference | idFromURL }}">{{cp.display}}</a>
+                                </p>
                             </td>
                         </tr>
                         <tr ng-show="vm.patient.identifier">
@@ -112,7 +150,6 @@
                                     <tr>
                                         <th>System</th>
                                         <th>Value</th>
-                                        <th>Label</th>
                                         <th>Use</th>
                                     </tr>
                                     </thead>
@@ -120,7 +157,6 @@
                                     <tr ng-repeat="id in vm.patient.identifier">
                                         <td>{{id.system}}</td>
                                         <td>{{id.value}}</td>
-                                        <td>{{id.label}}</td>
                                         <td>{{id.use}}</td>
                                     </tr>
                                     </tbody>

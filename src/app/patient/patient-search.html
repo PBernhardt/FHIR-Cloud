@@ -2,11 +2,12 @@
         <div flex="80">
             <h3 class="md-title">Patient Quick Find</h3>
             <md-autocomplete
+                    md-no-cache="true"
                     md-selected-item-change="vm.goToPatient(vm.selectedPatient)"
                     md-selected-item="vm.selectedPatient"
                     md-search-text="vm.searchText"
                     md-items="patient in vm.querySearch(vm.searchText)"
-                    md-delay="200"
+                    md-delay="300"
                     md-min-length="3"
                     placeholder="What patient are you looking for?">
               <span md-highlight-text="vm.searchText">{{patient.resource.name | fullName}}</span>
