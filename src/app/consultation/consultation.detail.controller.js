@@ -576,7 +576,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "9279-1",
-                    "display": "Respiratory rate"
+                    "display": "Respiratory rate",
+                    "primary": true
                 }],
                 "text": "Respiratory rate"
             };
@@ -661,7 +662,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "8480-6",
-                    "display": "Systolic blood pressure"
+                    "display": "Systolic blood pressure",
+                    "primary": true
                 }],
                 "text": "Systolic blood pressure"
             };
@@ -689,7 +691,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "8462-4",
-                    "display": "Diastolic blood pressure"
+                    "display": "Diastolic blood pressure",
+                    "primary": true
                 }],
                 "text": "Diastolic blood pressure"
             };
@@ -715,7 +718,8 @@
                         {
                             "system": "http://loinc.org",
                             "code": "55284-4",
-                            "display": "Blood pressure systolic & diastolic"
+                            "display": "Blood pressure systolic & diastolic",
+                            "primary": true
                         }], "text": "Blood pressure systolic & diastolic"
                 };
                 bpInterpretationObs.interpretation = {
@@ -749,7 +753,8 @@
                 }, {
                     "system": "http://loinc.org",
                     "code": "39156-5",
-                    "display": "Body mass index (BMI) [Ratio]"
+                    "display": "Body mass index (BMI) [Ratio]",
+                    "primary": true
                 }],
                 "text": "Body mass index"
             };

@@ -136,6 +136,7 @@ module.exports = function (grunt) {
                     'app/extensionDefinition/extensionDefinition.service.js',
                     'app/consultation/consultation.detail.controller.js',
                     'app/observation/observation.service.js',
+                    'app/lab/lab.detail.controller.js',
                     'app/observation/observation.valueSets.js',
                     'app/operationDefinition/operationDefinition.detail.controller.js',
                     'app/operationDefinition/operationDefinition.search.controller.js',

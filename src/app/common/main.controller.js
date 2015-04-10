@@ -13,9 +13,9 @@
         var _adminPages = [
             {name: 'Organization', href: 'organization'},
             {name: 'Patient', href: 'patient/view/current'},
-            {name: 'Practitioner', href: 'practitioner'},
+  /*          {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},
-            {name: 'Related Person', href: 'relatedPerson'}
+            {name: 'Related Person', href: 'relatedPerson'}*/
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance'},

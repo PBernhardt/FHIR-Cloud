@@ -181,6 +181,8 @@
             templateUrl: 'extensionDefinition/extensionDefinition-view.html'
         }).when('/extensionDefinition/edit/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/lab', {
+            templateUrl: 'lab/lab-edit.html'
         }).when('/operationDefinition', {
             templateUrl: 'operationDefinition/operationDefinition-search.html'
         }).when('/operationDefinition/view/:hashKey', {
@@ -255,14 +257,17 @@
             .icon("actions", "./assets/svg/actions.svg", 24)
             .icon("account", "./assets/svg/account.svg", 24)
             .icon("add", "./assets/svg/add.svg", 24)
-            .icon("cardio", "./assets/svg/cardio2.svg", 24)
+            .icon("cardio", "./assets/svg/cardio3.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
+            .icon("consult", "./assets/svg/caduceus2.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
             .icon("error", "./assets/svb/error.svg", 48)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
+            .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
+            .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)

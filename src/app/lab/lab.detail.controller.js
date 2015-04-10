@@ -4,8 +4,8 @@
     var controllerId = 'labDetail';
 
     function labDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window,
-                                common, fhirServers, localValueSets, identifierService, observationService,
-                                observationValueSets, practitionerService, careProviderService, patientService) {
+                       common, fhirServers, localValueSets, identifierService, observationService,
+                       observationValueSets, practitionerService, careProviderService, patientService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -17,66 +17,20 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([_getActiveServer(), _loadSmokingStatuses(), _loadInterpretations(),
-                    _loadBPInterpretations(), _loadBMIRange(), _loadBodyTempMethods()],
+            common.activateController([_getActiveServer(), _loadLipidFindings()],
                 controllerId).then(function () {
-                    vm.vitals.date = new Date();
+                    vm.lab.date = new Date();
                     _getPatientContext();
 
                 });
         }
 
-        function _initializeBP() {
-            vm.vitals.date = new Date();
-            vm.vitals.bp.diastolic = 0;
-            vm.vitals.bp.systolic = 0;
-            vm.vitals.bp.interpretationCode = undefined;
-            vm.vitals.bp.interpretationText = "Enter new reading";
-        }
-
         function _initializeBMI() {
-            vm.vitals.bmi.height = undefined;
-            vm.vitals.bmi.weight = undefined;
-            vm.vitals.bmi.interpretationCode = undefined;
-            vm.vitals.bmi.interpretationText = "Enter new reading";
+            vm.lab.bmi.height = undefined;
+            vm.lab.bmi.weight = undefined;
+            vm.lab.bmi.interpretationCode = undefined;
+            vm.lab.bmi.interpretationText = "Enter new reading";
         }
-
-        function calculateBMI() {
-            if (vm.vitals.bmi.height && vm.vitals.bmi.weight && vm.vitals.bmi.height > 0 && vm.vitals.bmi.weight > 0) {
-                var _height = (vm.vitals.bmi.height / 39.3700787);
-                var _weight = (vm.vitals.bmi.weight / 2.20462);
-                vm.vitals.bmi.calculated = (Math.floor((_weight / Math.pow(_height, 2)) * 100) / 100);
-            }
-
-            switch (true) {
-                case (vm.vitals.bmi.calculated <= 18.5):
-                    vm.vitals.bmi.interpretationText = "Underweight";
-                    vm.vitals.bmi.color = "blue";
-                    break;
-                case ((vm.vitals.bmi.calculated >= 30) && (vm.vitals.bmi.calculated < 40)):
-                    vm.vitals.bmi.interpretationText = "Obese";
-                    vm.vitals.bmi.color = "red";
-                    break;
-                case (vm.vitals.bmi.calculated >= 40):
-                    vm.vitals.bmi.interpretationText = "Severely Obese";
-                    vm.vitals.bmi.color = "purple";
-                    break;
-                case ((vm.vitals.bmi.calculated > 18.5) && (vm.vitals.bmi.calculated < 25)):
-                    vm.vitals.bmi.interpretationText = "Healthy weight";
-                    vm.vitals.bmi.color = "green";
-                    break;
-                case ((vm.vitals.bmi.calculated >= 25) && (vm.vitals.bmi.calculated < 30)):
-                    vm.vitals.bmi.interpretationText = "Overweight";
-                    vm.vitals.bmi.color = "orange";
-                    break;
-                default:
-                    vm.vitals.bmi.interpretationText = "";
-                    vm.vitals.bmi.color = "grey";
-                    break;
-            }
-        }
-
-        vm.calculateBMI = calculateBMI;
 
         function _calculateAge(birthDate) {
             if (birthDate) {
@@ -92,25 +46,9 @@
             }
         }
 
-        function _loadSmokingStatuses() {
-            return vm.smokingStatuses = observationValueSets.smokingStatus();
-        }
-
-        function _loadBMIRange() {
-            return vm.bmiInterpretations = observationValueSets.bmiRange();
-        }
-
-        function _loadBPInterpretations() {
-            return vm.bpInterpretations = observationValueSets.bpInterpretation();
-        }
-
-        function _loadBodyTempMethods() {
+        function _loadLipidFindings() {
             vm.bodyTempMethods = observationValueSets.bodyTempMethods();
             vm.bodyTempFinding = observationValueSets.bodyTempFindings();
-        }
-
-        function _loadInterpretations() {
-            return vm.interpretations = observationValueSets.interpretation();
         }
 
         function _getPatientContext() {
@@ -176,174 +114,217 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('lab/smart/cardiac-risk/' + vm.lab.patient.id);
-                        break;
-                    case 2:
-                        logInfo("Add a condition coming soon...");
-                        break;
-                    case 3:
-                        logInfo("Add a medication coming soon...");
-                        break;
-                    case 4:
-                        logInfo("Add an allergy coming soon...");
+                        $location.path('consultation/smart/cardiac-risk/' + vm.lab.patient.id);
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Add a condition', icon: 'rx', index: 2},
-                    {name: 'Add a medication', icon: 'rx', index: 3},
-                    {name: 'Add an allergy', icon: 'rx', index: 4}
+                    {name: 'Cardiac Risk report', icon: 'cardio', index: 1}
                 ];
-                this.title = 'Observation options';
+                this.title = 'Lab options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
                 };
             }
         }
 
-        function updateBP() {
-            var s = vm.vitals.bp.systolic;
-            if (vm.vitals.bp.diastolic < 60 || s <= 90) {
-                vm.vitals.bp.interpretationText = "Low reading";
-                vm.vitals.bp.color = "blue";
-            } else if (vm.vitals.bp.diastolic > 90 || s >= 140) {
-                vm.vitals.bp.interpretationText = "High reading";
-                vm.vitals.bp.color = "red";
-            } else if (vm.vitals.bp.diastolic >= 60 && vm.vitals.bp.diastolic <= 80) {
-                switch (true) {
-                    case (s <= 120):
-                        vm.vitals.bp.interpretationText = "Reading is ideal and healthy";
-                        vm.vitals.bp.color = "green";
-                        break;
-                    case (s <= 140):
-                        vm.vitals.bp.interpretationText = "A little higher than it should be";
-                        vm.vitals.bp.color = "orange";
-                        break;
-                    default:
-                        vm.vitals.bp.interpretationText = "Inconclusive";
-                        vm.vitals.bp.color = "grey";
-                        break;
+        function updateTriglyceride() {
+            /*
+             Normal: Less than 150 mg/dL
+             Borderline High: 150 - 199 mg/dL
+             High: 200 - 499 mg/dL
+             Very High: 500 mg/dL or above
+             */
+            switch (true) {
+                case (vm.lab.lipid.triglyceride.value < 150):
+                    vm.lab.lipid.triglyceride.interpretationText = "Normal";
+                    vm.lab.lipid.triglyceride.color = "green";
+                    break;
+                case ((vm.lab.lipid.triglyceride.value >= 150) && (vm.lab.lipid.triglyceride.value < 199)):
+                    vm.lab.lipid.triglyceride.interpretationText = "Borderline High";
+                    vm.lab.lipid.triglyceride.color = "orange";
+                    break;
+                case ((vm.lab.lipid.triglyceride.value >= 200) && (vm.lab.lipid.triglyceride.value < 499)):
+                    vm.lab.lipid.triglyceride.interpretationText = "High";
+                    vm.lab.lipid.triglyceride.color = "red";
+                    break;
+                case (vm.lab.lipid.triglyceride.value >= 500):
+                    vm.lab.lipid.triglyceride.interpretationText = "Very High";
+                    vm.lab.lipid.triglyceride.color = "purple";
+                    break;
+                default:
+                    vm.lab.lipid.triglyceride.interpretationText = "Indeterminate";
+                    vm.lab.lipid.triglyceride.color = "grey";
+                    break;
+            }
+            _calculateTotalCholesterol();
+        }
+
+        vm.updateTriglyceride = updateTriglyceride;
+
+        function updateLdlCholesterol() {
+            /*
+             Less than 100 mg/dL (2.59 mmol/L) — Optimal
+             100-129 mg/dL (2.59-3.34 mmol/L) — Near optimal, above optimal
+             130-159 mg/dL (3.37-4.12 mmol/L) — Borderline high
+             160-189 mg/dL (4.15-4.90 mmol/L) — High
+             Greater than 189 mg/dL (4.90 mmol/L) — Very high
+             */
+            switch (true) {
+                case (vm.lab.lipid.ldlCholesterol.value < 100):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Optimal";
+                    vm.lab.lipid.ldlCholesterol.color = "green";
+                    break;
+                case ((vm.lab.lipid.ldlCholesterol.value >= 100) && (vm.lab.lipid.ldlCholesterol.value < 129)):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Near Optimal";
+                    vm.lab.lipid.ldlCholesterol.color = "blue";
+                    break;
+                case ((vm.lab.lipid.ldlCholesterol.value >= 130) && (vm.lab.lipid.ldlCholesterol.value < 159)):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Borderline High";
+                    vm.lab.lipid.ldlCholesterol.color = "orange";
+                    break;
+                case ((vm.lab.lipid.ldlCholesterol.value >= 160) && (vm.lab.lipid.ldlCholesterol.value <= 189)):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "High";
+                    vm.lab.lipid.ldlCholesterol.color = "red";
+                    break;
+                case (vm.lab.lipid.ldlCholesterol.value > 189):
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Very High";
+                    vm.lab.lipid.ldlCholesterol.color = "purple";
+                    break;
+                default:
+                    vm.lab.lipid.ldlCholesterol.interpretationText = "Indeterminate";
+                    vm.lab.lipid.ldlCholesterol.color = "grey";
+                    break;
+            }
+            _calculateTotalCholesterol();
+        }
+
+        vm.updateLdlCholesterol = updateLdlCholesterol;
+
+        function updateHdlCholesterol() {
+            /*
+             Over 60 - Optimal
+             Between 50-60 Borderline optimal
+             Under 50 - Low for men
+             Under 40 - Low for women
+             */
+            switch (true) {
+                case (vm.lab.lipid.hdlCholesterol.value >= 60):
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Optimal";
+                    vm.lab.lipid.hdlCholesterol.color = "green";
+                    break;
+                case ((vm.lab.lipid.hdlCholesterol.value < 60) && (vm.lab.lipid.hdlCholesterol.value >= 50)):
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Near Optimal";
+                    vm.lab.lipid.hdlCholesterol.color = "blue";
+                    break;
+                case ((vm.lab.lipid.hdlCholesterol.value < 50) && (vm.lab.lipid.hdlCholesterol.value >= 40)):
+                    if (vm.lab.patient.gender === 'male') {
+                        vm.lab.lipid.hdlCholesterol.interpretationText = "Low";
+                        vm.lab.lipid.hdlCholesterol.color = "red";
+                    } else {
+                        vm.lab.lipid.hdlCholesterol.interpretationText = "Borderline";
+                        vm.lab.lipid.hdlCholesterol.color = "orange";
+                    }
+                    break;
+                case (vm.lab.lipid.hdlCholesterol.value < 40):
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Low";
+                    vm.lab.lipid.hdlCholesterol.color = "red";
+                    break;
+                default:
+                    vm.lab.lipid.hdlCholesterol.interpretationText = "Indeterminate";
+                    vm.lab.lipid.hdlCholesterol.color = "grey";
+                    break;
+            }
+            _calculateTotalCholesterol();
+        }
+
+        vm.updateHdlCholesterol = updateHdlCholesterol;
+
+        function _calculateTotalCholesterol() {
+            if (angular.isDefined(vm.lab.lipid.hdlCholesterol.value)
+                && angular.isDefined(vm.lab.lipid.ldlCholesterol.value)
+                && angular.isDefined(vm.lab.lipid.triglyceride.value)) {
+                vm.lab.lipid.cholesterol.value = (vm.lab.lipid.hdlCholesterol.value + vm.lab.lipid.ldlCholesterol.value)
+                + (.2 * vm.lab.lipid.triglyceride.value);
+
+                /*
+                 Adults:
+                 below 200 mg/Dl - desirable
+                 200 > 239 - borderline high
+                 >= 240 - high risk
+
+                 Children:
+                 below 170 mg/Dl - desirable
+                 170 > 199 - borderline high
+                 >= 200 - high risk
+
+                 */
+                if (vm.lab.patient.age < 18) {
+                    switch (true) {
+                        case (vm.lab.lipid.cholesterol.value < 170):
+                            vm.lab.lipid.cholesterol.interpretationText = "Optimal";
+                            vm.lab.lipid.cholesterol.color = "green";
+                            break;
+                        case ((vm.lab.lipid.cholesterol.value >= 170) && (vm.lab.lipid.cholesterol.value < 200)):
+                            vm.lab.lipid.cholesterol.interpretationText = "Borderline High";
+                            vm.lab.lipid.cholesterol.color = "orange";
+                            break;
+                        case (vm.lab.lipid.cholesterol.value >= 200):
+                            vm.lab.lipid.cholesterol.interpretationText = "High Risk";
+                            vm.lab.lipid.cholesterol.color = "red";
+                            break;
+                        default:
+                            vm.lab.lipid.cholesterol.interpretationText = "Indeterminate";
+                            vm.lab.lipid.cholesterol.color = "grey";
+                            break;
+                    }
+                } else {
+                    switch (true) {
+                        case (vm.lab.lipid.cholesterol.value < 200):
+                            vm.lab.lipid.cholesterol.interpretationText = "Optimal";
+                            vm.lab.lipid.cholesterol.color = "green";
+                            break;
+                        case ((vm.lab.lipid.cholesterol.value >= 200) && (vm.lab.lipid.cholesterol.value < 240)):
+                            vm.lab.lipid.cholesterol.interpretationText = "Borderline High";
+                            vm.lab.lipid.cholesterol.color = "orange";
+                            break;
+                        case (vm.lab.lipid.cholesterol.value >= 240):
+                            vm.lab.lipid.cholesterol.interpretationText = "High Risk";
+                            vm.lab.lipid.cholesterol.color = "red";
+                            break;
+                        default:
+                            vm.lab.lipid.cholesterol.interpretationText = "Indeterminate";
+                            vm.lab.lipid.cholesterol.color = "grey";
+                            break;
+                    }
                 }
-            } else if (vm.vitals.bp.diastolic > 80 && vm.vitals.bp.diastolic <= 90) {
-                switch (true) {
-                    case (s <= 140):
-                        vm.vitals.bp.interpretationText = "A little higher than it should be";
-                        vm.vitals.bp.color = "orange";
-                        break;
-                    default:
-                        vm.vitals.bp.interpretationText = "Inconclusive";
-                        vm.vitals.bp.color = "grey";
-                        break;
-                }
-
             }
         }
 
-        vm.updateBP = updateBP;
-
-        function updateTemperature() {
-            switch (true) {
-                case (vm.vitals.temperature.value < 95.0):
-                    vm.vitals.temperature.interpretationText = "Hypothermia";
-                    vm.vitals.temperature.color = "blue";
-                    break;
-                case ((vm.vitals.temperature.value >= 95.0) && (vm.vitals.temperature.value < 97.7)):
-                    vm.vitals.temperature.interpretationText = "Below normal";
-                    vm.vitals.temperature.color = "orange";
-                    break;
-                case ((vm.vitals.temperature.value >= 97.7) && (vm.vitals.temperature.value <= 99.5)):
-                    vm.vitals.temperature.interpretationText = "Normal";
-                    vm.vitals.temperature.color = "green";
-                    break;
-                case ((vm.vitals.temperature.value > 99.5) && (vm.vitals.temperature.value <= 100.9)):
-                    vm.vitals.temperature.interpretationText = "Fever";
-                    vm.vitals.temperature.color = "red";
-                    break;
-                case (vm.vitals.temperature.value > 100.9):
-                    vm.vitals.temperature.interpretationText = "Hyperpyrexia";
-                    vm.vitals.temperature.color = "purple";
-                    break;
-                default:
-                    vm.vitals.temperature.interpretationText = "Indeterminate";
-                    vm.vitals.temperature.color = "grey";
-                    break;
-            }
-        }
-
-        vm.updateTemperature = updateTemperature;
-
-        function updatePulse() {
-            switch (true) {
-                case (vm.vitals.hr.pulse < 60):
-                    vm.vitals.hr.interpretationText = "Heart rate is below normal";
-                    vm.vitals.hr.color = "blue";
-                    break;
-                case (vm.vitals.hr.pulse > 100):
-                    vm.vitals.hr.interpretationText = "Heart rate is above normal";
-                    vm.vitals.hr.color = "red";
-                    break;
-                case (vm.vitals.hr.pulse <= 100 && vm.vitals.hr.pulse >= 60):
-                    vm.vitals.hr.interpretationText = "Normal heart rate";
-                    vm.vitals.hr.color = "green";
-                    break;
-                default:
-                    vm.vitals.hr.interpretationText = "Indeterminate";
-                    vm.vitals.hr.color = "grey";
-            }
-        }
-
-        vm.updatePulse = updatePulse;
-
-        function updateRespiration() {
-            //TODO: normalize for age
-            switch (true) {
-                case (vm.vitals.respiration.rate < 12):
-                    vm.vitals.respiration.interpretationText = "Respiration is lower than normal";
-                    vm.vitals.respiration.color = "blue";
-                    break;
-                case (vm.vitals.respiration.rate > 16):
-                    vm.vitals.respiration.interpretationText = "Respiration is higher than normal";
-                    vm.vitals.respiration.color = "red";
-                    break;
-                case (vm.vitals.respiration.rate >= 12 && vm.vitals.respiration.rate <= 16):
-                    vm.vitals.respiration.interpretationText = "Respiration is normal";
-                    vm.vitals.respiration.color = "green";
-                    break;
-                default:
-                    vm.vitals.respiration.interpretationText = "Indeterminate";
-                    vm.vitals.respiration.color = "grey";
-            }
-        }
-
-        vm.updateRespiration = updateRespiration;
-
-        function saveBloodPressure(form) {
+        function saveLipid(form) {
             function savePrimaryObs(observations) {
                 var deferred = $q.defer();
                 var completed = 0;
-                var interpretationObs = _buildBPInterpretation();
+                var lipidReport = _buildDiagnosticReport(); //TODO: implement Diagnostic Report
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
-                        vm.isBusy = true;
                         observationService.addObservation(observations[i])
                             .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
-                                if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
+                                if (angular.isDefined(observationId) && angular.isDefined(lipidReport)) {
                                     var relatedItem = {"type": "has-component"};
                                     relatedItem.target = {"reference": 'Observation/' + observationId};
-                                    interpretationObs.related.push(relatedItem);
+                                    lipidReport.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
                                 if (completed === observations.length) {
-                                    deferred.resolve(interpretationObs);
+                                    deferred.resolve(lipidReport);
                                 }
                             })
                     }
@@ -351,599 +332,184 @@
                 return deferred.promise;
             }
 
-            logInfo("Saving blood pressure readings to " + vm.activeServer.name);
+            logInfo("Saving lipid results to " + vm.activeServer.name);
             var observations = [];
-            observations.push(_buildDiastolic());
-            observations.push(_buildSystolic());
+            observations.push(_buildLdlCResult());
+            observations.push(_buildHdlCResult());
+            observations.push(_buildTriglycerideResult());
+            observations.push(_buildTotalCResult());
+            vm.isBusy = true;
 
             savePrimaryObs(observations)
-                .then(function (interpretationObs) {
-                    //TODO: if either sys/dia failed, compensate transaction
-                    if (angular.isDefined(interpretationObs)) {
-                        observationService.addObservation(interpretationObs)
-                            .then(_processCreateResponse,
-                            function (error) {
-                                logError(common.unexpectedOutcome(error));
-                            })
-                    }
+                .then(function () {
+                    logInfo("Lipid profile results saved successfully");
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    _initializeBP();
+                    vm.isBusy = false;
                     form.$setPristine();
                 })
         }
 
-        vm.saveBloodPressure = saveBloodPressure;
+        vm.saveLipid = saveLipid;
 
-        function savePulseAndRespiration(form) {
-            function savePrimaryObs(observations) {
-                var deferred = $q.defer();
-                var completed = 0;
-                var interpretationObs = _buildBPInterpretation();
-                for (var i = 0, len = observations.length; i <= len; i++) {
-                    if (observations[i] !== undefined) {
-                        vm.isBusy = true;
-                        observationService.addObservation(observations[i])
-                            .then(_processCreateResponse(),
-                            function (error) {
-                                logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
-                                deferred.reject(error);
-                            })
-                            .then(function (observationId) {
-                                if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
-                                    var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
-                                    interpretationObs.related.push(relatedItem);
-                                    completed = completed + 1;
-                                }
-                                if (completed === observations.length) {
-                                    deferred.resolve(interpretationObs);
-                                }
-                            })
-                    }
-                }
-                return deferred.promise;
-            }
-
-            logInfo("Saving heart and respiration results to " + vm.activeServer.name);
-            var observations = [];
-            observations.push(_buildHeartRate());
-            observations.push(_buildRespiration());
-
-            savePrimaryObs(observations)
-                .then(function (interpretationObs) {
-                    //TODO: if either sys/dia failed, compensate transaction
-                    if (angular.isDefined(interpretationObs)) {
-                        observationService.addObservation(interpretationObs)
-                            .then(_processCreateResponse,
-                            function (error) {
-                                logError(common.unexpectedOutcome(error));
-                            })
-                    }
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error));
-                }).then(function () {
-                    _initializeBP();
-                    form.$setPristine();
-                })
-        }
-
-        vm.savePulseAndRespiration = savePulseAndRespiration;
-
-        function saveBMI(form) {
-            function savePrimaryObs(observations) {
-                var deferred = $q.defer();
-                var completed = 0;
-                var bmiObservation = _buildBMIObs();
-                for (var i = 0, len = observations.length; i <= len; i++) {
-                    if (observations[i] !== undefined) {
-                        vm.isBusy = true;
-                        observationService.addObservation(observations[i])
-                            .then(_processCreateResponse,
-                            function (error) {
-                                logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
-                                deferred.reject(error);
-                            })
-                            .then(function (observationId) {
-                                if (angular.isDefined(observationId) && angular.isDefined(bmiObservation)) {
-                                    var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
-                                    bmiObservation.related.push(relatedItem);
-                                    completed = completed + 1;
-                                }
-                                if (completed === observations.length) {
-                                    deferred.resolve(bmiObservation);
-                                }
-                            })
-                    }
-                }
-                return deferred.promise;
-            }
-
-            logInfo("Saving height, weight and BMI to " + vm.activeServer.name);
-            var observations = [];
-            observations.push(_buildHeightObs());
-            observations.push(_buildWeightObs());
-
-            savePrimaryObs(observations)
-                .then(function (bmiObs) {
-                    if (angular.isDefined(bmiObs)) {
-                        observationService.addObservation(bmiObs)
-                            .then(_processCreateResponse,
-                            function (error) {
-                                logError(common.unexpectedOutcome(error));
-                            })
-                    }
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error));
-                }).then(function () {
-                    _initializeBMI();
-                    form.$setPristine();
-                })
-        }
-
-        vm.saveBMI = saveBMI;
-
-        function saveOther(form) {
-            if (angular.isDefined(vm.vitals.temperature.value)) {
-                var tempObservation = _buildBodyTemp();
-                logInfo("Saving body temperature to " + vm.activeServer.name);
-                observationService.addObservation(tempObservation)
-                    .then(_processCreateResponse,
-                    function (error) {
-                        logError(common.unexpectedOutcome(error));
-                    }).then(function () {
-                        _initializeBMI();
-                        form.$setPristine();
-                    })
-            }
-        }
-
-        vm.saveOther = saveOther;
-
-        function saveSmokingStatus(form) {
-            var smokingObservation = _buildSmokingStatus();
-            logInfo("Saving smoking status to " + vm.activeServer.name);
-            observationService.addObservation(smokingObservation)
-                .then(_processCreateResponse,
-                function (error) {
-                    logError(common.unexpectedOutcome(error));
-                }).then(function () {
-                    _initializeBMI();
-                    form.$setPristine();
-                })
-        }
-
-        vm.saveSmokingStatus = saveSmokingStatus;
-
-        function _buildSmokingStatus() {
-            var smokingStatusObs = observationService.initializeNewObservation();
-            smokingStatusObs.code = {
-                "coding": [],
-                "text": "Smoking status"
-            };
-            var coding = angular.fromJson(vm.vitals.smokingStatus);
-            coding.system = vm.smokingStatuses.system;
-            smokingStatusObs.code.coding.push(coding);
-            smokingStatusObs.status = "final";
-            smokingStatusObs.reliability = "ok";
-            smokingStatusObs.subject = {
-                "reference": 'Patient/' + vm.lab.patient.id,
-                "display": vm.lab.patient.fullName
-            };
-            smokingStatusObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return smokingStatusObs;
-        }
-
-        function _buildHeartRate() {
-            var systolicObs = observationService.initializeNewObservation();
-            systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "",
-                    "display": ""
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "8867-4",
-                    "display": "Heart rate"
-                }],
-                "text": "Heart rate"
-            };
-            systolicObs.valueQuantity = {
-                "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]"
-            };
-            systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
-                "reference": 'Patient/' + vm.lab.patient.id,
-                "display": vm.lab.patient.fullName
-            };
-            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return systolicObs;
-        }
-
-        function _buildRespiration() {
-            var systolicObs = observationService.initializeNewObservation();
-            systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "86290005",
-                    "display": "Respiratory rate"
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "9279-1",
-                    "display": "Respiratory rate"
-                }],
-                "text": "Respiratory rate"
-            };
-            systolicObs.valueQuantity = {
-                "value": vm.vitals.respiration.rate,
-                "units": "breaths/min",
-                "code": "258984001",
-                "system": "http://snomed.info/sct"
-            };
-            systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
-                "reference": 'Patient/' + vm.lab.patient.id,
-                "display": vm.lab.patient.fullName
-            };
-
-            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return systolicObs;
-        }
-
-        function _buildBodyTemp() {
-            var bodyTempObs = observationService.initializeNewObservation();
-            bodyTempObs.code = {
+        function _buildTriglycerideResult() {
+            var triglycerideResult = observationService.initializeNewObservation();
+            triglycerideResult.code = {
                 "coding": [
                     {
                         "system": "http://loinc.org",
-                        "code": "8310-5",
-                        "display": "Body temperature",
+                        "code": "35217-9",
                         "primary": true
-                    },
-                    {
-                        "system": "http://snomed.info/sct",
-                        "code": "386725007",
-                        "display": "Body temperature",
-                        "primary": false
                     }
                 ],
-                "text": "Body temperature"
-            }
-            if (angular.isDefined(vm.vitals.temperature.method)) {
-                bodyTempObs.method = {
-                    "coding": []
-                };
-                var methodCoding = angular.fromJson(vm.vitals.temperature.method);
-                methodCoding.system = vm.bodyTempMethods.system;
-                methodCoding.primary = true;
-                bodyTempObs.method.coding.push(methodCoding);
-            }
-            if (angular.isDefined(vm.vitals.temperature.interpretationCode)) {
-                bodyTempObs.interpretation = {
-                    "coding": []
-                };
-                var findingCoding = angular.fromJson(vm.vitals.temperature.interpretationCode);
-                findingCoding.system = vm.bodyTempFinding.system;
-                findingCoding.primary = true;
-                bodyTempObs.interpretation.coding.push(findingCoding);
-            }
-
-            bodyTempObs.valueQuantity = {
-                "value": vm.vitals.temperature.value,
-                "units": "F",
-                "code": "258712004",
-                "system": "http://snomed.info/sct"
+                "text": "Triglyceride"
             };
-            bodyTempObs.status = "final";
-            bodyTempObs.reliability = "ok";
-            bodyTempObs.subject = {
+            triglycerideResult.valueQuantity = {
+                "value": vm.lab.lipid.triglyceride.value,
+                "units": "mg/Dl",
+                "system": "http://snomed.info/sct",
+                "code": "258797006"
+            };
+            triglycerideResult.referenceRange = [
+                {
+                    "high": {
+                        "value": 200,
+                        "units": "mg/Dl",
+                        "system": "http://snomed.info/sct",
+                        "code": "258797006"
+                    }
+                }
+            ];
+            triglycerideResult.status = "final";
+            triglycerideResult.reliability = "ok";
+            triglycerideResult.subject = {
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            bodyTempObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return bodyTempObs;
+            triglycerideResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            return triglycerideResult;
         }
 
-        function _buildSystolic() {
-            var systolicObs = observationService.initializeNewObservation();
-            systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271649006",
-                    "display": "Systolic blood pressure"
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "8480-6",
-                    "display": "Systolic blood pressure"
-                }],
-                "text": "Systolic blood pressure"
-            };
-            systolicObs.valueQuantity = {
-                "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]"
-            };
-            systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
-                "reference": 'Patient/' + vm.lab.patient.id,
-                "display": vm.lab.patient.fullName
-            };
-            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return systolicObs;
-        }
-
-        function _buildDiastolic() {
-            var diastolicObs = observationService.initializeNewObservation();
-            diastolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271650006",
-                    "display": "Diastolic blood pressure"
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "8462-4",
-                    "display": "Diastolic blood pressure"
-                }],
-                "text": "Diastolic blood pressure"
-            };
-            diastolicObs.valueQuantity = {
-                "value": vm.vitals.bp.diastolic,
-                "units": "mm[Hg]"
-            };
-            diastolicObs.status = "final";
-            diastolicObs.reliability = "ok";
-            diastolicObs.subject = {
-                "reference": 'Patient/' + vm.lab.patient.id,
-                "display": vm.lab.patient.fullName
-            };
-            diastolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return diastolicObs;
-        }
-
-        function _buildBPInterpretation() {
-            if (vm.vitals.bp.interpretationCode) {
-                var bpInterpretationObs = observationService.initializeNewObservation();
-                bpInterpretationObs.code = {
-                    "coding": [
-                        {
-                            "system": "http://loinc.org",
-                            "code": "55284-4",
-                            "display": "Blood pressure systolic & diastolic"
-                        }], "text": "Blood pressure systolic & diastolic"
-                };
-                bpInterpretationObs.interpretation = {
-                    "coding": [],
-                    "text": vm.vitals.bp.interpretationText
-                };
-                var coding = angular.fromJson(vm.vitals.bp.interpretationCode);
-                coding.system = vm.interpretations.system;
-                bpInterpretationObs.interpretation.coding.push(coding);
-                bpInterpretationObs.status = "final";
-                bpInterpretationObs.reliability = "ok";
-                bpInterpretationObs.subject = {
-                    "reference": 'Patient/' + vm.lab.patient.id,
-                    "display": vm.lab.patient.fullName
-                };
-                bpInterpretationObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-
-                return bpInterpretationObs;
-            } else {
-                return undefined;
-            }
-        }
-
-        function _buildBMIObs() {
-            var bmiObs = observationService.initializeNewObservation();
-            bmiObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "60621009",
-                    "display": "Body mass index"
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "39156-5",
-                    "display": "Body mass index (BMI) [Ratio]"
-                }],
-                "text": "Body mass index"
-            };
-            bmiObs.bodySiteCodeableConcept = {
+        function _buildTotalCResult() {
+            var cholesterolResult = observationService.initializeNewObservation();
+            cholesterolResult.code = {
                 "coding": [
                     {
+                        "system": "http://loinc.org",
+                        "code": "35200-5"
+                    }
+                ],
+                "text": "Cholesterol"
+            };
+            cholesterolResult.valueQuantity = {
+                "value": vm.lab.lipid.cholesterol.value,
+                "units": "mg/Dl",
+                "system": "http://snomed.info/sct",
+                "code": "258797006"
+            };
+            cholesterolResult.referenceRange = [
+                {
+                    "high": {
+                        "value": (vm.lab.patient.age < 18 ? 200 : 240),
+                        "units": "mg/Dl",
                         "system": "http://snomed.info/sct",
-                        "code": "38266002",
-                        "display": "Entire body as a whole"
+                        "code": "258797006"
                     }
-                ]
-            };
-            bmiObs.referenceRange =
-                [
-                    {
-                        "high": {
-                            "value": 20
-                        },
-                        "meaning": {
-                            "coding": [
-                                {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "310252000",
-                                    "display": "Low BMI"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "low": {
-                            "value": 20
-                        },
-                        "high": {
-                            "value": 25
-                        },
-                        "meaning": {
-                            "coding": [
-                                {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "412768003",
-                                    "display": "Normal BMI"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "low": {
-                            "value": 25
-                        },
-                        "high": {
-                            "value": 30
-                        },
-                        "meaning": {
-                            "coding": [
-                                {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162863004",
-                                    "display": "Overweight"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "low": {
-                            "value": 30
-                        },
-                        "high": {
-                            "value": 40
-                        },
-                        "meaning": {
-                            "coding": [
-                                {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162864005",
-                                    "display": "Obesity"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "low": {
-                            "value": 40
-                        },
-                        "meaning": {
-                            "coding": [
-                                {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162864005",
-                                    "display": "Severe obesity"
-                                }
-                            ]
-                        }
-                    }
-                ];
-            bmiObs.valueQuantity = {
-                "value": vm.vitals.bmi.calculated,
-                "units": "lb/in2",
-                "code": "362981000",  //TODO: find rights code
-                "system": "http://snomed.info/sct"
-            };
-            bmiObs.status = "final";
-            bmiObs.reliability = "ok";
-            bmiObs.subject = {
+                }
+            ];
+            cholesterolResult.status = "final";
+            cholesterolResult.reliability = "ok";
+            cholesterolResult.subject = {
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            bmiObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-
-            if (vm.vitals.bmi.interpretationCode) {
-                bmiObs.interpretation = {
-                    "coding": [],
-                    "text": vm.vitals.bmi.interpretationText
-                };
-                var coding = angular.fromJson(vm.vitals.bmi.interpretationCode);
-                coding.system = vm.interpretations.system;
-                bmiObs.interpretation.coding.push(coding);
-            }
-            return bmiObs;
+            cholesterolResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            return cholesterolResult;
         }
 
-        function _buildHeightObs() {
-            var heightObs = observationService.initializeNewObservation();
-            if (vm.vitals.bmi.heightMeasured === "Standing") {
-                heightObs.code = {
-                    "coding": [{
-                        "system": "http://loinc.org",
-                        "code": "8302-2",
-                        "display": "Body height"
-                    }, {
-                        "system": "http://snomed.info/sct",
-                        "code": "248333004",
-                        "display": "Standing height"
-                    }],
-                    "text": "Standing body height"
-                };
-            } else {
-                heightObs.code = {
-                    "coding": [{
-                        "system": "http://loinc.org",
-                        "code": "8306-3",
-                        "display": "Body height - lying"
-                    }, {
-                        "system": "http://snomed.info/sct",
-                        "code": "248334005",
-                        "display": "Length of body"
-                    }],
-                    "text": "Lying body height"
-                };
-            }
-            heightObs.valueQuantity = {
-                "value": vm.vitals.bmi.height,
-                "units": "in",
-                "system": "http://snomed.info/sct",
-                "code": "258677007"
-            };
-            heightObs.status = "final";
-            heightObs.reliability = "ok";
-            heightObs.subject = {
-                "reference": 'Patient/' + vm.lab.patient.id,
-                "display": vm.lab.patient.fullName
-            };
-            heightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+        function _buildDiagnosticReport() {
+            var diagnosticReport = observationService.initializeNewObservation();
 
-            return heightObs;
+            return diagnosticReport;
         }
 
-        function _buildWeightObs() {
-            var weightObs = observationService.initializeNewObservation();
-            weightObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "27113001",
-                    "display": "Body weight"
-                }, {
-                    "system": "http://loinc.org",
-                    "code": "3141-9",
-                    "display": "Body weight Measured"
-                }],
-                "text": "Body weight"
+        function _buildLdlCResult() {
+            var ldlCResult = observationService.initializeNewObservation();
+            ldlCResult.code = {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "13457-7",
+                        "primary": true
+                    }
+                ],
+                "text": "Cholesterol in LDL"
             };
-            weightObs.valueQuantity = {
-                "value": vm.vitals.bmi.weight,
-                "units": "lb",
+            ldlCResult.valueQuantity = {
+                "value": vm.lab.lipid.ldlCholesterol.value,
+                "units": "mg/Dl",
                 "system": "http://snomed.info/sct",
-                "code": "258693003"
+                "code": "258797006"
             };
-            weightObs.status = "final";
-            weightObs.reliability = "ok";
-            weightObs.subject = {
+            ldlCResult.referenceRange = [
+                {
+                    "high": {
+                        "value": 160,
+                        "units": "mg/Dl",
+                        "system": "http://snomed.info/sct",
+                        "code": "258797006"
+                    }
+                }
+            ];
+            ldlCResult.status = "final";
+            ldlCResult.reliability = "ok";
+            ldlCResult.subject = {
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            weightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
-            return weightObs;
+            ldlCResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+
+            return ldlCResult;
+        }
+
+        function _buildHdlCResult() {
+            var hdlCResult = observationService.initializeNewObservation();
+            hdlCResult.code = {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "2085-9",
+                        "primary": true
+                    }
+                ],
+                "text": "Cholesterol in HDL"
+            };
+            hdlCResult.valueQuantity = {
+                "value": vm.lab.lipid.hdlCholesterol.value,
+                "units": "mg/Dl",
+                "system": "http://snomed.info/sct",
+                "code": "258797006"
+            };
+            hdlCResult.referenceRange = [
+                {
+                    "low": {
+                        "value": (vm.lab.patient.gender === 'male' ? 50 : 40),
+                        "units": "mg/Dl",
+                        "system": "http://snomed.info/sct",
+                        "code": "258797006"
+                    }
+                }
+            ];
+            hdlCResult.status = "final";
+            hdlCResult.reliability = "ok";
+            hdlCResult.subject = {
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
+            };
+            hdlCResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+
+            return hdlCResult;
         }
 
         function _processCreateResponse(results) {
@@ -968,49 +534,38 @@
         vm.practitionerSearchText = '';
         vm.selectedPractitioner = null;
         vm.smartLaunchUrl = '';
-        vm.lab = {};
         vm.smokingStatuses = [];
         vm.bpInterpretations = [];
         vm.bmiInterpretations = [];
         vm.interpretations = [];
         vm.bodyTempFinding = undefined;
         vm.bodyTempMethods = undefined;
-        vm.vitals = {
-            "bp": {
-                "systolic": undefined,
-                "diastolic": undefined,
-                "interpretationCode": undefined,
-                "color": "black",
-                "interpretationText": undefined
-            },
-            "hr": {
-                "pulse": undefined,
-                "interpretationCode": undefined,
-                "color": "black",
-                "interpretationText": undefined
-            },
-            "respiration": {
-                "rate": undefined,
-                "interpretationCode": undefined,
-                "color": "black",
-                "interpretationText": undefined
-            },
-            "bmi": {
-                "height": undefined,
-                "heightMeasured": "Standing",
-                "weight": undefined,
-                "calculated": undefined,
-                "interpretationCode": undefined,
-                "color": "black",
-                "interpretationText": undefined
-            },
-            "smokingStatus": undefined,
-            "temperature": {
-                "value": undefined,
-                "method": undefined,
-                "interpretationCode": undefined,
-                "color": "black",
-                "interpretationText": undefined
+        vm.lab = {
+            "lipid": {
+                "cholesterol": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                },
+                "hdlCholesterol": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                },
+                "ldlCholesterol": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                },
+                "triglyceride": {
+                    "value": undefined,
+                    "interpretationCode": undefined,
+                    "color": "black",
+                    "interpretationText": undefined
+                }
             }
         };
         vm.lab.patient = undefined;
@@ -1024,4 +579,5 @@
             'common', 'fhirServers', 'localValueSets', 'identifierService', 'observationService',
             'observationValueSets', 'practitionerService', 'careProviderService', 'patientService', labDetail]);
 
-})();
+})
+();
