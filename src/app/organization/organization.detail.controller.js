@@ -46,6 +46,7 @@
                     );
                 }
             }
+
             if (angular.isDefined(organization) && organization.resourceId) {
                 var confirm = $mdDialog.confirm().title('Delete ' + organization.name + '?').ok('Yes').cancel('No');
                 $mdDialog.show(confirm).then(executeDelete);
@@ -97,9 +98,25 @@
                 addressService.init(vm.organization.address, false);
                 contactService.init(vm.organization.contact);
                 contactPointService.init(vm.organization.telecom, false, false);
+
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.organization = JSON.stringify(vm.organization);
+                }
             }
 
-            if ($routeParams.hashKey === 'new') {
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.organization) || ($window.localStorage.organization === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/organization');
+                    }
+                } else {
+                    vm.organization = JSON.parse($window.localStorage.organization);
+                    vm.organization.hashKey = "current";
+                    initializeRelatedData(vm.organization);
+                }
+            } else if (vm.lookupKey === 'new') {
                 var data = organizationService.initializeNewOrganization();
                 initializeRelatedData(data);
                 vm.title = 'Add New Organization';
@@ -116,8 +133,8 @@
                         logError($filter('unexpectedOutcome')(error));
                     });
             } else {
-                if ($routeParams.hashKey) {
-                    organizationService.getCachedOrganization($routeParams.hashKey)
+                if (vm.lookupKey) {
+                    organizationService.getCachedOrganization(vm.lookupKey)
                         .then(initializeRelatedData).then(function () {
                             var session = sessionService.getSession();
                             session.organization = vm.organization;
@@ -240,10 +257,10 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/organization/edit/new');
+                        createRandomPatients();
                         break;
                     case 1:
-                        createRandomPatients();
+                        $location.path('/patient/org/' + vm.organization.id);
                         break;
                     case 2:
                         $location.path('/organization/detailed-search');
@@ -252,18 +269,31 @@
                         $location.path('/organization');
                         break;
                     case 4:
+                        $location.path('/organization/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/organization/edit/new');
+                        break;
+                    case 6:
                         deleteOrganization(vm.organization);
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
-                this.items = [
-                    {name: 'Add new organization', icon: 'add', index: 0},
-                    {name: 'Create random patients', icon: 'group', index: 1},
-                    {name: 'Detailed search', icon: 'search', index: 2},
-                    {name: 'Quick find', icon: 'hospital', index: 3},
-                    {name: 'Delete organization', icon: 'delete', index: 4},
-                ];
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Add random patients', icon: 'groupAdd', index: 0},
+                        {name: 'Get patients', icon: 'group', index: 1},
+                        {name: 'Quick find', icon: 'hospital', index: 3},
+                        {name: 'Edit organization', icon: 'edit', index: 4},
+                        {name: 'Add new organization', icon: 'add', index: 5}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 2},
+                        {name: 'Quick find', icon: 'hospital', index: 3}
+                    ];
+                }
                 this.title = 'Organization search options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);

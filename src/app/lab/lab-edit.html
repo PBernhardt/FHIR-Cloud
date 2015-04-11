@@ -24,6 +24,7 @@
                                          name="hdl-cholesterol"
                                          aria-controls="hdl-cholesterol-slider"
                                          type="number"
+                                         step="1"
                                          placeholder="mg/Dl"
                                          ng-change="vm.updateHdlCholesterol()"
                                          min="30" max="80" ng-required="true"/>
@@ -57,6 +58,7 @@
                                          name="ldl-cholesterol"
                                          aria-controls="ldl-cholesterol-slider"
                                          type="number"
+                                         step="1"
                                          placeholder="mg/Dl"
                                          ng-change="vm.updateLdlCholesterol()"
                                          min="80" max="200"
@@ -91,9 +93,10 @@
                                          name="triglyceride"
                                          aria-controls="triglyceride-slider"
                                          type="number"
+                                         step="1"
                                          placeholder="mg/Dl"
                                          ng-change="vm.updateTriglyceride()"
-                                         min="50" max="600"
+                                         min="60" max="600"
                                          ng-required="true"/>
                               </md-input-container>
                             </span>
@@ -101,7 +104,7 @@
                         <md-slider flex="85"
                                    md-discrete="true"
                                    step="20"
-                                   min="50" max="600"
+                                   min="60" max="600"
                                    ng-model="vm.lab.lipid.triglyceride.value"
                                    aria-label="triglyceride"
                                    id="triglyceride-slider"
@@ -151,10 +154,12 @@
                         </md-input-container>
                     </div>
 
-                    <md-button ng-disabled="lipidForm.$invalid"
-                               ng-click="vm.saveLipid(lipidForm)" aria-label="Execute save">
+                    <md-button name="save-lipid"
+                               ng-disabled="lipidForm.$invalid"
+                               ng-click="vm.saveLipid(lipidForm)"
+                               aria-label="Execute save">
                         <md-icon md-svg-icon="saveToCloud" aria-label="save blood pressure"
-                                 alt="Save blood pressure"></md-icon>
+                                 alt="Save lipid panel"></md-icon>
                     </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 </form>

@@ -9,6 +9,7 @@
     </div>
     <div flex="100">
         <md-tabs>
+            <!-- begin bp -->
             <md-tab label="Blood Pressure">
                 <form name="bloodPressureForm" class="form-horizontal"
                       ng-model="vm.vitals.bp">
@@ -64,7 +65,7 @@
                         </div>
                         <md-input-container>
                             <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" id="bpDate" type="datetime-local" required/>
+                            <input ng-model="vm.vitals.date" id="bp-date" type="datetime-local" />
                         </md-input-container>
                     </div>
 
@@ -76,6 +77,8 @@
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 </form>
             </md-tab>
+
+            <!-- begin pulse/resp -->
             <md-tab label="Pulse and Respiration">
                 <ng-form name="pulseAndRespirationForm" class="form-horizontal"
                          ng-model="vm.vitals">
@@ -152,7 +155,7 @@
                     <div layout-sm="column" layout="row" layout-align="end center">
                         <md-input-container>
                             <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" id="hrDate" type="datetime-local" required/>
+                            <input ng-model="vm.vitals.date" id="pulse-date" type="datetime-local"/>
                         </md-input-container>
                     </div>
 
@@ -165,6 +168,8 @@
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 </ng-form>
             </md-tab>
+
+            <!-- begin BMI vitals -->
             <md-tab label="Height and Weight">
                 <form name="bmiForm" class="form-horizontal"
                       ng-model="vm.vitals.bmi">
@@ -241,7 +246,7 @@
 
                         <md-input-container>
                             <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" type="datetime-local"/>
+                            <input ng-model="vm.vitals.date" id="bmi-date" type="datetime-local"/>
                         </md-input-container>
 
                     </div>
@@ -253,6 +258,8 @@
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 </form>
             </md-tab>
+
+            <!-- begin other vitals -->
             <md-tab label="Other">
                 <form name="otherForm" class="form-horizontal"
                       ng-model="vm.vitals">
@@ -331,7 +338,7 @@
                     <div layout-sm="column" layout="row" layout-align="start center">
                         <md-input-container>
                             <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" type="datetime-local" />
+                            <input ng-model="vm.vitals.date" id="other-date" type="datetime-local" />
                         </md-input-container>
 
                     </div>
@@ -343,6 +350,8 @@
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 </form>
             </md-tab>
+
+            <!--begin smoking status-->
             <md-tab label="Smoking Status">
                 <form name="smokingStatusForm" class="form-horizontal"
                       ng-model="vm.vitals.smokingStatus">
@@ -360,7 +369,7 @@
 
                         <md-input-container>
                             <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" type="datetime-local"/>
+                            <input ng-model="vm.vitals.date" id="smoking-date" type="datetime-local"/>
                         </md-input-container>
                     </div>
                     <md-button ng-disabled="smokingStatusForm.$invalid"

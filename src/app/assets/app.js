@@ -36,92 +36,50 @@
         };
     });
 
-    function common($http, $q, $rootScope, $timeout, commonConfig, logger) {
-        var throttles = {};
+    function common($http, $location, $q, $rootScope, $timeout, $window, commonConfig, logger) {
 
         function activateController(promises, controllerId) {
             return $q.all(promises).then(function (eventArgs) {
-                var data = { controllerId: controllerId };
+                var data = {controllerId: controllerId};
                 $broadcast(commonConfig.config.controllerActivateSuccessEvent, data);
             });
         }
 
+        function calculateAge(birthDate) {
+            if (birthDate) {
+                var dob = birthDate;
+                if (angular.isDate(dob) === false) {
+                    dob = new Date(birthDate);
+                }
+                var ageDifMs = Date.now() - dob.getTime();
+                var ageDate = new Date(ageDifMs); // miliseconds from epoch
+                return Math.abs(ageDate.getUTCFullYear() - 1970);
+            } else {
+                return "unknown";
+            }
+        }
+
         function changeServer(server) {
             if (angular.isDefined(server)) {
-                var data = { "activeServer": server };
+                var data = {"activeServer": server};
+                $window.localStorage.removeItem("patient");
+                $window.localStorage.removeItem("organization");
+                var currentLocation = $location.path();
+                if ((currentLocation !== '/patient') && (currentLocation !== '/organization') ) {
+                    $location.path('/home');
+                }
                 $broadcast(commonConfig.config.serverChangeEvent, data);
             }
         }
 
+        //TODO: remove this
         function toggleProgressBar(show) {
-            var data = { show: show };
+            var data = {show: show};
             $broadcast(commonConfig.config.progressToggleEvent, data);
         }
 
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
-        }
-
-        function createSearchThrottle(viewmodel, list, filteredList, filter, delay) {
-            // After a delay, search a view-model's list using
-            // a filter function, and return a filteredList.
-
-            // custom delay or use default
-            delay = +delay || 300;
-            // if only vm and list parameters were passed, set others by naming convention
-            if (!filteredList) {
-                // assuming list is named sessions, filteredList is filteredSessions
-                filteredList = 'filtered' + list[0].toUpperCase() + list.substr(1).toLowerCase(); // string
-                // filter function is named sessionFilter
-                filter = list + 'Filter'; // function in string form
-            }
-
-            // create the filtering function we will call from here
-            var filterFn = function () {
-                // translates to ...
-                // vm.filteredSessions
-                //      = vm.sessions.filter(function(item( { returns vm.sessionFilter (item) } );
-                viewmodel[filteredList] = viewmodel[list].filter(function (item) {
-                    return viewmodel[filter](item);
-                });
-            };
-
-            return (function () {
-                // Wrapped in outer IFFE so we can use closure
-                // over filterInputTimeout which references the timeout
-                var filterInputTimeout;
-
-                // return what becomes the 'applyFilter' function in the controller
-                return function (searchNow) {
-                    if (filterInputTimeout) {
-                        $timeout.cancel(filterInputTimeout);
-                        filterInputTimeout = null;
-                    }
-                    if (searchNow || !delay) {
-                        filterFn();
-                    } else {
-                        filterInputTimeout = $timeout(filterFn, delay);
-                    }
-                };
-            })();
-        }
-
-        function debouncedThrottle(key, callback, delay, immediate) {
-            // Perform some action (callback) after a delay.
-            // Track the callback by key, so if the same callback
-            // is issued again, restart the delay.
-
-            var defaultDelay = 1000;
-            delay = delay || defaultDelay;
-            if (throttles[key]) {
-                $timeout.cancel(throttles[key]);
-                throttles[key] = undefined;
-            }
-            if (immediate) {
-                callback();
-            } else {
-                throttles[key] = $timeout(callback, delay);
-            }
         }
 
         function generateUUID() {
@@ -237,13 +195,13 @@
         function randomHash() {
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            for( var i=0; i < 5; i++ )
+            for (var i = 0; i < 5; i++)
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
             return text;
         }
 
         function shuffle(array) {
-            var currentIndex = array.length, temporaryValue, randomIndex ;
+            var currentIndex = array.length, temporaryValue, randomIndex;
             // While there remain elements to shuffle...
             while (0 !== currentIndex) {
 
@@ -267,9 +225,8 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            calculateAge: calculateAge,
             changeServer: changeServer,
-            createSearchThrottle: createSearchThrottle,
-            debouncedThrottle: debouncedThrottle,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,
             isNumber: isNumber,
@@ -289,7 +246,7 @@
     }
 
     commonModule.factory('common',
-        ['$http', '$q', '$rootScope', '$timeout', 'commonConfig', 'logger', common]);
+        ['$http', '$location', '$q', '$rootScope', '$timeout', '$window', 'commonConfig', 'logger', common]);
 })();(function () {
     'use strict';
 
@@ -474,6 +431,8 @@
             templateUrl: 'extensionDefinition/extensionDefinition-view.html'
         }).when('/extensionDefinition/edit/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/home', {
+            templateUrl: 'home/home.html'
         }).when('/lab', {
             templateUrl: 'lab/lab-edit.html'
         }).when('/operationDefinition', {
@@ -484,6 +443,8 @@
             templateUrl: 'operationDefinition/operationDefinition-edit.html'
         }).when('/organization', {
             templateUrl: 'organization/organization-search.html'
+        }).when('/organization/get/:id', {
+            templateUrl: 'organization/organization-view.html'
         }).when('/organization/detailed-search', {
             templateUrl: 'organization/organization-detailed-search.html'
         }).when('/organization/view/:hashKey', {
@@ -492,8 +453,8 @@
             templateUrl: 'organization/organization-edit.html'
         }).when('/organization/get/:resourceId', {
             templateUrl: 'organization/organization-view.html'
-        }).when('/patients/:orgId', {
-            templateUrl: 'patient/patient-search.html'
+        }).when('/patient/org/:orgId', {
+            templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html'
         }).when('/patient/get/:id', {
@@ -558,6 +519,7 @@
             .icon("error", "./assets/svb/error.svg", 48)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
+            .icon("groupAdd", "./assets/svg/groupAdd.svg", 24)
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
             .icon("https", "./assets/svg/https.svg", 24)
@@ -2789,8 +2751,8 @@
                         return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
                     });
             }
-
-            var errors;
+            //TODO: uncomment when UI support is restored
+/*            var errors;
             if ($window.localStorage.errors) {
                 errors = JSON.parse($window.localStorage.errors);
             } else {
@@ -2799,7 +2761,8 @@
             var localError = {"message": message};
             localError.id = generateUUID();
             errors.push(localError);
-            $window.localStorage.errors = JSON.stringify(errors);
+
+            $window.localStorage.errors = JSON.stringify(errors);*/
 
             logIt(message, data, source, showToast, 'error');
         }
@@ -2843,7 +2806,7 @@
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var _adminPages = [
-            {name: 'Organization', href: 'organization'},
+            {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
   /*          {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},
@@ -5558,7 +5521,7 @@
                 identifiers = [];
                 var system = "urn:fhir-cloud:id";
                 if (type) {
-                    system = "urn:fhir-cloud:" + type + ":id";
+                    system = "urn:fhir-cloud:" + type;
                 }
                 var defaultId = {
                     "use": "usual",
@@ -6576,20 +6539,6 @@
 
         vm.calculateBMI = calculateBMI;
 
-        function _calculateAge(birthDate) {
-            if (birthDate) {
-                var dob = birthDate;
-                if (angular.isDate(dob) === false) {
-                    dob = new Date(birthDate);
-                }
-                var ageDifMs = Date.now() - dob.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return "unknown";
-            }
-        }
-
         function _loadSmokingStatuses() {
             return vm.smokingStatuses = observationValueSets.smokingStatus();
         }
@@ -6628,11 +6577,12 @@
 
                 // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
                 vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + $routeParams.patientId;
+                logInfo("Launching SMART on FHIR application, please wait ...");
 
             } else if (angular.isDefined($window.localStorage.patient)) {
                 vm.consultation.patient = JSON.parse($window.localStorage.patient);
                 vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
-                vm.consultation.patient.age = _calculateAge(vm.consultation.patient.birthDate);
+                vm.consultation.patient.age = common.calculateAge(vm.consultation.patient.birthDate);
             } else {
                 logError("You must first select a patient before initiating a consultation", error);
                 $location.path('/patient');
@@ -6674,26 +6624,22 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
+                        $location.path('/lab');
                         break;
                     case 2:
-                        logInfo("Add a condition coming soon...");
+                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
                         break;
                     case 3:
-                        logInfo("Add a medication coming soon...");
-                        break;
-                    case 4:
-                        logInfo("Add an allergy coming soon...");
+                        $location.path('/patient');
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Add a condition', icon: 'rx', index: 2},
-                    {name: 'Add a medication', icon: 'rx', index: 3},
-                    {name: 'Add an allergy', icon: 'rx', index: 4}
+                    {name: 'Lab', icon: 'lab', index: 1},
+                    {name: 'Cardiac Risk', icon: 'cardio', index: 2},
+                    {name: 'Find another patient', icon: 'person', index: 3}
                 ];
                 this.title = 'Observation options';
                 this.performAction = function (action) {
@@ -7463,10 +7409,10 @@
             var deferred = $q.defer();
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
                 deferred.resolve(undefined);
             } else {
-                logInfo("Observation recorded at " + resourceVersionId);
+                logInfo("Observation recorded at " + resourceVersionId, null, noToast);
                 deferred.resolve($filter('idFromURL')(resourceVersionId));
             }
             return deferred.promise;
@@ -8080,38 +8026,12 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([_getActiveServer(), _loadLipidFindings()],
+            common.activateController([_getActiveServer()],
                 controllerId).then(function () {
                     vm.lab.date = new Date();
                     _getPatientContext();
 
                 });
-        }
-
-        function _initializeBMI() {
-            vm.lab.bmi.height = undefined;
-            vm.lab.bmi.weight = undefined;
-            vm.lab.bmi.interpretationCode = undefined;
-            vm.lab.bmi.interpretationText = "Enter new reading";
-        }
-
-        function _calculateAge(birthDate) {
-            if (birthDate) {
-                var dob = birthDate;
-                if (angular.isDate(dob) === false) {
-                    dob = new Date(birthDate);
-                }
-                var ageDifMs = Date.now() - dob.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return "unknown";
-            }
-        }
-
-        function _loadLipidFindings() {
-            vm.bodyTempMethods = observationValueSets.bodyTempMethods();
-            vm.bodyTempFinding = observationValueSets.bodyTempFindings();
         }
 
         function _getPatientContext() {
@@ -8135,7 +8055,7 @@
             } else if (angular.isDefined($window.localStorage.patient)) {
                 vm.lab.patient = JSON.parse($window.localStorage.patient);
                 vm.lab.patient.fullName = $filter('fullName')(vm.lab.patient.name);
-                vm.lab.patient.age = _calculateAge(vm.lab.patient.birthDate);
+                vm.lab.patient.age = common.calculateAge(vm.lab.patient.birthDate);
             } else {
                 logError("You must first select a patient before initiating a lab", error);
                 $location.path('/patient');
@@ -8177,14 +8097,22 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
+                        $location.path('consultation');
+                        break;
+                    case 2:
                         $location.path('consultation/smart/cardiac-risk/' + vm.lab.patient.id);
+                        break;
+                    case 3:
+                        $location.path('/patient');
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk report', icon: 'cardio', index: 1}
+                    {name: 'Consult', icon: 'healing', index: 1},
+                    {name: 'Cardiac Risk report', icon: 'cardio', index: 2},
+                    {name: 'Find another patient', icon: 'person', index: 3}
                 ];
                 this.title = 'Lab options';
                 this.performAction = function (action) {
@@ -8309,8 +8237,9 @@
             if (angular.isDefined(vm.lab.lipid.hdlCholesterol.value)
                 && angular.isDefined(vm.lab.lipid.ldlCholesterol.value)
                 && angular.isDefined(vm.lab.lipid.triglyceride.value)) {
-                vm.lab.lipid.cholesterol.value = (vm.lab.lipid.hdlCholesterol.value + vm.lab.lipid.ldlCholesterol.value)
+                var calculatedValue = (vm.lab.lipid.hdlCholesterol.value + vm.lab.lipid.ldlCholesterol.value)
                 + (.2 * vm.lab.lipid.triglyceride.value);
+                vm.lab.lipid.cholesterol.value = Math.round(calculatedValue);
 
                 /*
                  Adults:
@@ -8394,28 +8323,40 @@
                 }
                 return deferred.promise;
             }
-
+            vm.isBusy = true;
             logInfo("Saving lipid results to " + vm.activeServer.name);
+            form.$invalid = true;
             var observations = [];
             observations.push(_buildLdlCResult());
             observations.push(_buildHdlCResult());
             observations.push(_buildTriglycerideResult());
             observations.push(_buildTotalCResult());
-            vm.isBusy = true;
+
 
             savePrimaryObs(observations)
                 .then(function () {
-                    logInfo("Lipid profile results saved successfully");
+                    logInfo("Lipid profile results saved successfully!");
+                    //TODO: save diagnostic report
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
                     vm.isBusy = false;
-                    form.$setPristine();
+                    _initializeLipid(form);
                 })
         }
 
         vm.saveLipid = saveLipid;
 
+        function _initializeLipid(form) {
+            vm.lab.lipid.hdlCholesterol.value = undefined;
+            vm.lab.lipid.ldlCholesterol.value = undefined;
+            vm.lab.lipid.triglyceride.value = undefined;
+            vm.lab.lipid.cholesterol.value = undefined;
+            updateHdlCholesterol();
+            updateLdlCholesterol();
+            updateTriglyceride();
+            form.$setPristine();
+        }
         function _buildTriglycerideResult() {
             var triglycerideResult = observationService.initializeNewObservation();
             triglycerideResult.code = {
@@ -8579,10 +8520,10 @@
             var deferred = $q.defer();
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
                 deferred.resolve(undefined);
             } else {
-                logInfo("Observation recorded at " + resourceVersionId);
+                logInfo("Observation recorded at " + resourceVersionId, null, noToast);
                 deferred.resolve($filter('idFromURL')(resourceVersionId));
             }
             return deferred.promise;
@@ -9691,6 +9632,7 @@
                     );
                 }
             }
+
             if (angular.isDefined(organization) && organization.resourceId) {
                 var confirm = $mdDialog.confirm().title('Delete ' + organization.name + '?').ok('Yes').cancel('No');
                 $mdDialog.show(confirm).then(executeDelete);
@@ -9742,9 +9684,25 @@
                 addressService.init(vm.organization.address, false);
                 contactService.init(vm.organization.contact);
                 contactPointService.init(vm.organization.telecom, false, false);
+
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.organization = JSON.stringify(vm.organization);
+                }
             }
 
-            if ($routeParams.hashKey === 'new') {
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.organization) || ($window.localStorage.organization === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/organization');
+                    }
+                } else {
+                    vm.organization = JSON.parse($window.localStorage.organization);
+                    vm.organization.hashKey = "current";
+                    initializeRelatedData(vm.organization);
+                }
+            } else if (vm.lookupKey === 'new') {
                 var data = organizationService.initializeNewOrganization();
                 initializeRelatedData(data);
                 vm.title = 'Add New Organization';
@@ -9761,8 +9719,8 @@
                         logError($filter('unexpectedOutcome')(error));
                     });
             } else {
-                if ($routeParams.hashKey) {
-                    organizationService.getCachedOrganization($routeParams.hashKey)
+                if (vm.lookupKey) {
+                    organizationService.getCachedOrganization(vm.lookupKey)
                         .then(initializeRelatedData).then(function () {
                             var session = sessionService.getSession();
                             session.organization = vm.organization;
@@ -9885,10 +9843,10 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/organization/edit/new');
+                        createRandomPatients();
                         break;
                     case 1:
-                        createRandomPatients();
+                        $location.path('/patient/org/' + vm.organization.id);
                         break;
                     case 2:
                         $location.path('/organization/detailed-search');
@@ -9897,18 +9855,31 @@
                         $location.path('/organization');
                         break;
                     case 4:
+                        $location.path('/organization/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/organization/edit/new');
+                        break;
+                    case 6:
                         deleteOrganization(vm.organization);
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
-                this.items = [
-                    {name: 'Add new organization', icon: 'add', index: 0},
-                    {name: 'Create random patients', icon: 'group', index: 1},
-                    {name: 'Detailed search', icon: 'search', index: 2},
-                    {name: 'Quick find', icon: 'hospital', index: 3},
-                    {name: 'Delete organization', icon: 'delete', index: 4},
-                ];
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Add random patients', icon: 'groupAdd', index: 0},
+                        {name: 'Get patients', icon: 'group', index: 1},
+                        {name: 'Quick find', icon: 'hospital', index: 3},
+                        {name: 'Edit organization', icon: 'edit', index: 4},
+                        {name: 'Add new organization', icon: 'add', index: 5}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 2},
+                        {name: 'Quick find', icon: 'hospital', index: 3}
+                    ];
+                }
                 this.title = 'Organization search options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
@@ -10622,7 +10593,7 @@
                     communicationService.init(vm.patient.communication, "multi");
                 }
                 vm.patient.fullName = humanNameService.getFullName();
-                if (angular.isDefined(vm.patient.id))  {
+                if (angular.isDefined(vm.patient.id)) {
                     vm.patient.resourceId = (vm.activeServer.baseUrl + '/Patient/' + vm.patient.id);
                 }
                 if (vm.patient.managingOrganization && vm.patient.managingOrganization.reference) {
@@ -10634,13 +10605,15 @@
                         vm.patient.managingOrganization.display = reference;
                     }
                 }
-                $window.localStorage.patient = JSON.stringify(vm.patient);
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.patient = JSON.stringify(vm.patient);
+                }
             }
 
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
-                if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
+                if (angular.isUndefined($window.localStorage.patient) || ($window.localStorage.patient === null)) {
                     if (angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
                     }
@@ -10652,13 +10625,13 @@
             } else if (angular.isDefined($routeParams.id)) {
                 var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
                 patientService.getPatient(resourceId)
-                    .then(function(resource) {
+                    .then(function (resource) {
                         initializeAdministrationData(resource.data);
                         if (vm.patient) {
                             getEverything(resourceId);
                         }
                     }, function (error) {
-                            logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error));
                     });
             } else if (vm.lookupKey === 'new') {
                 var data = patientService.initializeNewPatient();
@@ -10667,7 +10640,7 @@
                 vm.isEditing = false;
             } else if (vm.lookupKey !== "current") {
                 patientService.getCachedPatient(vm.lookupKey)
-                    .then(function(data) {
+                    .then(function (data) {
                         initializeAdministrationData(data);
                         if (vm.patient && vm.patient.resourceId) {
                             getEverything(vm.patient.resourceId);
@@ -10812,10 +10785,10 @@
                         $location.path('/patient');
                         break;
                     case 4:
-                        $location.path('/patient/edit/new');
+                        $location.path('/patient/edit/current');
                         break;
                     case 5:
-                        $location.path('/patient/edit/current');
+                        $location.path('/patient/edit/new');
                         break;
                     case 6:
                         deletePatient(vm.patient);
@@ -10823,14 +10796,21 @@
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
-                this.items = [
-                    {name: 'Consult', icon: 'healing', index: 0},
-                    {name: 'Lab', icon: 'lab', index: 1},
-                    {name: 'Refresh data', icon: 'refresh', index: 2},
-                    {name: 'Find another patient', icon: 'person', index: 3},
-                    {name: 'Edit patient', icon: 'edit', index: 5},
-                    {name: 'Delete patient', icon: 'delete', index: 6}
-                ];
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Consult', icon: 'healing', index: 0},
+                        {name: 'Lab', icon: 'lab', index: 1},
+                        {name: 'Refresh data', icon: 'refresh', index: 2},
+                        {name: 'Find another patient', icon: 'person', index: 3},
+                        {name: 'Edit patient', icon: 'edit', index: 4},
+                        {name: 'Add new patient', icon: 'personAdd', index: 5}
+                    ];
+                } else
+                {
+                    this.items = [
+                        {name: 'Find another patient', icon: 'person', index: 3},
+                    ];
+                }
                 this.title = 'Patient options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
@@ -11016,23 +10996,17 @@
         var noToast = false;
         var $q = common.$q;
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
-            }
-        );
-
         function activate() {
             common.activateController([getActiveServer()], controllerId)
                 .then(function () {
-                    if ($routeParams.orgId !== null) {
-                        //   getOrganizationPatients($routeParams.orgId);
+                    if (angular.isDefined($routeParams.orgId)) {
+                        getOrganizationPatients($routeParams.orgId);
+                        logInfo("Retrieving patients for current organization, please wait...");
                     } else {
 
                     }
                 }, function (error) {
-                    logError('Error ' + error);
+                    logError('Error initializing patient search', error);
                 });
         }
 
@@ -11044,16 +11018,8 @@
         }
 
         function getOrganizationPatients(orgId) {
-            var deferred = $q.defer();
-            patientService.getPatients(vm.activeServer.baseUrl, vm.searchText, org)
-                .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
-                    deferred.resolve(data.entry || []);
-                }, function (error) {
-                    logError('Error getting patients', error, noToast);
-                    deferred.reject();
-                });
-            return deferred.promise;
+            vm.patientSearch.organization = orgId;
+            detailSearch();
         }
 
         function goToPatient(patient) {
@@ -11180,6 +11146,7 @@
                 var dd = input.getDate().toString();
                 return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
             }
+
             searchPatients(queryString);
         }
 
@@ -11187,7 +11154,8 @@
             vm.isBusy = true;
             patientService.getPatientsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
@@ -11199,11 +11167,12 @@
                 });
         }
 
-        function querySearch(searchText) {
+        function quickSearch(searchText) {
             var deferred = $q.defer();
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
                     logError('Error getting patients', error, noToast);
@@ -11211,13 +11180,15 @@
                 });
             return deferred.promise;
         }
+        vm.quickSearch = quickSearch;
 
         function searchPatients(searchText) {
             var deferred = $q.defer();
             vm.isBusy = true;
             patientService.searchPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    vm.activeServer.name, null, noToast);
                     processSearchResults(data);
                     vm.isBusy = false;
                     vm.selectedTab = 1;
@@ -11299,7 +11270,6 @@
         vm.goToPatient = goToPatient;
         vm.patients = [];
         vm.selectedPatient = null;
-        vm.querySearch = querySearch;
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'Patients';

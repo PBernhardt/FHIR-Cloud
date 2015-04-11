@@ -182,6 +182,8 @@
             templateUrl: 'extensionDefinition/extensionDefinition-view.html'
         }).when('/extensionDefinition/edit/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/home', {
+            templateUrl: 'home/home.html'
         }).when('/lab', {
             templateUrl: 'lab/lab-edit.html'
         }).when('/operationDefinition', {
@@ -192,6 +194,8 @@
             templateUrl: 'operationDefinition/operationDefinition-edit.html'
         }).when('/organization', {
             templateUrl: 'organization/organization-search.html'
+        }).when('/organization/get/:id', {
+            templateUrl: 'organization/organization-view.html'
         }).when('/organization/detailed-search', {
             templateUrl: 'organization/organization-detailed-search.html'
         }).when('/organization/view/:hashKey', {
@@ -200,8 +204,8 @@
             templateUrl: 'organization/organization-edit.html'
         }).when('/organization/get/:resourceId', {
             templateUrl: 'organization/organization-view.html'
-        }).when('/patients/:orgId', {
-            templateUrl: 'patient/patient-search.html'
+        }).when('/patient/org/:orgId', {
+            templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html'
         }).when('/patient/get/:id', {
@@ -266,6 +270,7 @@
             .icon("error", "./assets/svb/error.svg", 48)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
+            .icon("groupAdd", "./assets/svg/groupAdd.svg", 24)
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
             .icon("https", "./assets/svg/https.svg", 24)

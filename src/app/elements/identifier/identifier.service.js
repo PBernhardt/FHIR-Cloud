@@ -52,7 +52,7 @@
                 identifiers = [];
                 var system = "urn:fhir-cloud:id";
                 if (type) {
-                    system = "urn:fhir-cloud:" + type + ":id";
+                    system = "urn:fhir-cloud:" + type;
                 }
                 var defaultId = {
                     "use": "usual",

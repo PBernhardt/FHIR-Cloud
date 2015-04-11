@@ -11,7 +11,7 @@
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var _adminPages = [
-            {name: 'Organization', href: 'organization'},
+            {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
   /*          {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},

@@ -4,7 +4,7 @@
     <title>FHIR Cloud</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="shortcut icon" href="favicon.ico"/>
-<!--    <link rel="stylesheet" href="https://rawgit.com/angular/bower-material/master/angular-material.css">-->
+    <!--    <link rel="stylesheet" href="https://rawgit.com/angular/bower-material/master/angular-material.css">-->
 
     <link rel="stylesheet" href="assets/lib/angular-material.css">
     <link rel="stylesheet" href="assets/app.css"/>
@@ -15,19 +15,26 @@
 
 <body ng-app="FHIRCloud" layout="column" ng-controller="mainController as vm">
 <md-toolbar layout="row" class="fill-height">
-    <md-button class="menu" hide-gt-sm ng-click="vm.toggleMenu()" aria-label="Show Menu">
-        <md-icon md-svg-src="menu"></md-icon>
-    </md-button>
-    <h1 hide-sm>FHIR Cloud</h1>
-<!--    <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
-        <md-icon md-svg-src="account"></md-icon>
-    </md-button>-->
-    <md-button class="menu" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
-        <md-icon md-svg-src="fire"></md-icon>
-    </md-button>
-    <md-button class="menu" ng-click="vm.showAbout()" hide-sm aria-label="About">
-        <md-icon md-svg-src="cloud"></md-icon>
-    </md-button>
+    <div flex="25" layout="row" layout-align="space-between center">
+        <md-button class="menu" hide-gt-sm ng-click="vm.toggleMenu()" aria-label="Show Menu">
+            <md-icon md-svg-src="menu"></md-icon>
+        </md-button>
+        <md-button ng-href="#/home" md-no-ink hide-sm>FHIR Cloud</md-button>
+    </div>
+
+    <div flex layout="row" layout-align="end center">
+        <!--        <p>User: {{vm.user || "Guest"}}</p>-->
+        <!--    <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
+               <md-icon md-svg-src="account"></md-icon>
+           </md-button>-->
+        <h4 hide-sm>Server: {{vm.activeServer.name || "Select a server"}}</h4>
+        <md-button class="menu" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
+            <md-icon md-svg-src="fire"></md-icon>
+        </md-button>
+        <md-button class="menu" ng-click="vm.showAbout()" hide-sm aria-label="About">
+            <md-icon md-svg-src="cloud"></md-icon>
+        </md-button>
+    </div>
 </md-toolbar>
 
 <div flex layout="row">
@@ -51,7 +58,8 @@
     <md-content flex id="content">
         <div ng-view></div>
 
-        <md-sidenav class="md-sidenav-right md-whiteframe-z2" style="width: 100px" md-component-id="right" tabindex="-1">
+        <md-sidenav class="md-sidenav-right md-whiteframe-z2" style="width: 100px" md-component-id="right"
+                    tabindex="-1">
             <md-toolbar class="md-theme-light">
                 <h1 class="md-toolbar-tools">FHIR Servers</h1>
             </md-toolbar>
@@ -61,7 +69,8 @@
                         <md-button ng-click="vm.selectServer(server)"
                                    ng-class="{'selected' : server === server.selected }">
                             <span class="md-inline-list-icon-label">{{ server.name }}</span>
-                            <md-icon ng-if="server.secure" md-svg-src="https" style="width: 12px; height: 12px;"></md-icon>
+                            <md-icon ng-if="server.secure" md-svg-src="https"
+                                     style="width: 12px; height: 12px;"></md-icon>
                         </md-button>
                     </md-item>
                 </md-list>
@@ -74,7 +83,6 @@
 <!--<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-animate.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular-aria.js"></script>-->
-
 
 
 <script src="assets/lib/angular.min.js"></script>

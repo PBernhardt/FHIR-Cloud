@@ -48,8 +48,8 @@
                         return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
                     });
             }
-
-            var errors;
+            //TODO: uncomment when UI support is restored
+/*            var errors;
             if ($window.localStorage.errors) {
                 errors = JSON.parse($window.localStorage.errors);
             } else {
@@ -58,7 +58,8 @@
             var localError = {"message": message};
             localError.id = generateUUID();
             errors.push(localError);
-            $window.localStorage.errors = JSON.stringify(errors);
+
+            $window.localStorage.errors = JSON.stringify(errors);*/
 
             logIt(message, data, source, showToast, 'error');
         }

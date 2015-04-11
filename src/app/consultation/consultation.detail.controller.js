@@ -78,20 +78,6 @@
 
         vm.calculateBMI = calculateBMI;
 
-        function _calculateAge(birthDate) {
-            if (birthDate) {
-                var dob = birthDate;
-                if (angular.isDate(dob) === false) {
-                    dob = new Date(birthDate);
-                }
-                var ageDifMs = Date.now() - dob.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return "unknown";
-            }
-        }
-
         function _loadSmokingStatuses() {
             return vm.smokingStatuses = observationValueSets.smokingStatus();
         }
@@ -130,11 +116,12 @@
 
                 // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
                 vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + $routeParams.patientId;
+                logInfo("Launching SMART on FHIR application, please wait ...");
 
             } else if (angular.isDefined($window.localStorage.patient)) {
                 vm.consultation.patient = JSON.parse($window.localStorage.patient);
                 vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
-                vm.consultation.patient.age = _calculateAge(vm.consultation.patient.birthDate);
+                vm.consultation.patient.age = common.calculateAge(vm.consultation.patient.birthDate);
             } else {
                 logError("You must first select a patient before initiating a consultation", error);
                 $location.path('/patient');
@@ -176,26 +163,22 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
+                        $location.path('/lab');
                         break;
                     case 2:
-                        logInfo("Add a condition coming soon...");
+                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
                         break;
                     case 3:
-                        logInfo("Add a medication coming soon...");
-                        break;
-                    case 4:
-                        logInfo("Add an allergy coming soon...");
+                        $location.path('/patient');
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Add a condition', icon: 'rx', index: 2},
-                    {name: 'Add a medication', icon: 'rx', index: 3},
-                    {name: 'Add an allergy', icon: 'rx', index: 4}
+                    {name: 'Lab', icon: 'lab', index: 1},
+                    {name: 'Cardiac Risk', icon: 'cardio', index: 2},
+                    {name: 'Find another patient', icon: 'person', index: 3}
                 ];
                 this.title = 'Observation options';
                 this.performAction = function (action) {
@@ -965,10 +948,10 @@
             var deferred = $q.defer();
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
                 deferred.resolve(undefined);
             } else {
-                logInfo("Observation recorded at " + resourceVersionId);
+                logInfo("Observation recorded at " + resourceVersionId, null, noToast);
                 deferred.resolve($filter('idFromURL')(resourceVersionId));
             }
             return deferred.promise;

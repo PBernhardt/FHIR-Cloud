@@ -17,38 +17,12 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([_getActiveServer(), _loadLipidFindings()],
+            common.activateController([_getActiveServer()],
                 controllerId).then(function () {
                     vm.lab.date = new Date();
                     _getPatientContext();
 
                 });
-        }
-
-        function _initializeBMI() {
-            vm.lab.bmi.height = undefined;
-            vm.lab.bmi.weight = undefined;
-            vm.lab.bmi.interpretationCode = undefined;
-            vm.lab.bmi.interpretationText = "Enter new reading";
-        }
-
-        function _calculateAge(birthDate) {
-            if (birthDate) {
-                var dob = birthDate;
-                if (angular.isDate(dob) === false) {
-                    dob = new Date(birthDate);
-                }
-                var ageDifMs = Date.now() - dob.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return "unknown";
-            }
-        }
-
-        function _loadLipidFindings() {
-            vm.bodyTempMethods = observationValueSets.bodyTempMethods();
-            vm.bodyTempFinding = observationValueSets.bodyTempFindings();
         }
 
         function _getPatientContext() {
@@ -72,7 +46,7 @@
             } else if (angular.isDefined($window.localStorage.patient)) {
                 vm.lab.patient = JSON.parse($window.localStorage.patient);
                 vm.lab.patient.fullName = $filter('fullName')(vm.lab.patient.name);
-                vm.lab.patient.age = _calculateAge(vm.lab.patient.birthDate);
+                vm.lab.patient.age = common.calculateAge(vm.lab.patient.birthDate);
             } else {
                 logError("You must first select a patient before initiating a lab", error);
                 $location.path('/patient');
@@ -114,14 +88,22 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
+                        $location.path('consultation');
+                        break;
+                    case 2:
                         $location.path('consultation/smart/cardiac-risk/' + vm.lab.patient.id);
+                        break;
+                    case 3:
+                        $location.path('/patient');
                         break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk report', icon: 'cardio', index: 1}
+                    {name: 'Consult', icon: 'healing', index: 1},
+                    {name: 'Cardiac Risk report', icon: 'cardio', index: 2},
+                    {name: 'Find another patient', icon: 'person', index: 3}
                 ];
                 this.title = 'Lab options';
                 this.performAction = function (action) {
@@ -246,8 +228,9 @@
             if (angular.isDefined(vm.lab.lipid.hdlCholesterol.value)
                 && angular.isDefined(vm.lab.lipid.ldlCholesterol.value)
                 && angular.isDefined(vm.lab.lipid.triglyceride.value)) {
-                vm.lab.lipid.cholesterol.value = (vm.lab.lipid.hdlCholesterol.value + vm.lab.lipid.ldlCholesterol.value)
+                var calculatedValue = (vm.lab.lipid.hdlCholesterol.value + vm.lab.lipid.ldlCholesterol.value)
                 + (.2 * vm.lab.lipid.triglyceride.value);
+                vm.lab.lipid.cholesterol.value = Math.round(calculatedValue);
 
                 /*
                  Adults:
@@ -331,28 +314,40 @@
                 }
                 return deferred.promise;
             }
-
+            vm.isBusy = true;
             logInfo("Saving lipid results to " + vm.activeServer.name);
+            form.$invalid = true;
             var observations = [];
             observations.push(_buildLdlCResult());
             observations.push(_buildHdlCResult());
             observations.push(_buildTriglycerideResult());
             observations.push(_buildTotalCResult());
-            vm.isBusy = true;
+
 
             savePrimaryObs(observations)
                 .then(function () {
-                    logInfo("Lipid profile results saved successfully");
+                    logInfo("Lipid profile results saved successfully!");
+                    //TODO: save diagnostic report
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
                     vm.isBusy = false;
-                    form.$setPristine();
+                    _initializeLipid(form);
                 })
         }
 
         vm.saveLipid = saveLipid;
 
+        function _initializeLipid(form) {
+            vm.lab.lipid.hdlCholesterol.value = undefined;
+            vm.lab.lipid.ldlCholesterol.value = undefined;
+            vm.lab.lipid.triglyceride.value = undefined;
+            vm.lab.lipid.cholesterol.value = undefined;
+            updateHdlCholesterol();
+            updateLdlCholesterol();
+            updateTriglyceride();
+            form.$setPristine();
+        }
         function _buildTriglycerideResult() {
             var triglycerideResult = observationService.initializeNewObservation();
             triglycerideResult.code = {
@@ -516,10 +511,10 @@
             var deferred = $q.defer();
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                logWarning("Observation saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
                 deferred.resolve(undefined);
             } else {
-                logInfo("Observation recorded at " + resourceVersionId);
+                logInfo("Observation recorded at " + resourceVersionId, null, noToast);
                 deferred.resolve($filter('idFromURL')(resourceVersionId));
             }
             return deferred.promise;

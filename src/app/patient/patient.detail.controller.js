@@ -121,7 +121,7 @@
                     communicationService.init(vm.patient.communication, "multi");
                 }
                 vm.patient.fullName = humanNameService.getFullName();
-                if (angular.isDefined(vm.patient.id))  {
+                if (angular.isDefined(vm.patient.id)) {
                     vm.patient.resourceId = (vm.activeServer.baseUrl + '/Patient/' + vm.patient.id);
                 }
                 if (vm.patient.managingOrganization && vm.patient.managingOrganization.reference) {
@@ -133,13 +133,15 @@
                         vm.patient.managingOrganization.display = reference;
                     }
                 }
-                $window.localStorage.patient = JSON.stringify(vm.patient);
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.patient = JSON.stringify(vm.patient);
+                }
             }
 
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
-                if (angular.isUndefined($window.localStorage.patient) || $window.localStorage.patient === "null") {
+                if (angular.isUndefined($window.localStorage.patient) || ($window.localStorage.patient === null)) {
                     if (angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
                     }
@@ -151,13 +153,13 @@
             } else if (angular.isDefined($routeParams.id)) {
                 var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
                 patientService.getPatient(resourceId)
-                    .then(function(resource) {
+                    .then(function (resource) {
                         initializeAdministrationData(resource.data);
                         if (vm.patient) {
                             getEverything(resourceId);
                         }
                     }, function (error) {
-                            logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error));
                     });
             } else if (vm.lookupKey === 'new') {
                 var data = patientService.initializeNewPatient();
@@ -166,7 +168,7 @@
                 vm.isEditing = false;
             } else if (vm.lookupKey !== "current") {
                 patientService.getCachedPatient(vm.lookupKey)
-                    .then(function(data) {
+                    .then(function (data) {
                         initializeAdministrationData(data);
                         if (vm.patient && vm.patient.resourceId) {
                             getEverything(vm.patient.resourceId);
@@ -311,10 +313,10 @@
                         $location.path('/patient');
                         break;
                     case 4:
-                        $location.path('/patient/edit/new');
+                        $location.path('/patient/edit/current');
                         break;
                     case 5:
-                        $location.path('/patient/edit/current');
+                        $location.path('/patient/edit/new');
                         break;
                     case 6:
                         deletePatient(vm.patient);
@@ -322,14 +324,21 @@
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
-                this.items = [
-                    {name: 'Consult', icon: 'healing', index: 0},
-                    {name: 'Lab', icon: 'lab', index: 1},
-                    {name: 'Refresh data', icon: 'refresh', index: 2},
-                    {name: 'Find another patient', icon: 'person', index: 3},
-                    {name: 'Edit patient', icon: 'edit', index: 5},
-                    {name: 'Delete patient', icon: 'delete', index: 6}
-                ];
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Consult', icon: 'healing', index: 0},
+                        {name: 'Lab', icon: 'lab', index: 1},
+                        {name: 'Refresh data', icon: 'refresh', index: 2},
+                        {name: 'Find another patient', icon: 'person', index: 3},
+                        {name: 'Edit patient', icon: 'edit', index: 4},
+                        {name: 'Add new patient', icon: 'personAdd', index: 5}
+                    ];
+                } else
+                {
+                    this.items = [
+                        {name: 'Find another patient', icon: 'person', index: 3},
+                    ];
+                }
                 this.title = 'Patient options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);

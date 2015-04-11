@@ -13,23 +13,17 @@
         var noToast = false;
         var $q = common.$q;
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
-            }
-        );
-
         function activate() {
             common.activateController([getActiveServer()], controllerId)
                 .then(function () {
-                    if ($routeParams.orgId !== null) {
-                        //   getOrganizationPatients($routeParams.orgId);
+                    if (angular.isDefined($routeParams.orgId)) {
+                        getOrganizationPatients($routeParams.orgId);
+                        logInfo("Retrieving patients for current organization, please wait...");
                     } else {
 
                     }
                 }, function (error) {
-                    logError('Error ' + error);
+                    logError('Error initializing patient search', error);
                 });
         }
 
@@ -41,16 +35,8 @@
         }
 
         function getOrganizationPatients(orgId) {
-            var deferred = $q.defer();
-            patientService.getPatients(vm.activeServer.baseUrl, vm.searchText, org)
-                .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
-                    deferred.resolve(data.entry || []);
-                }, function (error) {
-                    logError('Error getting patients', error, noToast);
-                    deferred.reject();
-                });
-            return deferred.promise;
+            vm.patientSearch.organization = orgId;
+            detailSearch();
         }
 
         function goToPatient(patient) {
@@ -177,6 +163,7 @@
                 var dd = input.getDate().toString();
                 return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
             }
+
             searchPatients(queryString);
         }
 
@@ -184,7 +171,8 @@
             vm.isBusy = true;
             patientService.getPatientsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
@@ -196,11 +184,12 @@
                 });
         }
 
-        function querySearch(searchText) {
+        function quickSearch(searchText) {
             var deferred = $q.defer();
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
                     logError('Error getting patients', error, noToast);
@@ -208,13 +197,15 @@
                 });
             return deferred.promise;
         }
+        vm.quickSearch = quickSearch;
 
         function searchPatients(searchText) {
             var deferred = $q.defer();
             vm.isBusy = true;
             patientService.searchPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    vm.activeServer.name, null, noToast);
                     processSearchResults(data);
                     vm.isBusy = false;
                     vm.selectedTab = 1;
@@ -296,7 +287,6 @@
         vm.goToPatient = goToPatient;
         vm.patients = [];
         vm.selectedPatient = null;
-        vm.querySearch = querySearch;
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'Patients';
