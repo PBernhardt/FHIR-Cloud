@@ -8239,17 +8239,17 @@
                 && angular.isDefined(vm.lab.lipid.ldlCholesterol.value)
                 && angular.isDefined(vm.lab.lipid.triglyceride.value)) {
                 var calculatedValue = (vm.lab.lipid.hdlCholesterol.value + vm.lab.lipid.ldlCholesterol.value)
-                + (.2 * vm.lab.lipid.triglyceride.value);
+                    + (.2 * vm.lab.lipid.triglyceride.value);
                 vm.lab.lipid.cholesterol.value = Math.round(calculatedValue);
 
                 /*
                  Adults:
-                 below 200 mg/Dl - desirable
+                 below 200 mg/dL - desirable
                  200 > 239 - borderline high
                  >= 240 - high risk
 
                  Children:
-                 below 170 mg/Dl - desirable
+                 below 170 mg/dL - desirable
                  170 > 199 - borderline high
                  >= 200 - high risk
 
@@ -8296,6 +8296,54 @@
             }
         }
 
+        function saveCRP(form) {
+            var crpObservation = _buildCrpResult();
+            logInfo("Saving HS CRP result to " + vm.activeServer.name);
+            observationService.addObservation(crpObservation)
+                .then(_processCreateResponse,
+                function (error) {
+                    logError(common.unexpectedOutcome(error));
+                }).then(function () {
+                    logInfo("HS CRP result saved successfully!");
+                    _initializeCrp(form);
+                })
+        }
+
+        vm.saveCRP = saveCRP;
+
+        function updateCRP() {
+            /*
+             Low risk: less than 1.0 mg/L
+             Average risk: 1.0 to 3.0 mg/L
+             High risk: 3.0 mg/L to 10.0 mg/L
+             Abnormal: above 10
+             */
+            switch (true) {
+                case (vm.lab.crp.value < 1.0):
+                    vm.lab.crp.interpretationText = "Low risk";
+                    vm.lab.crp.color = "green";
+                    break;
+                case ((vm.lab.crp.value >= 1.0) && (vm.lab.crp.value < 3.0)):
+                    vm.lab.crp.interpretationText = "Average risk";
+                    vm.lab.crp.color = "orange";
+                    break;
+                case ((vm.lab.crp.value >= 3.0) && (vm.lab.crp.value < 10)):
+                    vm.lab.crp.interpretationText = "High risk";
+                    vm.lab.crp.color = "red";
+                    break;
+                case (vm.lab.crp.value >= 10):
+                    vm.lab.crp.interpretationText = "Abnormally high (retest later)";
+                    vm.lab.crp.color = "purple";
+                    break;
+                default:
+                    vm.lab.crp.interpretationText = "Indeterminate";
+                    vm.lab.crp.color = "grey";
+                    break;
+            }
+        }
+
+        vm.updateCRP = updateCRP;
+
         function saveLipid(form) {
             function savePrimaryObs(observations) {
                 var deferred = $q.defer();
@@ -8324,6 +8372,7 @@
                 }
                 return deferred.promise;
             }
+
             vm.isBusy = true;
             logInfo("Saving lipid results to " + vm.activeServer.name);
             form.$invalid = true;
@@ -8358,13 +8407,128 @@
             updateTriglyceride();
             form.$setPristine();
         }
+
+        function _initializeCrp(form) {
+            vm.lab.crp.value = undefined;
+            vm.lab.crp.interpretationText = "Enter new reading";
+            vm.lab.crp.color = "black";
+            form.$setPristine();
+        }
+
+        function _buildCrpResult() {
+            var hsCRPObs = observationService.initializeNewObservation();
+            hsCRPObs.code = {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "30522-7",
+                        "display": "CRP SerPl High Sens-mCnc",
+                        "primary": true
+                    }, {
+                        "system": "http://snomed.info/sct",
+                        "code": "55235003",
+                        "display": "C-reactive protein measurement",
+                        "primary": false
+                    }, {
+                        "system": "http://snomed.info/sct",
+                        "code": "135842001",
+                        "display": "Serum C-reactive protein measurement",
+                        "primary": false
+                    }
+                ],
+                "text": "High-sensitivity C-Reactive Protein (CRP)"
+            };
+            hsCRPObs.valueQuantity = {
+                "value": vm.lab.crp.value,
+                "units": "mg/L",
+                "system": "http://snomed.info/sct",
+                "code": "258796002"
+            };
+            hsCRPObs.referenceRange = [
+                {
+                    "low": {
+                        "value": 0
+                    },
+                    "high": {
+                        "value": 0.9
+                    },
+                    "meaning": {
+                        "coding": [
+                            {
+                                "system": "http://snomed.info/sct",
+                                "code": "394688002",
+                                "display": "Low risk of primary heart disease"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "low": {
+                        "value": 1.0
+                    },
+                    "high": {
+                        "value": 2.9
+                    },
+                    "meaning": {
+                        "coding": [
+                            {
+                                "system": "http://snomed.info/sct",
+                                "code": "394689005",
+                                "display": "Moderate risk of primary heart disease"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "low": {
+                        "value": 3.0
+                    },
+                    "high": {
+                        "value": 9.9
+                    },
+                    "meaning": {
+                        "coding": [
+                            {
+                                "system": "http://snomed.info/sct",
+                                "code": "394690001",
+                                "display": "High risk of primary heart disease"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "low": {
+                        "value": 10
+                    },
+                    "meaning": {
+                        "coding": [
+                            {
+                                "system": "http://snomed.info/sct",
+                                "code": "166584001",
+                                "display": "C-reactive protein abnormal"
+                            }
+                        ]
+                    }
+                }
+            ];
+            hsCRPObs.status = "final";
+            hsCRPObs.reliability = "ok";
+            hsCRPObs.subject = {
+                "reference": 'Patient/' + vm.lab.patient.id,
+                "display": vm.lab.patient.fullName
+            };
+            hsCRPObs.appliesDateTime = vm.lab.date.toISOString();
+            return hsCRPObs;
+        }
+
         function _buildTriglycerideResult() {
             var triglycerideResult = observationService.initializeNewObservation();
             triglycerideResult.code = {
                 "coding": [
                     {
                         "system": "http://loinc.org",
-                        "code": "35217-9",
+                        "code": "2571-8",
+                        "display": "Trigl SerPl-mCnc",
                         "primary": true
                     }
                 ],
@@ -8372,7 +8536,7 @@
             };
             triglycerideResult.valueQuantity = {
                 "value": vm.lab.lipid.triglyceride.value,
-                "units": "mg/Dl",
+                "units": "mg/dL",
                 "system": "http://snomed.info/sct",
                 "code": "258797006"
             };
@@ -8380,7 +8544,7 @@
                 {
                     "high": {
                         "value": 200,
-                        "units": "mg/Dl",
+                        "units": "mg/dL",
                         "system": "http://snomed.info/sct",
                         "code": "258797006"
                     }
@@ -8392,7 +8556,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            triglycerideResult.appliesDateTime = vm.vitals.date.toISOString();
+            triglycerideResult.appliesDateTime = vm.lab.date.toISOString();
             return triglycerideResult;
         }
 
@@ -8402,14 +8566,17 @@
                 "coding": [
                     {
                         "system": "http://loinc.org",
-                        "code": "35200-5"
+                        "code": "2093-3",
+                        "display": "Cholest SerPl-mCnc",
+                        "primary": true
+
                     }
                 ],
-                "text": "Cholesterol"
+                "text": "Total cholesterol"
             };
             cholesterolResult.valueQuantity = {
                 "value": vm.lab.lipid.cholesterol.value,
-                "units": "mg/Dl",
+                "units": "mg/dL",
                 "system": "http://snomed.info/sct",
                 "code": "258797006"
             };
@@ -8417,7 +8584,7 @@
                 {
                     "high": {
                         "value": (vm.lab.patient.age < 18 ? 200 : 240),
-                        "units": "mg/Dl",
+                        "units": "mg/dL",
                         "system": "http://snomed.info/sct",
                         "code": "258797006"
                     }
@@ -8429,7 +8596,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            cholesterolResult.appliesDateTime = vm.vitals.date.toISOString();
+            cholesterolResult.appliesDateTime = vm.lab.date.toISOString();
             return cholesterolResult;
         }
 
@@ -8445,7 +8612,8 @@
                 "coding": [
                     {
                         "system": "http://loinc.org",
-                        "code": "13457-7",
+                        "code": "2089-1",
+                        "display": "LDLc SerPl-mCnc",
                         "primary": true
                     }
                 ],
@@ -8453,7 +8621,7 @@
             };
             ldlCResult.valueQuantity = {
                 "value": vm.lab.lipid.ldlCholesterol.value,
-                "units": "mg/Dl",
+                "units": "mg/dL",
                 "system": "http://snomed.info/sct",
                 "code": "258797006"
             };
@@ -8461,7 +8629,7 @@
                 {
                     "high": {
                         "value": 160,
-                        "units": "mg/Dl",
+                        "units": "mg/dL",
                         "system": "http://snomed.info/sct",
                         "code": "258797006"
                     }
@@ -8473,7 +8641,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            ldlCResult.appliesDateTime = vm.vitals.date.toISOString();
+            ldlCResult.appliesDateTime = vm.lab.date.toISOString();
 
             return ldlCResult;
         }
@@ -8485,6 +8653,7 @@
                     {
                         "system": "http://loinc.org",
                         "code": "2085-9",
+                        "display": "HDLc SerPl-mCnc",
                         "primary": true
                     }
                 ],
@@ -8492,7 +8661,7 @@
             };
             hdlCResult.valueQuantity = {
                 "value": vm.lab.lipid.hdlCholesterol.value,
-                "units": "mg/Dl",
+                "units": "mg/dL",
                 "system": "http://snomed.info/sct",
                 "code": "258797006"
             };
@@ -8500,7 +8669,7 @@
                 {
                     "low": {
                         "value": (vm.lab.patient.gender === 'male' ? 50 : 40),
-                        "units": "mg/Dl",
+                        "units": "mg/dL",
                         "system": "http://snomed.info/sct",
                         "code": "258797006"
                     }
@@ -8512,7 +8681,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            hdlCResult.appliesDateTime = vm.vitals.date.toISOString();
+            hdlCResult.appliesDateTime = vm.lab.date.toISOString();
 
             return hdlCResult;
         }
@@ -8539,12 +8708,7 @@
         vm.practitionerSearchText = '';
         vm.selectedPractitioner = null;
         vm.smartLaunchUrl = '';
-        vm.smokingStatuses = [];
-        vm.bpInterpretations = [];
-        vm.bmiInterpretations = [];
         vm.interpretations = [];
-        vm.bodyTempFinding = undefined;
-        vm.bodyTempMethods = undefined;
         vm.lab = {
             "lipid": {
                 "cholesterol": {
@@ -8571,6 +8735,11 @@
                     "color": "black",
                     "interpretationText": undefined
                 }
+            },
+            "crp": {
+                "value": undefined,
+                "color": "black",
+                "interpretationText": undefined
             }
         };
         vm.lab.patient = undefined;

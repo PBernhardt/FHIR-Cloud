@@ -11,8 +11,7 @@
     <div flex="100">
         <md-tabs>
             <md-tab label="Lipid Profile">
-                <form name="lipidForm" class="form-horizontal"
-                      ng-model="vm.vitals.bp">
+                <form name="lipidForm" class="form-horizontal">
                     <!-- begin total hdl cholesterol-->
                     <div layout-sm="column" layout="row" layout-align="space-between center">
 
@@ -150,7 +149,7 @@
                     <div layout-sm="column" layout="row" layout-align="end start">
                         <md-input-container>
                             <label>Date Processed</label>
-                            <input ng-model="vm.lab.date" id="date-prepared" type="datetime-local"/>
+                            <input ng-model="vm.lab.date" id="lipid-date" type="datetime-local" ng-required="true"/>
                         </md-input-container>
                     </div>
 
@@ -158,14 +157,62 @@
                                ng-disabled="lipidForm.$invalid"
                                ng-click="vm.saveLipid(lipidForm)"
                                aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save blood pressure"
+                        <md-icon md-svg-icon="saveToCloud" aria-label="save lipid panel"
                                  alt="Save lipid panel"></md-icon>
                     </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 </form>
             </md-tab>
-            <md-tab label="Blood Glucose">
-                <h3>Coming soon</h3>
+            <md-tab label="High-sensitivity CRP">
+                <form name="crpForm" class="layout-horizontal">
+                    <div layout-sm="column" layout="row" layout-align="space-between center">
+
+                        <div flex="15" layout layout-align="center center">
+                            <span>
+                              <md-input-container>
+                                  <label>C-reactive Protein</label>
+                                  <input ng-model="vm.lab.crp.value"
+                                         name="crp"
+                                         aria-controls="crp-slider"
+                                         type="number"
+                                         step=".1"
+                                         placeholder="mg/L"
+                                         ng-change="vm.updateCRP()"
+                                         min="0" max="12" ng-required="true"/>
+                              </md-input-container>
+                            </span>
+                        </div>
+                        <md-slider flex="85"
+                                   md-discrete="true"
+                                   step=".5"
+                                   min="0" max="12"
+                                   ng-model="vm.lab.crp.value"
+                                   aria-label="crp"
+                                   id="crp-slider"
+                                   ng-change="vm.updateCRP()"
+                                   class="md-primary"></md-slider>
+                    </div>
+
+                    <div flex="100" layout="row" layout-align="center start">
+                        <p class="result" ng-attr-style="color: {{vm.lab.crp.color}}">
+                            {{vm.lab.crp.interpretationText}}</p>
+                    </div>
+
+                    <div layout-sm="column" layout="row" layout-align="end start">
+                        <md-input-container>
+                            <label>Date Processed</label>
+                            <input ng-model="vm.lab.date" id="crp-date" type="datetime-local" ng-required="true"/>
+                        </md-input-container>
+                    </div>
+                    <md-button name="save-crp"
+                               ng-disabled="crpForm.$invalid"
+                               ng-click="vm.saveCRP(crpForm)"
+                               aria-label="Execute save">
+                        <md-icon md-svg-icon="saveToCloud" aria-label="save crp lab"
+                                 alt="Save CRP"></md-icon>
+                    </md-button>
+                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                </form>
             </md-tab>
         </md-tabs>
     </div>
