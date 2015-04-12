@@ -383,7 +383,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            triglycerideResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            triglycerideResult.appliesDateTime = vm.vitals.date.toISOString();
             return triglycerideResult;
         }
 
@@ -420,7 +420,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            cholesterolResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            cholesterolResult.appliesDateTime = vm.vitals.date.toISOString();
             return cholesterolResult;
         }
 
@@ -464,7 +464,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            ldlCResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            ldlCResult.appliesDateTime = vm.vitals.date.toISOString();
 
             return ldlCResult;
         }
@@ -503,7 +503,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            hdlCResult.appliesDateTime = $filter('date')(vm.lab.date, 'yyyy-MM-ddTHH:mm:ss');
+            hdlCResult.appliesDateTime = vm.vitals.date.toISOString();
 
             return hdlCResult;
         }

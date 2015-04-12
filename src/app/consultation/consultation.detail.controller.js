@@ -517,7 +517,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            smokingStatusObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            smokingStatusObs.appliesDateTime = vm.vitals.date.toISOString();
             return smokingStatusObs;
         }
 
@@ -542,7 +542,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -574,7 +574,7 @@
                 "display": vm.consultation.patient.fullName
             };
 
-            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -628,7 +628,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            bodyTempObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            bodyTempObs.appliesDateTime = vm.vitals.date.toISOString();
             return bodyTempObs;
         }
 
@@ -660,7 +660,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            systolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -692,7 +692,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            diastolicObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            diastolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return diastolicObs;
         }
 
@@ -721,7 +721,7 @@
                     "reference": 'Patient/' + vm.consultation.patient.id,
                     "display": vm.consultation.patient.fullName
                 };
-                bpInterpretationObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+                bpInterpretationObs.appliesDateTime = vm.vitals.date.toISOString();
 
                 return bpInterpretationObs;
             } else {
@@ -848,7 +848,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            bmiObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            bmiObs.appliesDateTime = vm.vitals.date.toISOString();
 
             if (vm.vitals.bmi.interpretationCode) {
                 bmiObs.interpretation = {
@@ -907,7 +907,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            heightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            heightObs.appliesDateTime = vm.vitals.date.toISOString();
 
             return heightObs;
         }
@@ -940,7 +940,7 @@
                 "reference": 'Patient/' + vm.consultation.patient.id,
                 "display": vm.consultation.patient.fullName
             };
-            weightObs.appliesDateTime = $filter('date')(vm.vitals.date, 'yyyy-MM-ddTHH:mm:ss');
+            weightObs.appliesDateTime = vm.vitals.date.toISOString();
             return weightObs;
         }
 
