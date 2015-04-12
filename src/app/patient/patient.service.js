@@ -530,7 +530,7 @@
             if (resource.link.length === 0) {
                 resource.link = null;
             }
-            if (resource.maritalStatus !== null) {
+            if (angular.isDefined(resource.maritalStatus)) {
                 if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
                     resource.maritalStatus = null;
                 }

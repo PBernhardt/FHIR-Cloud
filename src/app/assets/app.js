@@ -6567,11 +6567,20 @@
                     case 'cardiac-risk':
                         appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
                         break;
+                    case 'bp-centiles':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/bp-centiles/launch.html?";
+                        break;
                     case 'growth-chart':
                         appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
                         break;
-                    default:
+                    case 'disease-monograph':
+                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/disease-monograph/launch.html?";
+                        break;
+                    case 'diabetes-monograph':
                         appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
+                        break;
+                    default:
+                        appUrl = "https://fhir.meducation.com/launch.html?";
                 }
                 var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
 
@@ -6630,6 +6639,18 @@
                         $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
                         break;
                     case 3:
+                        $location.path('consultation/smart/disease-monograph/' + vm.consultation.patient.id);
+                        break;
+                    case 4:
+                        $location.path('consultation/smart/diabetes-monograph/' + vm.consultation.patient.id);
+                        break;
+                    case 5:
+                        $location.path('consultation/smart/bp-centiles/' + vm.consultation.patient.id);
+                        break;
+                    case 6:
+                        $location.path('consultation/smart/meducation/' + vm.consultation.patient.id);
+                        break;
+                    case 7:
                         $location.path('/patient');
                         break;
                 }
@@ -6639,7 +6660,11 @@
                     {name: 'Back to face sheet', icon: 'person', index: 0},
                     {name: 'Lab', icon: 'lab', index: 1},
                     {name: 'Cardiac Risk', icon: 'cardio', index: 2},
-                    {name: 'Find another patient', icon: 'person', index: 3}
+/*                    {name: 'Disease monograph', icon: 'smart', index: 3},
+                    {name: 'Diabetes monograph', icon: 'smart', index: 4},
+                    {name: 'BP Centiles', icon: 'smart', index: 5},
+                    {name: 'Meducation', icon: 'rx', index: 6},*/
+                    {name: 'Find another patient', icon: 'person', index: 7}
                 ];
                 this.title = 'Observation options';
                 this.performAction = function (action) {
@@ -12000,7 +12025,7 @@
             if (resource.link.length === 0) {
                 resource.link = null;
             }
-            if (resource.maritalStatus !== null) {
+            if (angular.isDefined(resource.maritalStatus)) {
                 if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
                     resource.maritalStatus = null;
                 }
