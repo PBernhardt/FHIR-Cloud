@@ -513,7 +513,7 @@
             .icon("add", "./assets/svg/add.svg", 24)
             .icon("cardio", "./assets/svg/cardio3.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
-            .icon("consult", "./assets/svg/caduceus2.svg", 24)
+            .icon("consult", "./assets/svg/stethoscope.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
             .icon("error", "./assets/svb/error.svg", 48)
@@ -8110,7 +8110,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Consult', icon: 'healing', index: 1},
+                    {name: 'Consult', icon: 'consult', index: 1},
                     {name: 'Cardiac Risk report', icon: 'cardio', index: 2},
                     {name: 'Find another patient', icon: 'person', index: 3}
                 ];
@@ -9589,7 +9589,9 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
+    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
+                                $mdDialog, common, contactService, fhirServers, identifierService, localValueSets,
+                                organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -9934,13 +9936,6 @@
         /* jshint validthis:true */
         var vm = this;
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
-            }
-        );
-
         function getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
@@ -9957,7 +9952,7 @@
         function activate() {
             common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
                 .then(function () {
-                    $mdSidenav('right').close();
+                    _loadOrganizationTypes();
                 });
         }
 
@@ -10046,11 +10041,9 @@
         }
         vm.goToOrganization = goToOrganization;
 
-        function loadOrganizationTypes() {
+        function _loadOrganizationTypes() {
             vm.organizationTypes = localValueSets.organizationType();
         }
-
-        vm.loadOrganizationTypes = loadOrganizationTypes;
 
         function actions($event) {
             $mdBottomSheet.show({
@@ -10798,7 +10791,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Consult', icon: 'healing', index: 0},
+                        {name: 'Consult', icon: 'consult', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Refresh data', icon: 'refresh', index: 2},
                         {name: 'Find another patient', icon: 'person', index: 3},
@@ -11003,7 +10996,7 @@
                         getOrganizationPatients($routeParams.orgId);
                         logInfo("Retrieving patients for current organization, please wait...");
                     } else {
-
+                        _loadLocalLookups();
                     }
                 }, function (error) {
                     logError('Error initializing patient search', error);
@@ -11028,16 +11021,10 @@
             }
         }
 
-        function loadEthnicities() {
-            return vm.ethnicities = localValueSets.ethnicity().concept;
-        }
-
-        function loadRaces() {
-            return vm.races = localValueSets.race().concept;
-        }
-
-        function loadLanguages() {
-            return vm.languages = localValueSets.iso6391Languages();
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
         }
 
         function detailSearch() {
@@ -11180,6 +11167,7 @@
                 });
             return deferred.promise;
         }
+
         vm.quickSearch = quickSearch;
 
         function searchPatients(searchText) {
@@ -11277,11 +11265,8 @@
         vm.practitioner = undefined;
         vm.actions = actions;
         vm.races = [];
-        vm.loadRaces = loadRaces;
         vm.ethnicities = [];
-        vm.loadEthnicities = loadEthnicities;
         vm.languages = [];
-        vm.loadLanguages = loadLanguages;
         vm.detailSearch = detailSearch;
         vm.isBusy = false;
         vm.ageRangeChange = ageRangeChange;
@@ -11734,16 +11719,43 @@
             return extension;
         }
 
+        var allEthnicities = [];
+        var ethnicitySystem = '';
+
         function _randomEthnicity() {
-            var ethnicities = localValueSets.ethnicity();
-            common.shuffle(ethnicities.concept);
-            var ethnicity = ethnicities.concept[1];
+            function prepEthnicities() {
+                var ethnicities = localValueSets.ethnicity();
+                ethnicitySystem = ethnicities.system;
+                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
+                    var mainConcept = ethnicities.concept[i];
+                    allEthnicities.push(mainConcept);
+                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
+                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
+                            var groupConcept = mainConcept.concept[j];
+                            allEthnicities.push(groupConcept);
+                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
+                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
+                                    var leafConcept = groupConcept.concept[k];
+                                    allEthnicities.push(leafConcept);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            if (allEthnicities.length === 0) {
+                prepEthnicities();
+            }
+            common.shuffle(allEthnicities);
+            var ethnicity = allEthnicities[1];
             var extension = {
                 "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
                 "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
             };
             extension.valueCodeableConcept.coding.push({
-                "system": ethnicities.system,
+                "system": ethnicitySystem,
                 "code": ethnicity.code,
                 "display": ethnicity.display
             });
@@ -11851,7 +11863,8 @@
 
     angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
         patientService]);
-})();(function () {
+})
+();(function () {
     'use strict';
 
     var controllerId = 'personDetail';

@@ -101,7 +101,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Consult', icon: 'healing', index: 1},
+                    {name: 'Consult', icon: 'consult', index: 1},
                     {name: 'Cardiac Risk report', icon: 'cardio', index: 2},
                     {name: 'Find another patient', icon: 'person', index: 3}
                 ];

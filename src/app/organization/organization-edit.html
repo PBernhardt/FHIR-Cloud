@@ -29,14 +29,14 @@
                         </div>
 
 
-                        <div flex="80" style="min-height: 100px">
+                        <div flex="80" style="min-height: 150px">
                             <label>Parent Organization</label>
                             <md-autocomplete flex
                                              md-no-cache="true"
                                              md-selected-item="vm.organization.partOf"
                                              md-search-text="vm.searchText"
                                              md-items="org in vm.getOrganizationReference(vm.searchText)"
-                                             md-delay="200"
+                                             md-delay="500"
                                              md-item-text="org.display"
                                              md-min-length="3"
                                              placeholder="What is the parent organization?">

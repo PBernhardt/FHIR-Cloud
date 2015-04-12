@@ -264,7 +264,7 @@
             .icon("add", "./assets/svg/add.svg", 24)
             .icon("cardio", "./assets/svg/cardio3.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
-            .icon("consult", "./assets/svg/caduceus2.svg", 24)
+            .icon("consult", "./assets/svg/stethoscope.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
             .icon("error", "./assets/svb/error.svg", 48)

@@ -326,7 +326,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Consult', icon: 'healing', index: 0},
+                        {name: 'Consult', icon: 'consult', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Refresh data', icon: 'refresh', index: 2},
                         {name: 'Find another patient', icon: 'person', index: 3},

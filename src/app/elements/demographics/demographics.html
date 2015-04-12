@@ -72,11 +72,23 @@
 
         <div layout="column" layout-align="center center" style="height: 100px;">
             <select ng-model="vm.demographics.ethnicity">
-                <option ng-repeat="main in vm.ethnicities.concept"
+                <option ng-repeat-start="main in vm.ethnicities.concept"
                         ng-value="main"
-                        ng-selected="main.coding===vm.demographics.ethnicity.coding[0].code">
+                        ng-selected="main.code===vm.demographics.ethnicity.coding[0].code">
                     {{main.display}}
                 </option>
+                <option ng-repeat-start="group in main.concept"
+                        ng-value="group"
+                        ng-selected="group.code===vm.demographics.ethnicity.coding[0].code">
+                    {{group.display}}
+                </option>
+                <option ng-repeat="class in group.concept"
+                        ng-value="class"
+                        ng-selected="class.code===vm.demographics.ethnicity.coding[0].code">
+                    {{class.display}}
+                </option>
+                <option ng-repeat-end ng-hide="true"></option>
+                <option ng-repeat-end ng-hide="true"></option>
             </select>
 
             <p class="result">Ethnicity</p>

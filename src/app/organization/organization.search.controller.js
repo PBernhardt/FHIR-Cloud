@@ -13,13 +13,6 @@
         /* jshint validthis:true */
         var vm = this;
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
-            }
-        );
-
         function getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
@@ -36,7 +29,7 @@
         function activate() {
             common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
                 .then(function () {
-                    $mdSidenav('right').close();
+                    _loadOrganizationTypes();
                 });
         }
 
@@ -125,11 +118,9 @@
         }
         vm.goToOrganization = goToOrganization;
 
-        function loadOrganizationTypes() {
+        function _loadOrganizationTypes() {
             vm.organizationTypes = localValueSets.organizationType();
         }
-
-        vm.loadOrganizationTypes = loadOrganizationTypes;
 
         function actions($event) {
             $mdBottomSheet.show({

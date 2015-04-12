@@ -19,8 +19,7 @@
                             </md-input-container>
 
                             <div flex="30" layout="column" layout-align="center center" style="height: 100px">
-                                <md-select ng-model="vm.organizationSearch.type"
-                                           md-on-open="vm.loadOrganizationTypes()">
+                                <md-select ng-model="vm.organizationSearch.type">
                                     <md-option ng-value="orgType.code" ng-repeat="orgType in vm.organizationTypes">
                                         {{orgType.display}}
                                     </md-option>

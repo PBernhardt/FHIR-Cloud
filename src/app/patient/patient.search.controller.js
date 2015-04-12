@@ -20,7 +20,7 @@
                         getOrganizationPatients($routeParams.orgId);
                         logInfo("Retrieving patients for current organization, please wait...");
                     } else {
-
+                        _loadLocalLookups();
                     }
                 }, function (error) {
                     logError('Error initializing patient search', error);
@@ -45,16 +45,10 @@
             }
         }
 
-        function loadEthnicities() {
-            return vm.ethnicities = localValueSets.ethnicity().concept;
-        }
-
-        function loadRaces() {
-            return vm.races = localValueSets.race().concept;
-        }
-
-        function loadLanguages() {
-            return vm.languages = localValueSets.iso6391Languages();
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
         }
 
         function detailSearch() {
@@ -197,6 +191,7 @@
                 });
             return deferred.promise;
         }
+
         vm.quickSearch = quickSearch;
 
         function searchPatients(searchText) {
@@ -294,11 +289,8 @@
         vm.practitioner = undefined;
         vm.actions = actions;
         vm.races = [];
-        vm.loadRaces = loadRaces;
         vm.ethnicities = [];
-        vm.loadEthnicities = loadEthnicities;
         vm.languages = [];
-        vm.loadLanguages = loadLanguages;
         vm.detailSearch = detailSearch;
         vm.isBusy = false;
         vm.ageRangeChange = ageRangeChange;

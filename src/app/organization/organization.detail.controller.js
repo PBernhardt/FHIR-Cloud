@@ -3,7 +3,9 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService, $mdDialog, common, contactService, fhirServers, identifierService, localValueSets, organizationService, contactPointService, sessionService, patientService, personService) {
+    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
+                                $mdDialog, common, contactService, fhirServers, identifierService, localValueSets,
+                                organizationService, contactPointService, sessionService, patientService, personService) {
         /* jshint validthis:true */
         var vm = this;
 
