@@ -19,7 +19,8 @@
         function activate() {
             common.activateController([_getActiveServer()],
                 controllerId).then(function () {
-                    vm.lab.date = new Date();
+                    var m = moment(new Date());
+                    vm.lab.date = new Date(m.year(), m.month(), m.date(), m.hour(), m.minute());
                     _getPatientContext();
 
                 });

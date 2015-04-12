@@ -6481,14 +6481,14 @@
             common.activateController([_getActiveServer(), _loadSmokingStatuses(), _loadInterpretations(),
                     _loadBPInterpretations(), _loadBMIRange(), _loadBodyTempMethods()],
                 controllerId).then(function () {
-                    vm.vitals.date = new Date();
+                    var m = moment(new Date());
+                    vm.vitals.date = new Date(m.year(), m.month(), m.date(), m.hour(), m.minute());
                     _getPatientContext();
 
                 });
         }
 
         function _initializeBP() {
-            vm.vitals.date = new Date();
             vm.vitals.bp.diastolic = 0;
             vm.vitals.bp.systolic = 0;
             vm.vitals.bp.interpretationCode = undefined;
@@ -8028,7 +8028,8 @@
         function activate() {
             common.activateController([_getActiveServer()],
                 controllerId).then(function () {
-                    vm.lab.date = new Date();
+                    var m = moment(new Date());
+                    vm.lab.date = new Date(m.year(), m.month(), m.date(), m.hour(), m.minute());
                     _getPatientContext();
 
                 });
