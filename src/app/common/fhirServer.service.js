@@ -32,28 +32,28 @@
                 var baseList = [
                     {
                         "id": 0,
-                        "name": "Health Directions",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
-                        "secure": false
-                    },
-                    {
-                        "id": 1,
                         "name": "SMART",
                         "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org",
                         "secure": true
                     },
                     {
-                        "id": 2,
+                        "id": 1,
                         "name": "HAPI",
-                        "baseUrl": "http://fhirtest.uhn.ca/baseDstu2",
-                        "secure": false
+                        "baseUrl": "https://fhirtest.uhn.ca/baseDstu2",
+                        "secure": true
                     },
                     {
-                        "id": 3,
+                        "id": 2,
                         "name": "RelayHealth",
                         "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                         //"baseUrl": "http://rhc-fhirservice-stage.cloudapp.net"
+                    },
+                    {
+                        "id": 3,
+                        "name": "Health Directions",
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
+                        "secure": false
                     },
                     {
                         "id": 4,
