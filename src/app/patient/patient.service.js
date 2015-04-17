@@ -347,7 +347,7 @@
                         resource.extension.push(_randomBirthPlace(birthPlace));
 
                         mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' + resource.address[0].state);
+                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
 
                         var timer = $timeout(function () {
                         }, 3000);
@@ -382,7 +382,7 @@
         }
 
         function _randomBirthDate() {
-            var start = new Date(1965, 1, 1);
+            var start = new Date(1945, 1, 1);
             var end = new Date(1995, 12, 31);
             var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
             return $filter('date')(randomDob, 'yyyy-MM-dd');

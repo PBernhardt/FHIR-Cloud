@@ -1,5 +1,19 @@
 <md-dialog>
-    <md-content>
-
+    <md-content class="sticky-container">
+        <md-subheader class="md-sticky-no-effect">FHIR Cloud</md-subheader>
+        <div class="dialog-content">
+            <p>Active Server: {{activeServer.name}}</p>
+            <footer>
+                <div>Icons made by <a href="http://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a
+                        href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
+                        href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a>
+                </div>
+            </footer>
+        </div>
     </md-content>
+    <div class="md-actions" layout="row">
+        <md-button ng-click="close()">
+            Close
+        </md-button>
+    </div>
 </md-dialog>

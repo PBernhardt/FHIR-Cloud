@@ -183,6 +183,7 @@
                                 <div class="md-tile-content">
                                     <md-button data-ng-click="vm.goToPatient(p)">{{p.resource.name | fullName}}
                                     </md-button>
+                                    <p>{{p.resource.birthDate | displayAge }} <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></p>
                                     <p>{{p.resource.managingOrganization.display ||
                                         p.resource.managingOrganization.reference || "No Organization"}}</p>
                                 </div>

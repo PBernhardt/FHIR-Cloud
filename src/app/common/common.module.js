@@ -30,20 +30,6 @@
             });
         }
 
-        function calculateAge(birthDate) {
-            if (birthDate) {
-                var dob = birthDate;
-                if (angular.isDate(dob) === false) {
-                    dob = new Date(birthDate);
-                }
-                var ageDifMs = Date.now() - dob.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return "unknown";
-            }
-        }
-
         function changeServer(server) {
             if (angular.isDefined(server)) {
                 var data = {"activeServer": server};
@@ -210,7 +196,6 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
-            calculateAge: calculateAge,
             changeServer: changeServer,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,

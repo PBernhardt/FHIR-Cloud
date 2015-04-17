@@ -1,27 +1,30 @@
 <div ng-controller="patientDetail as vm" layout="row" layout-wrap ng-cloak>
     <div flex="25" hide-sm>
-        <img data-fs-img-person="vm.patient.photo[0]" class="largeFace"/>
+        <img data-fs-img-person="vm.patient.photo[0]" class="largeFace" ng-if="vm.isBusy === false"/>
     </div>
     <div flex="65" layout="row" layout-align="start center">
-        <h3>{{ vm.patient.name | fullName }}</h3>
+        <h3 ng-if="vm.isBusy === false">{{ vm.patient.name | fullName }}</h3>
     </div>
     <div flex="10">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
-    <div flex="100">
+    <div flex="100" ng-if="vm.isBusy === true" layout="row" layout-align="center center">
+        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+    </div>
+    <div flex="100" ng-if="vm.isBusy === false">
         <md-tabs md-selected="selectedIndex">
             <md-tab label="Administration Detail">
                 <div flex="100" class="table-responsive-vertical shadow-z-1">
                     <table id="patientView" class="table table-hover table-mc-blue">
-                        <tr>
+                        <tr ng-if="vm.patient.resourceId">
                             <td>Resource Id</td>
                             <td>
                                 {{vm.patient.resourceId}}
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.name">
                             <td>Name</td>
                             <td>{{vm.patient.name | fullName }}</td>
                         </tr>
@@ -37,7 +40,7 @@
                                 {{vm.patient.birthPlace | singleLineAddress}}
                             </td>
                         </tr>
-                        <tr>
+                        <tr ng-if="vm.patient.gender">
                             <td>Gender</td>
                             <td>
                                 {{vm.patient.gender}}

@@ -45,9 +45,8 @@
                     {
                         "id": 2,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
-                        //"baseUrl": "http://rhc-fhirservice-stage.cloudapp.net"
                     },
                     {
                         "id": 3,
@@ -75,7 +74,8 @@
                      {
                      "id": 9,
                      "name": "Cerner",
-                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                     "secure": true
                      },
                      {
                      "id": 10,

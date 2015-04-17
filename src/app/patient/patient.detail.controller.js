@@ -18,7 +18,7 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([getActiveServer()], controllerId).then(function () {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
                 _getRequestedPatient();
             });
         }
@@ -56,7 +56,7 @@
             }
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
@@ -75,7 +75,7 @@
             return deferred.promise;
         }
 
-        function getEverything() {
+        function _getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
                 .then(function (data) {
                     vm.summary = data.summary;
@@ -138,6 +138,7 @@
                 }
             }
 
+            vm.patient = undefined;
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
@@ -151,15 +152,18 @@
                     initializeAdministrationData(vm.patient);
                 }
             } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
                 var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
                 patientService.getPatient(resourceId)
                     .then(function (resource) {
                         initializeAdministrationData(resource.data);
                         if (vm.patient) {
-                            getEverything(resourceId);
+                            _getEverything(resourceId);
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
                     });
             } else if (vm.lookupKey === 'new') {
                 var data = patientService.initializeNewPatient();
@@ -167,14 +171,18 @@
                 vm.title = 'Add New Patient';
                 vm.isEditing = false;
             } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
                 patientService.getCachedPatient(vm.lookupKey)
                     .then(function (data) {
                         initializeAdministrationData(data);
                         if (vm.patient && vm.patient.resourceId) {
-                            getEverything(vm.patient.resourceId);
+                            _getEverything(vm.patient.resourceId);
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
                     });
             } else {
                 logError("Unable to resolve patient lookup");
@@ -193,7 +201,6 @@
                 }
                 vm.patient.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
-                vm.title = getTitle();
                 $window.localStorage.patient = JSON.stringify(vm.patient);
                 vm.isBusy = false;
             }
@@ -326,15 +333,14 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Consult', icon: 'consult', index: 0},
+                        {name: 'Vitals', icon: 'vitals', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Refresh data', icon: 'refresh', index: 2},
                         {name: 'Find another patient', icon: 'person', index: 3},
                         {name: 'Edit patient', icon: 'edit', index: 4},
                         {name: 'Add new patient', icon: 'personAdd', index: 5}
                     ];
-                } else
-                {
+                } else {
                     this.items = [
                         {name: 'Find another patient', icon: 'person', index: 3},
                     ];

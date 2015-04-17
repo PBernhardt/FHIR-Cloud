@@ -26,113 +26,6 @@
         del: 46
     };
 
-    var fhirTypes = {
-        Primitive: 1,
-        Complex: 2,
-        Resource: 3
-    };
-
-    var fhirPrimitiveTypes = {
-        base64Binary: "base64Binary",
-        boolean: "boolean",
-        code: "code",
-        date: "date",
-        dateTime: "dateTime",
-        decimal: "decimal",
-        id: "id",
-        instant: "instant",
-        integer: "integer",
-        oid: "oid",
-        string: "string",
-        time: "time",
-        uri: "uri",
-        uuid: "uuid"
-    };
-
-    var fhirResources = {
-        AdverseReaction: "AdverseReaction",
-        Alert: "Alert",
-        AllergyIntolerance: "AllergyIntolerance",
-        Appointment: "Appointment",
-        AppointmentResponse: "AppointmentResponse",
-        Availability: "Availability",
-        Binary: "Binary",
-        CarePlan: "CarePlan",
-        Composition: "Composition",
-        ConceptMap: "ConceptMap",
-        Condition: "Condition",
-        Contraindication: "Contraindication",
-        Conformance: "Conformance",
-        DataElement: "DataElement",
-        Device: "Device",
-        DeviceObservationReport: "DeviceObservationReport",
-        DiagnosticOrder: "DiagnosticOrder",
-        DiagnosticReport: "DiagnosticReport",
-        DocumentReference: "DocumentReference",
-        DocumentManifest: "DocumentManifest",
-        Encounter: "Encounter",
-        FamilyHistory: "FamilyHistory",
-        Group: "Group",
-        ImagingStudy: "ImagingStudy",
-        Immunization: "Immunization",
-        ImmunizationRecommendation: "ImmunizationRecommendation",
-        List: "List",
-        Location: "Location",
-        Media: "Media",
-        Medication: "Medication",
-        MedicationAdministration: "MedicationAdministration",
-        MedicationDispense: "MedicationDispense",
-        MedicationPrescription: "MedicationPrescription",
-        MedicationStatement: "MedicationStatement",
-        MessageHeader: "MessageHeader",
-        Namespace: "Namespace",
-        Observation: "Observation",
-        OperationOutcome: "OperationOutcome",
-        Order: "Order",
-        OrderResponse: "OrderResponse",
-        Organization: "Organization",
-        Other: "Other",
-        Patient: "Patient",
-        Practitioner: "Practitioner",
-        Procedure: "Procedure",
-        Profile: "Profile",
-        Provenance: "Provenance",
-        Query: "Query",
-        Questionnaire: "Questionnaire",
-        QuestionnaireAnswers: "QuestionnaireAnswers",
-        ReferralRequest: "ReferralRequest",
-        RelatedPerson: "RelatedPerson",
-        RiskAssessment: "RiskAssessment",
-        SecurityEvent: "SecurityEvent",
-        Slot: "Slot",
-        Specimen: "Specimen",
-        Subscription: "Subscription",
-        Substance: "Substance",
-        Supply: "Supply",
-        ValueSet: "ValueSet"
-    };
-
-    var fhirComplexTypes = {
-        Address: "Address",
-        Age: "Age",
-        Attachment: "Attachment",
-        CodeableConcept: "CodeableConcept",
-        Coding: "Coding",
-        Contact: "Contact",
-        Count: "Count",
-        Distance: "Distance",
-        Duration: "Duration",
-        HumanName: "HumanName",
-        Identifier: "Identifier",
-        Money: "Money",
-        Period: "Period",
-        Quantity: "Quantity",
-        Range: "Range",
-        Ratio: "Ratio",
-        SampledData: "SampledData",
-        Schedule: "Schedule"
-    };
-
     var events = {
         controllerActivateSuccess: 'controller.activateSuccess',
         progressToggle: 'progress.toggle',
@@ -143,10 +36,6 @@
         appErrorPrefix: '[FS Error] ', //Configure the exceptionHandler decorator
         docTitle: 'FHIRCloud: ',
         events: events,
-        fhirPrimitiveTypes: fhirPrimitiveTypes,
-        fhirResources: fhirResources,
-        fhirComplexTypes: fhirComplexTypes,
-        fhirTypes: fhirTypes,
         imageSettings: imageSettings,
         keyCodes: keyCodes,
         version: '0.1.0'
@@ -264,10 +153,12 @@
             .icon("add", "./assets/svg/add.svg", 24)
             .icon("cardio", "./assets/svg/cardio3.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
-            .icon("consult", "./assets/svg/stethoscope.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
+            .icon("diagnosis", "./assets/svg/stethoscope.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
-            .icon("error", "./assets/svb/error.svg", 48)
+            .icon("error", "./assets/svg/error.svg", 48)
+            .icon("family", "./assets/svg/group.svg", 24)
+            .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
             .icon("groupAdd", "./assets/svg/groupAdd.svg", 24)
@@ -276,6 +167,7 @@
             .icon("https", "./assets/svg/https.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
+            .icon("male", "./assets/svg/male.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
@@ -290,7 +182,8 @@
             .icon("search", "./assets/svg/search.svg", 24)
             .icon("settings", "./assets/svg/settings.svg", 24)
             .icon("smart", "./assets/svg/SMART.svg", 24)
-            .icon("view", "./assets/svg/visibility.svg", 12);
+            .icon("view", "./assets/svg/visibility.svg", 12)
+            .icon("vitals", "./assets/svg/pulse1.svg", 24);
     }]);
 
     app.config(['$httpProvider', function ($httpProvider) {

@@ -45,20 +45,6 @@
             });
         }
 
-        function calculateAge(birthDate) {
-            if (birthDate) {
-                var dob = birthDate;
-                if (angular.isDate(dob) === false) {
-                    dob = new Date(birthDate);
-                }
-                var ageDifMs = Date.now() - dob.getTime();
-                var ageDate = new Date(ageDifMs); // miliseconds from epoch
-                return Math.abs(ageDate.getUTCFullYear() - 1970);
-            } else {
-                return "unknown";
-            }
-        }
-
         function changeServer(server) {
             if (angular.isDefined(server)) {
                 var data = {"activeServer": server};
@@ -225,7 +211,6 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
-            calculateAge: calculateAge,
             changeServer: changeServer,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,
@@ -275,113 +260,6 @@
         del: 46
     };
 
-    var fhirTypes = {
-        Primitive: 1,
-        Complex: 2,
-        Resource: 3
-    };
-
-    var fhirPrimitiveTypes = {
-        base64Binary: "base64Binary",
-        boolean: "boolean",
-        code: "code",
-        date: "date",
-        dateTime: "dateTime",
-        decimal: "decimal",
-        id: "id",
-        instant: "instant",
-        integer: "integer",
-        oid: "oid",
-        string: "string",
-        time: "time",
-        uri: "uri",
-        uuid: "uuid"
-    };
-
-    var fhirResources = {
-        AdverseReaction: "AdverseReaction",
-        Alert: "Alert",
-        AllergyIntolerance: "AllergyIntolerance",
-        Appointment: "Appointment",
-        AppointmentResponse: "AppointmentResponse",
-        Availability: "Availability",
-        Binary: "Binary",
-        CarePlan: "CarePlan",
-        Composition: "Composition",
-        ConceptMap: "ConceptMap",
-        Condition: "Condition",
-        Contraindication: "Contraindication",
-        Conformance: "Conformance",
-        DataElement: "DataElement",
-        Device: "Device",
-        DeviceObservationReport: "DeviceObservationReport",
-        DiagnosticOrder: "DiagnosticOrder",
-        DiagnosticReport: "DiagnosticReport",
-        DocumentReference: "DocumentReference",
-        DocumentManifest: "DocumentManifest",
-        Encounter: "Encounter",
-        FamilyHistory: "FamilyHistory",
-        Group: "Group",
-        ImagingStudy: "ImagingStudy",
-        Immunization: "Immunization",
-        ImmunizationRecommendation: "ImmunizationRecommendation",
-        List: "List",
-        Location: "Location",
-        Media: "Media",
-        Medication: "Medication",
-        MedicationAdministration: "MedicationAdministration",
-        MedicationDispense: "MedicationDispense",
-        MedicationPrescription: "MedicationPrescription",
-        MedicationStatement: "MedicationStatement",
-        MessageHeader: "MessageHeader",
-        Namespace: "Namespace",
-        Observation: "Observation",
-        OperationOutcome: "OperationOutcome",
-        Order: "Order",
-        OrderResponse: "OrderResponse",
-        Organization: "Organization",
-        Other: "Other",
-        Patient: "Patient",
-        Practitioner: "Practitioner",
-        Procedure: "Procedure",
-        Profile: "Profile",
-        Provenance: "Provenance",
-        Query: "Query",
-        Questionnaire: "Questionnaire",
-        QuestionnaireAnswers: "QuestionnaireAnswers",
-        ReferralRequest: "ReferralRequest",
-        RelatedPerson: "RelatedPerson",
-        RiskAssessment: "RiskAssessment",
-        SecurityEvent: "SecurityEvent",
-        Slot: "Slot",
-        Specimen: "Specimen",
-        Subscription: "Subscription",
-        Substance: "Substance",
-        Supply: "Supply",
-        ValueSet: "ValueSet"
-    };
-
-    var fhirComplexTypes = {
-        Address: "Address",
-        Age: "Age",
-        Attachment: "Attachment",
-        CodeableConcept: "CodeableConcept",
-        Coding: "Coding",
-        Contact: "Contact",
-        Count: "Count",
-        Distance: "Distance",
-        Duration: "Duration",
-        HumanName: "HumanName",
-        Identifier: "Identifier",
-        Money: "Money",
-        Period: "Period",
-        Quantity: "Quantity",
-        Range: "Range",
-        Ratio: "Ratio",
-        SampledData: "SampledData",
-        Schedule: "Schedule"
-    };
-
     var events = {
         controllerActivateSuccess: 'controller.activateSuccess',
         progressToggle: 'progress.toggle',
@@ -392,10 +270,6 @@
         appErrorPrefix: '[FS Error] ', //Configure the exceptionHandler decorator
         docTitle: 'FHIRCloud: ',
         events: events,
-        fhirPrimitiveTypes: fhirPrimitiveTypes,
-        fhirResources: fhirResources,
-        fhirComplexTypes: fhirComplexTypes,
-        fhirTypes: fhirTypes,
         imageSettings: imageSettings,
         keyCodes: keyCodes,
         version: '0.1.0'
@@ -517,6 +391,7 @@
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
             .icon("error", "./assets/svb/error.svg", 48)
+            .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
             .icon("groupAdd", "./assets/svg/groupAdd.svg", 24)
@@ -525,6 +400,7 @@
             .icon("https", "./assets/svg/https.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
+            .icon("male", "./assets/svg/male.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
@@ -539,7 +415,8 @@
             .icon("search", "./assets/svg/search.svg", 24)
             .icon("settings", "./assets/svg/settings.svg", 24)
             .icon("smart", "./assets/svg/SMART.svg", 24)
-            .icon("view", "./assets/svg/visibility.svg", 12);
+            .icon("view", "./assets/svg/visibility.svg", 12)
+            .icon("vitals", "./assets/svg/pulse1.svg", 24);
     }]);
 
     app.config(['$httpProvider', function ($httpProvider) {
@@ -614,6 +491,27 @@
 
     var app = angular.module('FHIRCloud');
 
+    app.directive('fcGenderIcon', ['$compile', function ($compile) {
+        /*
+         Usage: <fc-gender-icon gender="male/female/etc."></fc-gender-icon>
+         */
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'gender': '=?'
+            },
+            link: function (scope, element, attr) {
+                var gender = scope.gender;
+                if (angular.isDefined(gender)) {
+                    gender = gender.toLowerCase();
+                    var iconTemplate = '<md-icon md-svg-icon="' + gender + '" style="height: 12px; width=12px"></md-icon>';
+                    element.append($compile(iconTemplate)(scope));
+                }
+            }
+        };
+        return directiveDefinitionObject;
+    }]);
+
     app.directive('fsAddListItem', ['$parse', function ($parse) {
         // Description:
         //
@@ -642,7 +540,7 @@
     }]);
 
     app.directive('fsPagination', function () {
-        var directiveDefinitionObject  = {
+        var directiveDefinitionObject = {
             restrict: 'E',
             scope: {
                 'click': '&onClick',
@@ -662,7 +560,7 @@
                 );
             }
         };
-        return directiveDefinitionObject ;
+        return directiveDefinitionObject;
     });
 
     app.directive('fsAddToList', [function () {
@@ -983,9 +881,8 @@
                     {
                         "id": 2,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
-                        //"baseUrl": "http://rhc-fhirservice-stage.cloudapp.net"
                     },
                     {
                         "id": 3,
@@ -1013,7 +910,8 @@
                      {
                      "id": 9,
                      "name": "Cerner",
-                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                     "secure": true
                      },
                      {
                      "id": 10,
@@ -1133,6 +1031,35 @@
                 return input;
             }
         };
+    });
+
+    app.filter('displayAge', function() {
+        return function (birthDate) {
+            if (birthDate) {
+                var retValue;
+                var dob = birthDate;
+                if (angular.isDate(dob) === false) {
+                    dob = new Date(birthDate);
+                }
+
+                var ageDifMs = Date.now() - dob.getTime();
+                var ageDate = new Date(ageDifMs); // miliseconds from epoch
+                var years = Math.floor(ageDate.getUTCFullYear() - 1970);
+                retValue = "age " + years;
+                if (years < 2) {
+                    var months = Math.floor(ageDifMs/2628000000);
+                    retValue = "age " + months + ' months';
+
+                    if (months < 6) {
+                        var weeks = Math.floor(ageDifMs/604800000);
+                        retValue = "age " + weeks + ' weeks';
+                    }
+                }
+                return retValue;
+            } else {
+                return "unknown";
+            }
+        }
     });
 
     app.filter('codeableConcept', function () {
@@ -2880,14 +2807,24 @@
         }
 
         function showAbout(ev) {
-            $mdDialog.show(
-                $mdDialog.alert()
-                    .title('FHIR Cloud')
-                    .content('Active Server: ' + vm.activeServer.name)
-                    .ariaLabel('About FHIR Cloud')
-                    .ok('OK')
-                    .targetEvent(ev)
-            );
+            $mdDialog.show({
+                controller: aboutController,
+                templateUrl: 'templates/about.html',
+                targetEvent: ev
+            })
+                .then(function() {
+                    logInfo("About dialog closed", null, noToast);
+                }, function(error) {
+                    logError("Error", error, noToast);
+                });
+        }
+
+        function aboutController($scope, $mdDialog) {
+            function close() {
+                $mdDialog.hide();
+            }
+            $scope.close = close;
+            $scope.activeServer = vm.activeServer;
         }
 
         function authenticate(ev) {
@@ -10678,7 +10615,7 @@
         var noToast = false;
 
         function activate() {
-            common.activateController([getActiveServer()], controllerId).then(function () {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
                 _getRequestedPatient();
             });
         }
@@ -10716,7 +10653,7 @@
             }
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
@@ -10735,7 +10672,7 @@
             return deferred.promise;
         }
 
-        function getEverything() {
+        function _getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
                 .then(function (data) {
                     vm.summary = data.summary;
@@ -10798,6 +10735,7 @@
                 }
             }
 
+            vm.patient = undefined;
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
@@ -10811,15 +10749,18 @@
                     initializeAdministrationData(vm.patient);
                 }
             } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
                 var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
                 patientService.getPatient(resourceId)
                     .then(function (resource) {
                         initializeAdministrationData(resource.data);
                         if (vm.patient) {
-                            getEverything(resourceId);
+                            _getEverything(resourceId);
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
                     });
             } else if (vm.lookupKey === 'new') {
                 var data = patientService.initializeNewPatient();
@@ -10827,14 +10768,18 @@
                 vm.title = 'Add New Patient';
                 vm.isEditing = false;
             } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
                 patientService.getCachedPatient(vm.lookupKey)
                     .then(function (data) {
                         initializeAdministrationData(data);
                         if (vm.patient && vm.patient.resourceId) {
-                            getEverything(vm.patient.resourceId);
+                            _getEverything(vm.patient.resourceId);
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
                     });
             } else {
                 logError("Unable to resolve patient lookup");
@@ -10853,7 +10798,6 @@
                 }
                 vm.patient.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
-                vm.title = getTitle();
                 $window.localStorage.patient = JSON.stringify(vm.patient);
                 vm.isBusy = false;
             }
@@ -10986,15 +10930,14 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Consult', icon: 'consult', index: 0},
+                        {name: 'Vitals', icon: 'vitals', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Refresh data', icon: 'refresh', index: 2},
                         {name: 'Find another patient', icon: 'person', index: 3},
                         {name: 'Edit patient', icon: 'edit', index: 4},
                         {name: 'Add new patient', icon: 'personAdd', index: 5}
                     ];
-                } else
-                {
+                } else {
                     this.items = [
                         {name: 'Find another patient', icon: 'person', index: 3},
                     ];
@@ -11041,7 +10984,7 @@
 
     var app = angular.module('FHIRCloud');
 
-    app.directive('smartApp', function (common, $http, $compile, $sce) {
+    app.directive('smartApp', ['$compile', '$sce', function ($compile, $sce) {
         // Description:
         //
         // Usage:
@@ -11069,84 +11012,7 @@
             }
         };
         return directiveDefinitionObject;
-    });
-
-    app.directive('smartApplication', function (common, $http, $compile, $sce) {
-        // Description:
-        //
-        // Usage:
-        var directiveDefinitionObject = {
-            restrict: 'E',
-            scope: {
-                'smartUrl': '=smartUrl'
-            },
-            link: function (scope, element, attr) {
-                var loadedUri = '';
-
-                function isURLAvailable(launchUrl) {
-                    var directiveId = 'smartApplication';
-                    var logError = common.logger.getLogFn(directiveId, 'error');
-                    var logInfo = common.logger.getLogFn(directiveId, 'info');
-                    var $q = common.$q;
-                    var noToast = false;
-                    var deferred = $q.defer();
-
-                    var url = encodeURIComponent(launchUrl);
-                    var yqlUri = 'http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url%3D%22' + url + '%22&callback=JSON_CALLBACK';
-
-                    $http.jsonp(yqlUri)
-                        .success(function (data, status) {
-                            if (data.results.length) {
-                                logInfo(url + ' is available...', null, noToast);
-                                deferred.resolve(true)
-                            } else {
-                                logError(url + ' failed: ' + status);
-                                deferred.reject(false);
-                            }
-                        })
-                        .error(function (data, status) {
-                            logError(url + ' failed: ' + status);
-                            deferred.reject('failed');
-                        });
-                    return deferred.promise;
-                }
-
-                scope.$watch('smartUrl', function (uri) {
-                    var directiveId = 'smartApplication';
-                    var logError = common.logger.getLogFn(directiveId, 'error');
-                    var logInfo = common.logger.getLogFn(directiveId, 'info');
-                    var noToast = false;
-
-                    if (loadedUri !== uri) {
-                        isURLAvailable(uri)
-                            .then(function () {
-                                logInfo('Uri is valid: ' + uri, null, noToast);
-                                loadedUri = uri;
-
-                                scope.trustedUri = $sce.trustAsResourceUrl(scope.smartUrl);
-
-                                var iFrameHtml = '<iframe src="{{trustedUri}}" style="height: 1280px; width: 800px;" allowfullscreen="" frameborder="0"></iframe>';
-
-                                var markup = $compile(iFrameHtml)(scope);
-                                element.empty();
-                                element.append(markup);
-                            })
-                            .catch(function () {
-                                console.log('directive: uri invalid');
-                                var badRequestImgHtml = '<md-icon md-font-icon="error" alt="SMART App Unavailable">';
-
-                                var markup = $compile(badRequestImgHtml)(scope);
-
-                                logError(scope.errorUrl, null, noToast);
-                                element.empty();
-                                element.append(markup);
-                            });
-                    }
-                })
-            }
-        };
-        return directiveDefinitionObject;
-    });
+    }]);
 
     app.directive('fhirClinicalResource', function () {
         var directiveDefinitionObject = {
@@ -11842,7 +11708,7 @@
                         resource.extension.push(_randomBirthPlace(birthPlace));
 
                         mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' + resource.address[0].state);
+                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
 
                         var timer = $timeout(function () {
                         }, 3000);
@@ -11877,7 +11743,7 @@
         }
 
         function _randomBirthDate() {
-            var start = new Date(1965, 1, 1);
+            var start = new Date(1945, 1, 1);
             var end = new Date(1995, 12, 31);
             var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
             return $filter('date')(randomDob, 'yyyy-MM-dd');

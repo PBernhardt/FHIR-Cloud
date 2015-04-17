@@ -77,6 +77,23 @@ module.exports = function (grunt) {
             ]
         },
 
+        uglify: {
+            ugly: {
+                files: {
+                    './app/assets/app.min.js': ['./app/assets/app.js']
+                }
+            },
+            beautiful: {
+                options: {
+                    beautify: true
+                },
+                files: {
+                    './app/assets/app.min.js': ['./app/assets/app.js']
+                }
+            }
+
+        },
+
         concat: {
             styles: {
                 dest: './app/assets/app.css',
@@ -158,7 +175,7 @@ module.exports = function (grunt) {
                     'app/profile/profile.service.js',
                     'app/relatedPerson/relatedPerson.detail.controller.js',
                     'app/relatedPerson/relatedPerson.search.controller.js',
-                    'app/relatedPerson/relatedPerson.service.js',                    
+                    'app/relatedPerson/relatedPerson.service.js',
                     'app/templates/bottomSheet.controller.js',
                     'app/templates/daf.controller.js',
                     'app/templates/rawData.controller.js',

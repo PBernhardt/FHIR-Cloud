@@ -14,6 +14,35 @@
         };
     });
 
+    app.filter('displayAge', function() {
+        return function (birthDate) {
+            if (birthDate) {
+                var retValue;
+                var dob = birthDate;
+                if (angular.isDate(dob) === false) {
+                    dob = new Date(birthDate);
+                }
+
+                var ageDifMs = Date.now() - dob.getTime();
+                var ageDate = new Date(ageDifMs); // miliseconds from epoch
+                var years = Math.floor(ageDate.getUTCFullYear() - 1970);
+                retValue = "age " + years;
+                if (years < 2) {
+                    var months = Math.floor(ageDifMs/2628000000);
+                    retValue = "age " + months + ' months';
+
+                    if (months < 6) {
+                        var weeks = Math.floor(ageDifMs/604800000);
+                        retValue = "age " + weeks + ' weeks';
+                    }
+                }
+                return retValue;
+            } else {
+                return "unknown";
+            }
+        }
+    });
+
     app.filter('codeableConcept', function () {
         return function (codeableConcept) {
             if (angular.isUndefined(codeableConcept)) {

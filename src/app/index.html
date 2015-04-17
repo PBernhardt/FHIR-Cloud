@@ -23,10 +23,10 @@
     </div>
 
     <div flex layout="row" layout-align="end center">
-        <!--        <p>User: {{vm.user || "Guest"}}</p>-->
-        <!--    <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
-               <md-icon md-svg-src="account"></md-icon>
-           </md-button>-->
+        <h4 hide-sm>User: {{vm.user || "Guest"}}</h4>
+        <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
+            <md-icon md-svg-src="account"></md-icon>
+        </md-button>
         <h4 hide-sm>Server: {{vm.activeServer.name || "Select a server"}}</h4>
         <md-button class="menu" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
             <md-icon md-svg-src="fire"></md-icon>
@@ -38,7 +38,6 @@
 </md-toolbar>
 
 <div flex layout="row">
-
     <md-sidenav layout="column" class="md-whiteframe-z2" md-component-id="left" md-is-locked-open="$mdMedia('gt-sm')"
                 tabindex="-1">
         <md-content>

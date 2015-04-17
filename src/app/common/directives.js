@@ -3,6 +3,27 @@
 
     var app = angular.module('FHIRCloud');
 
+    app.directive('fcGenderIcon', ['$compile', function ($compile) {
+        /*
+         Usage: <fc-gender-icon gender="male/female/etc."></fc-gender-icon>
+         */
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'gender': '=?'
+            },
+            link: function (scope, element, attr) {
+                var gender = scope.gender;
+                if (angular.isDefined(gender)) {
+                    gender = gender.toLowerCase();
+                    var iconTemplate = '<md-icon md-svg-icon="' + gender + '" style="height: 12px; width=12px"></md-icon>';
+                    element.append($compile(iconTemplate)(scope));
+                }
+            }
+        };
+        return directiveDefinitionObject;
+    }]);
+
     app.directive('fsAddListItem', ['$parse', function ($parse) {
         // Description:
         //
@@ -31,7 +52,7 @@
     }]);
 
     app.directive('fsPagination', function () {
-        var directiveDefinitionObject  = {
+        var directiveDefinitionObject = {
             restrict: 'E',
             scope: {
                 'click': '&onClick',
@@ -51,7 +72,7 @@
                 );
             }
         };
-        return directiveDefinitionObject ;
+        return directiveDefinitionObject;
     });
 
     app.directive('fsAddToList', [function () {

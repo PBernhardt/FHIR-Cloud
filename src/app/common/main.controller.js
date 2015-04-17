@@ -85,14 +85,24 @@
         }
 
         function showAbout(ev) {
-            $mdDialog.show(
-                $mdDialog.alert()
-                    .title('FHIR Cloud')
-                    .content('Active Server: ' + vm.activeServer.name)
-                    .ariaLabel('About FHIR Cloud')
-                    .ok('OK')
-                    .targetEvent(ev)
-            );
+            $mdDialog.show({
+                controller: aboutController,
+                templateUrl: 'templates/about.html',
+                targetEvent: ev
+            })
+                .then(function() {
+                    logInfo("About dialog closed", null, noToast);
+                }, function(error) {
+                    logError("Error", error, noToast);
+                });
+        }
+
+        function aboutController($scope, $mdDialog) {
+            function close() {
+                $mdDialog.hide();
+            }
+            $scope.close = close;
+            $scope.activeServer = vm.activeServer;
         }
 
         function authenticate(ev) {
