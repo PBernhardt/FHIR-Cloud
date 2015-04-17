@@ -2732,7 +2732,7 @@
 
     var controllerId = 'mainController';
 
-    function mainController($mdDialog, $mdSidenav, $location, common, conformanceService, fhirServers) {
+    function mainController($filter, $mdDialog, $mdSidenav, $location, $window, common, conformanceService, fhirServers) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -2832,6 +2832,10 @@
             }
             $scope.close = close;
             $scope.activeServer = vm.activeServer;
+            if (angular.isDefined($window.localStorage.patient) && ($window.localStorage.patient !== null)) {
+                $scope.patient = JSON.parse($window.localStorage.patient);
+                $scope.patient.fullName = $filter('fullName')($scope.patient.name);
+            }
         }
 
         function authenticate(ev) {
@@ -2916,7 +2920,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$mdDialog', '$mdSidenav', '$location', 'common', 'conformanceService', 'fhirServers', mainController]);
+        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$window', 'common', 'conformanceService', 'fhirServers', mainController]);
 
 })();
 (function () {

@@ -2,6 +2,10 @@
     <md-content class="sticky-container">
         <md-subheader class="md-sticky-no-effect"><h4 class="md-title">FHIR Cloud</h4></md-subheader>
         <div class="dialog-content">
+            <md-input-container ng-if="patient">
+                <label>Active Patient</label>
+                <input ng-model="patient.fullName" readonly>
+            </md-input-container>
             <md-input-container>
                 <label>Active Server</label>
                 <input ng-model="activeServer.name" readonly>
