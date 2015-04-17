@@ -1,19 +1,21 @@
-<md-dialog aria-label="authenticate">
-    <md-content>
-        <h3>Login to FHIR-Cloud</h3>
-        <md-input-container>
-            <label>User name</label>
-            <input type="text"
-                   ng-model="user">
-        </md-input-container>
-        <md-input-container>
-            <label>Password</label>
-            <input type="password"
-                   ng-model="password">
-        </md-input-container>
-        <div layout="row" layout-align="space-between center">
-            <md-button class="md-primary">Login</md-button>
-            <md-button class="md-warn">Cancel</md-button>
+<md-dialog>
+    <md-content class="sticky-container">
+        <md-subheader class="md-sticky-no-effect"><h4 class="md-title">FHIR Cloud Login</h4></md-subheader>
+        <div class="dialog-content" style="min-height: 500px">
+            <md-input-container>
+                <label>User name</label>
+                <input type="text"
+                       ng-model="user">
+            </md-input-container>
+            <md-input-container>
+                <label>Password</label>
+                <input type="password"
+                       ng-model="password">
+            </md-input-container>
         </div>
     </md-content>
+    <div class="md-actions" layout="row" layout-align="space-between center">
+        <md-button class="md-primary">Login</md-button>
+        <md-button class="md-warn">Cancel</md-button>
+    </div>
 </md-dialog>

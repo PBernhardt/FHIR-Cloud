@@ -259,3 +259,8 @@ h2 .md-subheader.md-sticky-clone {
 h2 .md-subheader-content {
     padding-left: 10px;
 }
+
+h2 .md-subheader.md-default-theme {
+    background-color: #c0a16b;
+    margin: 0;
+}

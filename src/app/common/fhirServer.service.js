@@ -3,13 +3,18 @@
 
     var serviceId = 'fhirServers';
 
-    function fhirServers($cookieStore, common, dataCache) {
+    function fhirServers($cookieStore, $window, common, dataCache) {
         var $q = common.$q;
 
         function getActiveServer() {
             var activeServer = dataCache.readFromCache('activeServer');
             if (angular.isUndefined(activeServer)) {
                 activeServer = $cookieStore.get('activeServer');
+            }
+            if (angular.isUndefined(activeServer)) {
+                if (angular.isDefined($window.localStorage.activeServer) && ($window.localStorage.activeServer !== null)) {
+                    activeServer = JSON.parse($window.localStorage.activeServer);
+                }
             }
             if (angular.isUndefined(activeServer)) {
                 getAllServers()
@@ -24,6 +29,7 @@
         function setActiveServer(server) {
             dataCache.addToCache('activeServer', server);
             $cookieStore.put('activeServer', server);
+            $window.localStorage.activeServer = JSON.stringify(server);
         }
 
         function getAllServers() {
@@ -121,6 +127,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', 'common', 'dataCache', fhirServers]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', '$window', 'common', 'dataCache', fhirServers]);
 
 })();

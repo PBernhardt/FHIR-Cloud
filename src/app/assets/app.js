@@ -387,10 +387,11 @@
             .icon("add", "./assets/svg/add.svg", 24)
             .icon("cardio", "./assets/svg/cardio3.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
-            .icon("consult", "./assets/svg/stethoscope.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
+            .icon("diagnosis", "./assets/svg/stethoscope.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
-            .icon("error", "./assets/svb/error.svg", 48)
+            .icon("error", "./assets/svg/error.svg", 48)
+            .icon("family", "./assets/svg/group.svg", 24)
             .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
@@ -839,13 +840,18 @@
 
     var serviceId = 'fhirServers';
 
-    function fhirServers($cookieStore, common, dataCache) {
+    function fhirServers($cookieStore, $window, common, dataCache) {
         var $q = common.$q;
 
         function getActiveServer() {
             var activeServer = dataCache.readFromCache('activeServer');
             if (angular.isUndefined(activeServer)) {
                 activeServer = $cookieStore.get('activeServer');
+            }
+            if (angular.isUndefined(activeServer)) {
+                if (angular.isDefined($window.localStorage.activeServer) && ($window.localStorage.activeServer !== null)) {
+                    activeServer = JSON.parse($window.localStorage.activeServer);
+                }
             }
             if (angular.isUndefined(activeServer)) {
                 getAllServers()
@@ -860,6 +866,7 @@
         function setActiveServer(server) {
             dataCache.addToCache('activeServer', server);
             $cookieStore.put('activeServer', server);
+            $window.localStorage.activeServer = JSON.stringify(server);
         }
 
         function getAllServers() {
@@ -957,7 +964,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', 'common', 'dataCache', fhirServers]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', '$window', 'common', 'dataCache', fhirServers]);
 
 })();(function () {
     'use strict';
@@ -2735,9 +2742,9 @@
         var _adminPages = [
             {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
-  /*          {name: 'Practitioner', href: 'practitioner'},
+            {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},
-            {name: 'Related Person', href: 'relatedPerson'}*/
+            {name: 'Related Person', href: 'relatedPerson'}
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance'},

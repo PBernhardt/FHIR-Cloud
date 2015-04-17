@@ -1,14 +1,33 @@
 <md-dialog>
     <md-content class="sticky-container">
-        <md-subheader class="md-sticky-no-effect">FHIR Cloud</md-subheader>
+        <md-subheader class="md-sticky-no-effect"><h4 class="md-title">FHIR Cloud</h4></md-subheader>
         <div class="dialog-content">
-            <p>Active Server: {{activeServer.name}}</p>
-            <footer>
-                <div>Icons made by <a href="http://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a
-                        href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
-                        href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a>
-                </div>
-            </footer>
+            <md-input-container>
+                <label>Active Server</label>
+                <input ng-model="activeServer.name" readonly>
+            </md-input-container>
+            <md-input-container>
+                <label>Base Url</label>
+                <input ng-model="activeServer.baseUrl" readonly>
+            </md-input-container>
+            <md-input-container ng-if="activeServer.authorizeUri">
+                <label>Authorization Url</label>
+                <input ng-model="activeServer.authorizeUri" readonly>
+            </md-input-container>
+            <md-input-container ng-if="activeServer.tokenUri">
+                <label>Access Token Url</label>
+                <input ng-model="activeServer.tokenUri" readonly>
+            </md-input-container>
+
+            <blockquote>
+                <p style="font-size: x-small">FHIR Cloud is a RelayHealth reference client for Fast Healthcare Interoperability Resources (FHIR).
+                    Icons made by <a href="http://www.flaticon.com/authors/freepik"
+                                     title="Freepik">Freepik</a> from <a
+                            href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
+                            href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY
+                        3.0</a>
+                </p>
+            </blockquote>
         </div>
     </md-content>
     <div class="md-actions" layout="row">
