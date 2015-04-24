@@ -27,7 +27,7 @@
                     case 'allergyIntolerance':
                         vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/allergyintolerance-daf.html");
                         break;
-                    case 'diagnosticOrder':
+                    case 'organization':
                         vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/diagnosticorder-daf.html");
                         break;
                     case 'diagnosticReport':

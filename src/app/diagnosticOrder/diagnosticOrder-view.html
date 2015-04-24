@@ -1,0 +1,106 @@
+﻿<div ng-controller="diagnosticOrderDetail as vm">
+    <div layout="row" layout-wrap>
+        <div flex="90">
+            <h3>{{vm.diagnosticOrder.name}}</h3>
+        </div>
+        <div flex="10">
+            <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+                <md-icon md-svg-icon="actions"></md-icon>
+            </md-button>
+        </div>
+
+        <div flex="100" class="table-responsive-vertical shadow-z-1" ng-if="vm.diagnosticOrder">
+            <table id="orgView" class="table table-hover table-mc-blue">
+                <tr ng-if="vm.diagnosticOrder.resourceId">
+                    <td>Resource Id</td>
+                    <td>
+                        {{vm.diagnosticOrder.resourceId}}
+                    </td>
+                </tr>
+                <tr ng-if="vm.diagnosticOrder.type && vm.diagnosticOrder.type.coding[0]">
+                    <td>Type</td>
+                    <td>{{vm.diagnosticOrder.type.coding[0].display}}</td>
+                </tr>
+                <tr ng-if="vm.diagnosticOrder.address">
+                    <td>Addresses</td>
+                    <td>
+                        <p ng-repeat="a in vm.diagnosticOrder.address">
+                            {{ a | singleLineAddress }}
+                        </p>
+                    </td>
+                </tr>
+                <tr ng-if="vm.diagnosticOrder.telecom">
+                    <td>Communication</td>
+                    <td>
+                        <p ng-repeat="t in vm.diagnosticOrder.telecom">
+                            <strong>{{t.system || "unspecified"}}</strong>:&nbsp;{{t.value}}
+                        </p>
+                    </td>
+                </tr>
+                <tr ng-if="vm.diagnosticOrder.contact">
+                    <td>Administrative Contacts</td>
+                    <td>
+                        <table ng-repeat="ac in vm.diagnosticOrder.contact" class="table table-hover table-mc-light-blue">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Telecom</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>
+                                    {{ac.name.given.join(' ')}}
+                                    {{ac.name.family.join(' ')}}
+                                </td>
+                                <td>
+                                    {{ac.address.line.join(', ')}},
+                                    {{ac.address.city}},
+                                    {{ac.address.state}}
+                                    {{ac.address.zip}}
+                                    {{ac.address.country}}
+                                </td>
+                                <td>
+                                    <p ng-repeat="ct in ac.telecom">
+                                        <strong>{{ct.use}} {{ct.system}}</strong>: {{ct.value}}
+                                    </p>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr ng-if="vm.diagnosticOrder.partOf">
+                    <td>Parent DiagnosticOrder</td>
+                    <td>
+                        <a ng-href="#/diagnosticOrder/get/{{vm.diagnosticOrder.partOf.reference | idFromURL }}">{{vm.diagnosticOrder.partOf.display}}</a>
+                    </td>
+                </tr>
+                <tr ng-if="vm.diagnosticOrder.identifier">
+                    <td>Identifiers</td>
+                    <td>
+                        <table ng-show="vm.diagnosticOrder.identifier" class="table table-hover table-mc-light-blue">
+                            <thead>
+                            <tr>
+                                <th>System</th>
+                                <th>Value</th>
+                                <th>Use</th>
+                            </tr>
+                            </thead>
+                            <tr ng-repeat="id in vm.diagnosticOrder.identifier">
+                                <td>{{id.system}}</td>
+                                <td>{{id.value}}</td>
+                                <td>{{id.use}}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr ng-if="vm.diagnosticOrder.active">
+                    <td>Active</td>
+                    <td>{{vm.diagnosticOrder.active}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

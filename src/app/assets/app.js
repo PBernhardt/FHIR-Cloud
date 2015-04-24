@@ -299,6 +299,16 @@
             templateUrl: 'consultation/consultation-edit.html'
         }).when('/consultation/smart/:smartApp/:patientId', {
             templateUrl: 'consultation/consultation-smart.html'
+        }).when('/diagnosticOrder', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-search.html'
+        }).when('/diagnosticOrder/get/:id', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-view.html'
+        }).when('/diagnosticOrder/view/:hashKey', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-view.html'
+        }).when('/diagnosticOrder/edit/:hashKey', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-edit.html'
+        }).when('/diagnosticOrder/detailed-search', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-detailed-search.html'
         }).when('/encounter/org/:orgId', {
             templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/encounter', {
@@ -441,6 +451,7 @@
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
+            .icon("order", "./assets/svg/flask.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)
@@ -2800,6 +2811,8 @@
         var _clinicalPages = [
             {name: 'Allergy', href: 'allergy'},
             {name: 'Condition', href: 'condition'},
+            {name: 'Diagnostic Order', href: 'diagnosticOrder'},
+            {name: 'Diagnostic Report', href: 'diagnosticReport'},
             {name: 'Family History', href: 'familyHistory'},
             {name: 'Immunization', href: 'immunization'},
             {name: 'Medication', href: 'medication'},
@@ -2808,7 +2821,7 @@
         var _dafResources = [
             {name: 'Patient', href: 'daf/patient'},
             {name: 'Allergy Intolerance', href: 'daf/allergyIntolerance'},
-            {name: 'Diagnostic Order', href: 'daf/diagnosticOrder'},
+            {name: 'Diagnostic Order', href: 'daf/organization'},
             {name: 'Diagnostic Report', href: 'daf/diagnosticReport'},
             {name: 'Encounter', href: 'daf/encounter'},
             {name: 'Family History', href: 'daf/familyHistory'},
@@ -3586,6 +3599,885 @@
     }
 
     angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', conformanceService]);
+})();(function () {
+    'use strict';
+
+    var controllerId = 'diagnosticOrderDetail';
+
+    function diagnosticOrderDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
+                                $mdDialog, common, contactService, fhirServers, identifierService, localValueSets,
+                                diagnosticOrderService, contactPointService, sessionService, patientService, personService) {
+        /* jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var $q = common.$q;
+        var noToast = false;
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
+        function cancel() {
+
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        function deleteDiagnosticOrder(diagnosticOrder) {
+            function executeDelete() {
+                if (diagnosticOrder && diagnosticOrder.resourceId) {
+                    diagnosticOrderService.deleteCachedDiagnosticOrder(diagnosticOrder.hashKey, diagnosticOrder.resourceId)
+                        .then(function () {
+                            logSuccess("Deleted diagnosticOrder " + diagnosticOrder.name);
+                            $location.path('/diagnosticOrder');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            if (angular.isDefined(diagnosticOrder) && diagnosticOrder.resourceId) {
+                var confirm = $mdDialog.confirm().title('Delete ' + diagnosticOrder.name + '?').ok('Yes').cancel('No');
+                $mdDialog.show(confirm).then(executeDelete);
+            } else {
+                logInfo("You must first select an diagnosticOrder to delete.")
+            }
+        }
+
+        function edit(diagnosticOrder) {
+            if (diagnosticOrder && diagnosticOrder.hashKey) {
+                $location.path('/diagnosticOrder/edit/' + diagnosticOrder.hashKey);
+            }
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function getDiagnosticOrderReference(input) {
+            var deferred = $q.defer();
+            diagnosticOrderService.getDiagnosticOrderReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' DiagnosticOrders from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data || []);
+                }, function (error) {
+                    logError('Error getting diagnosticOrders', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function getDiagnosticOrderTypes() {
+            vm.diagnosticOrderTypes = localValueSets.diagnosticOrderType();
+        }
+
+        function getRequestedDiagnosticOrder() {
+            function initializeRelatedData(data) {
+                vm.diagnosticOrder = data.resource || data;
+                if (angular.isUndefined(vm.diagnosticOrder.type)) {
+                    vm.diagnosticOrder.type = {"coding": []};
+                }
+                vm.diagnosticOrder.resourceId = vm.activeServer.baseUrl + '/DiagnosticOrder/' + vm.diagnosticOrder.id;
+                vm.title = vm.diagnosticOrder.name;
+                identifierService.init(vm.diagnosticOrder.identifier, "multi", "diagnosticOrder");
+                addressService.init(vm.diagnosticOrder.address, false);
+                contactService.init(vm.diagnosticOrder.contact);
+                contactPointService.init(vm.diagnosticOrder.telecom, false, false);
+
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.diagnosticOrder = JSON.stringify(vm.diagnosticOrder);
+                }
+            }
+
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.diagnosticOrder) || ($window.localStorage.diagnosticOrder === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/diagnosticOrder');
+                    }
+                } else {
+                    vm.diagnosticOrder = JSON.parse($window.localStorage.diagnosticOrder);
+                    vm.diagnosticOrder.hashKey = "current";
+                    initializeRelatedData(vm.diagnosticOrder);
+                }
+            } else if (vm.lookupKey === 'new') {
+                var data = diagnosticOrderService.initializeNewDiagnosticOrder();
+                initializeRelatedData(data);
+                vm.title = 'Add New DiagnosticOrder';
+                vm.isEditing = false;
+            } else if (angular.isDefined($routeParams.resourceId)) {
+                var fullPath = vm.activeServer.baseUrl + '/DiagnosticOrder/' + $routeParams.resourceId;
+                logInfo("Fetching " + fullPath, null, noToast);
+                diagnosticOrderService.getDiagnosticOrder(fullPath)
+                    .then(initializeRelatedData).then(function () {
+                        var session = sessionService.getSession();
+                        session.diagnosticOrder = vm.diagnosticOrder;
+                        sessionService.updateSession(session);
+                    }, function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                    });
+            } else {
+                if (vm.lookupKey) {
+                    diagnosticOrderService.getCachedDiagnosticOrder(vm.lookupKey)
+                        .then(initializeRelatedData).then(function () {
+                            var session = sessionService.getSession();
+                            session.diagnosticOrder = vm.diagnosticOrder;
+                            sessionService.updateSession(session);
+                        }, function (error) {
+                            logError($filter('unexpectedOutcome')(error));
+                        });
+                } else if ($routeParams.id) {
+                    var resourceId = vm.activeServer.baseUrl + '/DiagnosticOrder/' + $routeParams.id;
+                    diagnosticOrderService.getDiagnosticOrder(resourceId)
+                        .then(initializeRelatedData, function (error) {
+                            logError($filter('unexpectedOutcome')(error));
+                        });
+                }
+            }
+        }
+
+        function getTitle() {
+            var title = '';
+            if (vm.diagnosticOrder) {
+                title = vm.title = 'Edit ' + ((vm.diagnosticOrder && vm.diagnosticOrder.fullName) || '');
+            } else {
+                title = vm.title = 'Add New DiagnosticOrder';
+            }
+            vm.title = title;
+            return vm.title;
+        }
+
+        function goBack() {
+            $window.history.back();
+        }
+
+        function processResult(results) {
+            var resourceVersionId = results.headers.location || results.headers["content-location"];
+            if (angular.isUndefined(resourceVersionId)) {
+                logInfo("DiagnosticOrder saved, but location is unavailable. CORS is not implemented correctly at " + vm.activeServer.name);
+            } else {
+                logInfo("DiagnosticOrder saved at " + resourceVersionId);
+                vm.diagnosticOrder.resourceVersionId = resourceVersionId;
+                vm.diagnosticOrder.resourceId = common.setResourceId(vm.diagnosticOrder.resourceId, resourceVersionId);
+            }
+            vm.isEditing = true;
+            getTitle();
+        }
+
+        function save() {
+            if (vm.diagnosticOrder.name.length < 5) {
+                logError("DiagnosticOrder Name must be at least 5 characters");
+                return;
+            }
+            var diagnosticOrder = diagnosticOrderService.initializeNewDiagnosticOrder().resource;
+            diagnosticOrder.name = vm.diagnosticOrder.name;
+            diagnosticOrder.type = vm.diagnosticOrder.type;
+            diagnosticOrder.address = addressService.mapFromViewModel();
+            diagnosticOrder.telecom = contactPointService.mapFromViewModel();
+            diagnosticOrder.contact = contactService.mapFromViewModel();
+            diagnosticOrder.partOf = vm.diagnosticOrder.partOf;
+            diagnosticOrder.identifier = identifierService.getAll();
+            diagnosticOrder.active = vm.diagnosticOrder.active;
+            if (vm.isEditing) {
+                diagnosticOrder.id = vm.diagnosticOrder.id;
+                diagnosticOrderService.updateDiagnosticOrder(vm.diagnosticOrder.resourceId, diagnosticOrder)
+                    .then(processResult,
+                    function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                    });
+            } else {
+                diagnosticOrderService.addDiagnosticOrder(diagnosticOrder)
+                    .then(processResult,
+                    function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                    });
+            }
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function activate() {
+            common.activateController([getActiveServer(), getDiagnosticOrderTypes()], controllerId).then(function () {
+                getRequestedDiagnosticOrder();
+            });
+        }
+
+        function createRandomPatients(event) {
+            vm.diagnosticOrder.resourceId = vm.activeServer.baseUrl + '/DiagnosticOrder/' + vm.diagnosticOrder.id;
+            logSuccess("Creating random patients for " + vm.diagnosticOrder.name);
+            patientService.seedRandomPatients(vm.diagnosticOrder.id, vm.diagnosticOrder.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });
+        }
+
+        function createRandomPersons(event) {
+            vm.diagnosticOrder.resourceId = vm.activeServer.baseUrl + '/DiagnosticOrder/' + vm.diagnosticOrder.id;
+            logSuccess("Creating random patients for " + vm.diagnosticOrder.resourceId);
+            personService.seedRandomPersons(vm.diagnosticOrder.resourceId, vm.diagnosticOrder.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        createRandomPatients();
+                        break;
+                    case 1:
+                        $location.path('/patient/org/' + vm.diagnosticOrder.id);
+                        break;
+                    case 2:
+                        $location.path('/diagnosticOrder/detailed-search');
+                        break;
+                    case 3:
+                        $location.path('/diagnosticOrder');
+                        break;
+                    case 4:
+                        $location.path('/diagnosticOrder/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/diagnosticOrder/edit/new');
+                        break;
+                    case 6:
+                        deleteDiagnosticOrder(vm.diagnosticOrder);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Add random patients', icon: 'groupAdd', index: 0},
+                        {name: 'Get patients', icon: 'group', index: 1},
+                        {name: 'Quick find', icon: 'quickFind', index: 3},
+                        {name: 'Edit diagnosticOrder', icon: 'edit', index: 4},
+                        {name: 'Add new diagnosticOrder', icon: 'hospital', index: 5}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 2},
+                        {name: 'Quick find', icon: 'quickFind', index: 3}
+                    ];
+                }
+                this.title = 'DiagnosticOrder search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.cancel = cancel;
+        vm.activate = activate;
+        vm.contactTypes = undefined;
+        vm.delete = deleteDiagnosticOrder;
+        vm.edit = edit;
+        vm.getDiagnosticOrderReference = getDiagnosticOrderReference;
+        vm.getTitle = getTitle;
+        vm.goBack = goBack;
+        vm.isBusy = false;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.loadingDiagnosticOrders = false;
+        vm.diagnosticOrder = undefined;
+        vm.diagnosticOrderTypes = undefined;
+        vm.save = save;
+        vm.searchText = undefined;
+        vm.states = undefined;
+        vm.title = 'diagnosticOrderDetail';
+        vm.createRandomPatients = createRandomPatients;
+        vm.createRandomPersons = createRandomPersons;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
+            'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'diagnosticOrderService',
+            'contactPointService', 'sessionService', 'patientService', 'personService', diagnosticOrderDetail]);
+
+})
+();(function () {
+    'use strict';
+
+    var controllerId = 'diagnosticOrderSearch';
+
+    function diagnosticOrderSearch($location, $mdBottomSheet, $mdSidenav, $scope, common, fhirServers, localValueSets, diagnosticOrderService) {
+        var getLogFn = common.logger.getLogFn;
+        var logInfo = getLogFn(controllerId, 'info');
+        var logError = getLogFn(controllerId, 'error');
+        var noToast = false;
+        var $q = common.$q;
+
+        /* jshint validthis:true */
+        var vm = this;
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function getCachedSearchResults() {
+            diagnosticOrderService.getCachedSearchResults()
+                .then(processSearchResults);
+        }
+
+        function activate() {
+            common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
+                .then(function () {
+                    _loadDiagnosticOrderTypes();
+                });
+        }
+
+        function goToDetail(hash) {
+            if (hash) {
+                $location.path('/diagnosticOrder/view/' + hash);
+            }
+        }
+
+        vm.goToDetail = goToDetail;
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.diagnosticOrders = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function querySearch(searchText) {
+            var deferred = $q.defer();
+            diagnosticOrderService.getDiagnosticOrders(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' DiagnosticOrders from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data.entry || []);
+                }, function (error) {
+                    logError('Error getting diagnosticOrders', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+        vm.querySearch = querySearch;
+
+        function searchDiagnosticOrders(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            diagnosticOrderService.searchDiagnosticOrders(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' DiagnosticOrders from ' + vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error finding diagnosticOrders: ', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function dereferenceLink(url) {
+            diagnosticOrderService.getDiagnosticOrdersByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.diagnosticOrders) ? data.diagnosticOrders.length : 0) + ' Diagnostic Orders from ' + vm.activeServer.name, null, noToast);
+                    return data;
+                }, function (error) {
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                });
+        }
+
+        vm.dereferenceLink = dereferenceLink;
+
+        function getDiagnosticOrderReference(input) {
+            var deferred = $q.defer();
+            diagnosticOrderService.getDiagnosticOrderReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Diagnostic Orders from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data || []);
+                }, function (error) {
+                    logError('Error getting diagnostic orders', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getDiagnosticOrderReference = getDiagnosticOrderReference;
+
+        function goToDiagnosticOrder(diagnosticOrder) {
+            if (diagnosticOrder && diagnosticOrder.$$hashKey) {
+                $location.path('/diagnosticOrder/view/' + diagnosticOrder.$$hashKey);
+            }
+        }
+        vm.goToDiagnosticOrder = goToDiagnosticOrder;
+
+        function _loadDiagnosticOrderTypes() {
+            vm.diagnosticOrderTypes = localValueSets.diagnosticOrderType();
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/diagnosticOrder/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/diagnosticOrder/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/diagnosticOrder');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new diagnostic order', icon: 'order', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Diagnostic Order search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.diagnosticOrderSearch.name) {
+                queryParam.param = "name";
+                queryParam.value = vm.diagnosticOrderSearch.name;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.diagnosticOrderSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.diagnosticOrderSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.diagnosticOrderSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.diagnosticOrderSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.diagnosticOrderSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.diagnosticOrderSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.diagnosticOrderSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.diagnosticOrderSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.diagnosticOrderSearch.identifier.system && vm.diagnosticOrderSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.diagnosticOrderSearch.identifier.system.concat("|", vm.diagnosticOrderSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.diagnosticOrderSearch.type) {
+                queryParam.param = "type";
+                queryParam.value = vm.diagnosticOrderSearch.type;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.diagnosticOrderSearch.partOf) {
+                queryParam.param = "partOf";
+                queryParam.value = vm.diagnosticOrderSearch.partOf.reference;
+                queryParams.push(_.clone(queryParam));
+            }
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            searchDiagnosticOrders(queryString);
+        }
+
+        vm.detailSearch = detailSearch;
+
+        vm.activeServer = null;
+        vm.isBusy = false;
+        vm.diagnosticOrders = [];
+        vm.errorOutcome = null;
+        vm.diagnosticOrderTypes = null;
+        vm.diagnosticOrderSearch = {
+            name: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            identifier: {system: undefined, value: undefined},
+            type: undefined,
+            partOf: undefined
+        };
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'DiagnosticOrders';
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', '$mdSidenav', '$scope', 'common', 'fhirServers', 'localValueSets', 'diagnosticOrderService', diagnosticOrderSearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'diagnosticOrderService';
+
+    function diagnosticOrderService(common, dataCache, fhirClient, fhirServers) {
+        var dataCacheKey = 'localDiagnosticOrders';
+        var getLogFn = common.logger.getLogFn;
+        var logWarning = getLogFn(serviceId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function addDiagnosticOrder(resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/DiagnosticOrder";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedDiagnosticOrder(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                var removed = false;
+                var cachedDiagnosticOrders = searchResults.entry;
+                for (var i = 0, len = cachedDiagnosticOrders.length; i < len; i++) {
+                    if (cachedDiagnosticOrders[i].$$hashKey === hashKey) {
+                        cachedDiagnosticOrders.splice(i, 1);
+                        searchResults.entry = cachedDiagnosticOrders;
+                        searchResults.totalResults = (searchResults.totalResults - 1);
+                        dataCache.addToCache(dataCacheKey, searchResults);
+                        removed = true;
+                        break;
+                    }
+                }
+                if (removed) {
+                    deferred.resolve();
+                } else {
+                    logWarning('DiagnosticOrder not found in cache: ' + hashKey, null, noToast);
+                    deferred.resolve();
+                }
+            }
+
+            var deferred = $q.defer();
+            deleteDiagnosticOrder(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache)
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteDiagnosticOrder(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getCachedDiagnosticOrder(hashKey) {
+            function getDiagnosticOrder(searchResults) {
+                var cachedDiagnosticOrder;
+                var cachedDiagnosticOrders = searchResults.entry;
+                cachedDiagnosticOrder = _.find(cachedDiagnosticOrders, {'$$hashKey': hashKey});
+                if (cachedDiagnosticOrder) {
+                    deferred.resolve(cachedDiagnosticOrder);
+                } else {
+                    deferred.reject('DiagnosticOrder not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            getCachedSearchResults()
+                .then(getDiagnosticOrder,
+                function () {
+                    deferred.reject('DiagnosticOrder search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getDiagnosticOrder(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: add support for summary when DSTU2 server implementers have support
+        function getDiagnosticOrderReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/DiagnosticOrder?name=' + input + '&_count=10')
+                .then(function (results) {
+                    var diagnosticOrders = [];
+                    if (results.data.entry) {
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'DiagnosticOrder') {
+                                diagnosticOrders.push({
+                                    display: item.resource.name,
+                                    reference: baseUrl + '/DiagnosticOrder/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
+                    }
+                    if (diagnosticOrders.length === 0) {
+                        diagnosticOrders.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(diagnosticOrders);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: waiting for server implementers to add support for _summary
+        function getDiagnosticOrders(baseUrl, nameFilter) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/DiagnosticOrder?name=' + nameFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchDiagnosticOrders(baseUrl, filter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(filter)) {
+                deferred.reject('Invalid search input');
+            }
+
+            fhirClient.getResource(baseUrl + '/DiagnosticOrder?' + filter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getDiagnosticOrdersByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    var searchResults = {"links": {}, "diagnosticOrders": []};
+                    var diagnosticOrders = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'DiagnosticOrder') {
+                                    diagnosticOrders.push({display: item.content.name, reference: item.id});
+                                }
+                            });
+
+                    }
+                    if (diagnosticOrders.length === 0) {
+                        diagnosticOrders.push({display: "No matches", reference: ''});
+                    }
+                    searchResults.diagnosticOrders = diagnosticOrders;
+                    if (results.data.link) {
+                        searchResults.links = results.data.link;
+                    }
+                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
+                    deferred.resolve(searchResults);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewDiagnosticOrder() {
+            var data = {};
+            data.resource = {
+                "resourceType": "DiagnosticOrder",
+                "identifier": [],
+                "type": {"coding": []},
+                "telecom": [],
+                "contact": [],
+                "address": [],
+                "partOf": null,
+                "location": [],
+                "active": true
+            };
+            return data;
+        }
+
+        function updateDiagnosticOrder(resourceVersionId, resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.location.length === 0) {
+                resource.location = null;
+            }
+            return $q.when(resource);
+        }
+
+        function _prepCoding(coding) {
+            var result = null;
+            if (angular.isArray(coding) && angular.isDefined(coding[0])) {
+                if (angular.isObject(coding[0])) {
+                    result = coding;
+                } else {
+                    var parsedCoding = JSON.parse(coding[0]);
+                    result = [];
+                    result.push(parsedCoding ? parsedCoding : null);
+                }
+            }
+            return result;
+        }
+
+        var service = {
+            addDiagnosticOrder: addDiagnosticOrder,
+            clearCache: clearCache,
+            deleteCachedDiagnosticOrder: deleteCachedDiagnosticOrder,
+            deleteDiagnosticOrder: deleteDiagnosticOrder,
+            getCachedDiagnosticOrder: getCachedDiagnosticOrder,
+            getCachedSearchResults: getCachedSearchResults,
+            getDiagnosticOrder: getDiagnosticOrder,
+            getDiagnosticOrders: getDiagnosticOrders,
+            getDiagnosticOrdersByLink: getDiagnosticOrdersByLink,
+            getDiagnosticOrderReference: getDiagnosticOrderReference,
+            initializeNewDiagnosticOrder: initializeNewDiagnosticOrder,
+            searchDiagnosticOrders: searchDiagnosticOrders,
+            updateDiagnosticOrder: updateDiagnosticOrder
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', diagnosticOrderService]);
+
 })();(function () {
     'use strict';
 
@@ -18442,7 +19334,7 @@
                     case 'allergyIntolerance':
                         vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/allergyintolerance-daf.html");
                         break;
-                    case 'diagnosticOrder':
+                    case 'organization':
                         vm.dafUrl = $sce.trustAsResourceUrl(scheme + "://hl7-fhir.github.io/diagnosticorder-daf.html");
                         break;
                     case 'diagnosticReport':

@@ -65,6 +65,16 @@
             templateUrl: 'consultation/consultation-edit.html'
         }).when('/consultation/smart/:smartApp/:patientId', {
             templateUrl: 'consultation/consultation-smart.html'
+        }).when('/diagnosticOrder', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-search.html'
+        }).when('/diagnosticOrder/get/:id', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-view.html'
+        }).when('/diagnosticOrder/view/:hashKey', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-view.html'
+        }).when('/diagnosticOrder/edit/:hashKey', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-edit.html'
+        }).when('/diagnosticOrder/detailed-search', {
+            templateUrl: 'diagnosticOrder/diagnosticOrder-detailed-search.html'
         }).when('/encounter/org/:orgId', {
             templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/encounter', {
@@ -207,6 +217,7 @@
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
+            .icon("order", "./assets/svg/flask.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)

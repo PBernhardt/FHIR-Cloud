@@ -1,0 +1,84 @@
+﻿<div ng-controller="diagnosticOrderDetail as vm" layout="row" layout-wrap>
+    <div flex="100">
+        <h3 ng-if="vm.isEditing === false">Add New DiagnosticOrder</h3>
+
+        <h3 ng-if="vm.isEditing === true">Edit {{vm.diagnosticOrder.name}}</h3>
+    </div>
+    <div flex="20">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100">
+        <ng-form name="diagnosticOrderEditForm"
+              ng-model="vm.diagnosticOrder">
+            <md-tabs md-selected="vm.selectedTab">
+                <md-tab label="Basic Information">
+                    <div flex layout-padding>
+                        <div flex>
+                            <md-input-container>
+                                <label>DiagnosticOrder Name</label>
+                                <input ng-model="vm.diagnosticOrder.name" name="name" minlength="5" required>
+
+                                <div ng-messages="diagnosticOrderEditForm.name.$error"
+                                     ng-show="diagnosticOrderEditForm.$dirty">
+                                    <div ng-message="required">DiagnosticOrder name is required!</div>
+                                    <div ng-message="minlength">DiagnosticOrder name must be at least 5 characters.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+
+
+                        <div flex="80" style="min-height: 150px">
+                            <label>Parent DiagnosticOrder</label>
+                            <md-autocomplete flex
+                                             md-no-cache="true"
+                                             md-selected-item="vm.diagnosticOrder.partOf"
+                                             md-search-text="vm.searchText"
+                                             md-items="org in vm.getDiagnosticOrderReference(vm.searchText)"
+                                             md-delay="500"
+                                             md-item-text="org.display"
+                                             md-min-length="3"
+                                             placeholder="What is the parent diagnosticOrder?">
+                                <span md-highlight-text="vm.searchText">{{org.display}}</span>
+                            </md-autocomplete>
+                        </div>
+                        <div flex>
+                        <label>Type&nbsp;&nbsp;</label>
+                        <select
+                                id="diagnosticOrder-type"
+                                ng-model="vm.diagnosticOrder.type.coding[0]">
+                            <option ng-repeat="coding in vm.diagnosticOrderTypes"
+                                    value="{{coding}}"
+                                    ng-selected="coding.code===vm.diagnosticOrder.type.coding[0].code">
+                                {{coding.display || ''}}
+                            </option>
+                        </select>
+                    </div>
+                    </div>
+                </md-tab>
+                <md-tab label="Address">
+                    <div ng-include="'elements/address/address.html'"></div>
+                </md-tab>
+                <md-tab label="Telecom">
+                    <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
+                </md-tab>
+                <md-tab label="Admin Contact">
+                    <div ng-include="'elements/contact/contact.html'"></div>
+                </md-tab>
+                <md-tab label="Identifiers">
+                    <div ng-include="'elements/identifier/identifier.html'"></div>
+                </md-tab>
+            </md-tabs>
+
+            <div layout="row" layout-align="end end">
+                <md-button ng-click="vm.save()" aria-label="Execute save"
+                           ng-disabled="diagnosticOrderEditForm.$pristine || diagnosticOrderEditForm.$invalid">
+                    <md-icon md-svg-icon="saveToCloud" alt="Save DiagnosticOrder"></md-icon>
+                </md-button>
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            </div>
+        </ng-form>
+    </div>
+</div>
+

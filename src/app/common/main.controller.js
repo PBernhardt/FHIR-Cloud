@@ -33,6 +33,8 @@
         var _clinicalPages = [
             {name: 'Allergy', href: 'allergy'},
             {name: 'Condition', href: 'condition'},
+            {name: 'Diagnostic Order', href: 'diagnosticOrder'},
+            {name: 'Diagnostic Report', href: 'diagnosticReport'},
             {name: 'Family History', href: 'familyHistory'},
             {name: 'Immunization', href: 'immunization'},
             {name: 'Medication', href: 'medication'},
@@ -41,7 +43,7 @@
         var _dafResources = [
             {name: 'Patient', href: 'daf/patient'},
             {name: 'Allergy Intolerance', href: 'daf/allergyIntolerance'},
-            {name: 'Diagnostic Order', href: 'daf/diagnosticOrder'},
+            {name: 'Diagnostic Order', href: 'daf/organization'},
             {name: 'Diagnostic Report', href: 'daf/diagnosticReport'},
             {name: 'Encounter', href: 'daf/encounter'},
             {name: 'Family History', href: 'daf/familyHistory'},
