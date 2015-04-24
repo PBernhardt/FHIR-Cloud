@@ -1,0 +1,234 @@
+<div ng-controller="familyHistoryDetail as vm" layout="row" layout-wrap ng-cloak>
+    <div flex="25" hide-sm>
+        <img data-fs-img-person="vm.familyHistory.photo[0]" class="largeFace" ng-if="vm.isBusy === false"/>
+    </div>
+    <div flex="65" layout="row" layout-align="start center">
+        <h3 ng-if="vm.isBusy === false">{{ vm.familyHistory.name | fullName }}</h3>
+    </div>
+    <div flex="10">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100" ng-if="vm.isBusy === true" layout="row" layout-align="center center">
+        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+    </div>
+    <div flex="100" ng-if="vm.isBusy === false">
+        <md-tabs md-selected="selectedIndex">
+            <md-tab label="Administration Detail">
+                <div flex="100" class="table-responsive-vertical shadow-z-1">
+                    <table id="familyHistoryView" class="table table-hover table-mc-blue">
+                        <tr ng-if="vm.familyHistory.resourceId">
+                            <td>Resource Id</td>
+                            <td>
+                                {{vm.familyHistory.resourceId}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.name">
+                            <td>Name</td>
+                            <td>{{vm.familyHistory.name | fullName }}</td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.birthDate">
+                            <td>Date of Birth</td>
+                            <td>
+                                {{vm.familyHistory.birthDate | date: longDate}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.birthPlace">
+                            <td>Birth Place</td>
+                            <td>
+                                {{vm.familyHistory.birthPlace | singleLineAddress}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.gender">
+                            <td>Gender</td>
+                            <td>
+                                {{vm.familyHistory.gender}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.address">
+                            <td>Address</td>
+                            <td>
+                                <p class="small" ng-repeat="a in vm.familyHistory.address">
+                                    <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.telecom">
+                            <td>Telecommunication</td>
+                            <td>
+                                <p class="small" ng-repeat="t in vm.familyHistory.telecom">
+                                    <strong>{{t.use}} {{t.system}}</strong>: {{t.value}}
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.contact">
+                            <td>Contact</td>
+                            <td>
+                                <p class="small" ng-repeat="c in vm.familyHistory.contact">
+                                    {{c.name.given.join(' ')}} {{c.name.family.join(' ')}}
+                                    ({{c.relationship.text || "relationship unspecified"}})
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.link">
+                            <td>Links</td>
+                            <td>
+                                <div ng-repeat="l in vm.familyHistory.link">
+                                    <a href="{{l.other.reference}}">{{l.other.type || "Link Type Unspecified"}}</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.communication">
+                            <td>Languages</td>
+                            <td>
+                                <div ng-if="vm.familyHistory.communication">
+                                    <p class="small" ng-repeat="l in vm.familyHistory.communication">
+                                        {{l.language | codeableConcept}}<br/>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.ethnicity">
+                            <td>Ethnicity</td>
+                            <td>
+                                {{vm.familyHistory.ethnicity | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.race">
+                            <td>Race</td>
+                            <td>
+                                {{vm.familyHistory.race | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.religion">
+                            <td>Religion</td>
+                            <td>
+                                {{vm.familyHistory.religion | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.maritalStatus">
+                            <td>Marital Status</td>
+                            <td>
+                                {{vm.familyHistory.maritalStatus | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.mothersMaidenName">
+                            <td>Mother's Maiden Name</td>
+                            <td>
+                                {{vm.familyHistory.mothersMaidenName}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.multipleBirthInteger || vm.familyHistory.multipleBirthBoolean">
+                            <td>Multiple Birth</td>
+                            <td>
+                                {{vm.familyHistory.multipleBirthInteger || vm.familyHistory.multipleBirthBoolean}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.deceasedDateTime || vm.familyHistory.deceasedBoolean">
+                            <td>Deceased</td>
+                            <td>
+                                {{vm.familyHistory.deceasedDateTime || vm.familyHistory.deceasedBoolean}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.managingOrganization">
+                            <td>Managing Organization</td>
+                            <td>
+                                <a ng-href="#/organization/get/{{vm.familyHistory.managingOrganization.reference | idFromURL }}">{{vm.familyHistory.managingOrganization.display}}</a>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.careProvider">
+                            <td>Care Provider</td>
+                            <td>
+                                <p ng-repeat="cp in vm.familyHistory.careProvider">
+                                    <a ng-href="#/practitioner/get/{{cp.reference | idFromURL }}">{{cp.display}}</a>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-show="vm.familyHistory.identifier">
+                            <td>Identifiers</td>
+                            <td>
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>System</th>
+                                        <th>Value</th>
+                                        <th>Use</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="id in vm.familyHistory.identifier">
+                                        <td>{{id.system}}</td>
+                                        <td>{{id.value}}</td>
+                                        <td>{{id.use}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.familyHistory.active">
+                            <td>Active</td>
+                            <td>
+                                {{vm.familyHistory.active}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </md-tab>
+            <md-tab label="Clinical Summary">
+                <md-list>
+                    <md-item ng-repeat="item in vm.summary">
+                        <md-item-content md-is-locked-open="true">
+                            <div class="md-tile-left">
+                                <md-button layout-align="start start"
+                                           ng-click="vm.showClinicalData($index, $event)"
+                                           aria-label="{{item.resource.id}}">
+                                    <md-icon md-svg-src="view"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <div ng-hide="item.resource.code && item.resource.code.text">
+                                    <h4>{{ item.resource.resourceType }}</h4>
+                                </div>
+                                <div ng-show="item.resource.code && item.resource.code.text">
+                                    <h4>{{ item.resource.code.text }}</h4>
+                                </div>
+                                <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
+                                </div>
+                                <div ng-show="item.resource.emptyReason.text">
+                                    <p> {{ item.resource.emptyReason.text }}</p>
+                                </div>
+                                <div ng-show="item.resource.appliesDateTime">
+                                    <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
+                                </div>
+                            </div>
+                        </md-item-content>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-item>
+                </md-list>
+            </md-tab>
+            <md-tab label="Audit History">
+                <md-list>
+                    <md-item ng-repeat="ev in vm.history">
+                        <md-item-content>
+                            <div class="md-tile-left">
+                                <md-button
+                                        ng-click="vm.showAuditData($index, $event)"
+                                        aria-label="{{ev.resource.id}}">
+                                    <md-icon md-svg-src="view"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <h3>{{ev.resource.event.dateTime | date: 'medium'}}</h3>
+                                <h4>{{ev.resource.event.subtype[0].coding[0].display}}</h4>
+
+                                <p ng-repeat="p in ev.resource.participant">{{p.name}}
+                            </div>
+                        </md-item-content>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-item>
+                </md-list>
+            </md-tab>
+        </md-tabs>
+    </div>
+</div>

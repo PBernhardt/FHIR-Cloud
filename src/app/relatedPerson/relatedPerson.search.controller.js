@@ -10,7 +10,6 @@
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
-        var keyCodes = config.keyCodes;
         var noToast = false;
 
         function activate() {
@@ -33,7 +32,7 @@
         function _getCachedRelatedpersons() {
             relatedPersonService.getCachedSearchResults()
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' relatedPersons from cache', null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' related persons from cache', null, noToast);
                     return data;
                 }, function (message) {
                     logInfo(message, null, noToast);
@@ -60,7 +59,7 @@
                 toggleSpinner(true);
                 relatedPersonService.getRelatedpersons(vm.activeServer.baseUrl, vm.searchText)
                     .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' relatedPersons from ' + vm.activeServer.name);
+                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' related persons from ' + vm.activeServer.name);
                         return data;
                     }, function (error) {
                         logError('Error: ' + error);
@@ -73,49 +72,44 @@
             }
         }
 
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/relatedPerson/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/relatedPerson/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/relatedPerson');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new related person', icon: 'relatedPerson', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Related person search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
             }
         }
 
-        function toggleSpinner(on) {
-            vm.isBusy = on;
-        }
-
-        function relatedPersonSearchActionsMenu($event) {
-            var menuItems = [
-                {name: 'Add', icon: 'img/add184.svg'},
-                {name: 'Search', icon: 'img/search100.svg'},
-                {name: 'Clear', icon: 'img/clear5.svg'}
-            ];
-            $mdBottomSheet.show({
-                locals: {items: menuItems},
-                templateUrl: 'templates/bottomSheet.html',
-                controller: 'bottomSheetController',
-                targetEvent: $event
-            }).then(function (clickedItem) {
-                switch (clickedItem.name) {
-                    case 'Add':
-                        $location.path('/relatedPerson/edit/new');
-                        break;
-                    case 'Search':
-                        logInfo('TODO: implement Locate');
-                        break;
-                    case 'Clear':
-                        relatedPersonService.clearCache();
-                        vm.searchText = '';
-                        vm.relatedPersons = [];
-                        vm.paging = null;
-                        $location.path('/relatedPerson');
-                        logInfo('Search results cache cleared');
-                }
-            });
-        }
+        vm.actions = actions;
 
         vm.activeServer = null;
         vm.isBusy = false;
-        vm.keyPress = keyPress;
         vm.goToRelatedperson = goToRelatedperson;
         vm.relatedPersons = [];
         vm.paging = {
@@ -126,8 +120,7 @@
         vm.submit = submit;
         vm.searchResults = null;
         vm.searchText = '';
-        vm.title = 'Relatedperson';
-        vm.relatedPersonSearchActionsMenu = relatedPersonSearchActionsMenu;
+        vm.title = 'Related Person';
 
         activate();
     }

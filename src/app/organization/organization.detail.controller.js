@@ -286,14 +286,14 @@
                     this.items = [
                         {name: 'Add random patients', icon: 'groupAdd', index: 0},
                         {name: 'Get patients', icon: 'group', index: 1},
-                        {name: 'Quick find', icon: 'hospital', index: 3},
+                        {name: 'Quick find', icon: 'quickFind', index: 3},
                         {name: 'Edit organization', icon: 'edit', index: 4},
-                        {name: 'Add new organization', icon: 'add', index: 5}
+                        {name: 'Add new organization', icon: 'hospital', index: 5}
                     ];
                 } else {
                     this.items = [
                         {name: 'Detailed search', icon: 'search', index: 2},
-                        {name: 'Quick find', icon: 'hospital', index: 3}
+                        {name: 'Quick find', icon: 'quickFind', index: 3}
                     ];
                 }
                 this.title = 'Organization search options';

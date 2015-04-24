@@ -65,14 +65,46 @@
             templateUrl: 'consultation/consultation-edit.html'
         }).when('/consultation/smart/:smartApp/:patientId', {
             templateUrl: 'consultation/consultation-smart.html'
+        }).when('/encounter/org/:orgId', {
+            templateUrl: 'encounter/encounter-detailed-search.html'
+        }).when('/encounter', {
+            templateUrl: 'encounter/encounter-search.html'
+        }).when('/encounter/get/:id', {
+            templateUrl: 'encounter/encounter-view.html'
+        }).when('/encounter/view/:hashKey', {
+            templateUrl: 'encounter/encounter-view.html'
+        }).when('/encounter/edit/:hashKey', {
+            templateUrl: 'encounter/encounter-edit.html'
+        }).when('/encounter/detailed-search', {
+            templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
         }).when('/extensionDefinition/view/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-view.html'
         }).when('/extensionDefinition/edit/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/familyHistory', {
+            templateUrl: 'familyHistory/familyHistory-search.html'
+        }).when('/familyHistory/get/:id', {
+            templateUrl: 'familyHistory/familyHistory-view.html'
+        }).when('/familyHistory/view/:hashKey', {
+            templateUrl: 'familyHistory/familyHistory-view.html'
+        }).when('/familyHistory/edit/:hashKey', {
+            templateUrl: 'familyHistory/familyHistory-edit.html'
+        }).when('/familyHistory/detailed-search', {
+            templateUrl: 'familyHistory/familyHistory-detailed-search.html'
         }).when('/home', {
             templateUrl: 'home/home.html'
+        }).when('/immunization', {
+            templateUrl: 'immunization/immunization-search.html'
+        }).when('/immunization/get/:id', {
+            templateUrl: 'immunization/immunization-view.html'
+        }).when('/immunization/view/:hashKey', {
+            templateUrl: 'immunization/immunization-view.html'
+        }).when('/immunization/edit/:hashKey', {
+            templateUrl: 'immunization/immunization-edit.html'
+        }).when('/immunization/detailed-search', {
+            templateUrl: 'immunization/immunization-detailed-search.html'
         }).when('/lab', {
             templateUrl: 'lab/lab-edit.html'
         }).when('/operationDefinition', {
@@ -156,8 +188,9 @@
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("diagnosis", "./assets/svg/stethoscope.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
+            .icon("encounter", "./assets/svg/man412.svg", 24)
             .icon("error", "./assets/svg/error.svg", 48)
-            .icon("family", "./assets/svg/group.svg", 24)
+            .icon("family", "./assets/svg/group41.svg", 24)
             .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
@@ -165,9 +198,12 @@
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
             .icon("https", "./assets/svg/https.svg", 24)
+            .icon("hospital", "./assets/svg/hospital.svg", 24)
+            .icon("immunization", "./assets/svg/location2.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("male", "./assets/svg/male.svg", 24)
+            .icon("medication", "./assets/svg/medical12.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
@@ -175,7 +211,9 @@
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
+            .icon("quickFind", "./assets/svg/quickFind.svg", 24)
             .icon("refresh", "./assets/svg/refresh.svg", 24)
+            .icon("relatedPerson", "./assets/svg/group.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
             .icon("saveToList", "./assets/svg/saveToList.svg", 24)

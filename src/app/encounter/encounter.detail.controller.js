@@ -1,11 +1,11 @@
 (function () {
     'use strict';
 
-    var controllerId = 'patientDetail';
+    var controllerId = 'encounterDetail';
 
-    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+    function encounterDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
                            attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService, practitionerService, communicationService,
+                           organizationService, encounterService, contactPointService, practitionerService, communicationService,
                            careProviderService, observationService, config) {
 
         /*jshint validthis:true */
@@ -19,17 +19,17 @@
 
         function activate() {
             common.activateController([_getActiveServer()], controllerId).then(function () {
-                _getRequestedPatient();
+                _getRequestedEncounter();
             });
         }
 
-        function deletePatient(patient, event) {
+        function deleteEncounter(encounter, event) {
             function executeDelete() {
-                if (patient && patient.resourceId && patient.hashKey) {
-                    patientService.deleteCachedPatient(patient.hashKey, patient.resourceId)
+                if (encounter && encounter.resourceId && encounter.hashKey) {
+                    encounterService.deleteCachedEncounter(encounter.hashKey, encounter.resourceId)
                         .then(function () {
-                            logInfo("Deleted patient " + patient.fullName);
-                            $location.path('/patient');
+                            logInfo("Deleted encounter " + encounter.fullName);
+                            $location.path('/encounter');
                         },
                         function (error) {
                             logError(common.unexpectedOutcome(error));
@@ -39,20 +39,20 @@
             }
 
             var confirm = $mdDialog.confirm()
-                .title('Delete ' + patient.fullName + '?')
-                .ariaLabel('delete patient')
+                .title('Delete ' + encounter.fullName + '?')
+                .ariaLabel('delete encounter')
                 .ok('Yes')
                 .cancel('No')
                 .targetEvent(event);
             $mdDialog.show(confirm).then(executeDelete,
                 function () {
-                    logInfo('You decided to keep ' + patient.fullName);
+                    logInfo('You decided to keep ' + encounter.fullName);
                 });
         }
 
-        function edit(patient) {
-            if (patient && patient.hashKey) {
-                $location.path('/patient/' + patient.hashKey);
+        function edit(encounter) {
+            if (encounter && encounter.hashKey) {
+                $location.path('/encounter/' + encounter.hashKey);
             }
         }
 
@@ -76,11 +76,11 @@
         }
 
         function _getEverything() {
-            patientService.getPatientEverything(vm.patient.resourceId)
+            encounterService.getEncounterEverything(vm.encounter.resourceId)
                 .then(function (data) {
                     vm.summary = data.summary;
                     vm.history = data.history;
-                    logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
+                    logInfo("Retrieved everything for encounter at " + vm.encounter.resourceId, null, noToast);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), null, noToast);
                     _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
@@ -88,76 +88,76 @@
         }
 
         function _getObservations() {
-            observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.encounter.id)
                 .then(function (data) {
                     vm.summary = data.entry;
-                    logInfo("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
+                    logInfo("Retrieved observations for encounter " + vm.encounter.fullName, null, noToast);
                 }, function (error) {
                     vm.isBusy = false;
                     logError(common.unexpectedOutcome(error), null, noToast);
                 });
         }
 
-        function _getRequestedPatient() {
+        function _getRequestedEncounter() {
             function initializeAdministrationData(data) {
-                vm.patient = data;
-                humanNameService.init(vm.patient.name);
-                demographicsService.init(vm.patient.gender, vm.patient.maritalStatus, vm.patient.communication);
-                demographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger);
-                demographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
-                demographicsService.setBirthDate(vm.patient.birthDate);
-                demographicsService.initializeKnownExtensions(vm.patient.extension);
-                vm.patient.race = demographicsService.getRace();
-                vm.patient.religion = demographicsService.getReligion();
-                vm.patient.ethnicity = demographicsService.getEthnicity();
-                vm.patient.mothersMaidenName = demographicsService.getMothersMaidenName();
-                vm.patient.birthPlace = demographicsService.getBirthPlace();
-                attachmentService.init(vm.patient.photo, "Photos");
-                identifierService.init(vm.patient.identifier, "multi", "patient");
-                addressService.init(vm.patient.address, true);
-                contactPointService.init(vm.patient.telecom, true, true);
-                careProviderService.init(vm.patient.careProvider);
-                if (vm.patient.communication) {
-                    communicationService.init(vm.patient.communication, "multi");
+                vm.encounter = data;
+                humanNameService.init(vm.encounter.name);
+                demographicsService.init(vm.encounter.gender, vm.encounter.maritalStatus, vm.encounter.communication);
+                demographicsService.initBirth(vm.encounter.multipleBirthBoolean, vm.encounter.multipleBirthInteger);
+                demographicsService.initDeath(vm.encounter.deceasedBoolean, vm.encounter.deceasedDateTime);
+                demographicsService.setBirthDate(vm.encounter.birthDate);
+                demographicsService.initializeKnownExtensions(vm.encounter.extension);
+                vm.encounter.race = demographicsService.getRace();
+                vm.encounter.religion = demographicsService.getReligion();
+                vm.encounter.ethnicity = demographicsService.getEthnicity();
+                vm.encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.encounter.birthPlace = demographicsService.getBirthPlace();
+                attachmentService.init(vm.encounter.photo, "Photos");
+                identifierService.init(vm.encounter.identifier, "multi", "encounter");
+                addressService.init(vm.encounter.address, true);
+                contactPointService.init(vm.encounter.telecom, true, true);
+                careProviderService.init(vm.encounter.careProvider);
+                if (vm.encounter.communication) {
+                    communicationService.init(vm.encounter.communication, "multi");
                 }
-                vm.patient.fullName = humanNameService.getFullName();
-                if (angular.isDefined(vm.patient.id)) {
-                    vm.patient.resourceId = (vm.activeServer.baseUrl + '/Patient/' + vm.patient.id);
+                vm.encounter.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.encounter.id)) {
+                    vm.encounter.resourceId = (vm.activeServer.baseUrl + '/Encounter/' + vm.encounter.id);
                 }
-                if (vm.patient.managingOrganization && vm.patient.managingOrganization.reference) {
-                    var reference = vm.patient.managingOrganization.reference;
+                if (vm.encounter.managingOrganization && vm.encounter.managingOrganization.reference) {
+                    var reference = vm.encounter.managingOrganization.reference;
                     if (common.isAbsoluteUri(reference) === false) {
-                        vm.patient.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                        vm.encounter.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
                     }
-                    if (angular.isUndefined(vm.patient.managingOrganization.display)) {
-                        vm.patient.managingOrganization.display = reference;
+                    if (angular.isUndefined(vm.encounter.managingOrganization.display)) {
+                        vm.encounter.managingOrganization.display = reference;
                     }
                 }
                 if (vm.lookupKey !== "new") {
-                    $window.localStorage.patient = JSON.stringify(vm.patient);
+                    $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 }
             }
 
-            vm.patient = undefined;
+            vm.encounter = undefined;
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
-                if (angular.isUndefined($window.localStorage.patient) || ($window.localStorage.patient === null)) {
+                if (angular.isUndefined($window.localStorage.encounter) || ($window.localStorage.encounter === null)) {
                     if (angular.isUndefined($routeParams.id)) {
-                        $location.path('/patient');
+                        $location.path('/encounter');
                     }
                 } else {
-                    vm.patient = JSON.parse($window.localStorage.patient);
-                    vm.patient.hashKey = "current";
-                    initializeAdministrationData(vm.patient);
+                    vm.encounter = JSON.parse($window.localStorage.encounter);
+                    vm.encounter.hashKey = "current";
+                    initializeAdministrationData(vm.encounter);
                 }
             } else if (angular.isDefined($routeParams.id)) {
                 vm.isBusy = true;
-                var resourceId = vm.activeServer.baseUrl + '/Patient/' + $routeParams.id;
-                patientService.getPatient(resourceId)
+                var resourceId = vm.activeServer.baseUrl + '/Encounter/' + $routeParams.id;
+                encounterService.getEncounter(resourceId)
                     .then(function (resource) {
                         initializeAdministrationData(resource.data);
-                        if (vm.patient) {
+                        if (vm.encounter) {
                             _getEverything(resourceId);
                         }
                     }, function (error) {
@@ -166,17 +166,17 @@
                         vm.isBusy = false;
                     });
             } else if (vm.lookupKey === 'new') {
-                var data = patientService.initializeNewPatient();
+                var data = encounterService.initializeNewEncounter();
                 initializeAdministrationData(data);
-                vm.title = 'Add New Patient';
+                vm.title = 'Add New Encounter';
                 vm.isEditing = false;
             } else if (vm.lookupKey !== "current") {
                 vm.isBusy = true;
-                patientService.getCachedPatient(vm.lookupKey)
+                encounterService.getCachedEncounter(vm.lookupKey)
                     .then(function (data) {
                         initializeAdministrationData(data);
-                        if (vm.patient && vm.patient.resourceId) {
-                            _getEverything(vm.patient.resourceId);
+                        if (vm.encounter && vm.encounter.resourceId) {
+                            _getEverything(vm.encounter.resourceId);
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -185,7 +185,7 @@
                         vm.isBusy = false;
                     });
             } else {
-                logError("Unable to resolve patient lookup");
+                logError("Unable to resolve encounter lookup");
             }
         }
 
@@ -193,58 +193,58 @@
             function processResult(results) {
                 var resourceVersionId = results.headers.location || results.headers["content-location"];
                 if (angular.isUndefined(resourceVersionId)) {
-                    logWarning("Patient saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                    logWarning("Encounter saved, but location is unavailable. CORS not implemented correctly at remote host.");
                 } else {
-                    logInfo("Patient saved at " + resourceVersionId);
-                    vm.patient.resourceVersionId = resourceVersionId;
-                    vm.patient.resourceId = common.setResourceId(vm.patient.resourceId, resourceVersionId);
+                    logInfo("Encounter saved at " + resourceVersionId);
+                    vm.encounter.resourceVersionId = resourceVersionId;
+                    vm.encounter.resourceId = common.setResourceId(vm.encounter.resourceId, resourceVersionId);
                 }
-                vm.patient.fullName = humanNameService.getFullName();
+                vm.encounter.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
-                $window.localStorage.patient = JSON.stringify(vm.patient);
+                $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 vm.isBusy = false;
             }
 
-            var patient = patientService.initializeNewPatient();
+            var encounter = encounterService.initializeNewEncounter();
             if (humanNameService.getAll().length === 0) {
-                logError("Patient must have at least one name.");
+                logError("Encounter must have at least one name.");
                 return;
             }
-            patient.name = humanNameService.mapFromViewModel();
-            patient.photo = attachmentService.getAll();
+            encounter.name = humanNameService.mapFromViewModel();
+            encounter.photo = attachmentService.getAll();
 
-            patient.birthDate = $filter('dateString')(demographicsService.getBirthDate());
-            patient.gender = demographicsService.getGender();
-            patient.maritalStatus = demographicsService.getMaritalStatus();
-            patient.multipleBirthBoolean = demographicsService.getMultipleBirth();
-            patient.multipleBirthInteger = demographicsService.getBirthOrder();
-            patient.deceasedBoolean = demographicsService.getDeceased();
-            patient.deceasedDateTime = demographicsService.getDeceasedDate();
-            patient.race = demographicsService.getRace();
-            patient.religion = demographicsService.getReligion();
-            patient.ethnicity = demographicsService.getEthnicity();
-            patient.mothersMaidenName = demographicsService.getMothersMaidenName();
-            patient.birthPlace = demographicsService.getBirthPlace();
+            encounter.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            encounter.gender = demographicsService.getGender();
+            encounter.maritalStatus = demographicsService.getMaritalStatus();
+            encounter.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            encounter.multipleBirthInteger = demographicsService.getBirthOrder();
+            encounter.deceasedBoolean = demographicsService.getDeceased();
+            encounter.deceasedDateTime = demographicsService.getDeceasedDate();
+            encounter.race = demographicsService.getRace();
+            encounter.religion = demographicsService.getReligion();
+            encounter.ethnicity = demographicsService.getEthnicity();
+            encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
+            encounter.birthPlace = demographicsService.getBirthPlace();
 
-            patient.address = addressService.mapFromViewModel();
-            patient.telecom = contactPointService.mapFromViewModel();
-            patient.identifier = identifierService.getAll();
-            patient.managingOrganization = vm.patient.managingOrganization;
-            patient.communication = communicationService.getAll();
-            patient.careProvider = careProviderService.getAll();
+            encounter.address = addressService.mapFromViewModel();
+            encounter.telecom = contactPointService.mapFromViewModel();
+            encounter.identifier = identifierService.getAll();
+            encounter.managingOrganization = vm.encounter.managingOrganization;
+            encounter.communication = communicationService.getAll();
+            encounter.careProvider = careProviderService.getAll();
 
-            patient.active = vm.patient.active;
+            encounter.active = vm.encounter.active;
             vm.isBusy = true;
             if (vm.isEditing) {
-                patient.id = vm.patient.id;
-                patientService.updatePatient(vm.patient.resourceId, patient)
+                encounter.id = vm.encounter.id;
+                encounterService.updateEncounter(vm.encounter.resourceId, encounter)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
                         vm.isBusy = false;
                     });
             } else {
-                patientService.addPatient(patient)
+                encounterService.addEncounter(encounter)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -313,23 +313,20 @@
                         $location.path('/lab');
                         break;
                     case 2:
-                        logInfo("Refreshing patient data from " + vm.activeServer.name);
-                        $location.path('/patient/get/' + vm.patient.id);
+                        logInfo("Refreshing encounter data from " + vm.activeServer.name);
+                        $location.path('/encounter/get/' + vm.encounter.id);
                         break;
                     case 3:
-                        $location.path('/patient');
+                        $location.path('/encounter');
                         break;
                     case 4:
-                        $location.path('/patient/edit/current');
+                        $location.path('/encounter/edit/current');
                         break;
                     case 5:
-                        $location.path('/patient/edit/new');
+                        $location.path('/encounter/edit/new');
                         break;
                     case 6:
-                        $location.path('/patient/detailed-search');
-                        break;
-                    case 7:
-                        deletePatient(vm.patient);
+                        deleteEncounter(vm.encounter);
                         break;
                 }
             });
@@ -339,17 +336,16 @@
                         {name: 'Vitals', icon: 'vitals', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Refresh data', icon: 'refresh', index: 2},
-                        {name: 'Find another patient', icon: 'search', index: 3},
-                        {name: 'Edit patient', icon: 'edit', index: 4},
-                        {name: 'Add new patient', icon: 'personAdd', index: 5}
+                        {name: 'Find another encounter', icon: 'person', index: 3},
+                        {name: 'Edit encounter', icon: 'edit', index: 4},
+                        {name: 'Add new encounter', icon: 'personAdd', index: 5}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Detailed search', icon: 'search', index: 6},
-                        {name: 'Quick find', icon: 'quickFind', index: 3}
+                        {name: 'Find another encounter', icon: 'person', index: 3},
                     ];
                 }
-                this.title = 'Patient options';
+                this.title = 'Encounter options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
                 };
@@ -358,7 +354,7 @@
 
         vm.actions = actions;
         vm.activeServer = null;
-        vm.delete = deletePatient;
+        vm.delete = deleteEncounter;
         vm.dataEvents = [];
         vm.errors = [];
         vm.history = [];
@@ -370,11 +366,11 @@
         vm.isBusy = false;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.patient = undefined;
+        vm.encounter = undefined;
         vm.practitionerSearchText = '';
         vm.save = save;
         vm.selectedPractitioner = null;
-        vm.title = 'Patient Detail';
+        vm.title = 'Encounter Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;
 
@@ -384,6 +380,6 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
-            'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', patientDetail]);
+            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', encounterDetail]);
 })();

@@ -3,18 +3,17 @@
 
     var controllerId = 'practitionerSearch';
 
-    function practitionerSearch($location, $mdSidenav, common, config, fhirServers, practitionerService) {
+    function practitionerSearch($location, $mdBottomSheet, common, config, fhirServers, practitionerService) {
         /*jshint validthis:true */
         var vm = this;
 
         var getLogFn = common.logger.getLogFn;
-        var keyCodes = config.keyCodes;
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
 
         function activate() {
-            common.activateController([_getActiveServer(), _getCachedpractitioners()], controllerId)
+            common.activateController([_getActiveServer(), _getCachedPractitioners()], controllerId)
                 .then(function () {
 
                 }, function (error) {
@@ -29,7 +28,7 @@
                 });
         }
 
-        function _getCachedpractitioners() {
+        function _getCachedPractitioners() {
             practitionerService.getCachedSearchResults()
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' practitioners from cache', noToast);
@@ -40,11 +39,14 @@
                 .then(processSearchResults);
         }
 
-        function goTopractitioner(practitioner) {
+
+        function goToPractitioner(practitioner) {
             if (practitioner && practitioner.$$hashKey) {
                 $location.path('/practitionerReference/view/' + practitioner.$$hashKey);
             }
         }
+
+        vm.goToPractitioner = goToPractitioner;
 
         function processSearchResults(searchResults) {
             if (searchResults) {
@@ -70,10 +72,12 @@
                 });
         }
 
+        vm.dereferenceLink = dereferenceLink;
+
         function submit() {
             if (vm.searchText.length > 0) {
                 common.toggleProgressBar(true);
-                practitionerService.getpractitioners(vm.activeServer.baseUrl, vm.searchText)
+                practitionerService.getPractitioners(vm.activeServer.baseUrl, vm.searchText)
                     .then(function (data) {
                         logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' practitioners from ' + vm.activeServer.name);
                         return data;
@@ -88,20 +92,44 @@
             }
         }
 
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
+        vm.submit = submit;
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/practitioner/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/practitioner/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/practitioner');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new practitioner', icon: 'practitioner', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Practitioner search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
             }
         }
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
+        vm.actions = actions;
         vm.activeServer = null;
-        vm.keyPress = keyPress;
-        vm.goTopractitioner = goTopractitioner;
         vm.practitioners = [];
         vm.practitionersCount = 0;
         vm.paging = {
@@ -109,17 +137,13 @@
             totalResults: 0,
             links: null
         };
-        vm.dereferenceLink = dereferenceLink;
-        vm.submit = submit;
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'practitioners';
         vm.managingOrganization = undefined;
-        vm.toggleSideNav = toggleSideNav;
-
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'practitionerService', practitionerSearch]);
+        ['$location', '$mdBottomSheet', 'common', 'config', 'fhirServers', 'practitionerService', practitionerSearch]);
 })();

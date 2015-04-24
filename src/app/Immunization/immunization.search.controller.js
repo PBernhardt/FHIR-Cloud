@@ -1,9 +1,9 @@
 ﻿(function () {
     'use strict';
 
-    var controllerId = 'patientSearch';
+    var controllerId = 'immunizationSearch';
 
-    function patientSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, patientService) {
+    function immunizationSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, immunizationService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -17,13 +17,13 @@
             common.activateController([getActiveServer()], controllerId)
                 .then(function () {
                     if (angular.isDefined($routeParams.orgId)) {
-                        getOrganizationPatients($routeParams.orgId);
-                        logInfo("Retrieving patients for current organization, please wait...");
+                        getOrganizationImmunizations($routeParams.orgId);
+                        logInfo("Retrieving immunizations for current organization, please wait...");
                     } else {
                         _loadLocalLookups();
                     }
                 }, function (error) {
-                    logError('Error initializing patient search', error);
+                    logError('Error initializing immunization search', error);
                 });
         }
 
@@ -34,14 +34,14 @@
                 });
         }
 
-        function getOrganizationPatients(orgId) {
-            vm.patientSearch.organization = orgId;
+        function getOrganizationImmunizations(orgId) {
+            vm.immunizationSearch.organization = orgId;
             detailSearch();
         }
 
-        function goToPatient(patient) {
-            if (patient && patient.$$hashKey) {
-                $location.path('/patient/view/' + patient.$$hashKey);
+        function goToImmunization(immunization) {
+            if (immunization && immunization.$$hashKey) {
+                $location.path('/immunization/view/' + immunization.$$hashKey);
             }
         }
 
@@ -56,93 +56,93 @@
             var queryString = '';
             var queryParam = {param: '', value: ''};
             var queryParams = [];
-            if (vm.patientSearch.organization) {
+            if (vm.immunizationSearch.organization) {
                 queryParam.param = "organization";
-                queryParam.value = vm.patientSearch.organization;
+                queryParam.value = vm.immunizationSearch.organization;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.name.given) {
+            if (vm.immunizationSearch.name.given) {
                 queryParam.param = "given";
-                queryParam.value = vm.patientSearch.name.given;
+                queryParam.value = vm.immunizationSearch.name.given;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.name.family) {
+            if (vm.immunizationSearch.name.family) {
                 queryParam.param = "family";
-                queryParam.value = vm.patientSearch.name.family;
+                queryParam.value = vm.immunizationSearch.name.family;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.mothersMaidenName) {
+            if (vm.immunizationSearch.mothersMaidenName) {
                 queryParam.param = "mothersMaidenName";
-                queryParam.value = vm.patientSearch.mothersMaidenName;
+                queryParam.value = vm.immunizationSearch.mothersMaidenName;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.address.street) {
+            if (vm.immunizationSearch.address.street) {
                 queryParam.param = "addressLine";
-                queryParam.value = vm.patientSearch.address.street;
+                queryParam.value = vm.immunizationSearch.address.street;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.address.city) {
+            if (vm.immunizationSearch.address.city) {
                 queryParam.param = "city";
-                queryParam.value = vm.patientSearch.address.city;
+                queryParam.value = vm.immunizationSearch.address.city;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.address.state) {
+            if (vm.immunizationSearch.address.state) {
                 queryParam.param = "state";
-                queryParam.value = vm.patientSearch.address.state;
+                queryParam.value = vm.immunizationSearch.address.state;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.address.postalCode) {
+            if (vm.immunizationSearch.address.postalCode) {
                 queryParam.param = "postalCode";
-                queryParam.value = vm.patientSearch.address.postalCode;
+                queryParam.value = vm.immunizationSearch.address.postalCode;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.dob) {
+            if (vm.immunizationSearch.dob) {
                 queryParam.param = "birthDate";
-                queryParam.value = formatString(vm.patientSearch.dob);
+                queryParam.value = formatString(vm.immunizationSearch.dob);
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.age.start || vm.patientSearch.age.end) {
-                if (vm.patientSearch.age.start === vm.patientSearch.age.end) {
+            if (vm.immunizationSearch.age.start || vm.immunizationSearch.age.end) {
+                if (vm.immunizationSearch.age.start === vm.immunizationSearch.age.end) {
                     queryParam.param = "age";
-                    queryParam.value = vm.patientSearch.age.start;
+                    queryParam.value = vm.immunizationSearch.age.start;
                     queryParams.push(_.clone(queryParam));
                 }
                 else {
                     queryParam.param = "age";
-                    queryParam.value = ">".concat(vm.patientSearch.age.start === 0 ? vm.patientSearch.age.start : (vm.patientSearch.age.start - 1));
+                    queryParam.value = ">".concat(vm.immunizationSearch.age.start === 0 ? vm.immunizationSearch.age.start : (vm.immunizationSearch.age.start - 1));
                     queryParams.push(_.clone(queryParam));
-                    queryParam.value = "<".concat(vm.patientSearch.age.end === 1 ? vm.patientSearch.age.end : (vm.patientSearch.age.end + 1));
+                    queryParam.value = "<".concat(vm.immunizationSearch.age.end === 1 ? vm.immunizationSearch.age.end : (vm.immunizationSearch.age.end + 1));
                     queryParams.push(_.clone(queryParam));
                 }
             }
-            if (vm.patientSearch.identifier.system && vm.patientSearch.identifier.value) {
+            if (vm.immunizationSearch.identifier.system && vm.immunizationSearch.identifier.value) {
                 queryParam.param = "identifier";
-                queryParam.value = vm.patientSearch.identifier.system.concat("|", vm.patientSearch.identifier.value);
+                queryParam.value = vm.immunizationSearch.identifier.system.concat("|", vm.immunizationSearch.identifier.value);
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.telecom) {
+            if (vm.immunizationSearch.telecom) {
                 queryParam.param = "telecom";
-                queryParam.value = vm.patientSearch.telecom;
+                queryParam.value = vm.immunizationSearch.telecom;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.gender) {
+            if (vm.immunizationSearch.gender) {
                 queryParam.param = "gender";
-                queryParam.value = vm.patientSearch.gender;
+                queryParam.value = vm.immunizationSearch.gender;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.race) {
+            if (vm.immunizationSearch.race) {
                 queryParam.param = "race";
-                queryParam.value = localValueSets.race().system.concat("|", vm.patientSearch.race.code);
+                queryParam.value = localValueSets.race().system.concat("|", vm.immunizationSearch.race.code);
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.language) {
+            if (vm.immunizationSearch.language) {
                 queryParam.param = "language";
-                queryParam.value = vm.patientSearch.language.system.concat("|", vm.patientSearch.language.code);
+                queryParam.value = vm.immunizationSearch.language.system.concat("|", vm.immunizationSearch.language.code);
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.patientSearch.ethnicity) {
+            if (vm.immunizationSearch.ethnicity) {
                 queryParam.param = "ethnicity";
-                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.patientSearch.ethnicity.code);
+                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.immunizationSearch.ethnicity.code);
                 queryParams.push(_.clone(queryParam));
             }
 
@@ -158,14 +158,14 @@
                 return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
             }
 
-            searchPatients(queryString);
+            searchImmunizations(queryString);
         }
 
         function dereferenceLink(url) {
             vm.isBusy = true;
-            patientService.getPatientsByLink(url)
+            immunizationService.getImmunizationsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Immunizations from ' +
                     vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
@@ -180,13 +180,13 @@
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
-            patientService.getPatients(vm.activeServer.baseUrl, searchText)
+            immunizationService.getImmunizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Immunizations from ' +
                     vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
-                    logError('Error getting patients', error, noToast);
+                    logError('Error getting immunizations', error, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
@@ -194,19 +194,19 @@
 
         vm.quickSearch = quickSearch;
 
-        function searchPatients(searchText) {
+        function searchImmunizations(searchText) {
             var deferred = $q.defer();
             vm.isBusy = true;
-            patientService.searchPatients(vm.activeServer.baseUrl, searchText)
+            immunizationService.searchImmunizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Immunizations from ' +
                     vm.activeServer.name, null, noToast);
                     processSearchResults(data);
                     vm.isBusy = false;
                     vm.selectedTab = 1;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError('Error getting patients', error);
+                    logError('Error getting immunizations', error);
                     deferred.reject();
                 })
                 .then(deferred.resolve());
@@ -215,27 +215,27 @@
 
         function processSearchResults(searchResults) {
             if (searchResults) {
-                vm.patients = (searchResults.entry || []);
+                vm.immunizations = (searchResults.entry || []);
                 vm.paging.links = (searchResults.link || []);
                 vm.paging.totalResults = (searchResults.total || 0);
             }
         }
 
         function ageRangeChange() {
-            if (vm.patientSearch.age.end === undefined) {
-                vm.patientSearch.age.end = vm.patientSearch.age.start;
+            if (vm.immunizationSearch.age.end === undefined) {
+                vm.immunizationSearch.age.end = vm.immunizationSearch.age.start;
             }
-            if (vm.patientSearch.age.start === undefined) {
-                vm.patientSearch.age.start = vm.patientSearch.age.end;
+            if (vm.immunizationSearch.age.start === undefined) {
+                vm.immunizationSearch.age.start = vm.immunizationSearch.age.end;
             }
-            if (vm.patientSearch.age.start > vm.patientSearch.age.end) {
-                vm.patientSearch.age.end = vm.patientSearch.age.start;
+            if (vm.immunizationSearch.age.start > vm.immunizationSearch.age.end) {
+                vm.immunizationSearch.age.end = vm.immunizationSearch.age.start;
             }
         }
 
         function dobChange() {
-            if (vm.patientSearch.dob !== undefined) {
-                vm.patientSearch.age.end = vm.patientSearch.age.start = undefined;
+            if (vm.immunizationSearch.dob !== undefined) {
+                vm.immunizationSearch.age.end = vm.immunizationSearch.age.start = undefined;
             }
         }
 
@@ -250,27 +250,27 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/patient/edit/new');
+                        $location.path('/immunization/edit/new');
                         break;
                     case 1:
-                        $location.path('/patient/detailed-search');
+                        $location.path('/immunization/detailed-search');
                         break;
                     case 2:
-                        $location.path('/patient');
+                        $location.path('/immunization');
                         break;
                 }
             });
 
             /**
-             * Bottom Sheet controller for Patient search
+             * Bottom Sheet controller for Immunization search
              */
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new patient', icon: 'personAdd', index: 0},
+                    {name: 'Add new immunization', icon: 'immunization', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
                     {name: 'Quick find', icon: 'quickFind', index: 2}
                 ];
-                this.title = 'Patient search options';
+                this.title = 'Immunization search options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
                 };
@@ -279,12 +279,12 @@
 
         vm.activeServer = null;
         vm.dereferenceLink = dereferenceLink;
-        vm.goToPatient = goToPatient;
-        vm.patients = [];
-        vm.selectedPatient = null;
+        vm.goToImmunization = goToImmunization;
+        vm.immunizations = [];
+        vm.selectedImmunization = null;
         vm.searchResults = null;
         vm.searchText = '';
-        vm.title = 'Patients';
+        vm.title = 'Immunizations';
         vm.managingOrganization = undefined;
         vm.practitioner = undefined;
         vm.actions = actions;
@@ -295,7 +295,7 @@
         vm.isBusy = false;
         vm.ageRangeChange = ageRangeChange;
         vm.dobChange = dobChange;
-        vm.patientSearch = {
+        vm.immunizationSearch = {
             name: {first: undefined, last: undefined},
             mothersMaidenName: undefined,
             address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
@@ -320,5 +320,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'immunizationService', immunizationSearch]);
 })();

@@ -11,23 +11,32 @@
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var _adminPages = [
+            {name: 'Encounter', href: 'encounter'},
             {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
-            {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},
+            {name: 'Practitioner', href: 'practitioner'},
             {name: 'Related Person', href: 'relatedPerson'}
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance'},
-            {name: 'Profile', href: 'profile'},
             {name: 'Extension Definition', href: 'extensionDefinition'},
             {name: 'Operation Definition', href: 'operationDefinition'},
+            {name: 'Profile', href: 'profile'},
             {name: 'Value Set', href: 'valueSet'}
         ];
         var _documentsPages = [
             {name: 'Composition', href: 'composition'},
-            {name: 'Document Reference', href: 'documentReference'},
-            {name: 'Document Manifest', href: 'documentManifest'}
+            {name: 'Document Manifest', href: 'documentManifest'},
+            {name: 'Document Reference', href: 'documentReference'}
+        ];
+        var _clinicalPages = [
+            {name: 'Allergy', href: 'allergy'},
+            {name: 'Condition', href: 'condition'},
+            {name: 'Family History', href: 'familyHistory'},
+            {name: 'Immunization', href: 'immunization'},
+            {name: 'Medication', href: 'medication'},
+            {name: 'Medication Statement', href: 'medicationStatement'}
         ];
         var _dafResources = [
             {name: 'Patient', href: 'daf/patient'},
@@ -49,9 +58,10 @@
         ];
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
-       //     {name: 'Conformance', id: 2, pages: _conformancePages},
-       //     {name: 'Documents', id: 3, pages: _documentsPages},
-            {name: 'DAF Profiles', id: 3, pages: _dafResources}
+            {name: 'Clinical', id: 2, pages: _clinicalPages},
+            {name: 'Conformance', id: 3, pages: _conformancePages},
+            {name: 'Documents', id: 4, pages: _documentsPages},
+            {name: 'DAF Profiles', id: 5, pages: _dafResources}
         ];
         var noToast = false;
 

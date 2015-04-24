@@ -65,29 +65,29 @@
                         "name": "Argonaut Reference",
                         "baseUrl": "http://argonaut.healthintersections.com.au/open",
                         "secure": false
-                    }
-                    /*                   , {
-                     "id": 7,
-                     "name": "HealthConnex",
-                     "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
-                     },
+                    },
+                    {
+                        "id": 7,
+                        "name": "HealthConnex",
+                        "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
+                    },
 
-                     {
-                     "id": 8,
-                     "name": "EPIC",
-                     "baseUrl": "http://open.epic.com/Clinical/FHIR"
-                     },
-                     {
-                     "id": 9,
-                     "name": "Cerner",
-                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
-                     "secure": true
-                     },
-                     {
-                     "id": 10,
-                     "name": "AEGIS",
-                     "baseUrl": "http://wildfhir.aegis.net/fhir2"
-                     }*/
+                    {
+                        "id": 8,
+                        "name": "EPIC",
+                        "baseUrl": "http://open.epic.com/Clinical/FHIR"
+                    },
+                    {
+                        "id": 9,
+                        "name": "Cerner",
+                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        "secure": true
+                    },
+                    {
+                        "id": 10,
+                        "name": "AEGIS",
+                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                    }
                 ];
                 var servers = dataCache.readFromCache('servers');
                 if (angular.isUndefined(servers)) {

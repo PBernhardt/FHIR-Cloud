@@ -145,9 +145,9 @@
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new organization', icon: 'add', index: 0},
+                    {name: 'Add new organization', icon: 'hospital', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
-                    {name: 'Quick find', icon: 'hospital', index: 2}
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
                 ];
                 this.title = 'Organization search options';
                 this.performAction = function (action) {

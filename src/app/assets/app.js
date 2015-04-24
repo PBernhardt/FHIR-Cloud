@@ -299,14 +299,46 @@
             templateUrl: 'consultation/consultation-edit.html'
         }).when('/consultation/smart/:smartApp/:patientId', {
             templateUrl: 'consultation/consultation-smart.html'
+        }).when('/encounter/org/:orgId', {
+            templateUrl: 'encounter/encounter-detailed-search.html'
+        }).when('/encounter', {
+            templateUrl: 'encounter/encounter-search.html'
+        }).when('/encounter/get/:id', {
+            templateUrl: 'encounter/encounter-view.html'
+        }).when('/encounter/view/:hashKey', {
+            templateUrl: 'encounter/encounter-view.html'
+        }).when('/encounter/edit/:hashKey', {
+            templateUrl: 'encounter/encounter-edit.html'
+        }).when('/encounter/detailed-search', {
+            templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/extensionDefinition', {
             templateUrl: 'extensionDefinition/extensionDefinition-search.html'
         }).when('/extensionDefinition/view/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-view.html'
         }).when('/extensionDefinition/edit/:hashKey', {
             templateUrl: 'extensionDefinition/extensionDefinition-edit.html'
+        }).when('/familyHistory', {
+            templateUrl: 'familyHistory/familyHistory-search.html'
+        }).when('/familyHistory/get/:id', {
+            templateUrl: 'familyHistory/familyHistory-view.html'
+        }).when('/familyHistory/view/:hashKey', {
+            templateUrl: 'familyHistory/familyHistory-view.html'
+        }).when('/familyHistory/edit/:hashKey', {
+            templateUrl: 'familyHistory/familyHistory-edit.html'
+        }).when('/familyHistory/detailed-search', {
+            templateUrl: 'familyHistory/familyHistory-detailed-search.html'
         }).when('/home', {
             templateUrl: 'home/home.html'
+        }).when('/immunization', {
+            templateUrl: 'immunization/immunization-search.html'
+        }).when('/immunization/get/:id', {
+            templateUrl: 'immunization/immunization-view.html'
+        }).when('/immunization/view/:hashKey', {
+            templateUrl: 'immunization/immunization-view.html'
+        }).when('/immunization/edit/:hashKey', {
+            templateUrl: 'immunization/immunization-edit.html'
+        }).when('/immunization/detailed-search', {
+            templateUrl: 'immunization/immunization-detailed-search.html'
         }).when('/lab', {
             templateUrl: 'lab/lab-edit.html'
         }).when('/operationDefinition', {
@@ -390,8 +422,9 @@
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("diagnosis", "./assets/svg/stethoscope.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
+            .icon("encounter", "./assets/svg/man412.svg", 24)
             .icon("error", "./assets/svg/error.svg", 48)
-            .icon("family", "./assets/svg/group.svg", 24)
+            .icon("family", "./assets/svg/group41.svg", 24)
             .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
@@ -399,9 +432,12 @@
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
             .icon("https", "./assets/svg/https.svg", 24)
+            .icon("hospital", "./assets/svg/hospital.svg", 24)
+            .icon("immunization", "./assets/svg/location2.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("male", "./assets/svg/male.svg", 24)
+            .icon("medication", "./assets/svg/medical12.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
@@ -409,7 +445,9 @@
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)
             .icon("practitioner", "./assets/svg/md.svg", 24)
+            .icon("quickFind", "./assets/svg/quickFind.svg", 24)
             .icon("refresh", "./assets/svg/refresh.svg", 24)
+            .icon("relatedPerson", "./assets/svg/group.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
             .icon("saveToCloud", "./assets/svg/saveToCloud.svg", 24)
             .icon("saveToList", "./assets/svg/saveToList.svg", 24)
@@ -902,29 +940,29 @@
                         "name": "Argonaut Reference",
                         "baseUrl": "http://argonaut.healthintersections.com.au/open",
                         "secure": false
-                    }
-                    /*                   , {
-                     "id": 7,
-                     "name": "HealthConnex",
-                     "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
-                     },
+                    },
+                    {
+                        "id": 7,
+                        "name": "HealthConnex",
+                        "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
+                    },
 
-                     {
-                     "id": 8,
-                     "name": "EPIC",
-                     "baseUrl": "http://open.epic.com/Clinical/FHIR"
-                     },
-                     {
-                     "id": 9,
-                     "name": "Cerner",
-                     "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
-                     "secure": true
-                     },
-                     {
-                     "id": 10,
-                     "name": "AEGIS",
-                     "baseUrl": "http://wildfhir.aegis.net/fhir2"
-                     }*/
+                    {
+                        "id": 8,
+                        "name": "EPIC",
+                        "baseUrl": "http://open.epic.com/Clinical/FHIR"
+                    },
+                    {
+                        "id": 9,
+                        "name": "Cerner",
+                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        "secure": true
+                    },
+                    {
+                        "id": 10,
+                        "name": "AEGIS",
+                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
+                    }
                 ];
                 var servers = dataCache.readFromCache('servers');
                 if (angular.isUndefined(servers)) {
@@ -2740,23 +2778,32 @@
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var _adminPages = [
+            {name: 'Encounter', href: 'encounter'},
             {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
-            {name: 'Practitioner', href: 'practitioner'},
             {name: 'Person', href: 'person'},
+            {name: 'Practitioner', href: 'practitioner'},
             {name: 'Related Person', href: 'relatedPerson'}
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance'},
-            {name: 'Profile', href: 'profile'},
             {name: 'Extension Definition', href: 'extensionDefinition'},
             {name: 'Operation Definition', href: 'operationDefinition'},
+            {name: 'Profile', href: 'profile'},
             {name: 'Value Set', href: 'valueSet'}
         ];
         var _documentsPages = [
             {name: 'Composition', href: 'composition'},
-            {name: 'Document Reference', href: 'documentReference'},
-            {name: 'Document Manifest', href: 'documentManifest'}
+            {name: 'Document Manifest', href: 'documentManifest'},
+            {name: 'Document Reference', href: 'documentReference'}
+        ];
+        var _clinicalPages = [
+            {name: 'Allergy', href: 'allergy'},
+            {name: 'Condition', href: 'condition'},
+            {name: 'Family History', href: 'familyHistory'},
+            {name: 'Immunization', href: 'immunization'},
+            {name: 'Medication', href: 'medication'},
+            {name: 'Medication Statement', href: 'medicationStatement'}
         ];
         var _dafResources = [
             {name: 'Patient', href: 'daf/patient'},
@@ -2778,9 +2825,10 @@
         ];
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
-       //     {name: 'Conformance', id: 2, pages: _conformancePages},
-       //     {name: 'Documents', id: 3, pages: _documentsPages},
-            {name: 'DAF Profiles', id: 3, pages: _dafResources}
+            {name: 'Clinical', id: 2, pages: _clinicalPages},
+            {name: 'Conformance', id: 3, pages: _conformancePages},
+            {name: 'Documents', id: 4, pages: _documentsPages},
+            {name: 'DAF Profiles', id: 5, pages: _dafResources}
         ];
         var noToast = false;
 
@@ -5866,6 +5914,1280 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'encounterDetail';
+
+    function encounterDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, encounterService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService, config) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedEncounter();
+            });
+        }
+
+        function deleteEncounter(encounter, event) {
+            function executeDelete() {
+                if (encounter && encounter.resourceId && encounter.hashKey) {
+                    encounterService.deleteCachedEncounter(encounter.hashKey, encounter.resourceId)
+                        .then(function () {
+                            logInfo("Deleted encounter " + encounter.fullName);
+                            $location.path('/encounter');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            var confirm = $mdDialog.confirm()
+                .title('Delete ' + encounter.fullName + '?')
+                .ariaLabel('delete encounter')
+                .ok('Yes')
+                .cancel('No')
+                .targetEvent(event);
+            $mdDialog.show(confirm).then(executeDelete,
+                function () {
+                    logInfo('You decided to keep ' + encounter.fullName);
+                });
+        }
+
+        function edit(encounter) {
+            if (encounter && encounter.hashKey) {
+                $location.path('/encounter/' + encounter.hashKey);
+            }
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function _getEverything() {
+            encounterService.getEncounterEverything(vm.encounter.resourceId)
+                .then(function (data) {
+                    vm.summary = data.summary;
+                    vm.history = data.history;
+                    logInfo("Retrieved everything for encounter at " + vm.encounter.resourceId, null, noToast);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.encounter.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for encounter " + vm.encounter.fullName, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getRequestedEncounter() {
+            function initializeAdministrationData(data) {
+                vm.encounter = data;
+                humanNameService.init(vm.encounter.name);
+                demographicsService.init(vm.encounter.gender, vm.encounter.maritalStatus, vm.encounter.communication);
+                demographicsService.initBirth(vm.encounter.multipleBirthBoolean, vm.encounter.multipleBirthInteger);
+                demographicsService.initDeath(vm.encounter.deceasedBoolean, vm.encounter.deceasedDateTime);
+                demographicsService.setBirthDate(vm.encounter.birthDate);
+                demographicsService.initializeKnownExtensions(vm.encounter.extension);
+                vm.encounter.race = demographicsService.getRace();
+                vm.encounter.religion = demographicsService.getReligion();
+                vm.encounter.ethnicity = demographicsService.getEthnicity();
+                vm.encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.encounter.birthPlace = demographicsService.getBirthPlace();
+                attachmentService.init(vm.encounter.photo, "Photos");
+                identifierService.init(vm.encounter.identifier, "multi", "encounter");
+                addressService.init(vm.encounter.address, true);
+                contactPointService.init(vm.encounter.telecom, true, true);
+                careProviderService.init(vm.encounter.careProvider);
+                if (vm.encounter.communication) {
+                    communicationService.init(vm.encounter.communication, "multi");
+                }
+                vm.encounter.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.encounter.id)) {
+                    vm.encounter.resourceId = (vm.activeServer.baseUrl + '/Encounter/' + vm.encounter.id);
+                }
+                if (vm.encounter.managingOrganization && vm.encounter.managingOrganization.reference) {
+                    var reference = vm.encounter.managingOrganization.reference;
+                    if (common.isAbsoluteUri(reference) === false) {
+                        vm.encounter.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                    }
+                    if (angular.isUndefined(vm.encounter.managingOrganization.display)) {
+                        vm.encounter.managingOrganization.display = reference;
+                    }
+                }
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.encounter = JSON.stringify(vm.encounter);
+                }
+            }
+
+            vm.encounter = undefined;
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.encounter) || ($window.localStorage.encounter === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/encounter');
+                    }
+                } else {
+                    vm.encounter = JSON.parse($window.localStorage.encounter);
+                    vm.encounter.hashKey = "current";
+                    initializeAdministrationData(vm.encounter);
+                }
+            } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
+                var resourceId = vm.activeServer.baseUrl + '/Encounter/' + $routeParams.id;
+                encounterService.getEncounter(resourceId)
+                    .then(function (resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.encounter) {
+                            _getEverything(resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
+                    });
+            } else if (vm.lookupKey === 'new') {
+                var data = encounterService.initializeNewEncounter();
+                initializeAdministrationData(data);
+                vm.title = 'Add New Encounter';
+                vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
+                encounterService.getCachedEncounter(vm.lookupKey)
+                    .then(function (data) {
+                        initializeAdministrationData(data);
+                        if (vm.encounter && vm.encounter.resourceId) {
+                            _getEverything(vm.encounter.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
+            } else {
+                logError("Unable to resolve encounter lookup");
+            }
+        }
+
+        function save() {
+            function processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Encounter saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                } else {
+                    logInfo("Encounter saved at " + resourceVersionId);
+                    vm.encounter.resourceVersionId = resourceVersionId;
+                    vm.encounter.resourceId = common.setResourceId(vm.encounter.resourceId, resourceVersionId);
+                }
+                vm.encounter.fullName = humanNameService.getFullName();
+                vm.isEditing = true;
+                $window.localStorage.encounter = JSON.stringify(vm.encounter);
+                vm.isBusy = false;
+            }
+
+            var encounter = encounterService.initializeNewEncounter();
+            if (humanNameService.getAll().length === 0) {
+                logError("Encounter must have at least one name.");
+                return;
+            }
+            encounter.name = humanNameService.mapFromViewModel();
+            encounter.photo = attachmentService.getAll();
+
+            encounter.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            encounter.gender = demographicsService.getGender();
+            encounter.maritalStatus = demographicsService.getMaritalStatus();
+            encounter.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            encounter.multipleBirthInteger = demographicsService.getBirthOrder();
+            encounter.deceasedBoolean = demographicsService.getDeceased();
+            encounter.deceasedDateTime = demographicsService.getDeceasedDate();
+            encounter.race = demographicsService.getRace();
+            encounter.religion = demographicsService.getReligion();
+            encounter.ethnicity = demographicsService.getEthnicity();
+            encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
+            encounter.birthPlace = demographicsService.getBirthPlace();
+
+            encounter.address = addressService.mapFromViewModel();
+            encounter.telecom = contactPointService.mapFromViewModel();
+            encounter.identifier = identifierService.getAll();
+            encounter.managingOrganization = vm.encounter.managingOrganization;
+            encounter.communication = communicationService.getAll();
+            encounter.careProvider = careProviderService.getAll();
+
+            encounter.active = vm.encounter.active;
+            vm.isBusy = true;
+            if (vm.isEditing) {
+                encounter.id = vm.encounter.id;
+                encounterService.updateEncounter(vm.encounter.resourceId, encounter)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            } else {
+                encounterService.addEncounter(encounter)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            }
+        }
+
+        function showAuditData($index, $event) {
+            showRawData(vm.history[$index], $event);
+        }
+
+        function showClinicalData($index, $event) {
+            showRawData(vm.summary[$index], $event);
+        }
+
+        function showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/consultation');
+                        break;
+                    case 1:
+                        $location.path('/lab');
+                        break;
+                    case 2:
+                        logInfo("Refreshing encounter data from " + vm.activeServer.name);
+                        $location.path('/encounter/get/' + vm.encounter.id);
+                        break;
+                    case 3:
+                        $location.path('/encounter');
+                        break;
+                    case 4:
+                        $location.path('/encounter/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/encounter/edit/new');
+                        break;
+                    case 6:
+                        deleteEncounter(vm.encounter);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Vitals', icon: 'vitals', index: 0},
+                        {name: 'Lab', icon: 'lab', index: 1},
+                        {name: 'Refresh data', icon: 'refresh', index: 2},
+                        {name: 'Find another encounter', icon: 'person', index: 3},
+                        {name: 'Edit encounter', icon: 'edit', index: 4},
+                        {name: 'Add new encounter', icon: 'personAdd', index: 5}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Find another encounter', icon: 'person', index: 3},
+                    ];
+                }
+                this.title = 'Encounter options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.delete = deleteEncounter;
+        vm.dataEvents = [];
+        vm.errors = [];
+        vm.history = [];
+        vm.isBusy = false;
+        vm.summary = [];
+        vm.edit = edit;
+        vm.getOrganizationReference = getOrganizationReference;
+        vm.lookupKey = undefined;
+        vm.isBusy = false;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.encounter = undefined;
+        vm.practitionerSearchText = '';
+        vm.save = save;
+        vm.selectedPractitioner = null;
+        vm.title = 'Encounter Detail';
+        vm.showAuditData = showAuditData;
+        vm.showClinicalData = showClinicalData;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', encounterDetail]);
+})();(function () {
+    'use strict';
+
+    var controllerId = 'encounterSearch';
+
+    function encounterSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, encounterService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var getLogFn = common.logger.getLogFn;
+        var logError = getLogFn(controllerId, 'error');
+        var logInfo = getLogFn(controllerId, 'info');
+        var noToast = false;
+        var $q = common.$q;
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId)
+                .then(function () {
+                    if (angular.isDefined($routeParams.orgId)) {
+                        getOrganizationEncounters($routeParams.orgId);
+                        logInfo("Retrieving encounters for current organization, please wait...");
+                    } else {
+                        _loadLocalLookups();
+                    }
+                }, function (error) {
+                    logError('Error initializing encounter search', error);
+                });
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationEncounters(orgId) {
+            vm.encounterSearch.organization = orgId;
+            detailSearch();
+        }
+
+        function goToEncounter(encounter) {
+            if (encounter && encounter.$$hashKey) {
+                $location.path('/encounter/view/' + encounter.$$hashKey);
+            }
+        }
+
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
+        }
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.encounterSearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.encounterSearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.name.given) {
+                queryParam.param = "given";
+                queryParam.value = vm.encounterSearch.name.given;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.name.family) {
+                queryParam.param = "family";
+                queryParam.value = vm.encounterSearch.name.family;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.mothersMaidenName) {
+                queryParam.param = "mothersMaidenName";
+                queryParam.value = vm.encounterSearch.mothersMaidenName;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.encounterSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.encounterSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.encounterSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.encounterSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.dob) {
+                queryParam.param = "birthDate";
+                queryParam.value = formatString(vm.encounterSearch.dob);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.age.start || vm.encounterSearch.age.end) {
+                if (vm.encounterSearch.age.start === vm.encounterSearch.age.end) {
+                    queryParam.param = "age";
+                    queryParam.value = vm.encounterSearch.age.start;
+                    queryParams.push(_.clone(queryParam));
+                }
+                else {
+                    queryParam.param = "age";
+                    queryParam.value = ">".concat(vm.encounterSearch.age.start === 0 ? vm.encounterSearch.age.start : (vm.encounterSearch.age.start - 1));
+                    queryParams.push(_.clone(queryParam));
+                    queryParam.value = "<".concat(vm.encounterSearch.age.end === 1 ? vm.encounterSearch.age.end : (vm.encounterSearch.age.end + 1));
+                    queryParams.push(_.clone(queryParam));
+                }
+            }
+            if (vm.encounterSearch.identifier.system && vm.encounterSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.encounterSearch.identifier.system.concat("|", vm.encounterSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.telecom) {
+                queryParam.param = "telecom";
+                queryParam.value = vm.encounterSearch.telecom;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.gender) {
+                queryParam.param = "gender";
+                queryParam.value = vm.encounterSearch.gender;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.race) {
+                queryParam.param = "race";
+                queryParam.value = localValueSets.race().system.concat("|", vm.encounterSearch.race.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.language) {
+                queryParam.param = "language";
+                queryParam.value = vm.encounterSearch.language.system.concat("|", vm.encounterSearch.language.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.encounterSearch.ethnicity) {
+                queryParam.param = "ethnicity";
+                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.encounterSearch.ethnicity.code);
+                queryParams.push(_.clone(queryParam));
+            }
+
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            function formatString(input) {
+                var yyyy = input.getFullYear().toString();
+                var mm = (input.getMonth() + 1).toString();
+                var dd = input.getDate().toString();
+                return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
+            }
+
+            searchEncounters(queryString);
+        }
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            encounterService.getEncountersByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
+                    vm.activeServer.name, null, noToast);
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            encounterService.getEncounters(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
+                    vm.activeServer.name, null, noToast);
+                    deferred.resolve(data.entry || []);
+                }, function (error) {
+                    logError('Error getting encounters', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.quickSearch = quickSearch;
+
+        function searchEncounters(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            encounterService.searchEncounters(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
+                    vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error getting encounters', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.encounters = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function ageRangeChange() {
+            if (vm.encounterSearch.age.end === undefined) {
+                vm.encounterSearch.age.end = vm.encounterSearch.age.start;
+            }
+            if (vm.encounterSearch.age.start === undefined) {
+                vm.encounterSearch.age.start = vm.encounterSearch.age.end;
+            }
+            if (vm.encounterSearch.age.start > vm.encounterSearch.age.end) {
+                vm.encounterSearch.age.end = vm.encounterSearch.age.start;
+            }
+        }
+
+        function dobChange() {
+            if (vm.encounterSearch.dob !== undefined) {
+                vm.encounterSearch.age.end = vm.encounterSearch.age.start = undefined;
+            }
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/encounter/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/encounter/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/encounter');
+                        break;
+                }
+            });
+
+            /**
+             * Bottom Sheet controller for Encounter search
+             */
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Start new encounter', icon: 'encounter', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Encounter search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.activeServer = null;
+        vm.dereferenceLink = dereferenceLink;
+        vm.goToEncounter = goToEncounter;
+        vm.encounters = [];
+        vm.selectedEncounter = null;
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'Encounters';
+        vm.managingOrganization = undefined;
+        vm.practitioner = undefined;
+        vm.actions = actions;
+        vm.races = [];
+        vm.ethnicities = [];
+        vm.languages = [];
+        vm.detailSearch = detailSearch;
+        vm.isBusy = false;
+        vm.ageRangeChange = ageRangeChange;
+        vm.dobChange = dobChange;
+        vm.encounterSearch = {
+            name: {first: undefined, last: undefined},
+            mothersMaidenName: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            telecom: undefined,
+            identifier: {system: undefined, value: undefined},
+            age: {start: undefined, end: undefined},
+            dob: undefined,
+            race: undefined,
+            gender: undefined,
+            ethnicity: undefined,
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
+        };
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.selectedTab = 0;
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'encounterService', encounterSearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'encounterService';
+
+    function encounterService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+        var dataCacheKey = 'localEncounters';
+        var itemCacheKey = 'contextEncounter';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var $q = common.$q;
+
+        function addEncounter(resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/Encounter";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedEncounter(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                if (searchResults && searchResults.entry) {
+                    var cachedEncounters = searchResults.entry;
+                    searchResults.entry = _.remove(cachedEncounters, function (item) {
+                        return item.$$hashKey !== hashKey;
+                    });
+                    searchResults.totalResults = (searchResults.totalResults - 1);
+                    dataCache.addToCache(dataCacheKey, searchResults);
+                }
+                deferred.resolve();
+            }
+
+            var deferred = $q.defer();
+            deleteEncounter(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteEncounter(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getEncounterEverything(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId + '/$everything')
+                .then(function (results) {
+                    var everything = {"encounter": null, "summary": [], "history": []};
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'AuditEvent');
+                    });
+                    everything.encounter = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'Encounter');
+                    })[0];
+                    everything.summary = results.data.entry;
+                    deferred.resolve(everything);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedEncounter(hashKey) {
+            function getEncounter(searchResults) {
+                var cachedEncounter;
+                var cachedEncounters = searchResults.entry;
+                for (var i = 0, len = cachedEncounters.length; i < len; i++) {
+                    if (cachedEncounters[i].$$hashKey === hashKey) {
+                        cachedEncounter = cachedEncounters[i].resource;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedEncounter.resourceId = (baseUrl + cachedEncounter.resourceType + '/' + cachedEncounter.id);
+                        cachedEncounter.hashKey = hashKey;
+                        break;
+                    }
+                }
+                if (cachedEncounter) {
+                    deferred.resolve(cachedEncounter);
+                } else {
+                    deferred.reject('Encounter not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            var activeServer;
+            getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
+                .then(getEncounter,
+                function () {
+                    deferred.reject('Encounter search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getEncounter(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (data) {
+                    dataCache.addToCache(dataCacheKey, data);
+                    deferred.resolve(data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getEncounterContext() {
+            return dataCache.readFromCache(dataCacheKey);
+        }
+
+        function getEncounterReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Encounter?name=' + input + '&_count=20')
+                .then(function (results) {
+                    var encounters = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'Encounter') {
+                                    encounters.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
+                    }
+                    if (encounters.length === 0) {
+                        encounters.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(encounters);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchEncounters(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/Encounter?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getEncounters(baseUrl, searchFilter, organizationId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Encounter?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getEncountersByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewEncounter() {
+            return {
+                "resourceType": "Encounter",
+                "name": [],
+                "gender": undefined,
+                "birthDate": null,
+                "maritalStatus": undefined,
+                "multipleBirth": false,
+                "telecom": [],
+                "address": [],
+                "photo": [],
+                "communication": [],
+                "managingOrganization": null,
+                "careProvider": [],
+                "contact": [],
+                "link": [],
+                "extension": [],
+                "active": true
+            };
+        }
+
+        function setEncounterContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updateEncounter(resourceVersionId, resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomEncounters(organizationId, organizationName) {
+            var deferred = $q.defer();
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
+                .success(function (data) {
+                    angular.forEach(data.results, function (result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "Encounter",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": _randomBirthDate(),
+                            "contact": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": [{"url": user.picture.large}],
+                            "identifier": [
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "secondary",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:encounter",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
+                                }
+                            ],
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
+                            "link": [],
+                            "active": true,
+                            "extension": []
+                        };
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
+
+                        var timer = $timeout(function () {
+                        }, 3000);
+                        timer.then(function () {
+                            addEncounter(resource).then(function (results) {
+                                logInfo("Created encounter " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create encounter " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
+                    });
+                    deferred.resolve();
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/encounter-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
+        }
+
+        function _randomBirthDate() {
+            var start = new Date(1945, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        var allEthnicities = [];
+        var ethnicitySystem = '';
+
+        function _randomEthnicity() {
+            function prepEthnicities() {
+                var ethnicities = localValueSets.ethnicity();
+                ethnicitySystem = ethnicities.system;
+                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
+                    var mainConcept = ethnicities.concept[i];
+                    allEthnicities.push(mainConcept);
+                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
+                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
+                            var groupConcept = mainConcept.concept[j];
+                            allEthnicities.push(groupConcept);
+                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
+                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
+                                    var leafConcept = groupConcept.concept[k];
+                                    allEthnicities.push(leafConcept);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            if (allEthnicities.length === 0) {
+                prepEthnicities();
+            }
+            common.shuffle(allEthnicities);
+            var ethnicity = allEthnicities[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicitySystem,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.photo.length === 0) {
+                resource.photo = null;
+            }
+            if (resource.communication.length === 0) {
+                resource.communication = null;
+            }
+            if (resource.link.length === 0) {
+                resource.link = null;
+            }
+            if (angular.isDefined(resource.maritalStatus)) {
+                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
+                    resource.maritalStatus = null;
+                }
+            }
+            return $q.when(resource);
+        }
+
+        var service = {
+            addEncounter: addEncounter,
+            clearCache: clearCache,
+            deleteCachedEncounter: deleteCachedEncounter,
+            deleteEncounter: deleteEncounter,
+            getCachedEncounter: getCachedEncounter,
+            getCachedSearchResults: getCachedSearchResults,
+            getEncounter: getEncounter,
+            getEncounterContext: getEncounterContext,
+            getEncounterReference: getEncounterReference,
+            getEncounters: getEncounters,
+            getEncountersByLink: getEncountersByLink,
+            getEncounterEverything: getEncounterEverything,
+            initializeNewEncounter: initializeNewEncounter,
+            setEncounterContext: setEncounterContext,
+            updateEncounter: updateEncounter,
+            seedRandomEncounters: seedRandomEncounters,
+            searchEncounters: searchEncounters
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
+        encounterService]);
+})
+();(function () {
+    'use strict';
+
     var controllerId = 'extensionDefinitionDetail';
 
     function extensionDefinitionDetail($location, $mdDialog, $routeParams, common, fhirServers, identifierService, extensionDefinitionService, contactPointService) {
@@ -6408,6 +7730,2541 @@
     angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', extensionDefinitionService]);
 
 })();(function () {
+    'use strict';
+
+    var controllerId = 'familyHistoryDetail';
+
+    function familyHistoryDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, familyHistoryService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService, config) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedFamilyHistory();
+            });
+        }
+
+        function deleteFamilyHistory(familyHistory, event) {
+            function executeDelete() {
+                if (familyHistory && familyHistory.resourceId && familyHistory.hashKey) {
+                    familyHistoryService.deleteCachedFamilyHistory(familyHistory.hashKey, familyHistory.resourceId)
+                        .then(function () {
+                            logInfo("Deleted familyHistory " + familyHistory.fullName);
+                            $location.path('/familyHistory');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            var confirm = $mdDialog.confirm()
+                .title('Delete ' + familyHistory.fullName + '?')
+                .ariaLabel('delete familyHistory')
+                .ok('Yes')
+                .cancel('No')
+                .targetEvent(event);
+            $mdDialog.show(confirm).then(executeDelete,
+                function () {
+                    logInfo('You decided to keep ' + familyHistory.fullName);
+                });
+        }
+
+        function edit(familyHistory) {
+            if (familyHistory && familyHistory.hashKey) {
+                $location.path('/familyHistory/' + familyHistory.hashKey);
+            }
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function _getEverything() {
+            familyHistoryService.getFamilyHistoryEverything(vm.familyHistory.resourceId)
+                .then(function (data) {
+                    vm.summary = data.summary;
+                    vm.history = data.history;
+                    logInfo("Retrieved everything for familyHistory at " + vm.familyHistory.resourceId, null, noToast);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.familyHistory.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for familyHistory " + vm.familyHistory.fullName, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getRequestedFamilyHistory() {
+            function initializeAdministrationData(data) {
+                vm.familyHistory = data;
+                humanNameService.init(vm.familyHistory.name);
+                demographicsService.init(vm.familyHistory.gender, vm.familyHistory.maritalStatus, vm.familyHistory.communication);
+                demographicsService.initBirth(vm.familyHistory.multipleBirthBoolean, vm.familyHistory.multipleBirthInteger);
+                demographicsService.initDeath(vm.familyHistory.deceasedBoolean, vm.familyHistory.deceasedDateTime);
+                demographicsService.setBirthDate(vm.familyHistory.birthDate);
+                demographicsService.initializeKnownExtensions(vm.familyHistory.extension);
+                vm.familyHistory.race = demographicsService.getRace();
+                vm.familyHistory.religion = demographicsService.getReligion();
+                vm.familyHistory.ethnicity = demographicsService.getEthnicity();
+                vm.familyHistory.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.familyHistory.birthPlace = demographicsService.getBirthPlace();
+                attachmentService.init(vm.familyHistory.photo, "Photos");
+                identifierService.init(vm.familyHistory.identifier, "multi", "familyHistory");
+                addressService.init(vm.familyHistory.address, true);
+                contactPointService.init(vm.familyHistory.telecom, true, true);
+                careProviderService.init(vm.familyHistory.careProvider);
+                if (vm.familyHistory.communication) {
+                    communicationService.init(vm.familyHistory.communication, "multi");
+                }
+                vm.familyHistory.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.familyHistory.id)) {
+                    vm.familyHistory.resourceId = (vm.activeServer.baseUrl + '/Family History/' + vm.familyHistory.id);
+                }
+                if (vm.familyHistory.managingOrganization && vm.familyHistory.managingOrganization.reference) {
+                    var reference = vm.familyHistory.managingOrganization.reference;
+                    if (common.isAbsoluteUri(reference) === false) {
+                        vm.familyHistory.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                    }
+                    if (angular.isUndefined(vm.familyHistory.managingOrganization.display)) {
+                        vm.familyHistory.managingOrganization.display = reference;
+                    }
+                }
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.familyHistory = JSON.stringify(vm.familyHistory);
+                }
+            }
+
+            vm.familyHistory = undefined;
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.familyHistory) || ($window.localStorage.familyHistory === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/familyHistory');
+                    }
+                } else {
+                    vm.familyHistory = JSON.parse($window.localStorage.familyHistory);
+                    vm.familyHistory.hashKey = "current";
+                    initializeAdministrationData(vm.familyHistory);
+                }
+            } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
+                var resourceId = vm.activeServer.baseUrl + '/FamilyHistory/' + $routeParams.id;
+                familyHistoryService.getFamilyHistory(resourceId)
+                    .then(function (resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.familyHistory) {
+                            _getEverything(resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
+                    });
+            } else if (vm.lookupKey === 'new') {
+                var data = familyHistoryService.initializeNewFamilyHistory();
+                initializeAdministrationData(data);
+                vm.title = 'Add New Family History';
+                vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
+                familyHistoryService.getCachedFamilyHistory(vm.lookupKey)
+                    .then(function (data) {
+                        initializeAdministrationData(data);
+                        if (vm.familyHistory && vm.familyHistory.resourceId) {
+                            _getEverything(vm.familyHistory.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
+            } else {
+                logError("Unable to resolve familyHistory lookup");
+            }
+        }
+
+        function save() {
+            function processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Family History saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                } else {
+                    logInfo("Family History saved at " + resourceVersionId);
+                    vm.familyHistory.resourceVersionId = resourceVersionId;
+                    vm.familyHistory.resourceId = common.setResourceId(vm.familyHistory.resourceId, resourceVersionId);
+                }
+                vm.familyHistory.fullName = humanNameService.getFullName();
+                vm.isEditing = true;
+                $window.localStorage.familyHistory = JSON.stringify(vm.familyHistory);
+                vm.isBusy = false;
+            }
+
+            var familyHistory = familyHistoryService.initializeNewFamilyHistory();
+            if (humanNameService.getAll().length === 0) {
+                logError("Family History must have at least one name.");
+                return;
+            }
+            familyHistory.name = humanNameService.mapFromViewModel();
+            familyHistory.photo = attachmentService.getAll();
+
+            familyHistory.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            familyHistory.gender = demographicsService.getGender();
+            familyHistory.maritalStatus = demographicsService.getMaritalStatus();
+            familyHistory.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            familyHistory.multipleBirthInteger = demographicsService.getBirthOrder();
+            familyHistory.deceasedBoolean = demographicsService.getDeceased();
+            familyHistory.deceasedDateTime = demographicsService.getDeceasedDate();
+            familyHistory.race = demographicsService.getRace();
+            familyHistory.religion = demographicsService.getReligion();
+            familyHistory.ethnicity = demographicsService.getEthnicity();
+            familyHistory.mothersMaidenName = demographicsService.getMothersMaidenName();
+            familyHistory.birthPlace = demographicsService.getBirthPlace();
+
+            familyHistory.address = addressService.mapFromViewModel();
+            familyHistory.telecom = contactPointService.mapFromViewModel();
+            familyHistory.identifier = identifierService.getAll();
+            familyHistory.managingOrganization = vm.familyHistory.managingOrganization;
+            familyHistory.communication = communicationService.getAll();
+            familyHistory.careProvider = careProviderService.getAll();
+
+            familyHistory.active = vm.familyHistory.active;
+            vm.isBusy = true;
+            if (vm.isEditing) {
+                familyHistory.id = vm.familyHistory.id;
+                familyHistoryService.updateFamilyHistory(vm.familyHistory.resourceId, familyHistory)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            } else {
+                familyHistoryService.addFamilyHistory(familyHistory)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            }
+        }
+
+        function showAuditData($index, $event) {
+            showRawData(vm.history[$index], $event);
+        }
+
+        function showClinicalData($index, $event) {
+            showRawData(vm.summary[$index], $event);
+        }
+
+        function showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/consultation');
+                        break;
+                    case 1:
+                        $location.path('/lab');
+                        break;
+                    case 2:
+                        logInfo("Refreshing familyHistory data from " + vm.activeServer.name);
+                        $location.path('/familyHistory/get/' + vm.familyHistory.id);
+                        break;
+                    case 3:
+                        $location.path('/familyHistory');
+                        break;
+                    case 4:
+                        $location.path('/familyHistory/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/familyHistory/edit/new');
+                        break;
+                    case 6:
+                        deleteFamilyHistory(vm.familyHistory);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Vitals', icon: 'vitals', index: 0},
+                        {name: 'Lab', icon: 'lab', index: 1},
+                        {name: 'Refresh data', icon: 'refresh', index: 2},
+                        {name: 'Find another familyHistory', icon: 'person', index: 3},
+                        {name: 'Edit familyHistory', icon: 'edit', index: 4},
+                        {name: 'Add new familyHistory', icon: 'personAdd', index: 5}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Find another familyHistory', icon: 'person', index: 3},
+                    ];
+                }
+                this.title = 'Family History options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.delete = deleteFamilyHistory;
+        vm.dataEvents = [];
+        vm.errors = [];
+        vm.history = [];
+        vm.isBusy = false;
+        vm.summary = [];
+        vm.edit = edit;
+        vm.getOrganizationReference = getOrganizationReference;
+        vm.lookupKey = undefined;
+        vm.isBusy = false;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.familyHistory = undefined;
+        vm.practitionerSearchText = '';
+        vm.save = save;
+        vm.selectedPractitioner = null;
+        vm.title = 'Family History Detail';
+        vm.showAuditData = showAuditData;
+        vm.showClinicalData = showClinicalData;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'familyHistoryService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', familyHistoryDetail]);
+})();(function () {
+    'use strict';
+
+    var controllerId = 'familyHistorySearch';
+
+    function familyHistorySearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, familyHistoryService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var getLogFn = common.logger.getLogFn;
+        var logError = getLogFn(controllerId, 'error');
+        var logInfo = getLogFn(controllerId, 'info');
+        var noToast = false;
+        var $q = common.$q;
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId)
+                .then(function () {
+                    if (angular.isDefined($routeParams.orgId)) {
+                        getOrganizationFamilyHistories($routeParams.orgId);
+                        logInfo("Retrieving familyHistories for current organization, please wait...");
+                    } else {
+                        _loadLocalLookups();
+                    }
+                }, function (error) {
+                    logError('Error initializing familyHistory search', error);
+                });
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationFamilyHistories(orgId) {
+            vm.familyHistorySearch.organization = orgId;
+            detailSearch();
+        }
+
+        function goToFamilyHistory(familyHistory) {
+            if (familyHistory && familyHistory.$$hashKey) {
+                $location.path('/familyHistory/view/' + familyHistory.$$hashKey);
+            }
+        }
+
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
+        }
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.familyHistorySearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.familyHistorySearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.name.given) {
+                queryParam.param = "given";
+                queryParam.value = vm.familyHistorySearch.name.given;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.name.family) {
+                queryParam.param = "family";
+                queryParam.value = vm.familyHistorySearch.name.family;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.mothersMaidenName) {
+                queryParam.param = "mothersMaidenName";
+                queryParam.value = vm.familyHistorySearch.mothersMaidenName;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.familyHistorySearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.familyHistorySearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.familyHistorySearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.familyHistorySearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.dob) {
+                queryParam.param = "birthDate";
+                queryParam.value = formatString(vm.familyHistorySearch.dob);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.age.start || vm.familyHistorySearch.age.end) {
+                if (vm.familyHistorySearch.age.start === vm.familyHistorySearch.age.end) {
+                    queryParam.param = "age";
+                    queryParam.value = vm.familyHistorySearch.age.start;
+                    queryParams.push(_.clone(queryParam));
+                }
+                else {
+                    queryParam.param = "age";
+                    queryParam.value = ">".concat(vm.familyHistorySearch.age.start === 0 ? vm.familyHistorySearch.age.start : (vm.familyHistorySearch.age.start - 1));
+                    queryParams.push(_.clone(queryParam));
+                    queryParam.value = "<".concat(vm.familyHistorySearch.age.end === 1 ? vm.familyHistorySearch.age.end : (vm.familyHistorySearch.age.end + 1));
+                    queryParams.push(_.clone(queryParam));
+                }
+            }
+            if (vm.familyHistorySearch.identifier.system && vm.familyHistorySearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.familyHistorySearch.identifier.system.concat("|", vm.familyHistorySearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.telecom) {
+                queryParam.param = "telecom";
+                queryParam.value = vm.familyHistorySearch.telecom;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.gender) {
+                queryParam.param = "gender";
+                queryParam.value = vm.familyHistorySearch.gender;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.race) {
+                queryParam.param = "race";
+                queryParam.value = localValueSets.race().system.concat("|", vm.familyHistorySearch.race.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.language) {
+                queryParam.param = "language";
+                queryParam.value = vm.familyHistorySearch.language.system.concat("|", vm.familyHistorySearch.language.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.familyHistorySearch.ethnicity) {
+                queryParam.param = "ethnicity";
+                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.familyHistorySearch.ethnicity.code);
+                queryParams.push(_.clone(queryParam));
+            }
+
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            function formatString(input) {
+                var yyyy = input.getFullYear().toString();
+                var mm = (input.getMonth() + 1).toString();
+                var dd = input.getDate().toString();
+                return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
+            }
+
+            searchFamilyHistories(queryString);
+        }
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            familyHistoryService.getFamilyHistoriesByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Family Histories from ' +
+                    vm.activeServer.name, null, noToast);
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            familyHistoryService.getFamilyHistories(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Family Histories from ' +
+                    vm.activeServer.name, null, noToast);
+                    deferred.resolve(data.entry || []);
+                }, function (error) {
+                    logError('Error getting familyHistories', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.quickSearch = quickSearch;
+
+        function searchFamilyHistories(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            familyHistoryService.searchFamilyHistories(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Family Histories from ' +
+                    vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error getting familyHistories', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.familyHistories = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function ageRangeChange() {
+            if (vm.familyHistorySearch.age.end === undefined) {
+                vm.familyHistorySearch.age.end = vm.familyHistorySearch.age.start;
+            }
+            if (vm.familyHistorySearch.age.start === undefined) {
+                vm.familyHistorySearch.age.start = vm.familyHistorySearch.age.end;
+            }
+            if (vm.familyHistorySearch.age.start > vm.familyHistorySearch.age.end) {
+                vm.familyHistorySearch.age.end = vm.familyHistorySearch.age.start;
+            }
+        }
+
+        function dobChange() {
+            if (vm.familyHistorySearch.dob !== undefined) {
+                vm.familyHistorySearch.age.end = vm.familyHistorySearch.age.start = undefined;
+            }
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/familyHistory/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/familyHistory/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/familyHistory');
+                        break;
+                }
+            });
+
+            /**
+             * Bottom Sheet controller for Family History search
+             */
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new family history', icon: 'family', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Family History search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.activeServer = null;
+        vm.dereferenceLink = dereferenceLink;
+        vm.goToFamilyHistory = goToFamilyHistory;
+        vm.familyHistories = [];
+        vm.selectedFamilyHistory = null;
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'Family Histories';
+        vm.managingOrganization = undefined;
+        vm.practitioner = undefined;
+        vm.actions = actions;
+        vm.races = [];
+        vm.ethnicities = [];
+        vm.languages = [];
+        vm.detailSearch = detailSearch;
+        vm.isBusy = false;
+        vm.ageRangeChange = ageRangeChange;
+        vm.dobChange = dobChange;
+        vm.familyHistorySearch = {
+            name: {first: undefined, last: undefined},
+            mothersMaidenName: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            telecom: undefined,
+            identifier: {system: undefined, value: undefined},
+            age: {start: undefined, end: undefined},
+            dob: undefined,
+            race: undefined,
+            gender: undefined,
+            ethnicity: undefined,
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
+        };
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.selectedTab = 0;
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'familyHistoryService', familyHistorySearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'familyHistoryService';
+
+    function familyHistoryService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+        var dataCacheKey = 'localFamilyHistories';
+        var itemCacheKey = 'contextFamilyHistory';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var $q = common.$q;
+
+        function addFamilyHistory(resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/FamilyHistory";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedFamilyHistory(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                if (searchResults && searchResults.entry) {
+                    var cachedFamilyHistories = searchResults.entry;
+                    searchResults.entry = _.remove(cachedFamilyHistories, function (item) {
+                        return item.$$hashKey !== hashKey;
+                    });
+                    searchResults.totalResults = (searchResults.totalResults - 1);
+                    dataCache.addToCache(dataCacheKey, searchResults);
+                }
+                deferred.resolve();
+            }
+
+            var deferred = $q.defer();
+            deleteFamilyHistory(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteFamilyHistory(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getFamilyHistoryEverything(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId + '/$everything')
+                .then(function (results) {
+                    var everything = {"familyHistory": null, "summary": [], "history": []};
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'AuditEvent');
+                    });
+                    everything.familyHistory = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'FamilyHistory');
+                    })[0];
+                    everything.summary = results.data.entry;
+                    deferred.resolve(everything);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedFamilyHistory(hashKey) {
+            function getFamilyHistory(searchResults) {
+                var cachedFamilyHistory;
+                var cachedFamilyHistories = searchResults.entry;
+                for (var i = 0, len = cachedFamilyHistories.length; i < len; i++) {
+                    if (cachedFamilyHistories[i].$$hashKey === hashKey) {
+                        cachedFamilyHistory = cachedFamilyHistories[i].resource;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedFamilyHistory.resourceId = (baseUrl + cachedFamilyHistory.resourceType + '/' + cachedFamilyHistory.id);
+                        cachedFamilyHistory.hashKey = hashKey;
+                        break;
+                    }
+                }
+                if (cachedFamilyHistory) {
+                    deferred.resolve(cachedFamilyHistory);
+                } else {
+                    deferred.reject('Family History not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            var activeServer;
+            getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
+                .then(getFamilyHistory,
+                function () {
+                    deferred.reject('Family History search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getFamilyHistory(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (data) {
+                    dataCache.addToCache(dataCacheKey, data);
+                    deferred.resolve(data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getFamilyHistoryContext() {
+            return dataCache.readFromCache(dataCacheKey);
+        }
+
+        function getFamilyHistoryReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/FamilyHistory?name=' + input + '&_count=20')
+                .then(function (results) {
+                    var familyHistories = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'FamilyHistory') {
+                                    familyHistories.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
+                    }
+                    if (familyHistories.length === 0) {
+                        familyHistories.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(familyHistories);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchFamilyHistories(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/FamilyHistory?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getFamilyHistories(baseUrl, searchFilter, organizationId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/FamilyHistory?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getFamilyHistoriesByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewFamilyHistory() {
+            return {
+                "resourceType": "FamilyHistory",
+                "name": [],
+                "gender": undefined,
+                "birthDate": null,
+                "maritalStatus": undefined,
+                "multipleBirth": false,
+                "telecom": [],
+                "address": [],
+                "photo": [],
+                "communication": [],
+                "managingOrganization": null,
+                "careProvider": [],
+                "contact": [],
+                "link": [],
+                "extension": [],
+                "active": true
+            };
+        }
+
+        function setFamilyHistoryContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updateFamilyHistory(resourceVersionId, resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomFamilyHistories(organizationId, organizationName) {
+            var deferred = $q.defer();
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
+                .success(function (data) {
+                    angular.forEach(data.results, function (result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "FamilyHistory",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": _randomBirthDate(),
+                            "contact": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": [{"url": user.picture.large}],
+                            "identifier": [
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "secondary",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:familyHistory",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
+                                }
+                            ],
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
+                            "link": [],
+                            "active": true,
+                            "extension": []
+                        };
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
+
+                        var timer = $timeout(function () {
+                        }, 3000);
+                        timer.then(function () {
+                            addFamilyHistory(resource).then(function (results) {
+                                logInfo("Created familyHistory " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create familyHistory " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
+                    });
+                    deferred.resolve();
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/familyHistory-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
+        }
+
+        function _randomBirthDate() {
+            var start = new Date(1945, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        var allEthnicities = [];
+        var ethnicitySystem = '';
+
+        function _randomEthnicity() {
+            function prepEthnicities() {
+                var ethnicities = localValueSets.ethnicity();
+                ethnicitySystem = ethnicities.system;
+                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
+                    var mainConcept = ethnicities.concept[i];
+                    allEthnicities.push(mainConcept);
+                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
+                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
+                            var groupConcept = mainConcept.concept[j];
+                            allEthnicities.push(groupConcept);
+                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
+                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
+                                    var leafConcept = groupConcept.concept[k];
+                                    allEthnicities.push(leafConcept);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            if (allEthnicities.length === 0) {
+                prepEthnicities();
+            }
+            common.shuffle(allEthnicities);
+            var ethnicity = allEthnicities[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicitySystem,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.photo.length === 0) {
+                resource.photo = null;
+            }
+            if (resource.communication.length === 0) {
+                resource.communication = null;
+            }
+            if (resource.link.length === 0) {
+                resource.link = null;
+            }
+            if (angular.isDefined(resource.maritalStatus)) {
+                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
+                    resource.maritalStatus = null;
+                }
+            }
+            return $q.when(resource);
+        }
+
+        var service = {
+            addFamilyHistory: addFamilyHistory,
+            clearCache: clearCache,
+            deleteCachedFamilyHistory: deleteCachedFamilyHistory,
+            deleteFamilyHistory: deleteFamilyHistory,
+            getCachedFamilyHistory: getCachedFamilyHistory,
+            getCachedSearchResults: getCachedSearchResults,
+            getFamilyHistory: getFamilyHistory,
+            getFamilyHistoryContext: getFamilyHistoryContext,
+            getFamilyHistoryReference: getFamilyHistoryReference,
+            getFamilyHistories: getFamilyHistories,
+            getFamilyHistoriesByLink: getFamilyHistoriesByLink,
+            getFamilyHistoryEverything: getFamilyHistoryEverything,
+            initializeNewFamilyHistory: initializeNewFamilyHistory,
+            setFamilyHistoryContext: setFamilyHistoryContext,
+            updateFamilyHistory: updateFamilyHistory,
+            seedRandomFamilyHistories: seedRandomFamilyHistories,
+            searchFamilyHistories: searchFamilyHistories
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
+        familyHistoryService]);
+})
+();(function () {
+    'use strict';
+
+    var controllerId = 'immunizationDetail';
+
+    function immunizationDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, immunizationService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService, config) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedImmunization();
+            });
+        }
+
+        function deleteImmunization(immunization, event) {
+            function executeDelete() {
+                if (immunization && immunization.resourceId && immunization.hashKey) {
+                    immunizationService.deleteCachedImmunization(immunization.hashKey, immunization.resourceId)
+                        .then(function () {
+                            logInfo("Deleted immunization " + immunization.fullName);
+                            $location.path('/immunization');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            var confirm = $mdDialog.confirm()
+                .title('Delete ' + immunization.fullName + '?')
+                .ariaLabel('delete immunization')
+                .ok('Yes')
+                .cancel('No')
+                .targetEvent(event);
+            $mdDialog.show(confirm).then(executeDelete,
+                function () {
+                    logInfo('You decided to keep ' + immunization.fullName);
+                });
+        }
+
+        function edit(immunization) {
+            if (immunization && immunization.hashKey) {
+                $location.path('/immunization/' + immunization.hashKey);
+            }
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function _getEverything() {
+            immunizationService.getImmunizationEverything(vm.immunization.resourceId)
+                .then(function (data) {
+                    vm.summary = data.summary;
+                    vm.history = data.history;
+                    logInfo("Retrieved everything for immunization at " + vm.immunization.resourceId, null, noToast);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.immunization.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for immunization " + vm.immunization.fullName, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getRequestedImmunization() {
+            function initializeAdministrationData(data) {
+                vm.immunization = data;
+                humanNameService.init(vm.immunization.name);
+                demographicsService.init(vm.immunization.gender, vm.immunization.maritalStatus, vm.immunization.communication);
+                demographicsService.initBirth(vm.immunization.multipleBirthBoolean, vm.immunization.multipleBirthInteger);
+                demographicsService.initDeath(vm.immunization.deceasedBoolean, vm.immunization.deceasedDateTime);
+                demographicsService.setBirthDate(vm.immunization.birthDate);
+                demographicsService.initializeKnownExtensions(vm.immunization.extension);
+                vm.immunization.race = demographicsService.getRace();
+                vm.immunization.religion = demographicsService.getReligion();
+                vm.immunization.ethnicity = demographicsService.getEthnicity();
+                vm.immunization.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.immunization.birthPlace = demographicsService.getBirthPlace();
+                attachmentService.init(vm.immunization.photo, "Photos");
+                identifierService.init(vm.immunization.identifier, "multi", "immunization");
+                addressService.init(vm.immunization.address, true);
+                contactPointService.init(vm.immunization.telecom, true, true);
+                careProviderService.init(vm.immunization.careProvider);
+                if (vm.immunization.communication) {
+                    communicationService.init(vm.immunization.communication, "multi");
+                }
+                vm.immunization.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.immunization.id)) {
+                    vm.immunization.resourceId = (vm.activeServer.baseUrl + '/Immunization/' + vm.immunization.id);
+                }
+                if (vm.immunization.managingOrganization && vm.immunization.managingOrganization.reference) {
+                    var reference = vm.immunization.managingOrganization.reference;
+                    if (common.isAbsoluteUri(reference) === false) {
+                        vm.immunization.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                    }
+                    if (angular.isUndefined(vm.immunization.managingOrganization.display)) {
+                        vm.immunization.managingOrganization.display = reference;
+                    }
+                }
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.immunization = JSON.stringify(vm.immunization);
+                }
+            }
+
+            vm.immunization = undefined;
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.immunization) || ($window.localStorage.immunization === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/immunization');
+                    }
+                } else {
+                    vm.immunization = JSON.parse($window.localStorage.immunization);
+                    vm.immunization.hashKey = "current";
+                    initializeAdministrationData(vm.immunization);
+                }
+            } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
+                var resourceId = vm.activeServer.baseUrl + '/Immunization/' + $routeParams.id;
+                immunizationService.getImmunization(resourceId)
+                    .then(function (resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.immunization) {
+                            _getEverything(resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
+                    });
+            } else if (vm.lookupKey === 'new') {
+                var data = immunizationService.initializeNewImmunization();
+                initializeAdministrationData(data);
+                vm.title = 'Add New Immunization';
+                vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
+                immunizationService.getCachedImmunization(vm.lookupKey)
+                    .then(function (data) {
+                        initializeAdministrationData(data);
+                        if (vm.immunization && vm.immunization.resourceId) {
+                            _getEverything(vm.immunization.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
+            } else {
+                logError("Unable to resolve immunization lookup");
+            }
+        }
+
+        function save() {
+            function processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Immunization saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                } else {
+                    logInfo("Immunization saved at " + resourceVersionId);
+                    vm.immunization.resourceVersionId = resourceVersionId;
+                    vm.immunization.resourceId = common.setResourceId(vm.immunization.resourceId, resourceVersionId);
+                }
+                vm.immunization.fullName = humanNameService.getFullName();
+                vm.isEditing = true;
+                $window.localStorage.immunization = JSON.stringify(vm.immunization);
+                vm.isBusy = false;
+            }
+
+            var immunization = immunizationService.initializeNewImmunization();
+            if (humanNameService.getAll().length === 0) {
+                logError("Immunization must have at least one name.");
+                return;
+            }
+            immunization.name = humanNameService.mapFromViewModel();
+            immunization.photo = attachmentService.getAll();
+
+            immunization.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            immunization.gender = demographicsService.getGender();
+            immunization.maritalStatus = demographicsService.getMaritalStatus();
+            immunization.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            immunization.multipleBirthInteger = demographicsService.getBirthOrder();
+            immunization.deceasedBoolean = demographicsService.getDeceased();
+            immunization.deceasedDateTime = demographicsService.getDeceasedDate();
+            immunization.race = demographicsService.getRace();
+            immunization.religion = demographicsService.getReligion();
+            immunization.ethnicity = demographicsService.getEthnicity();
+            immunization.mothersMaidenName = demographicsService.getMothersMaidenName();
+            immunization.birthPlace = demographicsService.getBirthPlace();
+
+            immunization.address = addressService.mapFromViewModel();
+            immunization.telecom = contactPointService.mapFromViewModel();
+            immunization.identifier = identifierService.getAll();
+            immunization.managingOrganization = vm.immunization.managingOrganization;
+            immunization.communication = communicationService.getAll();
+            immunization.careProvider = careProviderService.getAll();
+
+            immunization.active = vm.immunization.active;
+            vm.isBusy = true;
+            if (vm.isEditing) {
+                immunization.id = vm.immunization.id;
+                immunizationService.updateImmunization(vm.immunization.resourceId, immunization)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            } else {
+                immunizationService.addImmunization(immunization)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            }
+        }
+
+        function showAuditData($index, $event) {
+            showRawData(vm.history[$index], $event);
+        }
+
+        function showClinicalData($index, $event) {
+            showRawData(vm.summary[$index], $event);
+        }
+
+        function showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/immunization');
+                        break;
+                    case 1:
+                        $location.path('/immunization/edit/current');
+                        break;
+                    case 2:
+                        $location.path('/immunization/edit/new');
+                        break;
+                    case 3:
+                        deleteImmunization(vm.immunization);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Find another immunization', icon: 'search', index: 0},
+                        {name: 'Edit immunization', icon: 'edit', index: 1},
+                        {name: 'Add new immunization', icon: 'immunization', index: 2}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Find another immunization', icon: 'search', index: 0},
+                    ];
+                }
+                this.title = 'Immunization options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.delete = deleteImmunization;
+        vm.dataEvents = [];
+        vm.errors = [];
+        vm.history = [];
+        vm.isBusy = false;
+        vm.summary = [];
+        vm.edit = edit;
+        vm.getOrganizationReference = getOrganizationReference;
+        vm.lookupKey = undefined;
+        vm.isBusy = false;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.immunization = undefined;
+        vm.practitionerSearchText = '';
+        vm.save = save;
+        vm.selectedPractitioner = null;
+        vm.title = 'Immunization Detail';
+        vm.showAuditData = showAuditData;
+        vm.showClinicalData = showClinicalData;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'immunizationService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', immunizationDetail]);
+})();(function () {
+    'use strict';
+
+    var controllerId = 'immunizationSearch';
+
+    function immunizationSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, immunizationService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var getLogFn = common.logger.getLogFn;
+        var logError = getLogFn(controllerId, 'error');
+        var logInfo = getLogFn(controllerId, 'info');
+        var noToast = false;
+        var $q = common.$q;
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId)
+                .then(function () {
+                    if (angular.isDefined($routeParams.orgId)) {
+                        getOrganizationImmunizations($routeParams.orgId);
+                        logInfo("Retrieving immunizations for current organization, please wait...");
+                    } else {
+                        _loadLocalLookups();
+                    }
+                }, function (error) {
+                    logError('Error initializing immunization search', error);
+                });
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationImmunizations(orgId) {
+            vm.immunizationSearch.organization = orgId;
+            detailSearch();
+        }
+
+        function goToImmunization(immunization) {
+            if (immunization && immunization.$$hashKey) {
+                $location.path('/immunization/view/' + immunization.$$hashKey);
+            }
+        }
+
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
+        }
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.immunizationSearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.immunizationSearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.name.given) {
+                queryParam.param = "given";
+                queryParam.value = vm.immunizationSearch.name.given;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.name.family) {
+                queryParam.param = "family";
+                queryParam.value = vm.immunizationSearch.name.family;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.mothersMaidenName) {
+                queryParam.param = "mothersMaidenName";
+                queryParam.value = vm.immunizationSearch.mothersMaidenName;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.immunizationSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.immunizationSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.immunizationSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.immunizationSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.dob) {
+                queryParam.param = "birthDate";
+                queryParam.value = formatString(vm.immunizationSearch.dob);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.age.start || vm.immunizationSearch.age.end) {
+                if (vm.immunizationSearch.age.start === vm.immunizationSearch.age.end) {
+                    queryParam.param = "age";
+                    queryParam.value = vm.immunizationSearch.age.start;
+                    queryParams.push(_.clone(queryParam));
+                }
+                else {
+                    queryParam.param = "age";
+                    queryParam.value = ">".concat(vm.immunizationSearch.age.start === 0 ? vm.immunizationSearch.age.start : (vm.immunizationSearch.age.start - 1));
+                    queryParams.push(_.clone(queryParam));
+                    queryParam.value = "<".concat(vm.immunizationSearch.age.end === 1 ? vm.immunizationSearch.age.end : (vm.immunizationSearch.age.end + 1));
+                    queryParams.push(_.clone(queryParam));
+                }
+            }
+            if (vm.immunizationSearch.identifier.system && vm.immunizationSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.immunizationSearch.identifier.system.concat("|", vm.immunizationSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.telecom) {
+                queryParam.param = "telecom";
+                queryParam.value = vm.immunizationSearch.telecom;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.gender) {
+                queryParam.param = "gender";
+                queryParam.value = vm.immunizationSearch.gender;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.race) {
+                queryParam.param = "race";
+                queryParam.value = localValueSets.race().system.concat("|", vm.immunizationSearch.race.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.language) {
+                queryParam.param = "language";
+                queryParam.value = vm.immunizationSearch.language.system.concat("|", vm.immunizationSearch.language.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.immunizationSearch.ethnicity) {
+                queryParam.param = "ethnicity";
+                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.immunizationSearch.ethnicity.code);
+                queryParams.push(_.clone(queryParam));
+            }
+
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            function formatString(input) {
+                var yyyy = input.getFullYear().toString();
+                var mm = (input.getMonth() + 1).toString();
+                var dd = input.getDate().toString();
+                return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
+            }
+
+            searchImmunizations(queryString);
+        }
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            immunizationService.getImmunizationsByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Immunizations from ' +
+                    vm.activeServer.name, null, noToast);
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            immunizationService.getImmunizations(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Immunizations from ' +
+                    vm.activeServer.name, null, noToast);
+                    deferred.resolve(data.entry || []);
+                }, function (error) {
+                    logError('Error getting immunizations', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.quickSearch = quickSearch;
+
+        function searchImmunizations(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            immunizationService.searchImmunizations(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Immunizations from ' +
+                    vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error getting immunizations', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.immunizations = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function ageRangeChange() {
+            if (vm.immunizationSearch.age.end === undefined) {
+                vm.immunizationSearch.age.end = vm.immunizationSearch.age.start;
+            }
+            if (vm.immunizationSearch.age.start === undefined) {
+                vm.immunizationSearch.age.start = vm.immunizationSearch.age.end;
+            }
+            if (vm.immunizationSearch.age.start > vm.immunizationSearch.age.end) {
+                vm.immunizationSearch.age.end = vm.immunizationSearch.age.start;
+            }
+        }
+
+        function dobChange() {
+            if (vm.immunizationSearch.dob !== undefined) {
+                vm.immunizationSearch.age.end = vm.immunizationSearch.age.start = undefined;
+            }
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/immunization/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/immunization/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/immunization');
+                        break;
+                }
+            });
+
+            /**
+             * Bottom Sheet controller for Immunization search
+             */
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new immunization', icon: 'immunization', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Immunization search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.activeServer = null;
+        vm.dereferenceLink = dereferenceLink;
+        vm.goToImmunization = goToImmunization;
+        vm.immunizations = [];
+        vm.selectedImmunization = null;
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'Immunizations';
+        vm.managingOrganization = undefined;
+        vm.practitioner = undefined;
+        vm.actions = actions;
+        vm.races = [];
+        vm.ethnicities = [];
+        vm.languages = [];
+        vm.detailSearch = detailSearch;
+        vm.isBusy = false;
+        vm.ageRangeChange = ageRangeChange;
+        vm.dobChange = dobChange;
+        vm.immunizationSearch = {
+            name: {first: undefined, last: undefined},
+            mothersMaidenName: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            telecom: undefined,
+            identifier: {system: undefined, value: undefined},
+            age: {start: undefined, end: undefined},
+            dob: undefined,
+            race: undefined,
+            gender: undefined,
+            ethnicity: undefined,
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
+        };
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.selectedTab = 0;
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'immunizationService', immunizationSearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'immunizationService';
+
+    function immunizationService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+        var dataCacheKey = 'localImmunizations';
+        var itemCacheKey = 'contextImmunization';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var $q = common.$q;
+
+        function addImmunization(resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/Immunization";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedImmunization(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                if (searchResults && searchResults.entry) {
+                    var cachedImmunizations = searchResults.entry;
+                    searchResults.entry = _.remove(cachedImmunizations, function (item) {
+                        return item.$$hashKey !== hashKey;
+                    });
+                    searchResults.totalResults = (searchResults.totalResults - 1);
+                    dataCache.addToCache(dataCacheKey, searchResults);
+                }
+                deferred.resolve();
+            }
+
+            var deferred = $q.defer();
+            deleteImmunization(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteImmunization(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getImmunizationEverything(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId + '/$everything')
+                .then(function (results) {
+                    var everything = {"immunization": null, "summary": [], "history": []};
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'AuditEvent');
+                    });
+                    everything.immunization = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'Immunization');
+                    })[0];
+                    everything.summary = results.data.entry;
+                    deferred.resolve(everything);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedImmunization(hashKey) {
+            function getImmunization(searchResults) {
+                var cachedImmunization;
+                var cachedImmunizations = searchResults.entry;
+                for (var i = 0, len = cachedImmunizations.length; i < len; i++) {
+                    if (cachedImmunizations[i].$$hashKey === hashKey) {
+                        cachedImmunization = cachedImmunizations[i].resource;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedImmunization.resourceId = (baseUrl + cachedImmunization.resourceType + '/' + cachedImmunization.id);
+                        cachedImmunization.hashKey = hashKey;
+                        break;
+                    }
+                }
+                if (cachedImmunization) {
+                    deferred.resolve(cachedImmunization);
+                } else {
+                    deferred.reject('Immunization not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            var activeServer;
+            getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
+                .then(getImmunization,
+                function () {
+                    deferred.reject('Immunization search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getImmunization(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (data) {
+                    dataCache.addToCache(dataCacheKey, data);
+                    deferred.resolve(data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getImmunizationContext() {
+            return dataCache.readFromCache(dataCacheKey);
+        }
+
+        function getImmunizationReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Immunization?name=' + input + '&_count=20')
+                .then(function (results) {
+                    var immunizations = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'Immunization') {
+                                    immunizations.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
+                    }
+                    if (immunizations.length === 0) {
+                        immunizations.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(immunizations);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchImmunizations(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/Immunization?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getImmunizations(baseUrl, searchFilter, organizationId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Immunization?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getImmunizationsByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewImmunization() {
+            return {
+                "resourceType": "Immunization",
+                "name": [],
+                "gender": undefined,
+                "birthDate": null,
+                "maritalStatus": undefined,
+                "multipleBirth": false,
+                "telecom": [],
+                "address": [],
+                "photo": [],
+                "communication": [],
+                "managingOrganization": null,
+                "careProvider": [],
+                "contact": [],
+                "link": [],
+                "extension": [],
+                "active": true
+            };
+        }
+
+        function setImmunizationContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updateImmunization(resourceVersionId, resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomImmunizations(organizationId, organizationName) {
+            var deferred = $q.defer();
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
+                .success(function (data) {
+                    angular.forEach(data.results, function (result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "Immunization",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": _randomBirthDate(),
+                            "contact": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": [{"url": user.picture.large}],
+                            "identifier": [
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "secondary",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:immunization",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
+                                }
+                            ],
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
+                            "link": [],
+                            "active": true,
+                            "extension": []
+                        };
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
+
+                        var timer = $timeout(function () {
+                        }, 3000);
+                        timer.then(function () {
+                            addImmunization(resource).then(function (results) {
+                                logInfo("Created immunization " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create immunization " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
+                    });
+                    deferred.resolve();
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/immunization-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
+        }
+
+        function _randomBirthDate() {
+            var start = new Date(1945, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        var allEthnicities = [];
+        var ethnicitySystem = '';
+
+        function _randomEthnicity() {
+            function prepEthnicities() {
+                var ethnicities = localValueSets.ethnicity();
+                ethnicitySystem = ethnicities.system;
+                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
+                    var mainConcept = ethnicities.concept[i];
+                    allEthnicities.push(mainConcept);
+                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
+                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
+                            var groupConcept = mainConcept.concept[j];
+                            allEthnicities.push(groupConcept);
+                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
+                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
+                                    var leafConcept = groupConcept.concept[k];
+                                    allEthnicities.push(leafConcept);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            if (allEthnicities.length === 0) {
+                prepEthnicities();
+            }
+            common.shuffle(allEthnicities);
+            var ethnicity = allEthnicities[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicitySystem,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.photo.length === 0) {
+                resource.photo = null;
+            }
+            if (resource.communication.length === 0) {
+                resource.communication = null;
+            }
+            if (resource.link.length === 0) {
+                resource.link = null;
+            }
+            if (angular.isDefined(resource.maritalStatus)) {
+                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
+                    resource.maritalStatus = null;
+                }
+            }
+            return $q.when(resource);
+        }
+
+        var service = {
+            addImmunization: addImmunization,
+            clearCache: clearCache,
+            deleteCachedImmunization: deleteCachedImmunization,
+            deleteImmunization: deleteImmunization,
+            getCachedImmunization: getCachedImmunization,
+            getCachedSearchResults: getCachedSearchResults,
+            getImmunization: getImmunization,
+            getImmunizationContext: getImmunizationContext,
+            getImmunizationReference: getImmunizationReference,
+            getImmunizations: getImmunizations,
+            getImmunizationsByLink: getImmunizationsByLink,
+            getImmunizationEverything: getImmunizationEverything,
+            initializeNewImmunization: initializeNewImmunization,
+            setImmunizationContext: setImmunizationContext,
+            updateImmunization: updateImmunization,
+            seedRandomImmunizations: seedRandomImmunizations,
+            searchImmunizations: searchImmunizations
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
+        immunizationService]);
+})
+();(function () {
     'use strict';
 
     var controllerId = 'consultationDetail';
@@ -10015,14 +13872,14 @@
                     this.items = [
                         {name: 'Add random patients', icon: 'groupAdd', index: 0},
                         {name: 'Get patients', icon: 'group', index: 1},
-                        {name: 'Quick find', icon: 'hospital', index: 3},
+                        {name: 'Quick find', icon: 'quickFind', index: 3},
                         {name: 'Edit organization', icon: 'edit', index: 4},
-                        {name: 'Add new organization', icon: 'add', index: 5}
+                        {name: 'Add new organization', icon: 'hospital', index: 5}
                     ];
                 } else {
                     this.items = [
                         {name: 'Detailed search', icon: 'search', index: 2},
-                        {name: 'Quick find', icon: 'hospital', index: 3}
+                        {name: 'Quick find', icon: 'quickFind', index: 3}
                     ];
                 }
                 this.title = 'Organization search options';
@@ -10211,9 +14068,9 @@
             });
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new organization', icon: 'add', index: 0},
+                    {name: 'Add new organization', icon: 'hospital', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
-                    {name: 'Quick find', icon: 'hospital', index: 2}
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
                 ];
                 this.title = 'Organization search options';
                 this.performAction = function (action) {
@@ -10934,6 +14791,9 @@
                         $location.path('/patient/edit/new');
                         break;
                     case 6:
+                        $location.path('/patient/detailed-search');
+                        break;
+                    case 7:
                         deletePatient(vm.patient);
                         break;
                 }
@@ -10944,13 +14804,14 @@
                         {name: 'Vitals', icon: 'vitals', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Refresh data', icon: 'refresh', index: 2},
-                        {name: 'Find another patient', icon: 'person', index: 3},
+                        {name: 'Find another patient', icon: 'search', index: 3},
                         {name: 'Edit patient', icon: 'edit', index: 4},
                         {name: 'Add new patient', icon: 'personAdd', index: 5}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Find another patient', icon: 'person', index: 3},
+                        {name: 'Detailed search', icon: 'search', index: 6},
+                        {name: 'Quick find', icon: 'quickFind', index: 3}
                     ];
                 }
                 this.title = 'Patient options';
@@ -11316,7 +15177,7 @@
                 this.items = [
                     {name: 'Add new patient', icon: 'personAdd', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
-                    {name: 'Quick find', icon: 'person', index: 2}
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
                 ];
                 this.title = 'Patient search options';
                 this.performAction = function (action) {
@@ -12686,18 +16547,17 @@
 
     var controllerId = 'practitionerSearch';
 
-    function practitionerSearch($location, $mdSidenav, common, config, fhirServers, practitionerService) {
+    function practitionerSearch($location, $mdBottomSheet, common, config, fhirServers, practitionerService) {
         /*jshint validthis:true */
         var vm = this;
 
         var getLogFn = common.logger.getLogFn;
-        var keyCodes = config.keyCodes;
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
 
         function activate() {
-            common.activateController([_getActiveServer(), _getCachedpractitioners()], controllerId)
+            common.activateController([_getActiveServer(), _getCachedPractitioners()], controllerId)
                 .then(function () {
 
                 }, function (error) {
@@ -12712,7 +16572,7 @@
                 });
         }
 
-        function _getCachedpractitioners() {
+        function _getCachedPractitioners() {
             practitionerService.getCachedSearchResults()
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' practitioners from cache', noToast);
@@ -12723,11 +16583,14 @@
                 .then(processSearchResults);
         }
 
-        function goTopractitioner(practitioner) {
+
+        function goToPractitioner(practitioner) {
             if (practitioner && practitioner.$$hashKey) {
                 $location.path('/practitionerReference/view/' + practitioner.$$hashKey);
             }
         }
+
+        vm.goToPractitioner = goToPractitioner;
 
         function processSearchResults(searchResults) {
             if (searchResults) {
@@ -12753,10 +16616,12 @@
                 });
         }
 
+        vm.dereferenceLink = dereferenceLink;
+
         function submit() {
             if (vm.searchText.length > 0) {
                 common.toggleProgressBar(true);
-                practitionerService.getpractitioners(vm.activeServer.baseUrl, vm.searchText)
+                practitionerService.getPractitioners(vm.activeServer.baseUrl, vm.searchText)
                     .then(function (data) {
                         logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' practitioners from ' + vm.activeServer.name);
                         return data;
@@ -12771,20 +16636,44 @@
             }
         }
 
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
+        vm.submit = submit;
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/practitioner/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/practitioner/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/practitioner');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new practitioner', icon: 'practitioner', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Practitioner search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
             }
         }
 
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
+        vm.actions = actions;
         vm.activeServer = null;
-        vm.keyPress = keyPress;
-        vm.goTopractitioner = goTopractitioner;
         vm.practitioners = [];
         vm.practitionersCount = 0;
         vm.paging = {
@@ -12792,19 +16681,15 @@
             totalResults: 0,
             links: null
         };
-        vm.dereferenceLink = dereferenceLink;
-        vm.submit = submit;
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'practitioners';
         vm.managingOrganization = undefined;
-        vm.toggleSideNav = toggleSideNav;
-
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'practitionerService', practitionerSearch]);
+        ['$location', '$mdBottomSheet', 'common', 'config', 'fhirServers', 'practitionerService', practitionerSearch]);
 })();
 (function () {
     'use strict';
@@ -14024,7 +17909,6 @@
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
-        var keyCodes = config.keyCodes;
         var noToast = false;
 
         function activate() {
@@ -14047,7 +17931,7 @@
         function _getCachedRelatedpersons() {
             relatedPersonService.getCachedSearchResults()
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' relatedPersons from cache', null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' related persons from cache', null, noToast);
                     return data;
                 }, function (message) {
                     logInfo(message, null, noToast);
@@ -14074,7 +17958,7 @@
                 toggleSpinner(true);
                 relatedPersonService.getRelatedpersons(vm.activeServer.baseUrl, vm.searchText)
                     .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' relatedPersons from ' + vm.activeServer.name);
+                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' related persons from ' + vm.activeServer.name);
                         return data;
                     }, function (error) {
                         logError('Error: ' + error);
@@ -14087,49 +17971,44 @@
             }
         }
 
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/relatedPerson/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/relatedPerson/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/relatedPerson');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new related person', icon: 'relatedPerson', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Related person search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
             }
         }
 
-        function toggleSpinner(on) {
-            vm.isBusy = on;
-        }
-
-        function relatedPersonSearchActionsMenu($event) {
-            var menuItems = [
-                {name: 'Add', icon: 'img/add184.svg'},
-                {name: 'Search', icon: 'img/search100.svg'},
-                {name: 'Clear', icon: 'img/clear5.svg'}
-            ];
-            $mdBottomSheet.show({
-                locals: {items: menuItems},
-                templateUrl: 'templates/bottomSheet.html',
-                controller: 'bottomSheetController',
-                targetEvent: $event
-            }).then(function (clickedItem) {
-                switch (clickedItem.name) {
-                    case 'Add':
-                        $location.path('/relatedPerson/edit/new');
-                        break;
-                    case 'Search':
-                        logInfo('TODO: implement Locate');
-                        break;
-                    case 'Clear':
-                        relatedPersonService.clearCache();
-                        vm.searchText = '';
-                        vm.relatedPersons = [];
-                        vm.paging = null;
-                        $location.path('/relatedPerson');
-                        logInfo('Search results cache cleared');
-                }
-            });
-        }
+        vm.actions = actions;
 
         vm.activeServer = null;
         vm.isBusy = false;
-        vm.keyPress = keyPress;
         vm.goToRelatedperson = goToRelatedperson;
         vm.relatedPersons = [];
         vm.paging = {
@@ -14140,8 +18019,7 @@
         vm.submit = submit;
         vm.searchResults = null;
         vm.searchText = '';
-        vm.title = 'Relatedperson';
-        vm.relatedPersonSearchActionsMenu = relatedPersonSearchActionsMenu;
+        vm.title = 'Related Person';
 
         activate();
     }

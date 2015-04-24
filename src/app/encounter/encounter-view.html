@@ -1,0 +1,234 @@
+<div ng-controller="encounterDetail as vm" layout="row" layout-wrap ng-cloak>
+    <div flex="25" hide-sm>
+        <img data-fs-img-person="vm.encounter.photo[0]" class="largeFace" ng-if="vm.isBusy === false"/>
+    </div>
+    <div flex="65" layout="row" layout-align="start center">
+        <h3 ng-if="vm.isBusy === false">{{ vm.encounter.name | fullName }}</h3>
+    </div>
+    <div flex="10">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100" ng-if="vm.isBusy === true" layout="row" layout-align="center center">
+        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+    </div>
+    <div flex="100" ng-if="vm.isBusy === false">
+        <md-tabs md-selected="selectedIndex">
+            <md-tab label="Administration Detail">
+                <div flex="100" class="table-responsive-vertical shadow-z-1">
+                    <table id="encounterView" class="table table-hover table-mc-blue">
+                        <tr ng-if="vm.encounter.resourceId">
+                            <td>Resource Id</td>
+                            <td>
+                                {{vm.encounter.resourceId}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.name">
+                            <td>Name</td>
+                            <td>{{vm.encounter.name | fullName }}</td>
+                        </tr>
+                        <tr ng-if="vm.encounter.birthDate">
+                            <td>Date of Birth</td>
+                            <td>
+                                {{vm.encounter.birthDate | date: longDate}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.birthPlace">
+                            <td>Birth Place</td>
+                            <td>
+                                {{vm.encounter.birthPlace | singleLineAddress}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.gender">
+                            <td>Gender</td>
+                            <td>
+                                {{vm.encounter.gender}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.address">
+                            <td>Address</td>
+                            <td>
+                                <p class="small" ng-repeat="a in vm.encounter.address">
+                                    <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.telecom">
+                            <td>Telecommunication</td>
+                            <td>
+                                <p class="small" ng-repeat="t in vm.encounter.telecom">
+                                    <strong>{{t.use}} {{t.system}}</strong>: {{t.value}}
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.contact">
+                            <td>Contact</td>
+                            <td>
+                                <p class="small" ng-repeat="c in vm.encounter.contact">
+                                    {{c.name.given.join(' ')}} {{c.name.family.join(' ')}}
+                                    ({{c.relationship.text || "relationship unspecified"}})
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.link">
+                            <td>Links</td>
+                            <td>
+                                <div ng-repeat="l in vm.encounter.link">
+                                    <a href="{{l.other.reference}}">{{l.other.type || "Link Type Unspecified"}}</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.communication">
+                            <td>Languages</td>
+                            <td>
+                                <div ng-if="vm.encounter.communication">
+                                    <p class="small" ng-repeat="l in vm.encounter.communication">
+                                        {{l.language | codeableConcept}}<br/>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.ethnicity">
+                            <td>Ethnicity</td>
+                            <td>
+                                {{vm.encounter.ethnicity | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.race">
+                            <td>Race</td>
+                            <td>
+                                {{vm.encounter.race | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.religion">
+                            <td>Religion</td>
+                            <td>
+                                {{vm.encounter.religion | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.maritalStatus">
+                            <td>Marital Status</td>
+                            <td>
+                                {{vm.encounter.maritalStatus | codeableConcept}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.mothersMaidenName">
+                            <td>Mother's Maiden Name</td>
+                            <td>
+                                {{vm.encounter.mothersMaidenName}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.multipleBirthInteger || vm.encounter.multipleBirthBoolean">
+                            <td>Multiple Birth</td>
+                            <td>
+                                {{vm.encounter.multipleBirthInteger || vm.encounter.multipleBirthBoolean}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.deceasedDateTime || vm.encounter.deceasedBoolean">
+                            <td>Deceased</td>
+                            <td>
+                                {{vm.encounter.deceasedDateTime || vm.encounter.deceasedBoolean}}
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.managingOrganization">
+                            <td>Managing Organization</td>
+                            <td>
+                                <a ng-href="#/organization/get/{{vm.encounter.managingOrganization.reference | idFromURL }}">{{vm.encounter.managingOrganization.display}}</a>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.careProvider">
+                            <td>Care Provider</td>
+                            <td>
+                                <p ng-repeat="cp in vm.encounter.careProvider">
+                                    <a ng-href="#/practitioner/get/{{cp.reference | idFromURL }}">{{cp.display}}</a>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr ng-show="vm.encounter.identifier">
+                            <td>Identifiers</td>
+                            <td>
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>System</th>
+                                        <th>Value</th>
+                                        <th>Use</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="id in vm.encounter.identifier">
+                                        <td>{{id.system}}</td>
+                                        <td>{{id.value}}</td>
+                                        <td>{{id.use}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr ng-if="vm.encounter.active">
+                            <td>Active</td>
+                            <td>
+                                {{vm.encounter.active}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </md-tab>
+            <md-tab label="Clinical Summary">
+                <md-list>
+                    <md-item ng-repeat="item in vm.summary">
+                        <md-item-content md-is-locked-open="true">
+                            <div class="md-tile-left">
+                                <md-button layout-align="start start"
+                                           ng-click="vm.showClinicalData($index, $event)"
+                                           aria-label="{{item.resource.id}}">
+                                    <md-icon md-svg-src="view"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <div ng-hide="item.resource.code && item.resource.code.text">
+                                    <h4>{{ item.resource.resourceType }}</h4>
+                                </div>
+                                <div ng-show="item.resource.code && item.resource.code.text">
+                                    <h4>{{ item.resource.code.text }}</h4>
+                                </div>
+                                <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
+                                </div>
+                                <div ng-show="item.resource.emptyReason.text">
+                                    <p> {{ item.resource.emptyReason.text }}</p>
+                                </div>
+                                <div ng-show="item.resource.appliesDateTime">
+                                    <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
+                                </div>
+                            </div>
+                        </md-item-content>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-item>
+                </md-list>
+            </md-tab>
+            <md-tab label="Audit History">
+                <md-list>
+                    <md-item ng-repeat="ev in vm.history">
+                        <md-item-content>
+                            <div class="md-tile-left">
+                                <md-button
+                                        ng-click="vm.showAuditData($index, $event)"
+                                        aria-label="{{ev.resource.id}}">
+                                    <md-icon md-svg-src="view"></md-icon>
+                                </md-button>
+                            </div>
+                            <div class="md-tile-content">
+                                <h3>{{ev.resource.event.dateTime | date: 'medium'}}</h3>
+                                <h4>{{ev.resource.event.subtype[0].coding[0].display}}</h4>
+
+                                <p ng-repeat="p in ev.resource.participant">{{p.name}}
+                            </div>
+                        </md-item-content>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-item>
+                </md-list>
+            </md-tab>
+        </md-tabs>
+    </div>
+</div>
