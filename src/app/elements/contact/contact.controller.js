@@ -3,12 +3,14 @@
 
     var controllerId = 'contact';
 
-    function contact(common, contactService, localValueSets) {
+    function contact(addressService, common, contactService, localValueSets) {
         /* jshint validthis:true */
         var vm = this;
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var $q = common.$q;
 
-        function activate() {
-            common.activateController([getContacts(), getContactTypes()], controllerId).then(function () {
+        function _activate() {
+            common.activateController([_getContacts(), _getContactTypes()], controllerId).then(function () {
                 // nothing yet
             });
         }
@@ -17,20 +19,32 @@
             if (form.$valid) {
                 contactService.add(item);
                 vm.contacts = contactService.getAll();
-                vm.contact =  {};
+                vm.contact = {};
                 form.$setPristine();
             }
         }
 
-        function editListItem(item) {
-            vm.contact = item;
+        vm.addToList = addToList;
+
+        function getLocation(input) {
+            var deferred = $q.defer();
+            addressService.searchGoogle(input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(error);
+                    deferred.reject();
+                });
+            return deferred.promise;
         }
 
-        function getContacts() {
+        vm.getLocation = getLocation;
+
+        function _getContacts() {
             vm.contacts = contactService.getAll();
         }
 
-        function getContactTypes() {
+        function _getContactTypes() {
             vm.contactTypes = localValueSets.contactEntityType();
         }
 
@@ -39,19 +53,15 @@
             vm.contacts = contactService.getAll();
         }
 
-        function reset(form) {
-            vm.contact = {};
-            form.$setPristine();
-        }
-        vm.addToList = addToList;
-        vm.editListItem = editListItem;
-        vm.contact = { purpose: { coding: []}};
-        vm.contacts = [];
         vm.removeListItem = removeListItem;
-        vm.reset = reset;
 
-        activate();
+        vm.contact = {purpose: {coding: []}};
+        vm.contacts = [];
+        vm.addressSearchText = '';
+
+        _activate();
     }
-    angular.module('FHIRCloud').controller(controllerId, ['common', 'contactService', 'localValueSets', contact]);
+
+    angular.module('FHIRCloud').controller(controllerId, ['addressService', 'common', 'contactService', 'localValueSets', contact]);
 
 })();

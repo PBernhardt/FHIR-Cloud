@@ -1,46 +1,56 @@
 <div ng-controller="contactPoint as vm">
     <md-content class="md-padding">
         <ng-form name="contactPointEditForm"
-                      ng-model="vm.contactPoint">
+                 ng-model="vm.contactPoint">
 
 
-
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Email</label>
+                <md-icon md-svg-icon="email"></md-icon>
                 <input type="email"
                        ng-model="vm.contactPoint.email"/>
             </md-input-container>
 
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Phone</label>
+                <md-icon md-svg-icon="phone"></md-icon>
                 <input type="text"
                        ng-model="vm.contactPoint.phone"/>
             </md-input-container>
 
 
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Fax</label>
+                <md-icon md-svg-icon="fax"></md-icon>
                 <input type="text"
                        ng-model="vm.contactPoint.fax"/>
             </md-input-container>
 
 
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Website</label>
+                <md-icon md-svg-icon="web"></md-icon>
                 <input type="url"
                        ng-model="vm.contactPoint.url"/>
             </md-input-container>
 
             <div ng-if="vm.contactPoint.use === 'old'">
-                <h4>Period of former contact point</h4>
-                <label>Start</label>
-                <input
-                        type="date"
-                        ng-model="vm.contactPoint.period.start">
-                <label>End</label>
-                <input
-                        type="date"
-                        ng-model="vm.contactPoint.period.end">
+                <h4 class="md-subhead">Period of former contact point</h4>
+
+                <div layout="row" layout-sm="column" layout-align="space-around center">
+                    <md-input-container>
+                        <label>Start</label>
+                        <input
+                                type="date"
+                                ng-model="vm.contactPoint.period.start">
+                    </md-input-container>
+                    <md-input-container>
+                        <label>End</label>
+                        <input
+                                type="date"
+                                ng-model="vm.contactPoint.period.end">
+                    </md-input-container>
+                </div>
             </div>
 
             <md-radio-group ng-model="vm.contactPoint.use" layout-gt-md="row">
@@ -52,39 +62,26 @@
             </md-radio-group>
 
             <div class="md-padding">
-                <md-button ng-click="vm.addToList(contactPointEditForm, vm.contactPoint)" aria-label="Save contact point to list">
-                    <md-icon md-svg-icon="list" alt="Save to contact list"></md-icon>
+                <md-button ng-click="vm.addToList(contactPointEditForm, vm.contactPoint)"
+                           aria-label="Save contact point to list">
+                    <md-icon md-svg-icon="listAdd" alt="Save to contact list"></md-icon>
                 </md-button>
             </div>
-        </ng-form>
-        <div>
-            <div ng-if="vm.contactPoints.length > 0">
-                <form>
-                    <section>
-                        <md-subheader>Contact Point List</md-subheader>
-                        <md-list>
-                            <md-item ng-repeat="cp in vm.contactPoints">
-                                <md-item-content>
-                                    <div class="md-tile-left">
-                                        <md-button ng-click="vm.removeListItem(cp)" aria-label="Remove from list">
-                                            <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
-                                        </md-button>
-                                    </div>
-                                    <div class="md-tile-content">
-                                        <h3>{{::cp.value}}</h3>
-                                        <h4>{{::cp.use}} {{::cp.system}}</h4>
 
-                                        <p ng-if="cp.period">
-                                            {{::cp.period | periodText}}
-                                        </p>
-                                    </div>
-                                </md-item-content>
-                            </md-item>
-                        </md-list>
-                    </section>
-                </form>
+            <div ng-if="vm.contactPoints.length > 0">
+                <md-subheader>Contact Point List</md-subheader>
+                <md-list>
+                    <md-list-item ng-click="vm.removeListItem(cp)" ng-repeat="cp in vm.contactPoints">
+                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                        <p>{{::cp.value}} - {{::cp.use}} {{::cp.system}}</p>
+
+                        <p ng-if="cp.period">
+                            {{::cp.period | periodText}}
+                        </p>
+                    </md-list-item>
+                </md-list>
             </div>
-        </div>
+        </ng-form>
     </md-content>
 </div>
 

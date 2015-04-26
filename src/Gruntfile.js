@@ -223,6 +223,26 @@ module.exports = function (grunt) {
             }
         },
 
+        copy: {
+            files: {
+                expand: true,
+                cwd: 'app/lib/',
+                src: [
+                    '**/angular-*.min.css',
+                    '**/angular-*.min.js',
+                    '**/angular-*.min.js.map',
+                    '**/angular-csp.css',
+                    '**/lodash.min.js',
+                    '**/moment.min.js',
+                    '**/jquery.min.js',
+                    '**/jquery.min.js.map'
+                ],
+                dest: 'app/assets/lib/',
+                flatten: true,
+                filter: 'isFile'
+            }
+        },
+
         karma: {
             unit: {
                 configFile: './test/karma-unit.conf.js',
@@ -246,7 +266,7 @@ module.exports = function (grunt) {
                     type: 'html',
                     dir: 'coverage/'
                 }
-            },
+            }
         }
     });
 
@@ -269,7 +289,7 @@ module.exports = function (grunt) {
     grunt.registerTask('update', ['shell:npm_install', 'concat']);
 
     //defaults
-    grunt.registerTask('default', ['dev']);
+    grunt.registerTask('default', ['copy']);
 
     //development
     grunt.registerTask('dev', ['update', 'connect:devserver', 'open:devserver', 'watch:assets']);

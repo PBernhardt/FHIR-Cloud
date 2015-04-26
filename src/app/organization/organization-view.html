@@ -9,98 +9,80 @@
             </md-button>
         </div>
 
-        <div flex="100" class="table-responsive-vertical shadow-z-1" ng-if="vm.organization">
-            <table id="orgView" class="table table-hover table-mc-blue">
-                <tr ng-if="vm.organization.resourceId">
-                    <td>Resource Id</td>
-                    <td>
-                        {{vm.organization.resourceId}}
-                    </td>
-                </tr>
-                <tr ng-if="vm.organization.type && vm.organization.type.coding[0]">
-                    <td>Type</td>
-                    <td>{{vm.organization.type.coding[0].display}}</td>
-                </tr>
-                <tr ng-if="vm.organization.address">
-                    <td>Addresses</td>
-                    <td>
-                        <p ng-repeat="a in vm.organization.address">
-                            {{ a | singleLineAddress }}
-                        </p>
-                    </td>
-                </tr>
-                <tr ng-if="vm.organization.telecom">
-                    <td>Communication</td>
-                    <td>
-                        <p ng-repeat="t in vm.organization.telecom">
-                            <strong>{{t.system || "unspecified"}}</strong>:&nbsp;{{t.value}}
-                        </p>
-                    </td>
-                </tr>
-                <tr ng-if="vm.organization.contact">
-                    <td>Administrative Contacts</td>
-                    <td>
-                        <table ng-repeat="ac in vm.organization.contact" class="table table-hover table-mc-light-blue">
-                            <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Address</th>
-                                <th>Telecom</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>
-                                    {{ac.name.given.join(' ')}}
-                                    {{ac.name.family.join(' ')}}
-                                </td>
-                                <td>
-                                    {{ac.address.line.join(', ')}},
-                                    {{ac.address.city}},
-                                    {{ac.address.state}}
-                                    {{ac.address.zip}}
-                                    {{ac.address.country}}
-                                </td>
-                                <td>
-                                    <p ng-repeat="ct in ac.telecom">
-                                        <strong>{{ct.use}} {{ct.system}}</strong>: {{ct.value}}
-                                    </p>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr ng-if="vm.organization.partOf">
-                    <td>Parent Organization</td>
-                    <td>
-                        <a ng-href="#/organization/get/{{vm.organization.partOf.reference | idFromURL }}">{{vm.organization.partOf.display}}</a>
-                    </td>
-                </tr>
-                <tr ng-if="vm.organization.identifier">
-                    <td>Identifiers</td>
-                    <td>
-                        <table ng-show="vm.organization.identifier" class="table table-hover table-mc-light-blue">
-                            <thead>
-                            <tr>
-                                <th>System</th>
-                                <th>Value</th>
-                                <th>Use</th>
-                            </tr>
-                            </thead>
-                            <tr ng-repeat="id in vm.organization.identifier">
-                                <td>{{id.system}}</td>
-                                <td>{{id.value}}</td>
-                                <td>{{id.use}}</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr ng-if="vm.organization.active">
-                    <td>Active</td>
-                    <td>{{vm.organization.active}}</td>
-                </tr>
-            </table>
+        <div flex="100" layout="row" layout-sm="column" layout-align="space-between start" ng-if="vm.organization"
+             layout-wrap>
+            <md-input-container flex="70" class="md-icon-float" ng-if="vm.organization.resourceId">
+                <label>Resource Id</label>
+                <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
+                <input ng-model="vm.organization.resourceId" readonly/>
+            </md-input-container>
+
+            <md-input-container flex="25" ng-if="vm.organization.type && vm.organization.type.coding[0]">
+                <label>Type</label>
+                <input ng-model="vm.organization.type.coding[0].display" readonly/>
+            </md-input-container>
+
+
+            <md-input-container flex="20" ng-if="vm.organization.active">
+                <label>Active</label>
+                <input ng-model="vm.organization.active" readonly/>
+            </md-input-container>
+
+            <md-input-container flex="60" class="md-icon-float" ng-if="vm.organization.partOf">
+                <label>Parent Organization</label>
+                 <md-icon md-svg-icon="hospital" ng-click="vm.goToPartOf(vm.organization.partOf)"></md-icon>
+                <input ng-model="vm.organization.partOf.display" readonly/>
+            </md-input-container>
+
+            <md-list flex="100" ng-if="vm.organization.address">
+                <md-subheader class="md-no-sticky">Addresses</md-subheader>
+                <md-list-item class="md-2-line" ng-repeat="a in vm.organization.address">
+                    <md-icon md-svg-icon="address" ng-if="$index === 0"></md-icon>
+                    <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                        <h3> {{ a | singleLineAddress }} </h3>
+
+                        <p>{{a.use}}</p>
+                    </div>
+                </md-list-item>
+            </md-list>
+
+            <md-list flex="100" ng-if="vm.organization.telecom">
+                <md-subheader class="md-no-sticky">Telecommunications</md-subheader>
+                <md-list-item class="md-2-line" ng-repeat="t in vm.organization.telecom">
+                    <md-icon md-svg-icon="telecom" ng-if="$index === 0"></md-icon>
+                    <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                        <h3>{{ t.value }} </h3>
+
+                        <p>{{t.use}} {{t.system || "unspecified"}}</p>
+                    </div>
+                </md-list-item>
+            </md-list>
+
+            <md-list flex="100" ng-if="vm.organization.contact">
+                <md-subheader class="md-no-sticky">Contacts</md-subheader>
+                <md-list-item class="md-3-line" ng-repeat="ac in vm.organization.contact">
+                    <md-icon md-svg-icon="contacts" ng-if="$index === 0"></md-icon>
+                    <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                        <h3>{{ac.name | fullName}}</h3>
+
+                        <p ng-if="ac.purpose">{{ac.purpose.coding[0].display}}</p>
+                    </div>
+                </md-list-item>
+            </md-list>
+            <md-divider ng-if="vm.organization.contact"></md-divider>
+
+            <md-list flex="100" ng-if="vm.organization.identifier">
+                <md-subheader class="md-no-sticky">Identifiers</md-subheader>
+                <md-list-item class="md-2-line" ng-repeat="id in vm.organization.identifier">
+                    <md-icon md-svg-icon="identifier" ng-if="$index === 0"></md-icon>
+                    <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                        <h3>{{id.system}} | {{id.value }} </h3>
+
+                        <p>{{id.use}}</p>
+                    </div>
+                </md-list-item>
+            </md-list>
+
         </div>
     </div>
 </div>

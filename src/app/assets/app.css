@@ -1,23 +1,6 @@
-html, body {
-    font-family: 'Roboto', sans-serif;
-    font-size: 14px;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-y: hidden;
-}
-
 p.result {
     font-size: 0.8em;
     color: #777;
-}
-
-.hidden-thing {
-    position: absolute;
-    left: 100%;
-    width: 50px;
-    height: 50px;
-    opacity: 0;
 }
 
 /* Toolbar area */
@@ -116,58 +99,7 @@ md-sidenav md-list {
     padding-top: 5px;
 }
 
-#content .md-button.actions {
-    background-color: transparent;
-    border: none;
-    width: 48px;
-    height: 48px;
-    margin: 8px auto 16px 0;
-    position: absolute;
-    top: 10px;
-    right: 25px;
-}
-
-#content md-icon.avatar {
-    margin-top: 10px;
-}
-
-#content .md-button.actions > md-icon {
-    fill: black;
-    width: 36px;
-    height: 36px;
-}
-
-md-button.menuBtn > md-icon {
-    fill: white;
-    width: 24px;
-    height: 24px;
-}
-
-#content .md-button.actions:active > md-icon {
-    background-color: #dadada;
-    border-radius: 75%;
-    padding: 4px;
-    transition: all 100ms ease-out 30ms;
-}
-
-#content img {
-    display: block;
-    height: auto;
-    max-width: 500px;
-}
-
 /* Utils */
-
-.content-wrapper {
-    position: relative;
-}
-
-/* Typography support coming in 0.8.0 */
-
-md-toolbar h1 {
-    font-size: 1.250em;
-    font-weight: 400;
-}
 
 .avatar {
     position: relative;
@@ -185,16 +117,6 @@ md-toolbar h1 {
     -moz-transform: scale(0.70);
 }
 
-md-bottom-sheet md-icon {
-    margin-right: 20px;
-}
-
-span.name {
-    font-weight: bold;
-    font-size: 1.1em;
-    padding-left: 5px;
-}
-
 .face {
     border-radius: 30px;
     border: 1px solid #ddd;
@@ -209,26 +131,6 @@ span.name {
     margin: 16px;
 }
 
-.animate-show {
-    line-height: 20px;
-    opacity: 1;
-    padding: 10px;
-    border: 1px solid black;
-    background: white;
-}
-
-.animate-show.ng-hide-add.ng-hide-add-active,
-.animate-show.ng-hide-remove.ng-hide-remove-active {
-    -webkit-transition: all linear 0.5s;
-    transition: all linear 0.5s;
-}
-
-.animate-show.ng-hide {
-    line-height: 0;
-    opacity: 0;
-    padding: 0 10px;
-}
-
 .smart-container {
     position: relative;
     padding-bottom: 56.25%;
@@ -237,30 +139,3 @@ span.name {
     overflow: hidden;
 }
 
-md-dialog md-content.sticky-container {
-    padding: 0;
-}
-
-md-dialog md-content.sticky-container .dialog-content {
-    padding: 0 24px 24px;
-}
-
-md-dialog md-subheader {
-    background-color: #c0a16b;
-    margin: 0;
-}
-
-h2 .md-subheader.md-sticky-clone {
-    margin-right: 0;
-    margin-top: 0;
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16);
-}
-
-h2 .md-subheader-content {
-    padding-left: 10px;
-}
-
-h2 .md-subheader.md-default-theme {
-    background-color: #c0a16b;
-    margin: 0;
-}

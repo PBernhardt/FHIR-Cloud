@@ -10,6 +10,6 @@
         'ngMessages',
         'ngCookies',
         'common',
-        'ui.bootstrap'
+        //'ui.bootstrap'
     ]);
 })();

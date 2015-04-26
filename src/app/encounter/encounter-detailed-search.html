@@ -12,158 +12,188 @@
             <md-tab label="Search Options">
                 <md-content class="md-padding">
                     <form name="encounterSearch">
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
-                                <label>First Name</label>
-                                <input ng-model="vm.encounterSearch.name.given">
+                        <div layout="row" layout-sm="column" layout-align="space-between center" layout-wrap>
+                            <md-input-container flex="15">
+                                <label>Start Date</label>
+                                <input ng-model="vm.encounterSearch.period.start" type="date">
                             </md-input-container>
-                            <md-input-container flex>
-                                <label>Last Name</label>
-                                <input ng-model="vm.encounterSearch.name.family">
+                            <md-input-container flex="15">
+                                <label>End Date</label>
+                                <input ng-model="vm.encounterSearch.period.end" type="date">
                             </md-input-container>
-                        </div>
+                            <md-input-container flex="20">
+                                <label>Length in Days</label>
+                                <input ng-model="vm.encounterSearch.length" type="number" min="1">
+                            </md-input-container>
 
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
-                                <label>Identifier system</label>
-                                <input ng-model="vm.encounterSearch.identifier.system"
-                                       placeholder="Should be a valid URI">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>Identifier value</label>
-                                <input ng-model="vm.encounterSearch.identifier.value">
-                            </md-input-container>
-                        </div>
-
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
-                                <label>Managing Organization</label>
-                                <input ng-model="vm.encounterSearch.organization"
-                                       placeholder="Id of organization">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>Care Provider</label>
-                                <input ng-model="vm.encounterSearch.careProvider"
-                                        placeholder="Id of practitioner">
-                            </md-input-container>
-                        </div>
-
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
-                                <label>Street address</label>
-                                <input ng-model="vm.encounterSearch.address.street">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>City</label>
-                                <input ng-model="vm.encounterSearch.address.city">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>State</label>
-                                <input ng-model="vm.encounterSearch.address.state">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>Postal code</label>
-                                <input ng-model="vm.encounterSearch.address.postalCode">
-                            </md-input-container>
-                        </div>
-
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
-                                <label>Mother's maiden name</label>
-                                <input ng-model="vm.encounterSearch.mothersMaidenName">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>Telephone or Email Address</label>
-                                <input ng-model="vm.encounterSearch.telecom">
-                            </md-input-container>
-                        </div>
-
-                        <div layout layout-sm="column">
-                            <div>
-                                <md-input-container flex>
-                                    <label>Birth date</label>
-                                    <input ng-model="vm.encounterSearch.dob" id="dob" type="date"
-                                           data-ng-change="vm.dobChange()">
-                                </md-input-container>
+                            <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                                <md-select ng-model="vm.encounterSearch.status" style="min-width: 100px;">
+                                    <md-option value="planned">Planned</md-option>
+                                    <md-option value="arrived">Arrived</md-option>
+                                    <md-option value="in-progress">In Progress</md-option>
+                                    <md-option value="onleave">On Leave</md-option>
+                                    <md-option value="finished">Finished</md-option>
+                                    <md-option value="cancelled">Cancelled</md-option>
+                                </md-select>
+                                <p class="result">Status</p>
                             </div>
-                            <div flex>
-                                <div layout="row" layout-align="space-around center">
-                                    <md-input-container>
-                                        <label>Starting Age</label>
-                                        <input type="number" min="0" max="99" ng-model="vm.encounterSearch.age.start"
-                                               min="0"
-                                               aria-controls="age-start"
-                                               style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.encounterSearch.dob">
-
-                                    </md-input-container>
-                                    <md-slider flex class="md-primary" min="0" max="99"
-                                               ng-model="vm.encounterSearch.age.start" aria-label="Starting age"
-                                               id="age-start" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.encounterSearch.dob">
-                                    </md-slider>
-                                </div>
-                                <div layout="row" layout-align="space-around center">
-                                    <md-input-container>
-                                        <label>Ending Age</label>
-                                        <input type="number" min="0" max="99" ng-model="vm.encounterSearch.age.end"
-                                               min="1"
-                                               aria-controls="age-end"
-                                               style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.encounterSearch.dob">
-                                    </md-input-container>
-                                    <md-slider flex min="0" max="99" ng-model="vm.encounterSearch.age.end"
-                                               aria-label="Ending age"
-                                               id="age-end" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.encounterSearch.dob">
-                                    </md-slider>
-                                </div>
+                            <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                                <md-select ng-model="vm.encounterSearch.type" style="min-width: 100px;">
+                                    <md-option value="planned">Planned</md-option>
+                                    <md-option value="arrived">Arrived</md-option>
+                                    <md-option value="in-progress">In Progress</md-option>
+                                    <md-option value="onleave">On Leave</md-option>
+                                    <md-option value="finished">Finished</md-option>
+                                    <md-option value="cancelled">Cancelled</md-option>
+                                </md-select>
+                                <p class="result">Type</p>
                             </div>
-                        </div>
 
-                        <div layout-gt-md="row" layout-align="space-between center">
-                            <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.encounterSearch.gender" style="min-width: 100px;">
+                            <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                                <md-select ng-model="vm.encounterSearch.reason" style="min-width: 100px;">
+                                    <md-option value="planned">Planned</md-option>
+                                    <md-option value="arrived">Arrived</md-option>
+                                    <md-option value="in-progress">In Progress</md-option>
+                                    <md-option value="onleave">On Leave</md-option>
+                                    <md-option value="finished">Finished</md-option>
+                                    <md-option value="cancelled">Cancelled</md-option>
+                                </md-select>
+                                <p class="result">Reason</p>
+                            </div>
+
+                            <div layout="column" layout-align="center center" style="height: 100px;" flex="25">
+                                <md-select ng-model="vm.encounterSearch.specialArrangement" style="min-width: 100px;">
                                     <md-option value="female">Female</md-option>
                                     <md-option value="male">Male</md-option>
                                     <md-option value="other">Other</md-option>
                                     <md-option value="unknown">Unknown</md-option>
                                 </md-select>
-                                <p class="result">Gender</p>
+                                <p class="result">Special Arrangement</p>
                             </div>
 
-                            <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.encounterSearch.language">
-                                    <md-option ng-value="language" ng-repeat="language in vm.languages">
-                                        {{language.display}}
-                                    </md-option>
-                                </md-select>
-                                <p class="result">Language</p>
-                            </div>
+                            <md-autocomplete flex="30"
+                                             md-selected-item="vm.encounterSearch.patient"
+                                             md-search-text="vm.searchPatientText"
+                                             md-items="pt in vm.getPatientReference(vm.searchPatientText)"
+                                             md-delay="200"
+                                             md-item-text="pt.display"
+                                             md-min-length="3"
+                                             placeholder="Search by the patient?">
+                                <span md-highlight-text="vm.searchPatientText">{{pt.display}}</span>
+                            </md-autocomplete>
+                            <md-autocomplete flex="30"
+                                             md-selected-item="vm.encounterSearch.practitioner"
+                                             md-search-text="vm.searchCareProviderText"
+                                             md-items="dr in vm.getPractitionerReference(vm.searchCareProviderText)"
+                                             md-delay="200"
+                                             md-item-text="dr.display"
+                                             md-min-length="3"
+                                             placeholder="Search by the care provider?">
+                                <span md-highlight-text="vm.searchCareProviderText">{{dr.display}}</span>
+                            </md-autocomplete>
 
-                            <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.encounterSearch.race">
-                                    <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
-                                </md-select>
-                                <p class="result">Race</p>
-                            </div>
-                            <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.encounterSearch.ethnicity"
-                                           style="min-width: 200px;">
-                                    <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
-                                        <md-option ng-value="main">{{main.display}}</md-option>
-                                        <md-optgroup ng-value="group" ng-repeat="group in main.concept">
-                                            {{group.display}}
-                                            <md-option ng-value="group">{{group.display}}</md-option>
-                                            <md-option ng-value="class" ng-repeat="class in group.concept">
-                                                {{class.display}}
-                                            </md-option>
-                                        </md-optgroup>
-                                    </md-optgroup>
-                                </md-select>
-                                <p class="result">Ethnicity</p>
+                            <md-input-container flex="30">
+                                <label>Appointment Fulfilled</label>
+                                <input ng-model="vm.encounterSearch.fulfills"
+                                       placeholder="Reference to related appointment">
+                            </md-input-container>
+
+                            <md-input-container flex="30">
+                                <label>Episode of Care</label>
+                                <input ng-model="vm.encounterSearch.episodeOfCare"
+                                       placeholder="Reference to episode of care">
+                            </md-input-container>
+                            <md-input-container flex="30">
+                                <label>Incoming Referral</label>
+                                <input ng-model="vm.encounterSearch.incomingReferral"
+                                       placeholder="Reference to referral request">
+                            </md-input-container>
+
+                            <md-input-container flex="30">
+                                <label>Related Encounter</label>
+                                <input ng-model="vm.encounterSearch.partOf"
+                                       placeholder="Reference to related encounter">
+                            </md-input-container>
+
+                            <md-input-container flex="30">
+                                <label>Indication</label>
+                                <input ng-model="vm.encounterSearch.indication"
+                                       placeholder="Reference to observation">
+                            </md-input-container>
+                        </div>
+
+                        <label flex="100">Location</label>
+
+                        <div layout="row" layout-sm="column" layout-align="space-between center">
+                            <md-autocomplete flex="50"
+                                             md-selected-item="vm.encounterSearch.location"
+                                             md-search-text="vm.searchLocationText"
+                                             md-items="loc in vm.getLocationReference(vm.searchLocationText)"
+                                             md-delay="200"
+                                             md-item-text="loc.display"
+                                             md-min-length="3"
+                                             placeholder="Search by the location of encounter?">
+                                <span md-highlight-text="vm.searchLocationText">{{loc.display}}</span>
+                            </md-autocomplete>
+
+                            <md-input-container flex="20">
+                                <label>Location Start Date</label>
+                                <input ng-model="vm.encounterSearch.location.period.start" type="date">
+                            </md-input-container>
+                            <md-input-container flex="20">
+                                <label>Location End Date</label>
+                                <input ng-model="vm.encounterSearch.location.period.end" type="date">
+                            </md-input-container>
+                        </div>
+
+                        <label flex="100">Participants</label>
+
+                        <div layout="row" layout-sm="column" layout-align="space-between center">
+                            <md-autocomplete flex="30"
+                                             md-selected-item="vm.organizationSearch.participant.practitioner"
+                                             md-search-text="vm.searchParticipantPractitionerText"
+                                             md-items="dr in vm.getPractitionerReference(vm.searchParticipantPractitionerText)"
+                                             md-delay="200"
+                                             md-item-text="dr.display"
+                                             md-min-length="3"
+                                             placeholder="Search by a practitioner participant?">
+                                <span md-highlight-text="vm.searchParticipantPractitionerText">{{dr.display}}</span>
+                            </md-autocomplete>
+
+                            <md-autocomplete flex="30"
+                                             md-selected-item="vm.organizationSearch.participant.relatedPerson"
+                                             md-search-text="vm.searchParticipantRelatedPersonText"
+                                             md-items="rp in vm.getRelatedPersonReference(vm.searchParticipantRelatedPersonText)"
+                                             md-delay="200"
+                                             md-item-text="rp.display"
+                                             md-min-length="3"
+                                             placeholder="Search by a related person participant?">
+                                <span md-highlight-text="vm.searchParticipantRelatedPersonText">{{rp.display}}</span>
+                            </md-autocomplete>
+                            <div flex="30">
+                                <div layout="column" layout-align="center center" style="height: 100px;">
+                                    <md-select ng-model="vm.encounterSearch.participantType">
+                                        <md-option ng-value="language" ng-repeat="pt in vm.participantType">
+                                            {{pt.display}}
+                                        </md-option>
+                                    </md-select>
+                                    <p class="result">Participant Type</p>
+                                </div>
                             </div>
                         </div>
+
+                        <div layout layout-sm="column" layout-align="space-between center" flex="40">
+                            <md-input-container flex="40">
+                                <label>Identifier system</label>
+                                <input ng-model="vm.encounterSearch.identifier.system"
+                                       placeholder="Should be a valid URI">
+                            </md-input-container>
+                            <md-input-container flex="40">
+                                <label>Identifier value</label>
+                                <input ng-model="vm.encounterSearch.identifier.value">
+                            </md-input-container>
+                        </div>
+
                     </form>
                     <md-button ng-click="vm.detailSearch()" aria-label="Execute search">
                         <md-icon md-svg-icon="search" alt="Search"></md-icon>
@@ -183,7 +213,9 @@
                                 <div class="md-tile-content">
                                     <md-button data-ng-click="vm.goToEncounter(p)">{{p.resource.name | fullName}}
                                     </md-button>
-                                    <p>{{p.resource.birthDate | displayAge }} <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></p>
+                                    <p>{{p.resource.birthDate | displayAge }}
+                                        <fc-gender-icon gender="p.resource.gender"></fc-gender-icon>
+                                    </p>
                                     <p>{{p.resource.managingOrganization.display ||
                                         p.resource.managingOrganization.reference || "No Organization"}}</p>
                                 </div>

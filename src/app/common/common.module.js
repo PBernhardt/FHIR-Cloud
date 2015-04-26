@@ -36,7 +36,7 @@
                 $window.localStorage.removeItem("patient");
                 $window.localStorage.removeItem("organization");
                 var currentLocation = $location.path();
-                if ((currentLocation !== '/patient') && (currentLocation !== '/organization') ) {
+                if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
                     $location.path('/home');
                 }
                 $broadcast(commonConfig.config.serverChangeEvent, data);
@@ -79,6 +79,22 @@
             //        'i' - non case-sensitive flag
             var r = new RegExp('^(?:[a-z]+:)?//', 'i');
             return r.test(input);
+        }
+
+        function makeAddress(singleLineAddress) {
+            if (singleLineAddress.length === 0) return null;
+            var address = {};
+            address.line = [];
+            if (singleLineAddress.text) {
+                var parts = singleLineAddress.text.split(", ");
+                address.line.push(parts[0]);
+                address.city = parts[1];
+                var stateAndZip = parts[2].split(" ");
+                address.state = stateAndZip[0];
+                address.postalCode = stateAndZip[1];
+                address.country = parts[3];
+            }
+            return address;
         }
 
         function makeHumanName(nameText) {
@@ -201,6 +217,7 @@
             isAbsoluteUri: isAbsoluteUri,
             isNumber: isNumber,
             logger: logger, // for accessibility
+            makeAddress: makeAddress,
             makeHumanName: makeHumanName,
             mapDisplayToCoding: mapDisplayToCoding,
             randomHash: randomHash,

@@ -14,9 +14,9 @@
         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
     </div>
     <div flex="100" ng-if="vm.isBusy === false">
-        <md-tabs md-selected="selectedIndex">
+        <md-tabs md-selected="selectedIndex" md-dynamic-height md-border-bottom>
             <md-tab label="Administration Detail">
-                <div flex="100" class="table-responsive-vertical shadow-z-1">
+                <div flex="100">
                     <table id="patientView" class="table table-hover table-mc-blue">
                         <tr ng-if="vm.patient.resourceId">
                             <td>Resource Id</td>
@@ -177,34 +177,25 @@
             </md-tab>
             <md-tab label="Clinical Summary">
                 <md-list>
-                    <md-item ng-repeat="item in vm.summary">
-                        <md-item-content md-is-locked-open="true">
-                            <div class="md-tile-left">
-                                <md-button layout-align="start start"
-                                           ng-click="vm.showClinicalData($index, $event)"
-                                           aria-label="{{item.resource.id}}">
-                                    <md-icon md-svg-src="view"></md-icon>
-                                </md-button>
+                    <md-list-item ng-click="vm.showClinicalData($index, $event)" class="md-3-line" ng-repeat="item in vm.summary">
+                        <md-icon md-svg-src="view"></md-icon>
+                        <div class="md-list-item-text">
+                            <div ng-hide="item.resource.code && item.resource.code.text">
+                                <h4>{{ item.resource.resourceType }}</h4>
                             </div>
-                            <div class="md-tile-content">
-                                <div ng-hide="item.resource.code && item.resource.code.text">
-                                    <h4>{{ item.resource.resourceType }}</h4>
-                                </div>
-                                <div ng-show="item.resource.code && item.resource.code.text">
-                                    <h4>{{ item.resource.code.text }}</h4>
-                                </div>
-                                <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
-                                </div>
-                                <div ng-show="item.resource.emptyReason.text">
-                                    <p> {{ item.resource.emptyReason.text }}</p>
-                                </div>
-                                <div ng-show="item.resource.appliesDateTime">
-                                    <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
-                                </div>
+                            <div ng-show="item.resource.code && item.resource.code.text">
+                                <h4>{{ item.resource.code.text }}</h4>
                             </div>
-                        </md-item-content>
-                        <md-divider ng-if="!$last"></md-divider>
-                    </md-item>
+                            <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
+                            </div>
+                            <div ng-show="item.resource.emptyReason.text">
+                                <p> {{ item.resource.emptyReason.text }}</p>
+                            </div>
+                            <div ng-show="item.resource.appliesDateTime">
+                                <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
+                            </div>
+                        </div>
+                    </md-list-item>
                 </md-list>
             </md-tab>
             <md-tab label="Audit History">

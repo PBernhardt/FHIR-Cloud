@@ -9,7 +9,7 @@
                     md-items="encounter in vm.quickSearch(vm.searchText)"
                     md-delay="300"
                     md-min-length="3"
-                    placeholder="What patient's encounter are you looking for?">
+                    placeholder="What patient's encounters are you looking for?">
               <span md-highlight-text="vm.searchText">{{vm.encounter.resource.patient.name | fullName}}</span>
             </md-autocomplete>
         </div>

@@ -1,0 +1,200 @@
+﻿<div ng-controller="practitionerSearch as vm" layout="column" layout-wrap>
+    <div flex="100">
+        <h3 class="md-title">Practitioner Detailed Search</h3>
+    </div>
+    <div flex="20">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex>
+        <md-tabs md-selected="vm.selectedTab" ng-cloak>
+            <md-tab label="Search Options">
+                <md-content class="md-padding">
+                    <form name="practitionerSearch">
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>First Name</label>
+                                <input ng-model="vm.practitionerSearch.name.given">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Last Name</label>
+                                <input ng-model="vm.practitionerSearch.name.family">
+                            </md-input-container>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>Identifier system</label>
+                                <input ng-model="vm.practitionerSearch.identifier.system"
+                                       placeholder="Should be a valid URI">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Identifier value</label>
+                                <input ng-model="vm.practitionerSearch.identifier.value">
+                            </md-input-container>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>Managing Organization</label>
+                                <input ng-model="vm.practitionerSearch.organization"
+                                       placeholder="Id of organization">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Care Provider</label>
+                                <input ng-model="vm.practitionerSearch.careProvider"
+                                        placeholder="Id of practitioner">
+                            </md-input-container>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>Street address</label>
+                                <input ng-model="vm.practitionerSearch.address.street">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>City</label>
+                                <input ng-model="vm.practitionerSearch.address.city">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>State</label>
+                                <input ng-model="vm.practitionerSearch.address.state">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Postal code</label>
+                                <input ng-model="vm.practitionerSearch.address.postalCode">
+                            </md-input-container>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <md-input-container flex>
+                                <label>Mother's maiden name</label>
+                                <input ng-model="vm.practitionerSearch.mothersMaidenName">
+                            </md-input-container>
+                            <md-input-container flex>
+                                <label>Telephone or Email Address</label>
+                                <input ng-model="vm.practitionerSearch.telecom">
+                            </md-input-container>
+                        </div>
+
+                        <div layout layout-sm="column">
+                            <div>
+                                <md-input-container flex>
+                                    <label>Birth date</label>
+                                    <input ng-model="vm.practitionerSearch.dob" id="dob" type="date"
+                                           data-ng-change="vm.dobChange()">
+                                </md-input-container>
+                            </div>
+                            <div flex>
+                                <div layout="row" layout-align="space-around center">
+                                    <md-input-container>
+                                        <label>Starting Age</label>
+                                        <input type="number" min="0" max="99" ng-model="vm.practitionerSearch.age.start"
+                                               min="0"
+                                               aria-controls="age-start"
+                                               style="width:40px" data-ng-change="vm.ageRangeChange()"
+                                               ng-disabled="vm.practitionerSearch.dob">
+
+                                    </md-input-container>
+                                    <md-slider flex class="md-primary" min="0" max="99"
+                                               ng-model="vm.practitionerSearch.age.start" aria-label="Starting age"
+                                               id="age-start" data-ng-change="vm.ageRangeChange()"
+                                               ng-disabled="vm.practitionerSearch.dob">
+                                    </md-slider>
+                                </div>
+                                <div layout="row" layout-align="space-around center">
+                                    <md-input-container>
+                                        <label>Ending Age</label>
+                                        <input type="number" min="0" max="99" ng-model="vm.practitionerSearch.age.end"
+                                               min="1"
+                                               aria-controls="age-end"
+                                               style="width:40px" data-ng-change="vm.ageRangeChange()"
+                                               ng-disabled="vm.practitionerSearch.dob">
+                                    </md-input-container>
+                                    <md-slider flex min="0" max="99" ng-model="vm.practitionerSearch.age.end"
+                                               aria-label="Ending age"
+                                               id="age-end" data-ng-change="vm.ageRangeChange()"
+                                               ng-disabled="vm.practitionerSearch.dob">
+                                    </md-slider>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div layout-gt-md="row" layout-align="space-between center">
+                            <div layout="column" layout-align="center center" style="height: 100px;">
+                                <md-select ng-model="vm.practitionerSearch.gender" style="min-width: 100px;">
+                                    <md-option value="female">Female</md-option>
+                                    <md-option value="male">Male</md-option>
+                                    <md-option value="other">Other</md-option>
+                                    <md-option value="unknown">Unknown</md-option>
+                                </md-select>
+                                <p class="result">Gender</p>
+                            </div>
+
+                            <div layout="column" layout-align="center center" style="height: 100px;">
+                                <md-select ng-model="vm.practitionerSearch.language">
+                                    <md-option ng-value="language" ng-repeat="language in vm.languages">
+                                        {{language.display}}
+                                    </md-option>
+                                </md-select>
+                                <p class="result">Language</p>
+                            </div>
+
+                            <div layout="column" layout-align="center center" style="height: 100px;">
+                                <md-select ng-model="vm.practitionerSearch.race">
+                                    <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
+                                </md-select>
+                                <p class="result">Race</p>
+                            </div>
+                            <div layout="column" layout-align="center center" style="height: 100px;">
+                                <md-select ng-model="vm.practitionerSearch.ethnicity"
+                                           style="min-width: 200px;">
+                                    <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
+                                        <md-option ng-value="main">{{main.display}}</md-option>
+                                        <md-optgroup ng-value="group" ng-repeat="group in main.concept">
+                                            {{group.display}}
+                                            <md-option ng-value="group">{{group.display}}</md-option>
+                                            <md-option ng-value="class" ng-repeat="class in group.concept">
+                                                {{class.display}}
+                                            </md-option>
+                                        </md-optgroup>
+                                    </md-optgroup>
+                                </md-select>
+                                <p class="result">Ethnicity</p>
+                            </div>
+                        </div>
+                    </form>
+                    <md-button ng-click="vm.detailSearch()" aria-label="Execute search">
+                        <md-icon md-svg-icon="search" alt="Search"></md-icon>
+                    </md-button>
+                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                </md-content>
+            </md-tab>
+            <md-tab id="results" label="Search Results">
+                <section>
+                    <md-subheader class="md-primary">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
+                    <md-list layout="column">
+                        <md-item ng-repeat="p in vm.practitioners">
+                            <md-item-content>
+                                <div class="md-tile-left">
+                                    <img fs-img-person="p.resource.photo[0]" class="face" alt="{{p.name}}">
+                                </div>
+                                <div class="md-tile-content">
+                                    <md-button data-ng-click="vm.goToPractitioner(p)">{{p.resource.name | fullName}}
+                                    </md-button>
+                                    <p>{{p.resource.birthDate | displayAge }} <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></p>
+                                    <p>{{p.resource.managingOrganization.display ||
+                                        p.resource.managingOrganization.reference || "No Organization"}}</p>
+                                </div>
+                            </md-item-content>
+                            <md-divider data-ng-if="!$last"></md-divider>
+                        </md-item>
+                    </md-list>
+                </section>
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                <fs-pagination on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
+            </md-tab>
+        </md-tabs>
+    </div>
+</div>

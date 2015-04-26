@@ -1,60 +1,69 @@
 <div ng-controller="contact as vm">
     <md-content class="md-padding">
         <ng-form name="contactEditForm" ng-model="vm.contact">
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Name (required)</label>
+                <md-icon md-svg-icon="person"></md-icon>
                 <input name="name"
                        ng-model="vm.contact.name"/>
+
                 <div ng-messages="contactEditForm.name.$error" ng-show="contactEditForm.$dirty">
                     <div ng-message="required">Contact name is required!</div>
                 </div>
             </md-input-container>
 
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Email</label>
-                <input ng-model="vm.contact.email"/>
+                <md-icon md-svg-icon="email"></md-icon>
+                <input ng-model="vm.contact.email" type="email"/>
             </md-input-container>
 
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Phone</label>
+                <md-icon md-svg-icon="phone"></md-icon>
                 <input ng-model="vm.contact.phone"/>
             </md-input-container>
 
-            <label>Purpose</label>&nbsp;&nbsp;<select
-                id="contact-purpose"
-                ng-model="vm.contact.purpose">
-            <option ng-repeat="coding in vm.contactTypes" value="{{coding.display}}"
-                    ng-selected="coding.code===vm.contact.purpose">
-                {{coding.display}}
-            </option>
-            <option value=""></option>
-        </select>
-            <div ng-if="vm.mode==='multi'" class="md-padding">
-                <md-button ng-click="vm.addToList(contactEditForm, vm.contact)" tooltip="Save to list"
+            <md-autocomplete
+                    id="addressSearch"
+                    md-no-cache="false"
+                    md-selected-item="vm.contact.address.text"
+                    md-search-text="vm.addressSearchText"
+                    md-items="address in vm.getLocation(vm.addressSearchText)"
+                    md-delay="300"
+                    md-min-length="3"
+                    md-item-text="address"
+                    md-floating-label="Address Search">
+                <span md-highlight-text="vm.searchText">{{address}}</span>
+            </md-autocomplete>
+
+            <div layout="column" layout-align="start start" style="height: 100px;">
+                <md-select ng-model="vm.contact.purpose">
+                    <md-option ng-selected="coding.code===vm.contact.purpose"
+                               ng-value="coding.display"
+                               ng-repeat="coding in vm.contactTypes">
+                        {{ coding.display || '' }}
+                    </md-option>
+                </md-select>
+                <p class="md-caption">Purpose</p>
+            </div>
+
+            <div class="md-padding">
+                <md-button ng-click="vm.addToList(contactEditForm, vm.contact)" aria-lable="Save to list"
                            ng-if="vm.contact.name">
-                    <md-icon md-svg-icon="list" alt="Save to contact list"></md-icon>
+                    <md-icon md-svg-icon="listAdd"></md-icon>
                 </md-button>
             </div>
-        </ng-form>
 
-        <div ng-if="vm.contacts.length !== null && vm.contacts.length > 0 && vm.mode==='multi'">
-            <form>
-                <section>
-                    <md-subheader>Contact List</md-subheader>
-                    <md-list>
-                        <md-item ng-repeat="a in vm.contacts">
-                            <md-item-content>
-                                <div class="md-tile-left">
-                                </div>
-                                <div class="md-tile-content">
-                                    <h3>{{a}}</h3>
-                                </div>
-                            </md-item-content>
-                        </md-item>
-                    </md-list>
-                </section>
-            </form>
-        </div>
-        </md-divider>
+            <div ng-if="vm.contacts.length > 0">
+                <md-subheader>Contact List</md-subheader>
+                <md-list>
+                    <md-list-item ng-click="vm.removeListItem(ct)" ng-repeat="ct in vm.contacts">
+                        <md-icon md-svg-icon="delete"></md-icon>
+                        <p>{{ct.name | fullName}} </p>
+                    </md-list-item>
+                </md-list>
+            </div>
+        </ng-form>
     </md-content>
 </div>

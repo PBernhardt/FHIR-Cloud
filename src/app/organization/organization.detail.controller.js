@@ -192,7 +192,7 @@
             organization.type = vm.organization.type;
             organization.address = addressService.mapFromViewModel();
             organization.telecom = contactPointService.mapFromViewModel();
-            organization.contact = contactService.mapFromViewModel();
+            organization.contact = contactService.getAll();
             organization.partOf = vm.organization.partOf;
             organization.identifier = identifierService.getAll();
             organization.active = vm.organization.active;
@@ -212,6 +212,29 @@
             }
         }
 
+        function showSource($event) {
+            _showRawData(vm.organization, $event);
+        }
+        vm.showSource = showSource;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
+        function goToPartOf(resourceReference) {
+            var id = ($filter)('idFromURL')(resourceReference.reference);
+            $location.path('/organization/get/' + id);
+        }
+        vm.goToPartOf = goToPartOf;
+
         Object.defineProperty(vm, 'canSave', {
             get: canSave
         });
@@ -220,7 +243,7 @@
             get: canDelete
         });
 
-        function activate() {
+        function _activate() {
             common.activateController([getActiveServer(), getOrganizationTypes()], controllerId).then(function () {
                 getRequestedOrganization();
             });
@@ -306,7 +329,6 @@
         vm.actions = actions;
         vm.activeServer = null;
         vm.cancel = cancel;
-        vm.activate = activate;
         vm.contactTypes = undefined;
         vm.delete = deleteOrganization;
         vm.edit = edit;
@@ -326,7 +348,7 @@
         vm.createRandomPatients = createRandomPatients;
         vm.createRandomPersons = createRandomPersons;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,

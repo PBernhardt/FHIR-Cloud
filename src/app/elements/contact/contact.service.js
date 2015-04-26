@@ -12,7 +12,8 @@
                 if (index > -1) {
                     contacts[index] = item;
                 } else {
-                    contacts.push(item);
+                    var mappedItem = _mapFromViewModel(item);
+                    contacts.push(mappedItem);
                 }
             }
         }
@@ -40,42 +41,32 @@
             }
         }
 
-        function mapFromViewModel() {
-            var mappedContacts;
-
-            function mapItem(item) {
-                var mappedItem = { "telecom": [], "purpose": {} };
-                if (item) {
-                    if (item.name) {
-                        mappedItem.name = common.makeHumanName(item.name);
-                    }
-                    if (item.email) {
-                        var email = { "value": item.email, "use": "work", "system": "email" };
-                        mappedItem.telecom.push(email);
-                    }
-                    if (item.phone) {
-                        var phone = { "value": item.phone, "use": "work", "system": "phone" };
-                        mappedItem.telecom.push(phone);
-                    }
-                    if (item.purpose) {
-                        var coding = common.mapDisplayToCoding(item.purpose, localValueSets.contactEntityType());
-                        if (coding) {
-                            mappedItem.purpose.coding = [];
-                            mappedItem.purpose.coding.push(coding);
-                        }
+        function _mapFromViewModel(item) {
+            var mappedItem = {"telecom": [], "purpose": {}};
+            if (item) {
+                if (item.name) {
+                    mappedItem.name = common.makeHumanName(item.name);
+                }
+                if (item.email) {
+                    var email = {"value": item.email, "use": "work", "system": "email"};
+                    mappedItem.telecom.push(email);
+                }
+                if (item.phone) {
+                    var phone = {"value": item.phone, "use": "work", "system": "phone"};
+                    mappedItem.telecom.push(phone);
+                }
+                if (item.purpose) {
+                    var coding = common.mapDisplayToCoding(item.purpose, localValueSets.contactEntityType());
+                    if (coding) {
+                        mappedItem.purpose.coding = [];
+                        mappedItem.purpose.coding.push(coding);
                     }
                 }
-                return mappedItem;
-            }
-
-            if (contacts) {
-                mappedContacts = [];
-                for (var i = 0, len = contacts.length; i < len; i++) {
-                    var mappedItem = mapItem(contacts[i]);
-                    mappedContacts.push(mappedItem);
+                if (item.address) {
+                    mappedItem.address = common.makeAddress(item.address);
                 }
             }
-            return mappedContacts;
+            return mappedItem;
         }
 
         function remove(item) {
@@ -94,7 +85,6 @@
             remove: remove,
             getAll: getAll,
             init: init,
-            mapFromViewModel: mapFromViewModel,
             reset: reset
         };
 

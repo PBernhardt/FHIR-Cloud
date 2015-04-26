@@ -284,6 +284,11 @@
         vm.selectedEncounter = null;
         vm.searchResults = null;
         vm.searchText = '';
+        vm.searchPatientText = '';
+        vm.searchCareProviderText = '';
+        vm.searchParticipantPractitionerText = '';
+        vm.searchLocationText = '';
+        vm.searchParticipantRelatedPersonText = '';
         vm.title = 'Encounters';
         vm.managingOrganization = undefined;
         vm.practitioner = undefined;

@@ -3,9 +3,11 @@
 
     var serviceId = 'practitionerService';
 
-    function practitionerService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
+    function practitionerService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
         var dataCacheKey = 'localPractitioners';
         var itemCacheKey = 'contextPractitioner';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
 
         function addPractitioner(resource) {
@@ -40,6 +42,7 @@
                 }
                 deferred.resolve();
             }
+
             var deferred = $q.defer();
             deletePractitioner(resourceId)
                 .then(getCachedSearchResults,
@@ -72,10 +75,10 @@
             fhirClient.getResource(resourceId + '/$everything')
                 .then(function (results) {
                     var everything = {"practitioner": null, "summary": [], "history": []};
-                    everything.history = _.remove(results.data.entry, function(item) {
-                       return (item.resource.resourceType === 'SecurityEvent');
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'AuditEvent');
                     });
-                    everything.practitioner = _.remove(results.data.entry, function(item) {
+                    everything.practitioner = _.remove(results.data.entry, function (item) {
                         return (item.resource.resourceType === 'Practitioner');
                     })[0];
                     everything.summary = results.data.entry;
@@ -93,9 +96,9 @@
                 for (var i = 0, len = cachedPractitioners.length; i < len; i++) {
                     if (cachedPractitioners[i].$$hashKey === hashKey) {
                         cachedPractitioner = cachedPractitioners[i].resource;
-                        //TODO: FHIR Change request to make fully-qualified resourceId part of meta data
-                        cachedPractitioner.resourceId = (searchResults.base + cachedPractitioner.resourceType + '/' + cachedPractitioner.id);
-                        cachedPractitioner.hashKey = cachedPractitioner.$$hashKey;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedPractitioner.resourceId = (baseUrl + cachedPractitioner.resourceType + '/' + cachedPractitioner.id);
+                        cachedPractitioner.hashKey = hashKey;
                         break;
                     }
                 }
@@ -107,13 +110,17 @@
             }
 
             var deferred = $q.defer();
+            var activeServer;
             getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
                 .then(getPractitioner,
                 function () {
                     deferred.reject('Practitioner search results not found in cache.');
                 });
             return deferred.promise;
-
         }
 
         function getCachedSearchResults() {
@@ -145,22 +152,19 @@
 
         function getPractitionerReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Practitioner?name=' + input + '&_count=10')
+            fhirClient.getResource(baseUrl + '/Practitioner?name=' + input + '&_count=20')
                 .then(function (results) {
                     var practitioners = [];
                     if (results.data.entry) {
-                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
-                            var item = results.data.entry[i];
-                            if (item.resource && item.resource.resourceType === 'Practitioner') {
-                                practitioners.push({
-                                    display: $filter('fullName')(item.resource.name),
-                                    reference: baseUrl + '/Practitioner/' + item.resource.id
-                                });
-                            }
-                            if (10 === i) {
-                                break;
-                            }
-                        }
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'Practitioner') {
+                                    practitioners.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
                     }
                     if (practitioners.length === 0) {
                         practitioners.push({display: "No matches", reference: ''});
@@ -172,18 +176,46 @@
             return deferred.promise;
         }
 
-        function getPractitioners(baseUrl, nameFilter) {
+        function searchPractitioners(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/Practitioner?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getPractitioners(baseUrl, searchFilter, organizationId) {
             var deferred = $q.defer();
             var params = '';
 
-            if (angular.isUndefined(nameFilter)) {
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
-            var names = nameFilter.split(' ');
-            if (names.length === 1) {
-                params = 'name=' + names[0];
-            } else {
-                params = 'given=' + names[0] + '&family=' + names[1];
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
             }
 
             fhirClient.getResource(baseUrl + '/Practitioner?' + params + '&_count=20')
@@ -211,20 +243,54 @@
         function initializeNewPractitioner() {
             return {
                 "resourceType": "Practitioner",
-                "name": [],
-                "gender": undefined,
-                "birthDate": null,
-                "maritalStatus": undefined,
-                //              "multipleBirth": false,
+                "identifier": [],
+                "name": null,
                 "telecom": [],
                 "address": [],
+                "gender": null,
+                "birthDate": null,
                 "photo": [],
-                "communication": [],
-                "managingpractitioner": null,
-                "contact": [],
-                "link": [],
-                "active": true
+                "practitionerRole": [{
+                    "managingOrganization": null,
+                    "role": null,
+                    "specialty": [],
+                    "period": null,
+                    "location": [],
+                    "healthcareService": []
+                }],
+                "qualification": [{
+                    "identifier": [],
+                    "code": null,
+                    "period": null,
+                    "issuer": null
+                }],
+                "communication": []
             };
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.photo.length === 0) {
+                resource.photo = null;
+            }
+            if (resource.communication.length === 0) {
+                resource.communication = null;
+            }
+            if (resource.qualification.length === 0) {
+                resource.qualification = null;
+            }
+            if (resource.practitionerRole.length === 0) {
+                resource.practitionerRole = null;
+            }
+            return $q.when(resource);
         }
 
         function setPractitionerContext(data) {
@@ -243,12 +309,13 @@
             return deferred.promise;
         }
 
-        function seedRandomPractitioners(resourceId, practitionerName) {
+        function seedRandomPractitioners(organizationId, organizationName) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=10')
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
-                    var count = 0;
-                    angular.forEach(data.results, function(result) {
+                    angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
@@ -261,10 +328,10 @@
                                 "use": "usual"
                             }],
                             "gender": user.gender,
-                            "birthDate": stringDOB,
+                            "birthDate": _randomBirthDate(),
                             "contact": [],
-                            "communication": [],
-                            "maritalStatus": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
                             "telecom": [
                                 {"system": "email", "value": user.email, "use": "home"},
                                 {"system": "phone", "value": user.cell, "use": "mobile"},
@@ -278,17 +345,53 @@
                             }],
                             "photo": [{"url": user.picture.large}],
                             "identifier": [
-                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
-                                {"system": "urn:oid:2.16.840.1.113883.15.18", "value": user.registered, "use": "official", "label": practitionerName + " master Id", "assigner": {"reference": resourceId, "display": practitionerName}}
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "secondary",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:practitioner",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
+                                }
                             ],
-                            "managingpractitioner": { "reference": resourceId, "display": practitionerName },
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
                             "link": [],
-                            "active": true
+                            "active": true,
+                            "extension": []
                         };
-                        $timeout(addPractitioner(resource).then(count = count + 1), 2000);
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
 
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
+
+                        var timer = $timeout(function () {
+                        }, 3000);
+                        timer.then(function () {
+                            addPractitioner(resource).then(function (results) {
+                                logInfo("Created practitioner " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create practitioner " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
                     });
-                    deferred.resolve(count + ' practitioners created for ' + practitionerName);
+                    deferred.resolve();
                 })
                 .error(function (error) {
                     deferred.reject(error);
@@ -296,33 +399,148 @@
             return deferred.promise;
         }
 
-        function _prepArrays(resource) {
-            if (resource.address.length === 0) {
-                resource.address = null;
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/practitioner-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
             }
-            if (resource.identifier.length === 0) {
-                resource.identifier = null;
-            }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
-            if (resource.telecom.length === 0) {
-                resource.telecom = null;
-            }
-            if (resource.photo.length === 0) {
-                resource.photo = null;
-            }
-            if (resource.communication.length === 0) {
-                resource.communication = null;
-            }
-            if (resource.link.length === 0) {
-                resource.link = null;
-            }
-            if (resource.maritalStatus.coding && resource.maritalStatus.coding.length === 0) {
-                resource.maritalStatus = null;
-            }
-            return $q.when(resource);
+            return extension;
         }
+
+        function _randomBirthDate() {
+            var start = new Date(1945, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        var allEthnicities = [];
+        var ethnicitySystem = '';
+
+        function _randomEthnicity() {
+            function prepEthnicities() {
+                var ethnicities = localValueSets.ethnicity();
+                ethnicitySystem = ethnicities.system;
+                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
+                    var mainConcept = ethnicities.concept[i];
+                    allEthnicities.push(mainConcept);
+                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
+                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
+                            var groupConcept = mainConcept.concept[j];
+                            allEthnicities.push(groupConcept);
+                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
+                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
+                                    var leafConcept = groupConcept.concept[k];
+                                    allEthnicities.push(leafConcept);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            if (allEthnicities.length === 0) {
+                prepEthnicities();
+            }
+            common.shuffle(allEthnicities);
+            var ethnicity = allEthnicities[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicitySystem,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
+        }
+
+
 
         var service = {
             addPractitioner: addPractitioner,
@@ -340,12 +558,14 @@
             initializeNewPractitioner: initializeNewPractitioner,
             setPractitionerContext: setPractitionerContext,
             updatePractitioner: updatePractitioner,
-            seedRandomPractitioners: seedRandomPractitioners
+            seedRandomPractitioners: seedRandomPractitioners,
+            searchPractitioners: searchPractitioners
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
         practitionerService]);
-})();
+})
+();

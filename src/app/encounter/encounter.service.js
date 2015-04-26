@@ -70,25 +70,6 @@
             return deferred.promise;
         }
 
-        function getEncounterEverything(resourceId) {
-            var deferred = $q.defer();
-            fhirClient.getResource(resourceId + '/$everything')
-                .then(function (results) {
-                    var everything = {"encounter": null, "summary": [], "history": []};
-                    everything.history = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'AuditEvent');
-                    });
-                    everything.encounter = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'Encounter');
-                    })[0];
-                    everything.summary = results.data.entry;
-                    deferred.resolve(everything);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
         function getCachedEncounter(hashKey) {
             function getEncounter(searchResults) {
                 var cachedEncounter;
@@ -192,42 +173,6 @@
             return deferred.promise;
         }
 
-        function getEncounters(baseUrl, searchFilter, organizationId) {
-            var deferred = $q.defer();
-            var params = '';
-
-            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
-                deferred.reject('Invalid search input');
-            }
-
-            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
-                var names = searchFilter.split(' ');
-                if (names.length === 1) {
-                    params = 'name=' + names[0];
-                } else {
-                    params = 'given=' + names[0] + '&family=' + names[1];
-                }
-            }
-
-            if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:=' + organizationId;
-                if (params.length > 1) {
-                    params = params + '&' + orgParam;
-                } else {
-                    params = orgParam;
-                }
-            }
-
-            fhirClient.getResource(baseUrl + '/Encounter?' + params + '&_count=20')
-                .then(function (results) {
-                    dataCache.addToCache(dataCacheKey, results.data);
-                    deferred.resolve(results.data);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
         function getEncountersByLink(url) {
             var deferred = $q.defer();
             fhirClient.getResource(url)
@@ -243,22 +188,89 @@
         function initializeNewEncounter() {
             return {
                 "resourceType": "Encounter",
-                "name": [],
-                "gender": undefined,
-                "birthDate": null,
-                "maritalStatus": undefined,
-                "multipleBirth": false,
-                "telecom": [],
-                "address": [],
-                "photo": [],
-                "communication": [],
-                "managingOrganization": null,
-                "careProvider": [],
-                "contact": [],
-                "link": [],
-                "extension": [],
-                "active": true
+                "identifier": [],
+                "status": null,
+                "statusHistory": [
+                    {
+                        "status": null,
+                        "period": null
+                    }
+                ],
+                "class": null,
+                "type": [],
+                "patient": null,
+                "episodeOfCare": null,
+                "incomingReferralRequest": [],
+                "participant": [
+                    {
+                        "type": [],
+                        "period": null,
+                        "individual": null
+                    }
+                ],
+                "fulfills": null,
+                "period": null,
+                "length": null,
+                "reason": [],
+                "indication": [],
+                "priority": null,
+                "hospitalization": {
+                    "preAdmissionIdentifier": null,
+                    "origin": null,
+                    "admitSource": null,
+                    "dietPreference": null,
+                    "specialCourtesy": [],
+                    "specialArrangement": [],
+                    "destination": null,
+                    "dischargeDisposition": null,
+                    "dischargeDiagnosis": null,
+                    "reAdmission": false
+                },
+                "location": [
+                    {
+                        "location": null,
+                        "status": null,
+                        "period": null
+                    }
+                ],
+                "serviceProvider": null,
+                "partOf": null
             };
+        }
+
+
+        function _prepArrays(resource) {
+            if (resource.statusHistory && resource.statusHistory.length === 0) {
+                resource.statusHistory = null;
+            }
+            if (resource.type && resource.type.length === 0) {
+                resource.type = null;
+            }
+            if (resource.incomingReferralRequest && resource.incomingReferralRequest.length === 0) {
+                resource.incomingReferralRequest = null;
+            }
+            if (resource.participant && resource.participant.length === 0) {
+                resource.participant = null;
+            }
+            if (resource.reason.length === 0) {
+                resource.reason = null;
+            }
+            if (resource.indication.length === 0) {
+                resource.indication = null;
+            }
+            if (resource.hospitalization && resource.hospitalization.specialArrangement.length === 0) {
+                resource.hospitalization.specialArrangement = null;
+            }
+            if (resource.hospitalization && resource.hospitalization.specialCourtesy.length === 0) {
+                resource.hospitalization.specialCourtesy = null;
+            }
+            if (resource.location && resource.location.length === 0) {
+                resource.location = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            return $q.when(resource);
         }
 
         function setEncounterContext(data) {
@@ -347,7 +359,7 @@
                         resource.extension.push(_randomBirthPlace(birthPlace));
 
                         mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
+                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
 
                         var timer = $timeout(function () {
                         }, 3000);
@@ -506,36 +518,6 @@
                 "display": maritalStatus.display
             });
             return concept;
-        }
-
-        function _prepArrays(resource) {
-            if (resource.address.length === 0) {
-                resource.address = null;
-            }
-            if (resource.identifier.length === 0) {
-                resource.identifier = null;
-            }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
-            if (resource.telecom.length === 0) {
-                resource.telecom = null;
-            }
-            if (resource.photo.length === 0) {
-                resource.photo = null;
-            }
-            if (resource.communication.length === 0) {
-                resource.communication = null;
-            }
-            if (resource.link.length === 0) {
-                resource.link = null;
-            }
-            if (angular.isDefined(resource.maritalStatus)) {
-                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
-                    resource.maritalStatus = null;
-                }
-            }
-            return $q.when(resource);
         }
 
         var service = {

@@ -147,14 +147,30 @@
             templateUrl: 'patient/patient-edit.html'
         }).when('/patient/detailed-search', {
             templateUrl: 'patient/patient-detailed-search.html'
+        }).when('/practitioner/org/:orgId', {
+            templateUrl: 'practitioner/practitioner-detailed-search.html'
         }).when('/practitioner', {
             templateUrl: 'practitioner/practitioner-search.html'
+        }).when('/practitioner/get/:id', {
+            templateUrl: 'practitioner/practitioner-view.html'
+        }).when('/practitioner/view/:hashKey', {
+            templateUrl: 'practitioner/practitioner-view.html'
+        }).when('/practitioner/edit/:hashKey', {
+            templateUrl: 'practitioner/practitioner-edit.html'
+        }).when('/practitioner/detailed-search', {
+            templateUrl: 'practitioner/practitioner-detailed-search.html'
+        }).when('/person/org/:orgId', {
+            templateUrl: 'person/person-detailed-search.html'
         }).when('/person', {
             templateUrl: 'person/person-search.html'
+        }).when('/person/get/:id', {
+            templateUrl: 'person/person-view.html'
         }).when('/person/view/:hashKey', {
             templateUrl: 'person/person-view.html'
         }).when('/person/edit/:hashKey', {
             templateUrl: 'person/person-edit.html'
+        }).when('/person/detailed-search', {
+            templateUrl: 'person/person-detailed-search.html'
         }).when('/profile', {
             templateUrl: 'profile/profile-search.html'
         }).when('/profile/view/:hashKey', {
@@ -165,10 +181,14 @@
             templateUrl: 'templates/home.html'
         }).when('/relatedPerson', {
             templateUrl: 'relatedPerson/relatedPerson-search.html'
+        }).when('/relatedPerson/get/:id', {
+            templateUrl: 'relatedPerson/relatedPerson-view.html'
         }).when('/relatedPerson/view/:hashKey', {
             templateUrl: 'relatedPerson/relatedPerson-view.html'
         }).when('/relatedPerson/edit/:hashKey', {
-            templateUrl: 'person/person-edit.html'
+            templateUrl: 'relatedPerson/relatedPerson-edit.html'
+        }).when('/relatedPerson/detailed-search', {
+            templateUrl: 'relatedPerson/relatedPerson-detailed-search.html'
         }).when('/valueSet', {
             templateUrl: 'valueSet/valueSet-search.html'
         }).when('/valueSet/view/:hashKey', {
@@ -192,15 +212,20 @@
         $mdIconProvider
             .icon("actions", "./assets/svg/actions.svg", 24)
             .icon("account", "./assets/svg/account.svg", 24)
+            .icon("address", "./assets/svg/place.svg", 24)
             .icon("add", "./assets/svg/add.svg", 24)
             .icon("cardio", "./assets/svg/cardio3.svg", 24)
             .icon("cloud", "./assets/svg/cloud.svg", 24)
+            .icon("contact", "./assets/svg/contact.svg", 24)
+            .icon("contacts", "./assets/svg/contacts.svg", 24)
             .icon("delete", "./assets/svg/delete.svg", 24)
             .icon("diagnosis", "./assets/svg/stethoscope.svg", 24)
             .icon("edit", "./assets/svg/edit.svg", 24)
+            .icon("email", "./assets/svg/email.svg", 16)
             .icon("encounter", "./assets/svg/man412.svg", 24)
             .icon("error", "./assets/svg/error.svg", 48)
             .icon("family", "./assets/svg/group41.svg", 24)
+            .icon("fax", "./assets/svg/fax.svg", 16)
             .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
@@ -209,9 +234,11 @@
             .icon("hospital", "./assets/svg/hospital.svg", 24)
             .icon("https", "./assets/svg/https.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
-            .icon("immunization", "./assets/svg/location2.svg", 24)
+            .icon("identifier", "./assets/svg/identifier.svg", 24)
+            .icon("immunization", "./assets/svg/immunize2.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
+            .icon("listAdd", "./assets/svg/listAdd.svg",24)
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
             .icon("menu", "./assets/svg/menu.svg", 24)
@@ -219,9 +246,14 @@
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("order", "./assets/svg/flask.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
+            .icon("people", "./assets/svg/people.svg", 24)
+            .icon("peopleOutline", "./assets/svg/peopleOutline.svg", 24)
             .icon("person", "./assets/svg/person.svg", 24)
             .icon("personAdd", "./assets/svg/personAdd.svg", 24)
-            .icon("practitioner", "./assets/svg/md.svg", 24)
+            .icon("personOutline", "./assets/svg/personOutline.svg", 24)
+            .icon("phone", "./assets/svg/phone.svg", 16)
+            .icon("place", "./assets/svg/place.svg", 24)
+            .icon("doctor", "./assets/svg/md.svg", 24)
             .icon("quickFind", "./assets/svg/quickFind.svg", 24)
             .icon("refresh", "./assets/svg/refresh.svg", 24)
             .icon("relatedPerson", "./assets/svg/group.svg", 24)
@@ -231,8 +263,10 @@
             .icon("search", "./assets/svg/search.svg", 24)
             .icon("settings", "./assets/svg/settings.svg", 24)
             .icon("smart", "./assets/svg/SMART.svg", 24)
+            .icon("telecom", "./assets/svg/telecom.svg", 24)
             .icon("view", "./assets/svg/visibility.svg", 12)
-            .icon("vitals", "./assets/svg/pulse1.svg", 24);
+            .icon("vitals", "./assets/svg/pulse1.svg", 24)
+            .icon("web", "./assets/svg/www.svg", 16);
     }]);
 
     app.config(['$httpProvider', function ($httpProvider) {

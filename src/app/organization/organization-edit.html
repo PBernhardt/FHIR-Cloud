@@ -1,5 +1,5 @@
 ﻿<div ng-controller="organizationDetail as vm" layout="row" layout-wrap>
-    <div flex="100">
+    <div flex="70">
         <h3 ng-if="vm.isEditing === false">Add New Organization</h3>
 
         <h3 ng-if="vm.isEditing === true">Edit {{vm.organization.name}}</h3>
@@ -11,8 +11,8 @@
     </div>
     <div flex="100">
         <ng-form name="organizationEditForm"
-              ng-model="vm.organization">
-            <md-tabs md-selected="vm.selectedTab">
+                 ng-model="vm.organization">
+            <md-tabs md-selected="vm.selectedTab" md-dynamic-height md-border-bottom>
                 <md-tab label="Basic Information">
                     <div flex layout-padding>
                         <div flex>
@@ -28,33 +28,29 @@
                             </md-input-container>
                         </div>
 
+                        <md-autocomplete flex="100"
+                                         md-no-cache="false"
+                                         md-selected-item="vm.organization.partOf"
+                                         md-search-text="vm.searchText"
+                                         md-items="org in vm.getOrganizationReference(vm.searchText)"
+                                         md-delay="300"
+                                         md-item-text="org.display"
+                                         md-min-length="3"
+                                         md-floating-label="Affiliated organization">
+                            <span md-highlight-text="vm.searchText">{{org.display}}</span>
+                        </md-autocomplete>
 
-                        <div flex="80" style="min-height: 150px">
-                            <label>Parent Organization</label>
-                            <md-autocomplete flex
-                                             md-no-cache="true"
-                                             md-selected-item="vm.organization.partOf"
-                                             md-search-text="vm.searchText"
-                                             md-items="org in vm.getOrganizationReference(vm.searchText)"
-                                             md-delay="500"
-                                             md-item-text="org.display"
-                                             md-min-length="3"
-                                             placeholder="What is the parent organization?">
-                                <span md-highlight-text="vm.searchText">{{org.display}}</span>
-                            </md-autocomplete>
+
+                        <div layout="column" layout-align="start start" style="height: 100px;">
+                            <md-select ng-model="vm.organization.type.coding[0]">
+                                <md-option ng-selected="coding.code===vm.organization.type.coding[0].code"
+                                           ng-value="coding"
+                                           ng-repeat="coding in vm.organizationTypes">
+                                    {{ coding.display || '' }}
+                                </md-option>
+                            </md-select>
+                            <p class="md-caption">Organization Type</p>
                         </div>
-                        <div flex>
-                        <label>Type&nbsp;&nbsp;</label>
-                        <select
-                                id="organization-type"
-                                ng-model="vm.organization.type.coding[0]">
-                            <option ng-repeat="coding in vm.organizationTypes"
-                                    value="{{coding}}"
-                                    ng-selected="coding.code===vm.organization.type.coding[0].code">
-                                {{coding.display || ''}}
-                            </option>
-                        </select>
-                    </div>
                     </div>
                 </md-tab>
                 <md-tab label="Address">
