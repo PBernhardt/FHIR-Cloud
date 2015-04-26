@@ -210,7 +210,7 @@
             }
 
             if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:=' + organizationId;
+                var orgParam = 'organization=' + organizationId;
                 if (params.length > 1) {
                     params = params + '&' + orgParam;
                 } else {

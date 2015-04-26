@@ -67,22 +67,22 @@
         ];
         var noToast = false;
 
-        function activate() {
-            common.activateController([getFHIRServers(), getActiveServer()], controllerId)
+        function _activate() {
+            common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
                 .then(function () {
                 }, function (error) {
                     logError('Error ' + error);
                 });
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
         }
 
-        function getFHIRServers() {
+        function _getFHIRServers() {
             fhirServers.getAllServers().then(function (data) {
                 vm.FHIRServers = data;
             })
@@ -199,7 +199,7 @@
         vm.toggleServers = toggleServers;
         vm.activeServer = null;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,

@@ -149,6 +149,8 @@ module.exports = function (grunt) {
                     'app/elements/identifier/identifier.service.js',
                     'app/elements/organizationReference/organization.reference.controller.js',
                     'app/elements/organizationReference/organization.reference.service.js',
+                    'app/elements/patientList/patientList.controller.js',
+                    'app/elements/practitionerList/practitionerList.controller.js',
                     'app/elements/practitionerReference/practitioner.reference.controller.js',
                     'app/elements/practitionerReference/practitioner.reference.service.js',
                     'app/encounter/encounter.detail.controller.js',

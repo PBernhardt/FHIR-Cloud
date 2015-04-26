@@ -28,6 +28,8 @@
 
     var events = {
         controllerActivateSuccess: 'controller.activateSuccess',
+        patientListChanged: 'patientList.changed',
+        practitionerListChanged: 'practitionerList.changed',
         progressToggle: 'progress.toggle',
         serverChanged: 'server.changed'
     };
@@ -279,6 +281,8 @@
         cfg.config.controllerActivateSuccessEvent = config.events.controllerActivateSuccess;
         cfg.config.progressToggleEvent = config.events.progressToggle;
         cfg.config.serverChangeEvent = config.events.serverChanged;
+        cfg.config.patientListChangeEvent = config.events.patientListChanged;
+        cfg.config.practitionerListChangeEvent = config.events.practitionerListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {

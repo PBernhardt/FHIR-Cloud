@@ -44,7 +44,7 @@
                             <md-input-container flex>
                                 <label>Care Provider</label>
                                 <input ng-model="vm.patientSearch.careProvider"
-                                        placeholder="Id of practitioner">
+                                       placeholder="Id of practitioner">
                             </md-input-container>
                         </div>
 
@@ -173,23 +173,19 @@
             </md-tab>
             <md-tab id="results" label="Search Results">
                 <section>
-                    <md-subheader class="md-primary">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
+                    <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
                     <md-list layout="column">
-                        <md-item ng-repeat="p in vm.patients">
-                            <md-item-content>
-                                <div class="md-tile-left">
-                                    <img fs-img-person="p.resource.photo[0]" class="face" alt="{{p.name}}">
-                                </div>
-                                <div class="md-tile-content">
-                                    <md-button data-ng-click="vm.goToPatient(p)">{{p.resource.name | fullName}}
-                                    </md-button>
-                                    <p>{{p.resource.birthDate | displayAge }} <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></p>
-                                    <p>{{p.resource.managingOrganization.display ||
-                                        p.resource.managingOrganization.reference || "No Organization"}}</p>
-                                </div>
-                            </md-item-content>
-                            <md-divider data-ng-if="!$last"></md-divider>
-                        </md-item>
+                        <md-list-item class="md-3-line" ng-click="vm.goToPatient(p)" ng-repeat="p in vm.patients">
+                            <img fs-img-person="p.resource.photo[0]" class="face" alt="{{p.name}}"/>
+                            <div class="md-list-item-text">
+                                <h3>{{p.resource.name | fullName}}</h3>
+                                <h4>{{p.resource.birthDate | displayAge }}
+                                    <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></h4>
+                                <p>{{p.resource.managingOrganization.display ||
+                                    p.resource.managingOrganization.reference || "No Organization"}}</p>
+                            </div>
+                        </md-list-item>
+                        <md-divider ng-if="!$last"></md-divider>
                     </md-list>
                 </section>
                 <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>

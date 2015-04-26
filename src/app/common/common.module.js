@@ -43,6 +43,19 @@
             }
         }
 
+        function changePatientList(patients) {
+            if (angular.isDefined(patients)) {
+                $broadcast(commonConfig.config.patientListChangeEvent, patients);
+            }
+        }
+
+        function changePractitionerList(practitioners) {
+            if (angular.isDefined(practitioners)) {
+                $broadcast(commonConfig.config.practitionerListChangeEvent, practitioners);
+            }
+        }
+
+
         //TODO: remove this
         function toggleProgressBar(show) {
             var data = {show: show};
@@ -212,6 +225,8 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changePatientList: changePatientList,
+            changePractitionerList: changePractitionerList,
             changeServer: changeServer,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,

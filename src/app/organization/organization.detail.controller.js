@@ -5,7 +5,8 @@
 
     function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
                                 $mdDialog, common, contactService, fhirServers, identifierService, localValueSets,
-                                organizationService, contactPointService, sessionService, patientService, personService) {
+                                organizationService, contactPointService, sessionService, patientService, personService,
+                                practitionerService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -103,6 +104,8 @@
 
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.organization = JSON.stringify(vm.organization);
+                    _getAffiliatedPatients();
+                    _getAffiliatedPractitioners();
                 }
             }
 
@@ -212,9 +215,38 @@
             }
         }
 
+        function _getAffiliatedPractitioners() {
+            var deferred = $q.defer();
+            practitionerService.getPractitioners(vm.activeServer.baseUrl, vm.organization.id)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' + vm.activeServer.name, null, noToast);
+                    common.changePractitionerList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError('Error getting Practitioners', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function _getAffiliatedPatients() {
+            var deferred = $q.defer();
+            patientService.getPatients(vm.activeServer.baseUrl, undefined, vm.organization.id)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    common.changePatientList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError('Error getting Patients', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
         function showSource($event) {
             _showRawData(vm.organization, $event);
         }
+
         vm.showSource = showSource;
 
         function _showRawData(item, event) {
@@ -233,6 +265,7 @@
             var id = ($filter)('idFromURL')(resourceReference.reference);
             $location.path('/organization/get/' + id);
         }
+
         vm.goToPartOf = goToPartOf;
 
         Object.defineProperty(vm, 'canSave', {
@@ -285,21 +318,18 @@
                         createRandomPatients();
                         break;
                     case 1:
-                        $location.path('/patient/org/' + vm.organization.id);
-                        break;
-                    case 2:
                         $location.path('/organization/detailed-search');
                         break;
-                    case 3:
+                    case 2:
                         $location.path('/organization');
                         break;
-                    case 4:
+                    case 3:
                         $location.path('/organization/edit/current');
                         break;
-                    case 5:
+                    case 4:
                         $location.path('/organization/edit/new');
                         break;
-                    case 6:
+                    case 5:
                         deleteOrganization(vm.organization);
                         break;
                 }
@@ -308,15 +338,14 @@
                 if (vm.isEditing) {
                     this.items = [
                         {name: 'Add random patients', icon: 'groupAdd', index: 0},
-                        {name: 'Get patients', icon: 'group', index: 1},
-                        {name: 'Quick find', icon: 'quickFind', index: 3},
-                        {name: 'Edit organization', icon: 'edit', index: 4},
-                        {name: 'Add new organization', icon: 'hospital', index: 5}
+                        {name: 'Quick find', icon: 'quickFind', index: 2},
+                        {name: 'Edit organization', icon: 'edit', index: 3},
+                        {name: 'Add new organization', icon: 'hospital', index: 4}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Detailed search', icon: 'search', index: 2},
-                        {name: 'Quick find', icon: 'quickFind', index: 3}
+                        {name: 'Detailed search', icon: 'search', index: 1},
+                        {name: 'Quick find', icon: 'quickFind', index: 2}
                     ];
                 }
                 this.title = 'Organization search options';
@@ -354,7 +383,8 @@
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
             'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService',
-            'contactPointService', 'sessionService', 'patientService', 'personService', organizationDetail]);
+            'contactPointService', 'sessionService', 'patientService', 'personService', 'practitionerService',
+            organizationDetail]);
 
 })
 ();
