@@ -1,18 +1,18 @@
 <div ng-controller="patientDetail as vm" layout="row" layout-wrap ng-cloak>
-    <div flex="100">
-        <h3 ng-if="vm.isEditing === false">Add New Patient</h3>
+    <div flex="90">
+        <h3 class="md-title" ng-if="vm.isEditing === false">Add New Patient</h3>
 
-        <h3 ng-if="vm.isEditing === true">Edit {{vm.patient.name | fullName}}</h3>
+        <h3 class="md-title" ng-if="vm.isEditing === true">Edit {{vm.patient.name | fullName}}</h3>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
     <div flex="100">
-        <form name="patientEditForm" class="form-horizontal"
+        <ng-form name="patientEditForm" class="form-horizontal"
               ng-model="vm.patient">
-            <md-tabs>
+            <md-tabs md-dynamic-height>
                 <md-tab label="Name">
                     <div ng-include="'elements/humanName/humanName.html'"></div>
                 </md-tab>
@@ -47,6 +47,6 @@
                 </md-button>
                 <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
             </div>
-        </form>
+        </ng-form>
     </div>
 </div>

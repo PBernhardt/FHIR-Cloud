@@ -6,7 +6,7 @@
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
                            attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, practitionerService, communicationService,
-                           careProviderService, observationService, config) {
+                           careProviderService, observationService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -17,7 +17,7 @@
         var $q = common.$q;
         var noToast = false;
 
-        function activate() {
+        function _activate() {
             common.activateController([_getActiveServer()], controllerId).then(function () {
                 _getRequestedPatient();
             });
@@ -50,11 +50,15 @@
                 });
         }
 
+        vm.delete = deletePatient;
+
         function edit(patient) {
             if (patient && patient.hashKey) {
                 $location.path('/patient/' + patient.hashKey);
             }
         }
+
+        vm.edit = edit;
 
         function _getActiveServer() {
             fhirServers.getActiveServer()
@@ -74,6 +78,15 @@
                 });
             return deferred.promise;
         }
+
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function goToManagingOrganization(resourceReference) {
+            var id = ($filter)('idFromURL')(resourceReference.reference);
+            $location.path('/organization/get/' + id);
+        }
+
+        vm.goToManagingOrganization = goToManagingOrganization;
 
         function _getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
@@ -252,16 +265,27 @@
                     });
             }
         }
+        vm.save = save;
+
+        function showSource($event) {
+            _showRawData(vm.patient, $event);
+        }
+
+        vm.showSource = showSource;
 
         function showAuditData($index, $event) {
-            showRawData(vm.history[$index], $event);
+            _showRawData(vm.history[$index], $event);
         }
+
+        vm.showAuditData = showAuditData;
 
         function showClinicalData($index, $event) {
-            showRawData(vm.summary[$index], $event);
+            _showRawData(vm.summary[$index], $event);
         }
 
-        function showRawData(item, event) {
+        vm.showClinicalData = showClinicalData;
+
+        function _showRawData(item, event) {
             $mdDialog.show({
                 optionsOrPresent: {disableParentScroll: false},
                 templateUrl: 'templates/rawData-dialog.html',
@@ -313,22 +337,18 @@
                         $location.path('/lab');
                         break;
                     case 2:
-                        logInfo("Refreshing patient data from " + vm.activeServer.name);
-                        $location.path('/patient/get/' + vm.patient.id);
-                        break;
-                    case 3:
                         $location.path('/patient');
                         break;
-                    case 4:
+                    case 3:
                         $location.path('/patient/edit/current');
                         break;
-                    case 5:
+                    case 4:
                         $location.path('/patient/edit/new');
                         break;
-                    case 6:
+                    case 5:
                         $location.path('/patient/detailed-search');
                         break;
-                    case 7:
+                    case 6:
                         deletePatient(vm.patient);
                         break;
                 }
@@ -338,15 +358,14 @@
                     this.items = [
                         {name: 'Vitals', icon: 'vitals', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
-                        {name: 'Refresh data', icon: 'refresh', index: 2},
-                        {name: 'Find another patient', icon: 'search', index: 3},
-                        {name: 'Edit patient', icon: 'edit', index: 4},
-                        {name: 'Add new patient', icon: 'personAdd', index: 5}
+                        {name: 'Find another patient', icon: 'quickFind', index: 2},
+                        {name: 'Edit patient', icon: 'edit', index: 3},
+                        {name: 'Add new patient', icon: 'personAdd', index: 4}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Detailed search', icon: 'search', index: 6},
-                        {name: 'Quick find', icon: 'quickFind', index: 3}
+                        {name: 'Detailed search', icon: 'search', index: 5},
+                        {name: 'Quick find', icon: 'quickFind', index: 2}
                     ];
                 }
                 this.title = 'Patient options';
@@ -357,33 +376,28 @@
         }
 
         vm.actions = actions;
+
         vm.activeServer = null;
-        vm.delete = deletePatient;
         vm.dataEvents = [];
         vm.errors = [];
         vm.history = [];
         vm.isBusy = false;
         vm.summary = [];
-        vm.edit = edit;
-        vm.getOrganizationReference = getOrganizationReference;
         vm.lookupKey = undefined;
         vm.isBusy = false;
         vm.isSaving = false;
         vm.isEditing = true;
         vm.patient = undefined;
         vm.practitionerSearchText = '';
-        vm.save = save;
         vm.selectedPractitioner = null;
         vm.title = 'Patient Detail';
-        vm.showAuditData = showAuditData;
-        vm.showClinicalData = showClinicalData;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', patientDetail]);
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
 })();

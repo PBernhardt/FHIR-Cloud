@@ -130,7 +130,6 @@
             } else if (angular.isDefined($window.localStorage.patient)) {
                 vm.consultation.patient = JSON.parse($window.localStorage.patient);
                 vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
-                vm.consultation.patient.age = common.calculateAge(vm.consultation.patient.birthDate);
             } else {
                 logError("You must first select a patient before initiating a consultation", error);
                 $location.path('/patient');
@@ -172,24 +171,9 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('/lab');
-                        break;
-                    case 2:
                         $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
                         break;
-                    case 3:
-                        $location.path('consultation/smart/disease-monograph/' + vm.consultation.patient.id);
-                        break;
-                    case 4:
-                        $location.path('consultation/smart/diabetes-monograph/' + vm.consultation.patient.id);
-                        break;
-                    case 5:
-                        $location.path('consultation/smart/bp-centiles/' + vm.consultation.patient.id);
-                        break;
-                    case 6:
-                        $location.path('consultation/smart/meducation/' + vm.consultation.patient.id);
-                        break;
-                    case 7:
+                    case 2:
                         $location.path('/patient');
                         break;
                 }
@@ -197,13 +181,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Lab', icon: 'lab', index: 1},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 2},
-/*                    {name: 'Disease monograph', icon: 'smart', index: 3},
-                    {name: 'Diabetes monograph', icon: 'smart', index: 4},
-                    {name: 'BP Centiles', icon: 'smart', index: 5},
-                    {name: 'Meducation', icon: 'rx', index: 6},*/
-                    {name: 'Find another patient', icon: 'person', index: 7}
+                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
+                    {name: 'Find another patient', icon: 'quickFind', index: 2}
                 ];
                 this.title = 'Observation options';
                 this.performAction = function (action) {

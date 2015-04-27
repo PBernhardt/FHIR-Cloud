@@ -101,15 +101,17 @@
                 addressService.init(vm.organization.address, false);
                 contactService.init(vm.organization.contact);
                 contactPointService.init(vm.organization.telecom, false, false);
-
+                vm.isBusy = false;
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.organization = JSON.stringify(vm.organization);
                     _getAffiliatedPatients();
                     _getAffiliatedPractitioners();
                 }
+
             }
 
             vm.lookupKey = $routeParams.hashKey;
+            vm.isBusy = true;
 
             if (vm.lookupKey === "current") {
                 if (angular.isUndefined($window.localStorage.organization) || ($window.localStorage.organization === null)) {
@@ -136,6 +138,7 @@
                         sessionService.updateSession(session);
                     }, function (error) {
                         logError($filter('unexpectedOutcome')(error));
+                        vm.isBusy = false;
                     });
             } else {
                 if (vm.lookupKey) {
@@ -146,12 +149,14 @@
                             sessionService.updateSession(session);
                         }, function (error) {
                             logError($filter('unexpectedOutcome')(error));
+                            vm.isBusy = false;
                         });
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/Organization/' + $routeParams.id;
                     organizationService.getOrganization(resourceId)
                         .then(initializeRelatedData, function (error) {
                             logError($filter('unexpectedOutcome')(error));
+                            vm.isBusy = false;
                         });
                 }
             }

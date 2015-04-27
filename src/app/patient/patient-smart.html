@@ -1,5 +1,5 @@
-<div flex layout-wrap ng-controller="patientDetail as vm">
-    <div flex="90" hide-sm>
+<div layout="row" ng-controller="patientDetail as vm" layout-align="end start">
+    <div flex="85" hide-sm>
         <smart-app smart-url="vm.smartLaunchUrl"></smart-app>
     </div>
     <div flex="10">
@@ -7,4 +7,5 @@
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
+
 </div>

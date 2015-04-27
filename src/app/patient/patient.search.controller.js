@@ -3,7 +3,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, patientService) {
+    function patientSearch($location, $mdBottomSheet, common, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -13,30 +13,20 @@
         var noToast = false;
         var $q = common.$q;
 
-        function activate() {
-            common.activateController([getActiveServer()], controllerId)
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
-                    if (angular.isDefined($routeParams.orgId)) {
-                        getOrganizationPatients($routeParams.orgId);
-                        logInfo("Retrieving patients for current organization, please wait...");
-                    } else {
-                        _loadLocalLookups();
-                    }
+                    _loadLocalLookups();
                 }, function (error) {
                     logError('Error initializing patient search', error);
                 });
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
-        }
-
-        function getOrganizationPatients(orgId) {
-            vm.patientSearch.organization = orgId;
-            detailSearch();
         }
 
         function goToPatient(patient) {
@@ -44,6 +34,8 @@
                 $location.path('/patient/view/' + patient.$$hashKey);
             }
         }
+
+        vm.goToPatient = goToPatient;
 
         function _loadLocalLookups() {
             vm.ethnicities = localValueSets.ethnicity().concept;
@@ -158,32 +150,17 @@
                 return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
             }
 
-            searchPatients(queryString);
+            _searchPatients(queryString);
         }
 
-        function dereferenceLink(url) {
-            vm.isBusy = true;
-            patientService.getPatientsByLink(url)
-                .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
-                    vm.activeServer.name, null, noToast);
-                    return data;
-                }, function (error) {
-                    vm.isBusy = false;
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
-                })
-                .then(processSearchResults)
-                .then(function () {
-                    vm.isBusy = false;
-                });
-        }
+        vm.detailSearch = detailSearch;
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
-                    vm.activeServer.name, null, noToast);
+                        vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry);
                 }, function (error) {
                     logError('Error getting patients', error, noToast);
@@ -194,14 +171,15 @@
 
         vm.quickSearch = quickSearch;
 
-        function searchPatients(searchText) {
+        function _searchPatients(searchText) {
             var deferred = $q.defer();
             vm.isBusy = true;
             patientService.searchPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
-                    vm.activeServer.name, null, noToast);
-                    processSearchResults(data);
+                        vm.activeServer.name, null, noToast);
+                    common.changePatientList(data);
+                    deferred.resolve();
                     vm.isBusy = false;
                     vm.selectedTab = 1;
                 }, function (error) {
@@ -211,14 +189,6 @@
                 })
                 .then(deferred.resolve());
             return deferred.promise;
-        }
-
-        function processSearchResults(searchResults) {
-            if (searchResults) {
-                vm.patients = (searchResults.entry || []);
-                vm.paging.links = (searchResults.link || []);
-                vm.paging.totalResults = (searchResults.total || 0);
-            }
         }
 
         function ageRangeChange() {
@@ -233,11 +203,15 @@
             }
         }
 
+        vm.ageRangeChange = ageRangeChange;
+
         function dobChange() {
             if (vm.patientSearch.dob !== undefined) {
                 vm.patientSearch.age.end = vm.patientSearch.age.start = undefined;
             }
         }
+
+        vm.dobChange = dobChange;
 
         function actions($event) {
             $mdBottomSheet.show({
@@ -277,9 +251,9 @@
             }
         }
 
+        vm.actions = actions;
+
         vm.activeServer = null;
-        vm.dereferenceLink = dereferenceLink;
-        vm.goToPatient = goToPatient;
         vm.patients = [];
         vm.selectedPatient = null;
         vm.searchResults = null;
@@ -287,14 +261,10 @@
         vm.title = 'Patients';
         vm.managingOrganization = undefined;
         vm.practitioner = undefined;
-        vm.actions = actions;
         vm.races = [];
         vm.ethnicities = [];
         vm.languages = [];
-        vm.detailSearch = detailSearch;
         vm.isBusy = false;
-        vm.ageRangeChange = ageRangeChange;
-        vm.dobChange = dobChange;
         vm.patientSearch = {
             name: {first: undefined, last: undefined},
             mothersMaidenName: undefined,
@@ -310,15 +280,11 @@
             organization: undefined,
             careProvider: undefined
         };
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
         vm.selectedTab = 0;
-        activate();
+
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
 })();

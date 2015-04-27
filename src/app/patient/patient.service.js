@@ -244,8 +244,9 @@
             return {
                 "resourceType": "Patient",
                 "name": [],
+                "identifier": [],
                 "gender": undefined,
-                "birthDate": null,
+                "birthDate": undefined,
                 "maritalStatus": undefined,
                 "multipleBirth": false,
                 "telecom": [],
@@ -256,8 +257,7 @@
                 "careProvider": [],
                 "contact": [],
                 "link": [],
-                "extension": [],
-                "active": true
+                "extension": []
             };
         }
 
@@ -347,7 +347,7 @@
                         resource.extension.push(_randomBirthPlace(birthPlace));
 
                         mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
+                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
 
                         var timer = $timeout(function () {
                         }, 3000);

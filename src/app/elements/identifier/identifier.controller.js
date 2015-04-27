@@ -3,16 +3,19 @@
 
     var controllerId = 'identifier';
 
-    function identifier(common, identifierService) {
+    function identifier(common, identifierService, localValueSets) {
         /* jshint validthis:true */
         var vm = this;
 
-        function activate() {
-            common.activateController([getIdentifiers(), getMode()], controllerId)
+        function _activate() {
+            common.activateController([_getIdentifiers(), _getMode()], controllerId)
                 .then(function () {
                     if (vm.identifiers.length > 0 && vm.mode === 'single') {
                         vm.identifier = vm.identifiers[0];
                     }
+                    vm.identifierTypes = localValueSets.identifierType().concept;
+                    vm.identifier.value = _generateIdentifier();
+                    vm.identifier.use = "usual";
                 });
         }
 
@@ -21,24 +24,25 @@
                 identifierService.add(_.clone(item));
                 vm.identifiers = identifierService.getAll();
                 vm.identifier = {};
+                vm.identifier.value = _generateIdentifier();
+                vm.identifier.use = "usual";
                 form.$setPristine();
                 form.$setUntouched();
             }
         }
 
-        function editListItem(item) {
-            vm.identifier = item;
-        }
+        vm.addToList = addToList;
 
-        function generateIdentifier() {
+        function _generateIdentifier() {
             return common.generateUUID();
         }
 
-        function getIdentifiers() {
+
+        function _getIdentifiers() {
             vm.identifiers = identifierService.getAll();
         }
 
-        function getMode() {
+        function _getMode() {
             vm.mode = identifierService.getMode();
             return vm.mode;
         }
@@ -48,28 +52,23 @@
             vm.identifiers = identifierService.getAll();
         }
 
+        vm.removeListItem = removeListItem;
+
         function reset(form) {
-            vm.identifier = { "use": "usual"};
+            vm.identifier = {"use": "usual"};
             form.$setPristine();
         }
 
-        function updateIdentifier() {
-            identifierService.setSingle(_.clone(vm.identifier));
-        }
+        vm.reset = reset;
 
-        vm.addToList = addToList;
-        vm.editListItem = editListItem;
-        vm.genId = generateIdentifier;
         vm.identifier = {};
         vm.identifiers = [];
+        vm.identifierTypes = [];
         vm.mode = 'multi';
-        vm.removeListItem = removeListItem;
-        vm.reset = reset;
-        vm.updateIdentifier = updateIdentifier;
 
-        activate();
+        _activate();
     }
 
-    angular.module('FHIRCloud').controller(controllerId, ['common', 'identifierService', identifier]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'identifierService', 'localValueSets', identifier]);
 
 })();

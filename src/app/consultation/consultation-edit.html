@@ -1,14 +1,14 @@
 <div ng-controller="consultationDetail as vm" layout="row" layout-wrap>
-    <div flex="100">
-        <h3>Consultation for {{vm.consultation.patient.fullName}} ({{vm.consultation.patient.gender}}, {{vm.consultation.patient.birthDate | displayAge}})</h3>
+    <div flex="95">
+        <h3 class="md-title">Consultation for {{vm.consultation.patient.fullName}} ({{vm.consultation.patient.gender}}, {{vm.consultation.patient.birthDate | displayAge}})</h3>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
     <div flex="100">
-        <md-tabs>
+        <md-tabs md-dynamic-height>
             <!-- begin bp -->
             <md-tab label="Blood Pressure">
                 <form name="bloodPressureForm" class="form-horizontal"

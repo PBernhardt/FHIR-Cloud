@@ -34,6 +34,15 @@
                        ng-model="vm.contactPoint.url"/>
             </md-input-container>
 
+
+            <md-radio-group ng-model="vm.contactPoint.use" layout-gt-md="row">
+                <md-radio-button value="work" aria-label="work">Work</md-radio-button>
+                <md-radio-button value="home" aria-label="home">Home</md-radio-button>
+                <md-radio-button value="mobile" aria-label="mobile"> Mobile</md-radio-button>
+                <md-radio-button value="temp" aria-label=temp">Temp</md-radio-button>
+                <md-radio-button value="old" aria-label="old">Former</md-radio-button>
+            </md-radio-group>
+
             <div ng-if="vm.contactPoint.use === 'old'">
                 <h4 class="md-subhead">Period of former contact point</h4>
 
@@ -52,14 +61,6 @@
                     </md-input-container>
                 </div>
             </div>
-
-            <md-radio-group ng-model="vm.contactPoint.use" layout-gt-md="row">
-                <md-radio-button value="work" aria-label="work">Work</md-radio-button>
-                <md-radio-button value="home" aria-label="home">Home</md-radio-button>
-                <md-radio-button value="mobile" aria-label="mobile"> Mobile</md-radio-button>
-                <md-radio-button value="temp" aria-label=temp">Temp</md-radio-button>
-                <md-radio-button value="old" aria-label="old">Former</md-radio-button>
-            </md-radio-group>
 
             <div class="md-padding">
                 <md-button ng-click="vm.addToList(contactPointEditForm, vm.contactPoint)"

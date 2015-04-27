@@ -5,6 +5,66 @@
 
     function localValueSets() {
 
+        function identifierType() {
+            return {
+                "system": "http://hl7.org/fhir/v2/0203",
+                "concept": [
+                    {
+                        "code": "DL",
+                        "display": "Driver's license number	"
+                    },
+                    {
+                        "code": "PPN",
+                        "display": "Passport number"
+                    },
+                    {
+                        "code": "MR",
+                        "display": "Medical record number"
+                    },
+                    {
+                        "code": "MCN",
+                        "display": "Microchip number"
+                    },
+                    {
+                        "code": "EN",
+                        "display": "Employer number"
+                    },
+                    {
+                        "code": "SS",
+                        "display": "Social security number"
+                    },
+                    {
+                        "code": "TAX",
+                        "display": "Tax ID number"
+                    },
+                    {
+                        "code": "NIIP",
+                        "display": "National Insurance Payor Identifier"
+                    },
+                    {
+                        "code": "PRN",
+                        "display": "Provider number"
+                    },
+                    {
+                        "code": "MD",
+                        "display": "Medical license number"
+                    },
+                    {
+                        "code": "UDI",
+                        "display": "Universal Device Identifier"
+                    },
+                    {
+                        "code": "SNO",
+                        "display": "Serial Number"
+                    },
+                    {
+                        "code": "DR",
+                        "display": "Donor Registration number"
+                    }
+                ]
+            };
+        }
+
         function race() {
             return {
                 "system": "http://hl7.org/fhir/v3/Race",
@@ -1130,6 +1190,7 @@
         var service = {
             administrativeGender: administrativeGender,
             contactEntityType: contactEntityType,
+            identifierType: identifierType,
             iso6391Languages: languages,
             locationMode: locationMode,
             locationPhysicalType: locationPhysicalType,

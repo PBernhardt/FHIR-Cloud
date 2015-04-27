@@ -13,6 +13,12 @@
             if (index > -1) {
                 identifiers[index] = item;
             } else {
+                if (angular.isDefined(item.type)) {
+                    item.type = {
+                        "coding": [ item.type ],
+                        "text": item.type.display
+                    }
+                }
                 identifiers.push(item);
             }
         }

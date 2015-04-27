@@ -1,8 +1,8 @@
-<div flex layout-wrap ng-controller="consultationDetail as vm">
-    <div flex="90" hide-sm>
+<div ng-controller="consultationDetail as vm" layout="row" layout-align="end start">
+    <div flex="95" hide-sm>
         <smart-app smart-url="vm.smartLaunchUrl"></smart-app>
     </div>
-    <div flex="10">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>

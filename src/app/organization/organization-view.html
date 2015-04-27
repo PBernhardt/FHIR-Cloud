@@ -1,20 +1,24 @@
 ﻿<div ng-controller="organizationDetail as vm">
     <div layout="row" layout-wrap>
         <div flex="90">
-            <h3>{{vm.organization.name}}</h3>
+            <h3 class="md-title">{{vm.organization.name}}</h3>
         </div>
         <div flex="10">
             <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
                 <md-icon md-svg-icon="actions"></md-icon>
             </md-button>
         </div>
+        <div flex="100" ng-if="vm.isBusy === true" layout="row" layout-align="center end" style="height: 300px">
+            <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+        </div>
 
-        <md-tabs md-dynamic-height>
+        <md-tabs md-dynamic-height ng-if="vm.isBusy === false">
             <md-tab label="Administrative">
-                <div flex="100" layout="row" layout-sm="column" layout-align="space-between end"
+                <div flex="100" layout="row" layout-sm="column" layout-align="space-between center"
                      ng-if="vm.organization"
                      layout-wrap>
-                    <md-input-container flex="70" class="md-icon-float" ng-if="vm.organization.resourceId">
+                    <br>
+                    <md-input-container flex="100" class="md-icon-float" ng-if="vm.organization.resourceId">
                         <label>Resource Id</label>
                         <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
                         <input ng-model="vm.organization.resourceId" readonly/>
@@ -23,6 +27,11 @@
                     <md-input-container flex="25" ng-if="vm.organization.type && vm.organization.type.coding[0]">
                         <label>Type</label>
                         <input ng-model="vm.organization.type.coding[0].display" readonly/>
+                    </md-input-container>
+
+                    <md-input-container flex="20" ng-if="vm.organization.active">
+                        <label>Active</label>
+                        <input ng-model="vm.organization.active" readonly/>
                     </md-input-container>
 
                     <md-input-container flex="60" class="md-icon-float" ng-if="vm.organization.partOf">
@@ -74,16 +83,13 @@
                             <md-icon md-svg-icon="identifier" ng-if="$index === 0"></md-icon>
                             <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
                                 <h3>{{id.system}} | {{id.value }} </h3>
+                                <h4>{{id.type | codeableConcept}}</h4>
 
                                 <p>{{id.use}}</p>
                             </div>
                         </md-list-item>
                     </md-list>
 
-                    <md-input-container flex="20" ng-if="vm.organization.active">
-                        <label>Active</label>
-                        <input ng-model="vm.organization.active" readonly/>
-                    </md-input-container>
                 </div>
             </md-tab>
             <md-tab label="Practitioners">

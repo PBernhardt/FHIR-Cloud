@@ -1,5 +1,5 @@
 ﻿<div ng-controller="patientSearch as vm" layout="row" layout-wrap>
-        <div flex="80">
+        <div flex="90">
             <h3 class="md-title">Patient Quick Find</h3>
             <md-autocomplete
                     md-no-cache="true"
@@ -13,7 +13,7 @@
               <span md-highlight-text="vm.searchText">{{patient.resource.name | fullName}}</span>
             </md-autocomplete>
         </div>
-        <div flex="20">
+        <div flex="5">
             <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
                 <md-icon md-svg-icon="actions"></md-icon>
             </md-button>

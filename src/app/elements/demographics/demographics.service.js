@@ -71,6 +71,9 @@
         }
 
         function init(gender, maritalStatus, language) {
+            _gender = undefined;
+            _maritalStatus = undefined;
+            _language = undefined;
             if (gender) {
                 _gender = gender;
             }
@@ -83,6 +86,8 @@
         }
 
         function initBirth(multipleBirth, birthOrder) {
+            _birthOrder = undefined;
+            _multipleBirth = undefined;
             if (birthOrder) {
                 _birthOrder = birthOrder;
                 _multipleBirth = true;
@@ -92,6 +97,7 @@
         }
 
         function initDeath(deceased, dateOfDeath) {
+            _deceased = undefined;
             if (dateOfDeath) {
                 _deceasedDate = dateOfDeath;
                 _deceased = true;
@@ -101,6 +107,11 @@
         }
 
         function initializeKnownExtensions(extensions) {
+            _race = undefined;
+            _mothersMaidenName = undefined;
+            _religion = undefined;
+            _birthPlace = undefined;
+            _ethnicity = undefined;
             if (extensions) {
                 for (var i = 0, len = extensions.length; i < len; i++) {
                     var ext = extensions[i];
@@ -123,7 +134,7 @@
                                 _birthPlace.text = $filter('singleLineAddress')(ext.valueAddress);
                                 break;
                             default:
-                            break;
+                                break;
                         }
                     }
                 }

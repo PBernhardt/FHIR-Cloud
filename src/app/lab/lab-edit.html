@@ -1,21 +1,21 @@
 <div ng-controller="labDetail as vm" layout="row" layout-wrap>
-    <div flex="100">
-        <h3>Diagnostic Report for {{vm.lab.patient.fullName}} ({{vm.lab.patient.gender}}, {{vm.lab.patient.birthDate |
+    <div flex="95">
+        <h3 class="md-title">Diagnostic Report for {{vm.lab.patient.fullName}} ({{vm.lab.patient.gender}}, {{vm.lab.patient.birthDate |
             displayAge }})</h3>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
     <div flex="100">
-        <md-tabs>
+        <md-tabs md-dynamic-height>
             <md-tab label="Lipid Profile">
-                <form name="lipidForm" class="form-horizontal">
+                <ng-form name="lipidForm">
                     <!-- begin total hdl cholesterol-->
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
+                    <div layout-sm="column" layout="row" layout-align="start center">
 
-                        <div flex="15" layout layout-align="center center">
+                        <div flex="25" layout layout-align="start start">
                             <span>
                               <md-input-container>
                                   <label>HDL Cholesterol</label>
@@ -24,13 +24,12 @@
                                          aria-controls="hdl-cholesterol-slider"
                                          type="number"
                                          step="1"
-                                         placeholder="mg/Dl"
                                          ng-change="vm.updateHdlCholesterol()"
                                          min="30" max="80" ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
-                        <md-slider flex="85"
+                        <md-slider flex="70"
                                    md-discrete="true"
                                    step="5"
                                    min="30" max="80"
@@ -47,9 +46,9 @@
                     </div>
                     <md-divider></md-divider>
                     <!-- begin total ldl cholesterol-->
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
+                    <div layout-sm="column" layout="row" layout-align="start center">
 
-                        <div flex="15" layout layout-align="center center">
+                        <div flex="25" layout layout-align="start start">
                             <span>
                               <md-input-container>
                                   <label>LDL Cholesterol</label>
@@ -58,14 +57,13 @@
                                          aria-controls="ldl-cholesterol-slider"
                                          type="number"
                                          step="1"
-                                         placeholder="mg/Dl"
                                          ng-change="vm.updateLdlCholesterol()"
                                          min="80" max="200"
                                          ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
-                        <md-slider flex="85"
+                        <md-slider flex="70"
                                    md-discrete="true"
                                    step="20"
                                    min="80" max="200"
@@ -82,9 +80,9 @@
                     </div>
                     <md-divider></md-divider>
                     <!-- begin triglyceride-->
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
+                    <div layout-sm="column" layout="row" layout-align="start center">
 
-                        <div flex="15" layout layout-align="center center">
+                        <div flex="25" layout layout-align="start start">
                             <span>
                               <md-input-container>
                                   <label>Triglyceride</label>
@@ -93,14 +91,13 @@
                                          aria-controls="triglyceride-slider"
                                          type="number"
                                          step="1"
-                                         placeholder="mg/Dl"
                                          ng-change="vm.updateTriglyceride()"
                                          min="60" max="600"
                                          ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
-                        <md-slider flex="85"
+                        <md-slider flex="70"
                                    md-discrete="true"
                                    step="20"
                                    min="60" max="600"
@@ -117,9 +114,9 @@
                     </div>
                     <md-divider></md-divider>
                     <!-- begin total cholesterol-->
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
+                    <div layout-sm="column" layout="row" layout-align="start center">
 
-                        <div flex="15" layout layout-align="center center">
+                        <div flex="25" layout layout-align="start start">
                             <span>
                               <md-input-container>
                                   <label>Total Cholesterol (calculated)</label>
@@ -127,13 +124,12 @@
                                          name="total-cholesterol"
                                          aria-controls="total-cholesterol-slider"
                                          type="number"
-                                         placeholder="mg/Dl"
                                          readonly
                                          ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
-                        <md-slider flex="85"
+                        <md-slider flex="70"
                                    min="120" max="300"
                                    ng-model="vm.lab.lipid.cholesterol.value"
                                    aria-label="total cholesterol"
@@ -146,7 +142,7 @@
                             {{vm.lab.lipid.cholesterol.interpretationText}}</p>
                     </div>
 
-                    <div layout-sm="column" layout="row" layout-align="end start">
+                    <div flex layout-sm="column" layout="row" layout-align="end start">
                         <md-input-container>
                             <label>Date Processed</label>
                             <input ng-model="vm.lab.date" id="lipid-date" type="datetime-local" ng-required="true"/>
@@ -161,13 +157,13 @@
                                  alt="Save lipid panel"></md-icon>
                     </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                </form>
+                </ng-form>
             </md-tab>
             <md-tab label="High-sensitivity CRP">
-                <form name="crpForm" class="layout-horizontal">
-                    <div layout-sm="column" layout="row" layout-align="space-between center">
+                <ng-form name="crpForm">
+                    <div layout-sm="column" layout="row" layout-align="start center">
 
-                        <div flex="15" layout layout-align="center center">
+                        <div flex="25" layout layout-align="start start">
                             <span>
                               <md-input-container>
                                   <label>C-reactive Protein</label>
@@ -175,16 +171,16 @@
                                          name="crp"
                                          aria-controls="crp-slider"
                                          type="number"
-                                         step=".1"
-                                         placeholder="mg/L"
+                                         step=".2"
                                          ng-change="vm.updateCRP()"
-                                         min="0" max="12" ng-required="true"/>
+                                         min="0" max="12"
+                                         ng-required="true"/>
                               </md-input-container>
                             </span>
                         </div>
-                        <md-slider flex="85"
+                        <md-slider flex="75"
                                    md-discrete="true"
-                                   step=".5"
+                                   step=".1"
                                    min="0" max="12"
                                    ng-model="vm.lab.crp.value"
                                    aria-label="crp"
@@ -212,7 +208,7 @@
                                  alt="Save CRP"></md-icon>
                     </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                </form>
+                </ng-form>
             </md-tab>
         </md-tabs>
     </div>

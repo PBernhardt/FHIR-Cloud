@@ -47,7 +47,6 @@
             } else if (angular.isDefined($window.localStorage.patient)) {
                 vm.lab.patient = JSON.parse($window.localStorage.patient);
                 vm.lab.patient.fullName = $filter('fullName')(vm.lab.patient.name);
-                vm.lab.patient.age = common.calculateAge(vm.lab.patient.birthDate);
             } else {
                 logError("You must first select a patient before initiating a lab", error);
                 $location.path('/patient');
@@ -89,12 +88,9 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation');
-                        break;
-                    case 2:
                         $location.path('consultation/smart/cardiac-risk/' + vm.lab.patient.id);
                         break;
-                    case 3:
+                    case 2:
                         $location.path('/patient');
                         break;
                 }
@@ -102,9 +98,8 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Consult', icon: 'consult', index: 1},
-                    {name: 'Cardiac Risk report', icon: 'cardio', index: 2},
-                    {name: 'Find another patient', icon: 'person', index: 3}
+                    {name: 'Cardiac Risk report', icon: 'cardio', index: 1},
+                    {name: 'Find another patient', icon: 'quickFind', index: 2}
                 ];
                 this.title = 'Lab options';
                 this.performAction = function (action) {

@@ -1,62 +1,81 @@
 <div ng-controller="identifier as vm">
     <md-content class="md-padding">
         <ng-form name="identifierEditForm" ng-model="vm.identifier">
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>The namespace for the identifier (required)</label>
+                <md-icon md-svg-icon="domain"></md-icon>
                 <input name="system"
                        ng-model="vm.identifier.system"/>
             </md-input-container>
 
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>The value that is unique (required)</label>
+                <md-icon md-svg-icon="refresh"></md-icon>
                 <input name="value"
                        ng-model="vm.identifier.value"/>
             </md-input-container>
 
-            <!--TODO: Add support for Type (DSTU2)-->
-
-            <md-input-container>
+            <md-input-container class="md-icon-float">
                 <label>Organization that issued id (may be just text)</label>
+                <md-icon md-svg-icon="authority"></md-icon>
                 <input ng-model="vm.identifier.assigner"/>
             </md-input-container>
 
+            <div layout="column" layout-align="start start">
+                <md-select ng-model="vm.identifier.type">
+                    <md-option ng-value="type" ng-repeat="type in vm.identifierTypes">
+                        {{type.display}}
+                    </md-option>
+                </md-select>
+                <p class="result">Type</p>
+            </div>
+
             <md-radio-group ng-model="vm.identifier.use" layout-gt-md="row" ng-if="vm.mode==='multi'">
-                <md-radio-button value="usual" aria-label="usual">Usual</md-radio-button>
                 <md-radio-button value="official" aria-label="official">Official</md-radio-button>
+                <md-radio-button value="usual" aria-label="usual">Usual</md-radio-button>
+                <md-radio-button value="secondary" aria-label="secondary">Secondary</md-radio-button>
                 <md-radio-button value="temp" aria-label="temp">Temporary</md-radio-button>
-                <md-radio-button value="secondary" aria-label="old">Secondary</md-radio-button>
+                <md-radio-button value="old" aria-label="old">Former</md-radio-button>
             </md-radio-group>
+
+            <div ng-if="vm.identifier.use === 'old'">
+                <h4 class="md-subhead">Period of former identifier</h4>
+
+                <div layout="row" layout-sm="column" layout-align="space-around center">
+                    <md-input-container>
+                        <label>Start</label>
+                        <input
+                                type="date"
+                                ng-model="vm.identifier.period.start">
+                    </md-input-container>
+                    <md-input-container>
+                        <label>End</label>
+                        <input
+                                type="date"
+                                ng-model="vm.identifier.period.end">
+                    </md-input-container>
+                </div>
+            </div>
+
 
             <div ng-if="vm.mode==='multi'" class="md-padding">
                 <md-button ng-click="vm.addToList(identifierEditForm, vm.identifier)"
                            aria-label="Save identifier to list"
                            ng-if="vm.identifier.system || vm.identifier.value">
-                    <md-icon md-svg-icon="list" alt="Save to identifier list"></md-icon>
+                    <md-icon md-svg-icon="listAdd" alt="Save to identifier list"></md-icon>
                 </md-button>
+            </div>
+
+            <div ng-if="vm.identifiers.length > 0 && vm.mode==='multi'">
+                <md-subheader>Identifier List</md-subheader>
+                <md-list>
+                    <md-list-item ng-click="vm.removeListItem(id)" ng-repeat="id in vm.identifiers">
+                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                        <p>{{id.system}} | {{id.value}}</p>
+                    </md-list-item>
+                </md-list>
             </div>
         </ng-form>
 
-        <div ng-if="vm.identifiers.length > 0 && vm.mode==='multi'">
-            <form>
-                <md-subheader>Identifier List</md-subheader>
-                <md-list>
-                    <md-item ng-repeat="id in vm.identifiers">
-                        <md-item-content>
-                            <div class="md-tile-left">
-                                <md-button ng-click="vm.removeListItem(id)" aria-label="Remove {{id.value}} from list">
-                                    <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
-                                </md-button>
-                            </div>
-                            <div class="md-tile-content">
-                                <h3>{{id.system}}</h3>
-                                <h4>{{id.value}}</h4>
-
-                                <p>{{id.label}}</p>
-                            </div>
-                        </md-item-content>
-                    </md-item>
-                </md-list>
-            </form>
-        </div>
     </md-content>
 </div>

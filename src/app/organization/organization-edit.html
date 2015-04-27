@@ -1,10 +1,10 @@
 ﻿<div ng-controller="organizationDetail as vm" layout="row" layout-wrap>
-    <div flex="70">
-        <h3 ng-if="vm.isEditing === false">Add New Organization</h3>
+    <div flex="90">
+        <h3 class="md-title" ng-if="vm.isEditing === false">Add New Organization</h3>
 
-        <h3 ng-if="vm.isEditing === true">Edit {{vm.organization.name}}</h3>
+        <h3 class="md-title" ng-if="vm.isEditing === true">Edit {{vm.organization.name}}</h3>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>

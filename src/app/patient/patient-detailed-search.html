@@ -1,8 +1,8 @@
 ﻿<div ng-controller="patientSearch as vm" layout="row" layout-wrap>
-    <div flex="75">
+    <div flex="90">
         <h3 class="md-title">Patient Detailed Search</h3>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
@@ -172,24 +172,7 @@
                 </md-content>
             </md-tab>
             <md-tab id="results" label="Search Results">
-                <section>
-                    <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
-                    <md-list layout="column">
-                        <md-list-item class="md-3-line" ng-click="vm.goToPatient(p)" ng-repeat="p in vm.patients">
-                            <img fs-img-person="p.resource.photo[0]" class="face" alt="{{p.name}}"/>
-                            <div class="md-list-item-text">
-                                <h3>{{p.resource.name | fullName}}</h3>
-                                <h4>{{p.resource.birthDate | displayAge }}
-                                    <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></h4>
-                                <p>{{p.resource.managingOrganization.display ||
-                                    p.resource.managingOrganization.reference || "No Organization"}}</p>
-                            </div>
-                        </md-list-item>
-                        <md-divider ng-if="!$last"></md-divider>
-                    </md-list>
-                </section>
-                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                <fs-pagination on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
+                <div ng-include="'elements/patientList/patientList.html'"></div>
             </md-tab>
         </md-tabs>
     </div>

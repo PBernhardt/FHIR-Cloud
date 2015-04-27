@@ -35,50 +35,41 @@
                 <md-radio-button value="maiden" aria-label="maiden">Maiden</md-radio-button>
                 <md-radio-button value="old" aria-label="old">Former</md-radio-button>
             </md-radio-group>
+
             <div ng-if="vm.humanName.use === 'old'">
                 <h4>Period of former name</h4>
-                <label>Start</label>
-                <input
-                        type="date"
-                        ng-model="vm.humanName.period.start">
-                <label>End</label>
-                <input
-                        type="date"
-                        ng-model="vm.humanName.period.end">
+                <div layout="row" layout-sm="column" layout-align="space-around center">
+                    <md-input-container>
+                        <label>Start</label>
+                        <input
+                                type="date"
+                                ng-model="vm.humanName.period.start">
+                    </md-input-container>
+                    <md-input-container>
+                        <label>End</label>
+                        <input
+                                type="date"
+                                ng-model="vm.humanName.period.end">
+                    </md-input-container>
+                </div>
             </div>
+
             <div ng-if="vm.mode==='multi'" class="md-padding">
                 <md-button ng-click="vm.addToList(humanNameEditForm, vm.humanName)" aria-label="Save to list">
-                    <md-icon md-svg-icon="list" alt="Save to name list"></md-icon>
+                    <md-icon md-svg-icon="listAdd" alt="Save to name list"></md-icon>
                 </md-button>
             </div>
-        </ng-form>
-        <div>
-            <div ng-if="vm.humanNames.length > 0 && vm.mode==='multi'">
-                <form>
-                    <section>
-                        <md-subheader>Name List</md-subheader>
-                        <md-list>
-                            <md-item ng-repeat="name in vm.humanNames">
-                                <md-item-content>
-                                    <div class="md-tile-left">
-                                        <md-button ng-click="vm.removeListItem(name)" aria-label="Remove from list">
-                                            <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
-                                        </md-button>
-                                    </div>
-                                    <div class="md-tile-content">
-                                        <h3>{{::name | fullName}}</h3>
-                                        <h4>{{::name.use}}</h4>
 
-                                        <p ng-if="name.period">
-                                            {{::name.period | periodText}}
-                                        </p>
-                                    </div>
-                                </md-item-content>
-                            </md-item>
-                        </md-list>
-                    </section>
-                </form>
+            <div ng-if="vm.humanNames.length > 0 && vm.mode==='multi'">
+
+                <md-subheader>Name List</md-subheader>
+                <md-list>
+                    <md-list-item ng-click="vm.removeListItem(name)" ng-repeat="name in vm.humanNames">
+                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                        <p>{{name | fullName}}</p>
+                    </md-list-item>
+                </md-list>
             </div>
-        </div>
+        </ng-form>
     </md-content>
 </div>
