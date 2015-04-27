@@ -507,6 +507,7 @@
             .icon("identifier", "./assets/svg/identifier.svg", 24)
             .icon("immunization", "./assets/svg/immunize2.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
+            .icon("language", "./assets/svg/language.svg", 24)
             .icon("link", "./assets/svg/link.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("listAdd", "./assets/svg/listAdd.svg",24)
@@ -16760,13 +16761,24 @@
                                 {
                                     "system": "urn:oid:2.16.840.1.113883.4.1",
                                     "value": user.SSN,
-                                    "use": "secondary",
+                                    "use": "usual",
+                                    "type": {
+                                        "text": "Social Security Number",
+                                        "coding": [{
+                                            "code": "SS",
+                                            "display": "Social Security Number",
+                                            "system": "http://hl7.org/fhir/v2/0203"
+                                        }]
+                                    },
                                     "assigner": {"display": "Social Security Administration"}
                                 },
                                 {
                                     "system": "urn:oid:2.16.840.1.113883.15.18",
                                     "value": user.registered,
                                     "use": "official",
+                                    "type": {
+                                        "text": organizationName + " identifier"
+                                    },
                                     "assigner": {"display": organizationName}
                                 },
                                 {

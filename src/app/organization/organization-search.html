@@ -1,6 +1,6 @@
 ﻿<div ng-controller="organizationSearch as vm" layout="row" layout-wrap>
-    <div flex="80">
-        <h3>Organization Quick Find</h3>
+    <div flex="90">
+        <h3 class="md-title">Organization Quick Find</h3>
         <md-autocomplete
                 md-selected-item-change="vm.goToOrganization(vm.selectedOrganization)"
                 md-selected-item="vm.selectedOrganization"
@@ -12,7 +12,7 @@
             <span md-highlight-text="vm.searchText">{{org.resource.name}}</span>
         </md-autocomplete>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>

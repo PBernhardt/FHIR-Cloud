@@ -25,72 +25,100 @@
                     <md-input-container flex="100" class="md-icon-float" ng-if="vm.patient.resourceId">
                         <label>Resource Id</label>
                         <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
-                        <input ng-model="vm.patient.resourceId" readonly/>
+                        <input ng-model="vm.patient.resourceId" ng-readonly/>
                     </md-input-container>
 
                     <md-input-container flex="15" ng-if="vm.patient.gender">
                         <label>Gender</label>
-                        <input ng-model="vm.patient.gender" readonly/>
+                        <input ng-model="vm.patient.gender" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="15" ng-if="vm.patient.birthDate">
                         <label>Birth date</label>
-                        <input ng-model="vm.patient.birthDate | date: 'longDate'" readonly/>
+                        <input ng-model="vm.patient.birthDate | date: 'longDate'"
+                               ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="15"
                                         ng-if="vm.patient.multipleBirthInteger">
                         <label>Birth Order</label>
-                        <input ng-model="vm.patient.multipleBirthInteger" readonly/>
+                        <input ng-model="vm.patient.multipleBirthInteger" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="15"
                                         ng-if="vm.patient.deceasedDateTime">
                         <label>Date of Death</label>
-                        <input ng-model="vm.patient.deceasedDateTime | date: 'longDate'" readonly/>
+                        <input ng-value="vm.patient.deceasedDateTime | date: 'longDate'" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="20" ng-if="vm.patient.birthPlace">
                         <label>Birth place</label>
-                        <input ng-model="vm.patient.birthPlace | singleLineAddress" readonly/>
+                        <input ng-model="vm.patient.birthPlace | singleLineAddress" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.mothersMaidenName">
                         <label>Mother's Maiden Name</label>
-                        <input ng-model="vm.patient.mothersMaidenName" readonly/>
+                        <input ng-model="vm.patient.mothersMaidenName" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.race">
                         <label>Race</label>
-                        <input ng-model="vm.patient.race | codeableConcept" readonly/>
+                        <input ng-model="vm.patient.race | codeableConcept" readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.religion">
                         <label>Religion</label>
-                        <input ng-model="vm.patient.religion | codeableConcept" readonly/>
+                        <input ng-model="vm.patient.religion | codeableConcept" readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.ethnicity">
                         <label>Ethnicity</label>
-                        <input ng-model="vm.patient.ethnicity | codeableConcept" readonly/>
+                        <input ng-model="vm.patient.ethnicity | codeableConcept" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.maritalStatus">
                         <label>Marital status</label>
-                        <input ng-model="vm.patient.maritalStatus | codeableConcept" readonly/>
+                        <input ng-model="vm.patient.maritalStatus | codeableConcept" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="20" ng-if="vm.patient.active">
                         <label>Active</label>
-                        <input ng-model="vm.patient.active" readonly/>
+                        <input ng-model="vm.patient.active" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="60" class="md-icon-float" ng-if="vm.patient.managingOrganization">
                         <label>Managing Organization</label>
                         <md-icon md-svg-icon="hospital"
                                  ng-click="vm.goToManagingOrganization(vm.patient.managingOrganization)"></md-icon>
-                        <input ng-model="vm.patient.managingOrganization.display" readonly/>
+                        <input ng-model="vm.patient.managingOrganization.display" ng-readonly="true"/>
                     </md-input-container>
+
+                    <md-list flex="100" ng-if="vm.patient.careProvider">
+                        <md-subheader class="md-no-sticky">Care Providers</md-subheader>
+                        <md-list-item class="md-2-line" ng-repeat="md in vm.patient.careProvider">
+                            <md-icon md-svg-icon="doctor" ng-if="$index === 0"></md-icon>
+                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                                <h3>{{md.display}} </h3>
+
+                                <p>{{md.reference}}</p>
+                            </div>
+                            <md-divider ng-if="$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
+
+                    <md-list flex="100" ng-if="vm.patient.communication">
+                        <md-subheader class="md-no-sticky">Languages</md-subheader>
+                        <md-list-item class="md-2-line" ng-repeat="comm in vm.patient.communication">
+                            <md-icon md-svg-icon="language" ng-if="$index === 0"></md-icon>
+                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                                <h4>{{comm.language | codeableConcept}}</h4>
+
+                                <p>{{comm.preferred === true ? 'Preferred language' : ''}}</p>
+                            </div>
+                            <md-divider ng-if="$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
+
 
                     <md-list flex="100" ng-if="vm.patient.name">
                         <md-subheader class="md-no-sticky">Names</md-subheader>
@@ -144,29 +172,6 @@
                         </md-list-item>
                     </md-list>
 
-                    <md-list flex="100" ng-if="vm.patient.communication">
-                        <md-subheader class="md-no-sticky">Languages</md-subheader>
-                        <md-list-item ng-repeat="l in vm.patient.communication">
-                            <md-icon md-svg-icon="identifier" ng-if="$index === 0"></md-icon>
-                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
-                                <p>{{l.language | codeableConcept}}</p>
-                            </div>
-                            <md-divider ng-if="$last"></md-divider>
-                        </md-list-item>
-                    </md-list>
-
-                    <md-list flex="100" ng-if="vm.patient.careProvider">
-                        <md-subheader class="md-no-sticky">Care Providers</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="md in vm.patient.careProvider">
-                            <md-icon md-svg-icon="md" ng-if="$index === 0"></md-icon>
-                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
-                                <h3>{{md.display}} </h3>
-
-                                <p>{{md.reference}}</p>
-                            </div>
-                            <md-divider ng-if="$last"></md-divider>
-                        </md-list-item>
-                    </md-list>
 
                     <md-list flex="100" ng-if="vm.patient.identifier">
                         <md-subheader class="md-no-sticky">Identifiers</md-subheader>
@@ -175,6 +180,7 @@
                             <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
                                 <h3>{{id.system}} | {{id.value }} </h3>
                                 <h4>{{id.type | codeableConcept}}</h4>
+
                                 <p>{{id.use}}</p>
                             </div>
                             <md-divider ng-if="$last"></md-divider>

@@ -241,6 +241,7 @@
             .icon("identifier", "./assets/svg/identifier.svg", 24)
             .icon("immunization", "./assets/svg/immunize2.svg", 24)
             .icon("lab", "./assets/svg/lab3.svg", 24)
+            .icon("language", "./assets/svg/language.svg", 24)
             .icon("link", "./assets/svg/link.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("listAdd", "./assets/svg/listAdd.svg",24)

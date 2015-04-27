@@ -316,13 +316,24 @@
                                 {
                                     "system": "urn:oid:2.16.840.1.113883.4.1",
                                     "value": user.SSN,
-                                    "use": "secondary",
+                                    "use": "usual",
+                                    "type": {
+                                        "text": "Social Security Number",
+                                        "coding": [{
+                                            "code": "SS",
+                                            "display": "Social Security Number",
+                                            "system": "http://hl7.org/fhir/v2/0203"
+                                        }]
+                                    },
                                     "assigner": {"display": "Social Security Administration"}
                                 },
                                 {
                                     "system": "urn:oid:2.16.840.1.113883.15.18",
                                     "value": user.registered,
                                     "use": "official",
+                                    "type": {
+                                        "text": organizationName + " identifier"
+                                    },
                                     "assigner": {"display": organizationName}
                                 },
                                 {
