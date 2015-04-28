@@ -1,14 +1,14 @@
-﻿<div ng-controller="encounterSearch as vm" layout="column" layout-wrap>
-    <div flex="100">
+﻿<div ng-controller="encounterSearch as vm" layout-gt-md="row" layout="column" layout-wrap>
+    <div flex="90">
         <h3 class="md-title">Encounter Detailed Search</h3>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
-    <div flex>
-        <md-tabs md-selected="vm.selectedTab" ng-cloak>
+    <div flex="100">
+        <md-tabs md-selected="vm.selectedTab" md-dynamic-height>
             <md-tab label="Search Options">
                 <md-content class="md-padding">
                     <form name="encounterSearch">
@@ -28,45 +28,37 @@
 
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
                                 <md-select ng-model="vm.encounterSearch.status" style="min-width: 100px;">
-                                    <md-option value="planned">Planned</md-option>
-                                    <md-option value="arrived">Arrived</md-option>
-                                    <md-option value="in-progress">In Progress</md-option>
-                                    <md-option value="onleave">On Leave</md-option>
-                                    <md-option value="finished">Finished</md-option>
-                                    <md-option value="cancelled">Cancelled</md-option>
+                                    <md-option ng-value="status" ng-repeat="status in vm.states.concept">
+                                        {{status.display}}
+                                    </md-option>
+                                    <md-option></md-option>
                                 </md-select>
                                 <p class="result">Status</p>
                             </div>
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
                                 <md-select ng-model="vm.encounterSearch.type" style="min-width: 100px;">
-                                    <md-option value="planned">Planned</md-option>
-                                    <md-option value="arrived">Arrived</md-option>
-                                    <md-option value="in-progress">In Progress</md-option>
-                                    <md-option value="onleave">On Leave</md-option>
-                                    <md-option value="finished">Finished</md-option>
-                                    <md-option value="cancelled">Cancelled</md-option>
+                                    <md-option ng-value="type" ng-repeat="type in vm.types.concept">
+                                        {{type.display}}
+                                    </md-option>
+                                    <md-option></md-option>
                                 </md-select>
                                 <p class="result">Type</p>
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
                                 <md-select ng-model="vm.encounterSearch.reason" style="min-width: 100px;">
-                                    <md-option value="planned">Planned</md-option>
-                                    <md-option value="arrived">Arrived</md-option>
-                                    <md-option value="in-progress">In Progress</md-option>
-                                    <md-option value="onleave">On Leave</md-option>
-                                    <md-option value="finished">Finished</md-option>
-                                    <md-option value="cancelled">Cancelled</md-option>
+
+                                    <md-option></md-option>
                                 </md-select>
                                 <p class="result">Reason</p>
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="25">
                                 <md-select ng-model="vm.encounterSearch.specialArrangement" style="min-width: 100px;">
-                                    <md-option value="female">Female</md-option>
-                                    <md-option value="male">Male</md-option>
-                                    <md-option value="other">Other</md-option>
-                                    <md-option value="unknown">Unknown</md-option>
+                                    <md-option ng-value="sa" ng-repeat="sa in vm.specialArrangements.concept">
+                                        {{sa.display}}
+                                    </md-option>
+                                    <md-option></md-option>
                                 </md-select>
                                 <p class="result">Special Arrangement</p>
                             </div>
@@ -173,9 +165,10 @@
                             <div flex="30">
                                 <div layout="column" layout-align="center center" style="height: 100px;">
                                     <md-select ng-model="vm.encounterSearch.participantType">
-                                        <md-option ng-value="language" ng-repeat="pt in vm.participantType">
+                                        <md-option ng-value="language" ng-repeat="pt in vm.participantTypes">
                                             {{pt.display}}
                                         </md-option>
+                                        <md-option></md-option>
                                     </md-select>
                                     <p class="result">Participant Type</p>
                                 </div>
@@ -203,29 +196,23 @@
             </md-tab>
             <md-tab id="results" label="Search Results">
                 <section>
-                    <md-subheader class="md-primary">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
-                    <md-list layout="column">
-                        <md-item ng-repeat="p in vm.encounters">
-                            <md-item-content>
-                                <div class="md-tile-left">
-                                    <img fs-img-person="p.resource.photo[0]" class="face" alt="{{p.name}}">
-                                </div>
-                                <div class="md-tile-content">
-                                    <md-button data-ng-click="vm.goToEncounter(p)">{{p.resource.name | fullName}}
-                                    </md-button>
-                                    <p>{{p.resource.birthDate | displayAge }}
-                                        <fc-gender-icon gender="p.resource.gender"></fc-gender-icon>
-                                    </p>
-                                    <p>{{p.resource.managingOrganization.display ||
-                                        p.resource.managingOrganization.reference || "No Organization"}}</p>
-                                </div>
-                            </md-item-content>
-                            <md-divider data-ng-if="!$last"></md-divider>
-                        </md-item>
+                    <md-list>
+                        <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}
+                        </md-subheader>
+                        <md-list-item class="md-3-line" ng-click="vm.goToEncounter(e)" ng-repeat="e in vm.encounters">
+                            <md-icon md-svg-icon="encounter"></md-icon>
+                            <div class="md-list-item-text">
+                                <h3>{{e.resource.patient.display || e.resource.patient.reference || 'No Patient' }}</h3>
+                                <h4>{{ e.resource.class }}</h4>
+
+                                <p> {{ e.resource.status }} </p>
+                            </div>
+                            <md-divider ng-if="!$last"></md-divider>
+                        </md-list-item>
                     </md-list>
                 </section>
-                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 <fs-pagination on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
             </md-tab>
         </md-tabs>
     </div>

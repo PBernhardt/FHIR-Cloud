@@ -222,7 +222,7 @@
 
         function _getAffiliatedPractitioners() {
             var deferred = $q.defer();
-            practitionerService.getPractitioners(vm.activeServer.baseUrl, vm.organization.id)
+            practitionerService.getPractitioners(vm.activeServer.baseUrl, undefined, vm.organization.id)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' + vm.activeServer.name, null, noToast);
                     common.changePractitionerList(data);

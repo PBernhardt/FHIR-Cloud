@@ -156,6 +156,7 @@ module.exports = function (grunt) {
                     'app/encounter/encounter.detail.controller.js',
                     'app/encounter/encounter.search.controller.js',
                     'app/encounter/encounter.service.js',
+                    'app/encounter/encounter.valueSets.js',
                     'app/extensionDefinition/extensionDefinition.detail.controller.js',
                     'app/extensionDefinition/extensionDefinition.search.controller.js',
                     'app/extensionDefinition/extensionDefinition.service.js',

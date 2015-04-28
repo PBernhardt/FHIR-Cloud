@@ -77,10 +77,8 @@
             templateUrl: 'diagnosticOrder/diagnosticOrder-edit.html'
         }).when('/diagnosticOrder/detailed-search', {
             templateUrl: 'diagnosticOrder/diagnosticOrder-detailed-search.html'
-        }).when('/encounter/org/:orgId', {
-            templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/encounter', {
-            templateUrl: 'encounter/encounter-search.html'
+            templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/encounter/get/:id', {
             templateUrl: 'encounter/encounter-view.html'
         }).when('/encounter/view/:hashKey', {

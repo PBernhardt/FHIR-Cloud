@@ -343,10 +343,8 @@
             templateUrl: 'diagnosticOrder/diagnosticOrder-edit.html'
         }).when('/diagnosticOrder/detailed-search', {
             templateUrl: 'diagnosticOrder/diagnosticOrder-detailed-search.html'
-        }).when('/encounter/org/:orgId', {
-            templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/encounter', {
-            templateUrl: 'encounter/encounter-search.html'
+            templateUrl: 'encounter/encounter-detailed-search.html'
         }).when('/encounter/get/:id', {
             templateUrl: 'encounter/encounter-view.html'
         }).when('/encounter/view/:hashKey', {
@@ -1012,7 +1010,7 @@
                     {
                         "id": 2,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                     },
                     {
@@ -2925,12 +2923,12 @@
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var _adminPages = [
-            {name: 'Encounter', href: 'encounter'},
+            {name: 'Encounter', href: 'encounter/view/current'},
             {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
-            {name: 'Person', href: 'person'},
-            {name: 'Practitioner', href: 'practitioner'},
-            {name: 'Related Person', href: 'relatedPerson'}
+            {name: 'Person', href: 'person/view/current'},
+            {name: 'Practitioner', href: 'practitioner/view/current'},
+            {name: 'Related Person', href: 'relatedPerson/view/curren t'}
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance'},
@@ -7131,9 +7129,9 @@
     var controllerId = 'encounterDetail';
 
     function encounterDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, encounterService, contactPointService, practitionerService, communicationService,
-                           careProviderService, observationService, config) {
+                             attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                             organizationService, encounterService, encounterValueSets, practitionerService, communicationService,
+                             careProviderService, observationService, config) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -7144,10 +7142,12 @@
         var $q = common.$q;
         var noToast = false;
 
-        function activate() {
-            common.activateController([_getActiveServer()], controllerId).then(function () {
-                _getRequestedEncounter();
-            });
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                    _getPatientContext();
+                    _getRequestedEncounter();
+                });
         }
 
         function deleteEncounter(encounter, event) {
@@ -7226,40 +7226,10 @@
         }
 
         function _getRequestedEncounter() {
-            function initializeAdministrationData(data) {
+            function initializeData(data) {
                 vm.encounter = data;
-                humanNameService.init(vm.encounter.name);
-                demographicsService.init(vm.encounter.gender, vm.encounter.maritalStatus, vm.encounter.communication);
-                demographicsService.initBirth(vm.encounter.multipleBirthBoolean, vm.encounter.multipleBirthInteger);
-                demographicsService.initDeath(vm.encounter.deceasedBoolean, vm.encounter.deceasedDateTime);
-                demographicsService.setBirthDate(vm.encounter.birthDate);
-                demographicsService.initializeKnownExtensions(vm.encounter.extension);
-                vm.encounter.race = demographicsService.getRace();
-                vm.encounter.religion = demographicsService.getReligion();
-                vm.encounter.ethnicity = demographicsService.getEthnicity();
-                vm.encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
-                vm.encounter.birthPlace = demographicsService.getBirthPlace();
-                attachmentService.init(vm.encounter.photo, "Photos");
-                identifierService.init(vm.encounter.identifier, "multi", "encounter");
-                addressService.init(vm.encounter.address, true);
-                contactPointService.init(vm.encounter.telecom, true, true);
-                careProviderService.init(vm.encounter.careProvider);
-                if (vm.encounter.communication) {
-                    communicationService.init(vm.encounter.communication, "multi");
-                }
-                vm.encounter.fullName = humanNameService.getFullName();
-                if (angular.isDefined(vm.encounter.id)) {
-                    vm.encounter.resourceId = (vm.activeServer.baseUrl + '/Encounter/' + vm.encounter.id);
-                }
-                if (vm.encounter.managingOrganization && vm.encounter.managingOrganization.reference) {
-                    var reference = vm.encounter.managingOrganization.reference;
-                    if (common.isAbsoluteUri(reference) === false) {
-                        vm.encounter.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
-                    }
-                    if (angular.isUndefined(vm.encounter.managingOrganization.display)) {
-                        vm.encounter.managingOrganization.display = reference;
-                    }
-                }
+                //Set encounter data
+
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 }
@@ -7268,7 +7238,9 @@
             vm.encounter = undefined;
             vm.lookupKey = $routeParams.hashKey;
 
+
             if (vm.lookupKey === "current") {
+                // Re-hydrate existing encounter
                 if (angular.isUndefined($window.localStorage.encounter) || ($window.localStorage.encounter === null)) {
                     if (angular.isUndefined($routeParams.id)) {
                         $location.path('/encounter');
@@ -7276,14 +7248,15 @@
                 } else {
                     vm.encounter = JSON.parse($window.localStorage.encounter);
                     vm.encounter.hashKey = "current";
-                    initializeAdministrationData(vm.encounter);
+                    initializeData(vm.encounter);
                 }
             } else if (angular.isDefined($routeParams.id)) {
+                // Retrieve encounter from remote server
                 vm.isBusy = true;
                 var resourceId = vm.activeServer.baseUrl + '/Encounter/' + $routeParams.id;
                 encounterService.getEncounter(resourceId)
                     .then(function (resource) {
-                        initializeAdministrationData(resource.data);
+                        initializeData(resource.data);
                         if (vm.encounter) {
                             _getEverything(resourceId);
                         }
@@ -7293,24 +7266,10 @@
                         vm.isBusy = false;
                     });
             } else if (vm.lookupKey === 'new') {
+                // Start new encounter
                 var data = encounterService.initializeNewEncounter();
-                initializeAdministrationData(data);
-                vm.title = 'Add New Encounter';
+                initializeData(data);
                 vm.isEditing = false;
-            } else if (vm.lookupKey !== "current") {
-                vm.isBusy = true;
-                encounterService.getCachedEncounter(vm.lookupKey)
-                    .then(function (data) {
-                        initializeAdministrationData(data);
-                        if (vm.encounter && vm.encounter.resourceId) {
-                            _getEverything(vm.encounter.resourceId);
-                        }
-                    }, function (error) {
-                        logError(common.unexpectedOutcome(error));
-                    })
-                    .then(function () {
-                        vm.isBusy = false;
-                    });
             } else {
                 logError("Unable to resolve encounter lookup");
             }
@@ -7380,6 +7339,15 @@
             }
         }
 
+        function _getPatientContext() {
+            if (angular.isDefined($window.localStorage.patient)) {
+                vm.patient = JSON.parse($window.localStorage.patient);
+            } else {
+                logError("You must first select a patient before initiating a consultation", error);
+                $location.path('/patient');
+            }
+        }
+
         function showAuditData($index, $event) {
             showRawData(vm.history[$index], $event);
         }
@@ -7434,25 +7402,15 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/consultation');
+                        $location.path('/encounter/detailed-search');
                         break;
                     case 1:
-                        $location.path('/lab');
-                        break;
-                    case 2:
-                        logInfo("Refreshing encounter data from " + vm.activeServer.name);
-                        $location.path('/encounter/get/' + vm.encounter.id);
-                        break;
-                    case 3:
-                        $location.path('/encounter');
-                        break;
-                    case 4:
                         $location.path('/encounter/edit/current');
                         break;
-                    case 5:
+                    case 2:
                         $location.path('/encounter/edit/new');
                         break;
-                    case 6:
+                    case 3:
                         deleteEncounter(vm.encounter);
                         break;
                 }
@@ -7460,16 +7418,13 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Vitals', icon: 'vitals', index: 0},
-                        {name: 'Lab', icon: 'lab', index: 1},
-                        {name: 'Refresh data', icon: 'refresh', index: 2},
-                        {name: 'Find another encounter', icon: 'person', index: 3},
-                        {name: 'Edit encounter', icon: 'edit', index: 4},
-                        {name: 'Add new encounter', icon: 'personAdd', index: 5}
+                        {name: 'Find another encounter', icon: 'search', index: 0},
+                        {name: 'Edit encounter', icon: 'edit', index: 1},
+                        {name: 'Add new encounter', icon: 'encounter', index: 2}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Find another encounter', icon: 'person', index: 3},
+                        {name: 'Find another encounter', icon: 'search', index: 0},
                     ];
                 }
                 this.title = 'Encounter options';
@@ -7494,27 +7449,28 @@
         vm.isSaving = false;
         vm.isEditing = true;
         vm.encounter = undefined;
+        vm.patient = undefined;
         vm.practitionerSearchText = '';
         vm.save = save;
         vm.selectedPractitioner = null;
-        vm.title = 'Encounter Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
-            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'contactPointService',
+            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'encounterValueSets',
             'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', encounterDetail]);
 })();(function () {
     'use strict';
 
     var controllerId = 'encounterSearch';
 
-    function encounterSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, encounterService) {
+    function encounterSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, encounterValueSets,
+                             encounterService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -7524,30 +7480,20 @@
         var noToast = false;
         var $q = common.$q;
 
-        function activate() {
-            common.activateController([getActiveServer()], controllerId)
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
-                    if (angular.isDefined($routeParams.orgId)) {
-                        getOrganizationEncounters($routeParams.orgId);
-                        logInfo("Retrieving encounters for current organization, please wait...");
-                    } else {
-                        _loadLocalLookups();
-                    }
+                    _loadLocalLookups();
                 }, function (error) {
                     logError('Error initializing encounter search', error);
                 });
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
-        }
-
-        function getOrganizationEncounters(orgId) {
-            vm.encounterSearch.organization = orgId;
-            detailSearch();
         }
 
         function goToEncounter(encounter) {
@@ -7556,10 +7502,13 @@
             }
         }
 
+        vm.goToEncounter = goToEncounter;
+
         function _loadLocalLookups() {
-            vm.ethnicities = localValueSets.ethnicity().concept;
-            vm.races = localValueSets.race().concept;
-            vm.languages = localValueSets.iso6391Languages();
+            vm.states = encounterValueSets.encounterState();
+            vm.types = encounterValueSets.encounterType();
+            vm.specialArrangements = encounterValueSets.encounterSpecialArrangement();
+            vm.participantTypes = encounterValueSets.encounterParticipantType();
         }
 
         function detailSearch() {
@@ -7567,93 +7516,14 @@
             var queryString = '';
             var queryParam = {param: '', value: ''};
             var queryParams = [];
-            if (vm.encounterSearch.organization) {
-                queryParam.param = "organization";
-                queryParam.value = vm.encounterSearch.organization;
+            if (vm.encounterSearch.status) {
+                queryParam.param = "status";
+                queryParam.value =  vm.encounterSearch.status.code;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.encounterSearch.name.given) {
-                queryParam.param = "given";
-                queryParam.value = vm.encounterSearch.name.given;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.name.family) {
-                queryParam.param = "family";
-                queryParam.value = vm.encounterSearch.name.family;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.mothersMaidenName) {
-                queryParam.param = "mothersMaidenName";
-                queryParam.value = vm.encounterSearch.mothersMaidenName;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.address.street) {
-                queryParam.param = "addressLine";
-                queryParam.value = vm.encounterSearch.address.street;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.address.city) {
-                queryParam.param = "city";
-                queryParam.value = vm.encounterSearch.address.city;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.address.state) {
-                queryParam.param = "state";
-                queryParam.value = vm.encounterSearch.address.state;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.address.postalCode) {
-                queryParam.param = "postalCode";
-                queryParam.value = vm.encounterSearch.address.postalCode;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.dob) {
-                queryParam.param = "birthDate";
-                queryParam.value = formatString(vm.encounterSearch.dob);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.age.start || vm.encounterSearch.age.end) {
-                if (vm.encounterSearch.age.start === vm.encounterSearch.age.end) {
-                    queryParam.param = "age";
-                    queryParam.value = vm.encounterSearch.age.start;
-                    queryParams.push(_.clone(queryParam));
-                }
-                else {
-                    queryParam.param = "age";
-                    queryParam.value = ">".concat(vm.encounterSearch.age.start === 0 ? vm.encounterSearch.age.start : (vm.encounterSearch.age.start - 1));
-                    queryParams.push(_.clone(queryParam));
-                    queryParam.value = "<".concat(vm.encounterSearch.age.end === 1 ? vm.encounterSearch.age.end : (vm.encounterSearch.age.end + 1));
-                    queryParams.push(_.clone(queryParam));
-                }
-            }
-            if (vm.encounterSearch.identifier.system && vm.encounterSearch.identifier.value) {
-                queryParam.param = "identifier";
-                queryParam.value = vm.encounterSearch.identifier.system.concat("|", vm.encounterSearch.identifier.value);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.telecom) {
-                queryParam.param = "telecom";
-                queryParam.value = vm.encounterSearch.telecom;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.gender) {
-                queryParam.param = "gender";
-                queryParam.value = vm.encounterSearch.gender;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.race) {
-                queryParam.param = "race";
-                queryParam.value = localValueSets.race().system.concat("|", vm.encounterSearch.race.code);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.language) {
-                queryParam.param = "language";
-                queryParam.value = vm.encounterSearch.language.system.concat("|", vm.encounterSearch.language.code);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.encounterSearch.ethnicity) {
-                queryParam.param = "ethnicity";
-                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.encounterSearch.ethnicity.code);
+            if (vm.encounterSearch.type) {
+                queryParam.param = "type";
+                queryParam.value =  vm.types.system.concat("|", vm.encounterSearch.type.code);
                 queryParams.push(_.clone(queryParam));
             }
 
@@ -7672,29 +7542,33 @@
             searchEncounters(queryString);
         }
 
+        vm.detailSearch = detailSearch;
+
         function dereferenceLink(url) {
             vm.isBusy = true;
             encounterService.getEncountersByLink(url)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
-                    vm.activeServer.name, null, noToast);
+                        vm.activeServer.name, null, noToast);
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                 })
-                .then(processSearchResults)
+                .then(_processSearchResults)
                 .then(function () {
                     vm.isBusy = false;
                 });
         }
 
+        vm.dereferenceLink = dereferenceLink;
+
         function quickSearch(searchText) {
             var deferred = $q.defer();
-            encounterService.getEncounters(vm.activeServer.baseUrl, searchText)
+            encounterService.searchEncounters(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
-                    vm.activeServer.name, null, noToast);
+                        vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
                     logError('Error getting encounters', error, noToast);
@@ -7711,8 +7585,8 @@
             encounterService.searchEncounters(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
-                    vm.activeServer.name, null, noToast);
-                    processSearchResults(data);
+                        vm.activeServer.name, null, noToast);
+                    _processSearchResults(data);
                     vm.isBusy = false;
                     vm.selectedTab = 1;
                 }, function (error) {
@@ -7724,29 +7598,13 @@
             return deferred.promise;
         }
 
-        function processSearchResults(searchResults) {
+        vm.searchEncounters = searchEncounters;
+
+        function _processSearchResults(searchResults) {
             if (searchResults) {
                 vm.encounters = (searchResults.entry || []);
                 vm.paging.links = (searchResults.link || []);
                 vm.paging.totalResults = (searchResults.total || 0);
-            }
-        }
-
-        function ageRangeChange() {
-            if (vm.encounterSearch.age.end === undefined) {
-                vm.encounterSearch.age.end = vm.encounterSearch.age.start;
-            }
-            if (vm.encounterSearch.age.start === undefined) {
-                vm.encounterSearch.age.start = vm.encounterSearch.age.end;
-            }
-            if (vm.encounterSearch.age.start > vm.encounterSearch.age.end) {
-                vm.encounterSearch.age.end = vm.encounterSearch.age.start;
-            }
-        }
-
-        function dobChange() {
-            if (vm.encounterSearch.dob !== undefined) {
-                vm.encounterSearch.age.end = vm.encounterSearch.age.start = undefined;
             }
         }
 
@@ -7764,10 +7622,7 @@
                         $location.path('/encounter/edit/new');
                         break;
                     case 1:
-                        $location.path('/encounter/detailed-search');
-                        break;
-                    case 2:
-                        $location.path('/encounter');
+                        $location.path('/patient/view/current');
                         break;
                 }
             });
@@ -7778,8 +7633,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Start new encounter', icon: 'encounter', index: 0},
-                    {name: 'Detailed search', icon: 'search', index: 1},
-                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                    {name: 'Back to face sheet', icon: 'person', index: 1},
                 ];
                 this.title = 'Encounter search options';
                 this.performAction = function (action) {
@@ -7789,8 +7643,6 @@
         }
 
         vm.activeServer = null;
-        vm.dereferenceLink = dereferenceLink;
-        vm.goToEncounter = goToEncounter;
         vm.encounters = [];
         vm.selectedEncounter = null;
         vm.searchResults = null;
@@ -7800,43 +7652,24 @@
         vm.searchParticipantPractitionerText = '';
         vm.searchLocationText = '';
         vm.searchParticipantRelatedPersonText = '';
-        vm.title = 'Encounters';
         vm.managingOrganization = undefined;
         vm.practitioner = undefined;
         vm.actions = actions;
-        vm.races = [];
-        vm.ethnicities = [];
-        vm.languages = [];
-        vm.detailSearch = detailSearch;
         vm.isBusy = false;
-        vm.ageRangeChange = ageRangeChange;
-        vm.dobChange = dobChange;
-        vm.encounterSearch = {
-            name: {first: undefined, last: undefined},
-            mothersMaidenName: undefined,
-            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
-            telecom: undefined,
-            identifier: {system: undefined, value: undefined},
-            age: {start: undefined, end: undefined},
-            dob: undefined,
-            race: undefined,
-            gender: undefined,
-            ethnicity: undefined,
-            language: undefined,
-            organization: undefined,
-            careProvider: undefined
-        };
+        vm.encounterSearch = {};
         vm.paging = {
             currentPage: 1,
             totalResults: 0,
             links: null
         };
         vm.selectedTab = 0;
-        activate();
+
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'encounterService', encounterSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'encounterValueSets',
+            'encounterService', encounterSearch]);
 })();
 (function () {
     'use strict';
@@ -8000,7 +7833,7 @@
         function searchEncounters(baseUrl, searchFilter) {
             var deferred = $q.defer();
 
-            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter)) {
                 deferred.reject('Invalid search input');
             }
             fhirClient.getResource(baseUrl + '/Encounter?' + searchFilter + '&_count=20')
@@ -8077,7 +7910,6 @@
                 "partOf": null
             };
         }
-
 
         function _prepArrays(resource) {
             if (resource.statusHistory && resource.statusHistory.length === 0) {
@@ -8370,9 +8202,7 @@
             getEncounter: getEncounter,
             getEncounterContext: getEncounterContext,
             getEncounterReference: getEncounterReference,
-            getEncounters: getEncounters,
             getEncountersByLink: getEncountersByLink,
-            getEncounterEverything: getEncounterEverything,
             initializeNewEncounter: initializeNewEncounter,
             setEncounterContext: setEncounterContext,
             updateEncounter: updateEncounter,
@@ -8387,6 +8217,410 @@
         encounterService]);
 })
 ();(function () {
+    'use strict';
+
+    var serviceId = 'encounterValueSets';
+
+    function encounterValueSets() {
+
+        function encounterAdmitSource() {
+            return {
+                "system": "http://hl7.org/fhir/admit-source",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "hosp-trans",
+                        "display": "Transferred from other hospital"
+                    },
+                    {
+                        "code": "emd",
+                        "display": "From accident/emergency department"
+                    },
+                    {
+                        "code": "outp",
+                        "display": "From outpatient department"
+                    },
+                    {
+                        "code": "born",
+                        "display": "Born in hospital"
+                    },
+                    {
+                        "code": "gp",
+                        "display": "General Practitioner referral"
+                    },
+                    {
+                        "code": "mp",
+                        "display": "Medical Practitioner/physician referral"
+                    },
+                    {
+                        "code": "nursing",
+                        "display": "From nursing home"
+                    },
+                    {
+                        "code": "psych",
+                        "display": "From psychiatric hospital"
+                    },
+                    {
+                        "code": "rehab",
+                        "display": "From rehabilitation facility"
+                    },
+                    {
+                        "code": "other",
+                        "display": "Other"
+                    }
+                ]
+            };
+        }
+
+        function encounterClass() {
+            return {
+                "system": "http://hl7.org/fhir/encounter-class",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "inpatient",
+                        "display": "Inpatient",
+                        "definition": "An encounter during which the patient is hospitalized and stays overnight."
+                    },
+                    {
+                        "code": "outpatient",
+                        "display": "Outpatient",
+                        "definition": "An encounter during which the patient is not hospitalized overnight."
+                    },
+                    {
+                        "code": "ambulatory",
+                        "display": "Ambulatory",
+                        "definition": "An encounter where the patient visits the practitioner in his/her office, e.g. a G.P. visit."
+                    },
+                    {
+                        "code": "emergency",
+                        "display": "Emergency",
+                        "definition": "An encounter where the patient needs urgent care."
+                    },
+                    {
+                        "code": "home",
+                        "display": "Home",
+                        "definition": "An encounter where the practitioner visits the patient at his/her home."
+                    },
+                    {
+                        "code": "field",
+                        "display": "Field",
+                        "definition": "An encounter taking place outside the regular environment for giving care."
+                    },
+                    {
+                        "code": "daytime",
+                        "display": "Daytime",
+                        "definition": "An encounter where the patient needs more prolonged treatment or investigations than outpatients, but who do not need to stay in the hospital overnight."
+                    },
+                    {
+                        "code": "virtual",
+                        "display": "Virtual",
+                        "definition": "An encounter that takes place where the patient and practitioner do not physically meet but use electronic means for contact."
+                    },
+                    {
+                        "code": "other",
+                        "display": "Other",
+                        "definition": "Any other encounter type that is not described by one of the other values. Where this is used it is expected that an implementer will include an extension value to define what the actual other type is."
+                    }
+                ]
+            };
+        }
+
+        function encounterDietPreference() {
+            return {
+                "system": "http://hl7.org/fhir/diet",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "vegetarian",
+                        "definition": "Food without meat, poultry or seafood"
+                    },
+                    {
+                        "code": "dairy-free",
+                        "definition": "Exludes dairy products"
+                    },
+                    {
+                        "code": "nut-free",
+                        "definition": "Excludes ingredients containing nuts"
+                    },
+                    {
+                        "code": "gluten-free",
+                        "definition": "Excludes ingredients containing gluten"
+                    },
+                    {
+                        "code": "vegan",
+                        "definition": "Food without meat, poultry, seafood, eggs, dairy products and other animal-derived substances"
+                    },
+                    {
+                        "code": "halal",
+                        "definition": "Foods that conform to Islamic law"
+                    },
+                    {
+                        "code": "kosher",
+                        "definition": "foods that conform to Jewish dietary law"
+                    }
+                ]
+            };
+        }
+
+        function encounterLocationStatus() {
+            return {
+                "system": "http://hl7.org/fhir/encounter-location-status",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "planned",
+                        "display": "Planned",
+                        "definition": "The patient is planned to be moved to this location at some point in the future."
+                    },
+                    {
+                        "code": "present",
+                        "display": "Present",
+                        "definition": "The patient is currently at this location, or was between the period specified."
+                    },
+                    {
+                        "code": "reserved",
+                        "display": "Reserved",
+                        "definition": "This location is held empty for this patient."
+                    }
+                ]
+            };
+        }
+
+        function encounterParticipantType() {
+            return [
+                {
+                    "code": "translator",
+                    "display": "Translator",
+                    "system": "http://hl7.org/fhir/participant-type",
+                    "definition": "A translator who is facilitating communication with the patient during the encounter"
+                },
+                {
+                    "code": "emergency",
+                    "display": "Emergency contact",
+                    "system": "http://hl7.org/fhir/participant-type",
+                    "definition": "A person to be contacted in case of an emergency during the encounter"
+                },
+                {
+                    "code": "ADM",
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "display": "Admitter",
+                    "definition": "The practitioner who is responsible for admitting a patient to a patient encounter."
+                },
+                {
+                    "code": "ATND",
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "display": "Attender",
+                    "definition": "The practitioner that has responsibility for overseeing a patient's care during a patient encounter."
+                },
+                {
+                    "code": "CALLBCK",
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "display": "Callback contact",
+                    "definition": "A person or organization who should be contacted for follow-up questions about the act in place of the author."
+                },
+                {
+                    "code": "CON",
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "display": "Consultant",
+                    "definition": "An advisor participating in the service by performing evaluations and making recommendations."
+                },
+                {
+                    "code": "DIS",
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "display": "Discharger",
+                    "definition": "The practitioner who is responsible for the discharge of a patient from a patient encounter."
+                },
+                {
+                    "code": "ESC",
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "display": "Escort",
+                    "definition": "Only with Transportation services.  A person who escorts the patient."
+                },
+                {
+                    "code": "REF",
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "display": "Referrer",
+                    "definition": "A person having referred the subject of the service to the performer (referring physician).  Typically, a referring physician will receive a report."
+                }
+            ];
+        }
+
+        function encounterPriority() {
+            return {
+                "system": "http://hl7.org/fhir/encounter-priority",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "imm",
+                        "display": "Immediate",
+                        "definition": "Within seconds"
+                    },
+                    {
+                        "code": "emg",
+                        "display": "Emergency",
+                        "definition": "Within 10 minutes"
+                    },
+                    {
+                        "code": "urg",
+                        "display": "Urgent",
+                        "definition": "Within 30 minutes"
+                    },
+                    {
+                        "code": "s-urg",
+                        "display": "Semi-urgent",
+                        "definition": "Within 60 minutes"
+                    },
+                    {
+                        "code": "no-urg",
+                        "display": "Non-urgent",
+                        "definition": "Within 120 minutes"
+                    }
+                ]
+            };
+        }
+
+        function encounterSpecialArrangement() {
+            return {
+                "system": "http://hl7.org/fhir/encounter-special-arrangements",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "wheel",
+                        "display": "Wheelchair"
+                    },
+                    {
+                        "code": "stret",
+                        "display": "Stretcher"
+                    },
+                    {
+                        "code": "int",
+                        "display": "Interpreter"
+                    },
+                    {
+                        "code": "att",
+                        "display": "Attendant"
+                    },
+                    {
+                        "code": "dog",
+                        "display": "Guide dog"
+                    }
+                ]
+            };
+        }
+
+        function encounterSpecialCourtesy() {
+            return {
+                "system": "http://hl7.org/fhir/v3/EncounterSpecialCourtesy",
+                "concept": [
+                    {
+                        "code": "EXT",
+                        "display": "Extended courtesy"
+                    },
+                    {
+                        "code": "NRM",
+                        "display": "Normal courtesy"
+                    },
+                    {
+                        "code": "PRF",
+                        "display": "Professional courtesy"
+                    },
+                    {
+                        "code": "STF",
+                        "display": "Staff of the entity providing service"
+                    },
+                    {
+                        "code": "VIP",
+                        "display": "Very important person"
+                    }
+                ]
+            }
+        }
+
+        function encounterState() {
+            return {
+                "system": "http://hl7.org/fhir/encounter-state",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "planned",
+                        "display": "Planned",
+                        "definition": "The Encounter has not yet started."
+                    },
+                    {
+                        "code": "arrived",
+                        "display": "Arrived",
+                        "definition": "The Patient is present for the encounter, however is not currently meeting with a practitioner."
+                    },
+                    {
+                        "code": "in-progress",
+                        "display": "In Progress",
+                        "definition": "The Encounter has begun and the patient is present / the practitioner and the patient are meeting."
+                    },
+                    {
+                        "code": "onleave",
+                        "display": "On Leave",
+                        "definition": "The Encounter has begun, but the patient is temporarily on leave."
+                    },
+                    {
+                        "code": "finished",
+                        "display": "Finished",
+                        "definition": "The Encounter has ended."
+                    },
+                    {
+                        "code": "cancelled",
+                        "display": "Cancelled",
+                        "definition": "The Encounter has ended before it has begun."
+                    }
+                ]
+            };
+        }
+
+        function encounterType() {
+            return {
+                "system": "http://hl7.org/fhir/encounter-type",
+                "caseSensitive": true,
+                "concept": [
+                    {
+                        "code": "ADMS",
+                        "display": "Annual diabetes mellitus screening"
+                    },
+                    {
+                        "code": "BD/BM-clin",
+                        "display": "Bone drilling/bone marrow punction in clinic"
+                    },
+                    {
+                        "code": "CCS60",
+                        "display": "Infant colon screening - 60 minutes"
+                    },
+                    {
+                        "code": "OKI",
+                        "display": "Outpatient Kenacort injection"
+                    }
+                ]
+            };
+        }
+
+        var service = {
+            encounterAdmitSource: encounterAdmitSource,
+            encounterClass: encounterClass,
+            encounterDietPreference: encounterDietPreference,
+            encounterLocationStatus: encounterLocationStatus,
+            encounterParticipantType: encounterParticipantType,
+            encounterPriority: encounterPriority,
+            encounterSpecialArrangement: encounterSpecialArrangement,
+            encounterSpecialCourtesy: encounterSpecialCourtesy,
+            encounterState: encounterState,
+            encounterType: encounterType
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, [encounterValueSets]);
+
+})();
+(function () {
     'use strict';
 
     var controllerId = 'extensionDefinitionDetail';
@@ -14983,7 +15217,7 @@
 
         function _getAffiliatedPractitioners() {
             var deferred = $q.defer();
-            practitionerService.getPractitioners(vm.activeServer.baseUrl, vm.organization.id)
+            practitionerService.getPractitioners(vm.activeServer.baseUrl, undefined, vm.organization.id)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' + vm.activeServer.name, null, noToast);
                     common.changePractitionerList(data);
@@ -18161,25 +18395,6 @@
             return deferred.promise;
         }
 
-        function getPractitionerEverything(resourceId) {
-            var deferred = $q.defer();
-            fhirClient.getResource(resourceId + '/$everything')
-                .then(function (results) {
-                    var everything = {"practitioner": null, "summary": [], "history": []};
-                    everything.history = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'AuditEvent');
-                    });
-                    everything.practitioner = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'Practitioner');
-                    })[0];
-                    everything.summary = results.data.entry;
-                    deferred.resolve(everything);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
         function getCachedPractitioner(hashKey) {
             function getPractitioner(searchResults) {
                 var cachedPractitioner;
@@ -18291,17 +18506,8 @@
                 deferred.reject('Invalid search input');
             }
 
-            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
-                var names = searchFilter.split(' ');
-                if (names.length === 1) {
-                    params = 'name=' + names[0];
-                } else {
-                    params = 'given=' + names[0] + '&family=' + names[1];
-                }
-            }
-
             if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:=' + organizationId;
+                var orgParam = 'organization=' + organizationId;
                 if (params.length > 1) {
                     params = params + '&' + orgParam;
                 } else {
@@ -18645,7 +18851,6 @@
             getPractitionerReference: getPractitionerReference,
             getPractitioners: getPractitioners,
             getPractitionersByLink: getPractitionersByLink,
-            getPractitionerEverything: getPractitionerEverything,
             initializeNewPractitioner: initializeNewPractitioner,
             setPractitionerContext: setPractitionerContext,
             updatePractitioner: updatePractitioner,

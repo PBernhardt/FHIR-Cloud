@@ -51,7 +51,7 @@
                     {
                         "id": 2,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                     },
                     {

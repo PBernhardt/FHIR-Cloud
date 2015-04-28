@@ -160,7 +160,7 @@
         function searchEncounters(baseUrl, searchFilter) {
             var deferred = $q.defer();
 
-            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter)) {
                 deferred.reject('Invalid search input');
             }
             fhirClient.getResource(baseUrl + '/Encounter?' + searchFilter + '&_count=20')
@@ -237,7 +237,6 @@
                 "partOf": null
             };
         }
-
 
         function _prepArrays(resource) {
             if (resource.statusHistory && resource.statusHistory.length === 0) {
@@ -530,9 +529,7 @@
             getEncounter: getEncounter,
             getEncounterContext: getEncounterContext,
             getEncounterReference: getEncounterReference,
-            getEncounters: getEncounters,
             getEncountersByLink: getEncountersByLink,
-            getEncounterEverything: getEncounterEverything,
             initializeNewEncounter: initializeNewEncounter,
             setEncounterContext: setEncounterContext,
             updateEncounter: updateEncounter,

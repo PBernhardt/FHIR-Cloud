@@ -1,8 +1,7 @@
-<div layout="row" layout-sm="column"
-         layout-align="space-between center" data-ng-show="links && links.length > 1">
-    <label>More Results</label>
-
-    <div data-ng-repeat="item in links">
-        <md-button class="md-raised" ng-click="click({url:item.url})">{{item.relation}}</md-button>
-    </div>
-</div>
+<md-whiteframe class="md-whiteframe-z3" layout
+     layout-align="start center" ng-show="links && links.length > 0" md-padding>
+    <p class="md-caption">More Results</p>
+        <div ng-repeat="item in links">
+            <md-button md-no-ink ng-click="click({url:item.url})">{{item.relation}}</md-button>
+        </div>
+</md-whiteframe>

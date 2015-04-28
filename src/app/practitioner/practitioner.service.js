@@ -70,25 +70,6 @@
             return deferred.promise;
         }
 
-        function getPractitionerEverything(resourceId) {
-            var deferred = $q.defer();
-            fhirClient.getResource(resourceId + '/$everything')
-                .then(function (results) {
-                    var everything = {"practitioner": null, "summary": [], "history": []};
-                    everything.history = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'AuditEvent');
-                    });
-                    everything.practitioner = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'Practitioner');
-                    })[0];
-                    everything.summary = results.data.entry;
-                    deferred.resolve(everything);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
         function getCachedPractitioner(hashKey) {
             function getPractitioner(searchResults) {
                 var cachedPractitioner;
@@ -200,17 +181,8 @@
                 deferred.reject('Invalid search input');
             }
 
-            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
-                var names = searchFilter.split(' ');
-                if (names.length === 1) {
-                    params = 'name=' + names[0];
-                } else {
-                    params = 'given=' + names[0] + '&family=' + names[1];
-                }
-            }
-
             if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:=' + organizationId;
+                var orgParam = 'organization=' + organizationId;
                 if (params.length > 1) {
                     params = params + '&' + orgParam;
                 } else {
@@ -554,7 +526,6 @@
             getPractitionerReference: getPractitionerReference,
             getPractitioners: getPractitioners,
             getPractitionersByLink: getPractitionersByLink,
-            getPractitionerEverything: getPractitionerEverything,
             initializeNewPractitioner: initializeNewPractitioner,
             setPractitionerContext: setPractitionerContext,
             updatePractitioner: updatePractitioner,

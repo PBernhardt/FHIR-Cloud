@@ -11,12 +11,12 @@
         var logError = getLogFn(controllerId, 'error');
         var logInfo = getLogFn(controllerId, 'info');
         var _adminPages = [
-            {name: 'Encounter', href: 'encounter'},
+            {name: 'Encounter', href: 'encounter/view/current'},
             {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
-            {name: 'Person', href: 'person'},
-            {name: 'Practitioner', href: 'practitioner'},
-            {name: 'Related Person', href: 'relatedPerson'}
+            {name: 'Person', href: 'person/view/current'},
+            {name: 'Practitioner', href: 'practitioner/view/current'},
+            {name: 'Related Person', href: 'relatedPerson/view/curren t'}
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance'},

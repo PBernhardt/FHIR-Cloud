@@ -4,9 +4,9 @@
     var controllerId = 'encounterDetail';
 
     function encounterDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, encounterService, contactPointService, practitionerService, communicationService,
-                           careProviderService, observationService, config) {
+                             attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                             organizationService, encounterService, encounterValueSets, practitionerService, communicationService,
+                             careProviderService, observationService, config) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -17,10 +17,12 @@
         var $q = common.$q;
         var noToast = false;
 
-        function activate() {
-            common.activateController([_getActiveServer()], controllerId).then(function () {
-                _getRequestedEncounter();
-            });
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                    _getPatientContext();
+                    _getRequestedEncounter();
+                });
         }
 
         function deleteEncounter(encounter, event) {
@@ -99,40 +101,10 @@
         }
 
         function _getRequestedEncounter() {
-            function initializeAdministrationData(data) {
+            function initializeData(data) {
                 vm.encounter = data;
-                humanNameService.init(vm.encounter.name);
-                demographicsService.init(vm.encounter.gender, vm.encounter.maritalStatus, vm.encounter.communication);
-                demographicsService.initBirth(vm.encounter.multipleBirthBoolean, vm.encounter.multipleBirthInteger);
-                demographicsService.initDeath(vm.encounter.deceasedBoolean, vm.encounter.deceasedDateTime);
-                demographicsService.setBirthDate(vm.encounter.birthDate);
-                demographicsService.initializeKnownExtensions(vm.encounter.extension);
-                vm.encounter.race = demographicsService.getRace();
-                vm.encounter.religion = demographicsService.getReligion();
-                vm.encounter.ethnicity = demographicsService.getEthnicity();
-                vm.encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
-                vm.encounter.birthPlace = demographicsService.getBirthPlace();
-                attachmentService.init(vm.encounter.photo, "Photos");
-                identifierService.init(vm.encounter.identifier, "multi", "encounter");
-                addressService.init(vm.encounter.address, true);
-                contactPointService.init(vm.encounter.telecom, true, true);
-                careProviderService.init(vm.encounter.careProvider);
-                if (vm.encounter.communication) {
-                    communicationService.init(vm.encounter.communication, "multi");
-                }
-                vm.encounter.fullName = humanNameService.getFullName();
-                if (angular.isDefined(vm.encounter.id)) {
-                    vm.encounter.resourceId = (vm.activeServer.baseUrl + '/Encounter/' + vm.encounter.id);
-                }
-                if (vm.encounter.managingOrganization && vm.encounter.managingOrganization.reference) {
-                    var reference = vm.encounter.managingOrganization.reference;
-                    if (common.isAbsoluteUri(reference) === false) {
-                        vm.encounter.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
-                    }
-                    if (angular.isUndefined(vm.encounter.managingOrganization.display)) {
-                        vm.encounter.managingOrganization.display = reference;
-                    }
-                }
+                //Set encounter data
+
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 }
@@ -141,7 +113,9 @@
             vm.encounter = undefined;
             vm.lookupKey = $routeParams.hashKey;
 
+
             if (vm.lookupKey === "current") {
+                // Re-hydrate existing encounter
                 if (angular.isUndefined($window.localStorage.encounter) || ($window.localStorage.encounter === null)) {
                     if (angular.isUndefined($routeParams.id)) {
                         $location.path('/encounter');
@@ -149,14 +123,15 @@
                 } else {
                     vm.encounter = JSON.parse($window.localStorage.encounter);
                     vm.encounter.hashKey = "current";
-                    initializeAdministrationData(vm.encounter);
+                    initializeData(vm.encounter);
                 }
             } else if (angular.isDefined($routeParams.id)) {
+                // Retrieve encounter from remote server
                 vm.isBusy = true;
                 var resourceId = vm.activeServer.baseUrl + '/Encounter/' + $routeParams.id;
                 encounterService.getEncounter(resourceId)
                     .then(function (resource) {
-                        initializeAdministrationData(resource.data);
+                        initializeData(resource.data);
                         if (vm.encounter) {
                             _getEverything(resourceId);
                         }
@@ -166,24 +141,10 @@
                         vm.isBusy = false;
                     });
             } else if (vm.lookupKey === 'new') {
+                // Start new encounter
                 var data = encounterService.initializeNewEncounter();
-                initializeAdministrationData(data);
-                vm.title = 'Add New Encounter';
+                initializeData(data);
                 vm.isEditing = false;
-            } else if (vm.lookupKey !== "current") {
-                vm.isBusy = true;
-                encounterService.getCachedEncounter(vm.lookupKey)
-                    .then(function (data) {
-                        initializeAdministrationData(data);
-                        if (vm.encounter && vm.encounter.resourceId) {
-                            _getEverything(vm.encounter.resourceId);
-                        }
-                    }, function (error) {
-                        logError(common.unexpectedOutcome(error));
-                    })
-                    .then(function () {
-                        vm.isBusy = false;
-                    });
             } else {
                 logError("Unable to resolve encounter lookup");
             }
@@ -253,6 +214,15 @@
             }
         }
 
+        function _getPatientContext() {
+            if (angular.isDefined($window.localStorage.patient)) {
+                vm.patient = JSON.parse($window.localStorage.patient);
+            } else {
+                logError("You must first select a patient before initiating a consultation", error);
+                $location.path('/patient');
+            }
+        }
+
         function showAuditData($index, $event) {
             showRawData(vm.history[$index], $event);
         }
@@ -307,25 +277,15 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/consultation');
+                        $location.path('/encounter/detailed-search');
                         break;
                     case 1:
-                        $location.path('/lab');
-                        break;
-                    case 2:
-                        logInfo("Refreshing encounter data from " + vm.activeServer.name);
-                        $location.path('/encounter/get/' + vm.encounter.id);
-                        break;
-                    case 3:
-                        $location.path('/encounter');
-                        break;
-                    case 4:
                         $location.path('/encounter/edit/current');
                         break;
-                    case 5:
+                    case 2:
                         $location.path('/encounter/edit/new');
                         break;
-                    case 6:
+                    case 3:
                         deleteEncounter(vm.encounter);
                         break;
                 }
@@ -333,16 +293,13 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Vitals', icon: 'vitals', index: 0},
-                        {name: 'Lab', icon: 'lab', index: 1},
-                        {name: 'Refresh data', icon: 'refresh', index: 2},
-                        {name: 'Find another encounter', icon: 'person', index: 3},
-                        {name: 'Edit encounter', icon: 'edit', index: 4},
-                        {name: 'Add new encounter', icon: 'personAdd', index: 5}
+                        {name: 'Find another encounter', icon: 'search', index: 0},
+                        {name: 'Edit encounter', icon: 'edit', index: 1},
+                        {name: 'Add new encounter', icon: 'encounter', index: 2}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Find another encounter', icon: 'person', index: 3},
+                        {name: 'Find another encounter', icon: 'search', index: 0},
                     ];
                 }
                 this.title = 'Encounter options';
@@ -367,19 +324,19 @@
         vm.isSaving = false;
         vm.isEditing = true;
         vm.encounter = undefined;
+        vm.patient = undefined;
         vm.practitionerSearchText = '';
         vm.save = save;
         vm.selectedPractitioner = null;
-        vm.title = 'Encounter Detail';
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
-            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'contactPointService',
+            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'encounterValueSets',
             'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', encounterDetail]);
 })();
