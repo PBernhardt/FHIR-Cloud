@@ -50,7 +50,7 @@
                     },
                     {
                         "id": 2,
-                        "name": "RelayHealth",
+                        "name": "RelayHealth (dev prod)",
                         "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                     },
@@ -85,9 +85,17 @@
                     },
                     {
                         "id": 10,
-                        "name": "AEGIS",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2"
-                    }
+                        "name": "RelayHealth (dev pre-prod)",
+                        "baseUrl": "http://038162db24ba4c4bbc1bc057ddd33e88.cloudapp.net",
+                        "secure": false
+                    },
+                    {
+                        "id": 11,
+                        "name": "RelayHealth (stage prod)",
+                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
+                        "secure": false
+                    },
+
                 ];
                 var servers = dataCache.readFromCache('servers');
                 if (angular.isUndefined(servers)) {

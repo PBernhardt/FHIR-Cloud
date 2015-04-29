@@ -2,6 +2,7 @@
     <div flex="90">
         <h3 class="md-title">Organization Quick Find</h3>
         <md-autocomplete
+                md-no-cache="true"
                 md-selected-item-change="vm.goToOrganization(vm.selectedOrganization)"
                 md-selected-item="vm.selectedOrganization"
                 md-search-text="vm.searchText"
