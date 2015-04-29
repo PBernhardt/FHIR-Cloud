@@ -49,18 +49,30 @@
             }
         }
 
+        function changePersonList(persons) {
+            if (angular.isDefined(persons)) {
+                $broadcast(commonConfig.config.personListChangeEvent, persons);
+            }
+        }
+
         function changePractitionerList(practitioners) {
             if (angular.isDefined(practitioners)) {
                 $broadcast(commonConfig.config.practitionerListChangeEvent, practitioners);
             }
         }
 
-
-        //TODO: remove this
-        function toggleProgressBar(show) {
-            var data = {show: show};
-            $broadcast(commonConfig.config.progressToggleEvent, data);
+        function changeRelatedPersonList(relatedPerson) {
+            if (angular.isDefined(relatedPerson)) {
+                $broadcast(commonConfig.config.relatedPersonListChangeEvent, relatedPerson);
+            }
         }
+
+        function changeUser(user) {
+            if (angular.isDefined(user)) {
+                $broadcast(commonConfig.config.authenticatedUserChangeEvent, user);
+            }
+        }
+
 
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
@@ -226,8 +238,11 @@
             // generic
             activateController: activateController,
             changePatientList: changePatientList,
+            changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,
+            changeRelatedPersonList: changeRelatedPersonList,
             changeServer: changeServer,
+            changeUser: changeUser,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,
             isNumber: isNumber,
@@ -240,7 +255,6 @@
             setResourceId: setResourceId,
             shuffle: shuffle,
             textContains: textContains,
-            toggleProgressBar: toggleProgressBar,
             unexpectedOutcome: unexpectedOutcome
         };
 

@@ -27,11 +27,14 @@
     };
 
     var events = {
+        authenticatedUserChanged: 'user.changed',
         controllerActivateSuccess: 'controller.activateSuccess',
         patientListChanged: 'patientList.changed',
+        personListChanged: 'personList.changed',
         practitionerListChanged: 'practitionerList.changed',
-        progressToggle: 'progress.toggle',
+        relatedPersonListChanged: 'relatedPersonList.changed',
         serverChanged: 'server.changed'
+
     };
 
     var config = {
@@ -230,8 +233,10 @@
             .icon("fax", "./assets/svg/fax.svg", 16)
             .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
+            .icon("github", "./assets/svg/github.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
             .icon("groupAdd", "./assets/svg/groupAdd.svg", 24)
+            .icon("home", "./assets/svg/home.svg", 24)
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
             .icon("https", "./assets/svg/https.svg", 24)
@@ -281,11 +286,13 @@
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {
+        cfg.config.authenticatedUserChangeEvent = config.events.authenticatedUserChanged;
         cfg.config.controllerActivateSuccessEvent = config.events.controllerActivateSuccess;
-        cfg.config.progressToggleEvent = config.events.progressToggle;
         cfg.config.serverChangeEvent = config.events.serverChanged;
         cfg.config.patientListChangeEvent = config.events.patientListChanged;
+        cfg.config.personListChangeEvent = config.events.personListChanged;
         cfg.config.practitionerListChangeEvent = config.events.practitionerListChanged;
+        cfg.config.relatedPersonListChangeEvent = config.events.relatedPersonListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {

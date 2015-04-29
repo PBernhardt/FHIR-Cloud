@@ -3,7 +3,8 @@
 
     var controllerId = 'mainController';
 
-    function mainController($filter, $mdDialog, $mdSidenav, $location, $window, common, conformanceService, fhirServers) {
+    function mainController($filter, $mdDialog, $mdSidenav, $location, $scope, $window, common, config,
+                            conformanceService, fhirServers) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -100,19 +101,16 @@
             $mdDialog.show({
                 controller: aboutController,
                 templateUrl: 'templates/about.html',
-                targetEvent: ev
-            })
-                .then(function() {
-                    logInfo("About dialog closed", null, noToast);
-                }, function(error) {
-                    logError("Error", error, noToast);
-                });
+                targetEvent: ev,
+                clickOutsideToClose: true
+            });
         }
 
         function aboutController($scope, $mdDialog) {
             function close() {
                 $mdDialog.hide();
             }
+
             $scope.close = close;
             $scope.activeServer = vm.activeServer;
             if (angular.isDefined($window.localStorage.patient) && ($window.localStorage.patient !== null)) {
@@ -123,15 +121,45 @@
 
         function authenticate(ev) {
             $mdDialog.show({
+                controller: authenticateController,
                 templateUrl: './templates/authenticate.html',
-                targetEvent: ev
-            })
-                .then(function (data) {
-                    // what they entered
-                }, function () {
-                    // login cancelled
-                })
+                targetEvent: ev,
+                clickOutsideToClose: true
+            });
         }
+
+        vm.authenticate = authenticate;
+
+        function authenticateController($scope, $mdDialog) {
+            function close() {
+                $mdDialog.hide();
+            }
+
+            $scope.close = close;
+
+            function authenticate() {
+                if (angular.isDefined($scope.user)) {
+                    $window.localStorage.user = JSON.stringify($scope.user);
+                    common.changeUser($scope.user);
+                }
+                $mdDialog.hide();
+            }
+
+            $scope.authenticate = authenticate;
+            if (angular.isDefined($window.localStorage.user)) {
+                $scope.user = JSON.parse($window.localStorage.user);
+            } else {
+                $scope.user = null;
+            }
+
+            $scope.activeServer = vm.activeServer;
+        }
+
+        $scope.$on(config.events.authenticatedUserChanged,
+            function (event, user) {
+                vm.user = user;
+            }
+        );
 
         function selectServer(fhirServer) {
             $mdSidenav('right').close();
@@ -182,7 +210,7 @@
             vm.menu.selectedSubPage = undefined;
         }
 
-        vm.authenticate = authenticate;
+
         vm.FHIRServers = [];
         vm.isSectionSelected = isSectionSelected;
         vm.menu = {
@@ -203,6 +231,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$window', 'common', 'conformanceService', 'fhirServers', mainController]);
+        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$scope', '$window', 'common', 'config',
+            'conformanceService', 'fhirServers', mainController]);
 
 })();

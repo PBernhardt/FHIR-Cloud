@@ -64,18 +64,30 @@
             }
         }
 
+        function changePersonList(persons) {
+            if (angular.isDefined(persons)) {
+                $broadcast(commonConfig.config.personListChangeEvent, persons);
+            }
+        }
+
         function changePractitionerList(practitioners) {
             if (angular.isDefined(practitioners)) {
                 $broadcast(commonConfig.config.practitionerListChangeEvent, practitioners);
             }
         }
 
-
-        //TODO: remove this
-        function toggleProgressBar(show) {
-            var data = {show: show};
-            $broadcast(commonConfig.config.progressToggleEvent, data);
+        function changeRelatedPersonList(relatedPerson) {
+            if (angular.isDefined(relatedPerson)) {
+                $broadcast(commonConfig.config.relatedPersonListChangeEvent, relatedPerson);
+            }
         }
+
+        function changeUser(user) {
+            if (angular.isDefined(user)) {
+                $broadcast(commonConfig.config.authenticatedUserChangeEvent, user);
+            }
+        }
+
 
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
@@ -241,8 +253,11 @@
             // generic
             activateController: activateController,
             changePatientList: changePatientList,
+            changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,
+            changeRelatedPersonList: changeRelatedPersonList,
             changeServer: changeServer,
+            changeUser: changeUser,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,
             isNumber: isNumber,
@@ -255,7 +270,6 @@
             setResourceId: setResourceId,
             shuffle: shuffle,
             textContains: textContains,
-            toggleProgressBar: toggleProgressBar,
             unexpectedOutcome: unexpectedOutcome
         };
 
@@ -293,11 +307,14 @@
     };
 
     var events = {
+        authenticatedUserChanged: 'user.changed',
         controllerActivateSuccess: 'controller.activateSuccess',
         patientListChanged: 'patientList.changed',
+        personListChanged: 'personList.changed',
         practitionerListChanged: 'practitionerList.changed',
-        progressToggle: 'progress.toggle',
+        relatedPersonListChanged: 'relatedPersonList.changed',
         serverChanged: 'server.changed'
+
     };
 
     var config = {
@@ -496,8 +513,10 @@
             .icon("fax", "./assets/svg/fax.svg", 16)
             .icon("female", "./assets/svg/female.svg", 24)
             .icon("fire", "./assets/svg/fire.svg", 24)
+            .icon("github", "./assets/svg/github.svg", 24)
             .icon("group", "./assets/svg/group.svg", 24)
             .icon("groupAdd", "./assets/svg/groupAdd.svg", 24)
+            .icon("home", "./assets/svg/home.svg", 24)
             .icon("healing", "./assets/svg/healing.svg", 24)
             .icon("hospital", "./assets/svg/hospital.svg", 24)
             .icon("https", "./assets/svg/https.svg", 24)
@@ -547,11 +566,13 @@
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {
+        cfg.config.authenticatedUserChangeEvent = config.events.authenticatedUserChanged;
         cfg.config.controllerActivateSuccessEvent = config.events.controllerActivateSuccess;
-        cfg.config.progressToggleEvent = config.events.progressToggle;
         cfg.config.serverChangeEvent = config.events.serverChanged;
         cfg.config.patientListChangeEvent = config.events.patientListChanged;
+        cfg.config.personListChangeEvent = config.events.personListChanged;
         cfg.config.practitionerListChangeEvent = config.events.practitionerListChanged;
+        cfg.config.relatedPersonListChangeEvent = config.events.relatedPersonListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {
@@ -2915,7 +2936,8 @@
 
     var controllerId = 'mainController';
 
-    function mainController($filter, $mdDialog, $mdSidenav, $location, $window, common, conformanceService, fhirServers) {
+    function mainController($filter, $mdDialog, $mdSidenav, $location, $scope, $window, common, config,
+                            conformanceService, fhirServers) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -3012,19 +3034,16 @@
             $mdDialog.show({
                 controller: aboutController,
                 templateUrl: 'templates/about.html',
-                targetEvent: ev
-            })
-                .then(function() {
-                    logInfo("About dialog closed", null, noToast);
-                }, function(error) {
-                    logError("Error", error, noToast);
-                });
+                targetEvent: ev,
+                clickOutsideToClose: true
+            });
         }
 
         function aboutController($scope, $mdDialog) {
             function close() {
                 $mdDialog.hide();
             }
+
             $scope.close = close;
             $scope.activeServer = vm.activeServer;
             if (angular.isDefined($window.localStorage.patient) && ($window.localStorage.patient !== null)) {
@@ -3035,15 +3054,45 @@
 
         function authenticate(ev) {
             $mdDialog.show({
+                controller: authenticateController,
                 templateUrl: './templates/authenticate.html',
-                targetEvent: ev
-            })
-                .then(function (data) {
-                    // what they entered
-                }, function () {
-                    // login cancelled
-                })
+                targetEvent: ev,
+                clickOutsideToClose: true
+            });
         }
+
+        vm.authenticate = authenticate;
+
+        function authenticateController($scope, $mdDialog) {
+            function close() {
+                $mdDialog.hide();
+            }
+
+            $scope.close = close;
+
+            function authenticate() {
+                if (angular.isDefined($scope.user)) {
+                    $window.localStorage.user = JSON.stringify($scope.user);
+                    common.changeUser($scope.user);
+                }
+                $mdDialog.hide();
+            }
+
+            $scope.authenticate = authenticate;
+            if (angular.isDefined($window.localStorage.user)) {
+                $scope.user = JSON.parse($window.localStorage.user);
+            } else {
+                $scope.user = null;
+            }
+
+            $scope.activeServer = vm.activeServer;
+        }
+
+        $scope.$on(config.events.authenticatedUserChanged,
+            function (event, user) {
+                vm.user = user;
+            }
+        );
 
         function selectServer(fhirServer) {
             $mdSidenav('right').close();
@@ -3094,7 +3143,7 @@
             vm.menu.selectedSubPage = undefined;
         }
 
-        vm.authenticate = authenticate;
+
         vm.FHIRServers = [];
         vm.isSectionSelected = isSectionSelected;
         vm.menu = {
@@ -3115,39 +3164,11 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$window', 'common', 'conformanceService', 'fhirServers', mainController]);
+        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$scope', '$window', 'common', 'config',
+            'conformanceService', 'fhirServers', mainController]);
 
 })();
 (function () {
-    'use strict';
-
-    // Must configure the common service and set its 
-    // events via the commonConfigProvider
-
-    angular.module('common')
-        .factory('progress', ['common', 'commonConfig', progress]);
-
-    function progress(common, commonConfig) {
-        var service = {
-            progressHide: progressHide,
-            progressShow: progressShow
-        };
-
-        return service;
-
-        function progressHide() {
-            progressToggle(false);
-        }
-
-        function progressShow() {
-            progressToggle(true);
-        }
-
-        function progressToggle(show) {
-            common.$broadcast(commonConfig.config.progressToggleEvent, { show: show });
-        }
-    }
-})();(function () {
     'use strict';
 
     var serviceId = 'sessionService';

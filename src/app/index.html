@@ -12,23 +12,39 @@
 <body ng-app="FHIRCloud" layout="column" ng-controller="mainController as vm">
 <md-toolbar layout="row" class="fill-height">
     <div flex="25" layout="row" layout-align="space-between center">
-        <md-button class="menu" hide-gt-sm ng-click="vm.toggleMenu()" aria-label="Show Menu">
+        <md-button tile="Menu"
+                class="md-icon-button launch"
+                   hide-gt-sm ng-click="vm.toggleMenu()"
+                   aria-label="Show Menu">
             <md-icon md-svg-src="menu"></md-icon>
         </md-button>
-        <md-button ng-href="#/home" md-no-ink hide-sm>FHIR Cloud</md-button>
+        <md-button title="Go to Home Page"
+                   class="md-icon-button launch"
+                   ng-href="#/home"
+                   aria-label="Home"
+                   hide-sm>
+            <md-icon md-svg-src="home"></md-icon>
+        </md-button>
     </div>
 
     <div flex layout="row" layout-align="end center">
         <h4 hide-sm class="md-subhead">User: {{vm.user || "Guest"}}</h4>
-        <md-button class="menu" ng-click="vm.authenticate()" aria-label="Account">
+        <md-button title="Authenticate user" class="md-icon-button launch" ng-click="vm.authenticate()" aria-label="Account">
             <md-icon md-svg-src="account"></md-icon>
         </md-button>
         <h4 hide-sm class="md-subhead">Server: {{vm.activeServer.name || "Select a server"}}</h4>
-        <md-button class="menu" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
+        <md-button title="Change remote FHIR Server" class="md-icon-button launch" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
             <md-icon md-svg-src="fire"></md-icon>
         </md-button>
-        <md-button class="menu" ng-click="vm.showAbout()" hide-sm aria-label="About">
+        <md-button title="About FHIR Cloud" class="md-icon-button launch" ng-click="vm.showAbout()" hide-sm aria-label="About">
             <md-icon md-svg-src="cloud"></md-icon>
+        </md-button>
+        <md-button href="https://github.com/PBernhardt/FHIR-Cloud"
+                   title="Launch source repository in new window"
+                   target="_blank"
+                   aria-label="Github"
+                   class="md-icon-button launch" >
+            <md-icon md-svg-src="github"></md-icon>
         </md-button>
     </div>
 </md-toolbar>
