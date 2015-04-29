@@ -1029,8 +1029,8 @@
                     },
                     {
                         "id": 2,
-                        "name": "RelayHealth (dev prod)",
-                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        "name": "RelayHealth",
+                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                     },
                     {
@@ -1061,19 +1061,8 @@
                         "name": "Cerner",
                         "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
                         "secure": true
-                    },
-                    {
-                        "id": 10,
-                        "name": "RelayHealth (dev pre-prod)",
-                        "baseUrl": "http://038162db24ba4c4bbc1bc057ddd33e88.cloudapp.net",
-                        "secure": false
-                    },
-                    {
-                        "id": 11,
-                        "name": "RelayHealth (stage prod)",
-                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
-                        "secure": false
-                    },
+                    }
+
 
                 ];
                 var servers = dataCache.readFromCache('servers');
