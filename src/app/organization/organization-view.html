@@ -4,7 +4,7 @@
             <h3 class="md-title">{{vm.organization.name}}</h3>
         </div>
         <div flex="10">
-            <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
                 <md-icon md-svg-icon="actions"></md-icon>
             </md-button>
         </div>
@@ -14,10 +14,9 @@
 
         <md-tabs md-dynamic-height ng-if="vm.isBusy === false">
             <md-tab label="Administrative">
-                <div flex="100" layout="row" layout-sm="column" layout-align="space-between center"
+                <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between center"
                      ng-if="vm.organization"
-                     layout-wrap>
-                    <br>
+                     layout-wrap style="position: relative; top:15px">
                     <md-input-container flex="100" class="md-icon-float" ng-if="vm.organization.resourceId">
                         <label>Resource Id</label>
                         <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>

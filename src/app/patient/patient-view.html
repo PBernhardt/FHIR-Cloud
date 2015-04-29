@@ -6,7 +6,7 @@
         <h3 class="md-title" ng-if="vm.isBusy === false">{{ vm.patient.name | fullName }}</h3>
     </div>
     <div flex="5">
-        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
@@ -17,11 +17,9 @@
     <div flex="100" ng-if="vm.isBusy === false">
         <md-tabs md-selected="selectedIndex" md-dynamic-height>
             <md-tab label="Administration">
-                <br>
-
-                <div flex="100" layout="row" layout-sm="column" layout-align="space-between end"
+                <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between end"
                      ng-if="vm.patient"
-                     layout-wrap>
+                     layout-wrap style="position: relative; top:15px">
                     <md-input-container flex="100" class="md-icon-float" ng-if="vm.patient.resourceId">
                         <label>Resource Id</label>
                         <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>

@@ -12,11 +12,12 @@
 <body ng-app="FHIRCloud" layout="column" ng-controller="mainController as vm">
 <md-toolbar layout="row" class="fill-height">
     <div flex="25" layout="row" layout-align="space-between center">
-        <md-button tile="Menu"
+        <md-button title="Menu"
                 class="md-icon-button launch"
-                   hide-gt-sm ng-click="vm.toggleMenu()"
-                   aria-label="Show Menu">
-            <md-icon md-svg-src="menu"></md-icon>
+                   hide-gt-sm
+                   ng-click="vm.toggleMenu()"
+                   aria-label="menu">
+            <md-icon md-svg-src="rectangle"></md-icon>
         </md-button>
         <md-button title="Go to Home Page"
                    class="md-icon-button launch"
@@ -36,14 +37,19 @@
         <md-button title="Change remote FHIR Server" class="md-icon-button launch" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
             <md-icon md-svg-src="fire"></md-icon>
         </md-button>
-        <md-button title="About FHIR Cloud" class="md-icon-button launch" ng-click="vm.showAbout()" hide-sm aria-label="About">
+        <md-button title="About FHIR Cloud"
+                   class="md-icon-button launch"
+                   ng-click="vm.showAbout()"
+                   hide-sm
+                   aria-label="About">
             <md-icon md-svg-src="cloud"></md-icon>
         </md-button>
         <md-button href="https://github.com/PBernhardt/FHIR-Cloud"
                    title="Launch source repository in new window"
                    target="_blank"
                    aria-label="Github"
-                   class="md-icon-button launch" >
+                   class="md-icon-button launch"
+                   hide-sm>
             <md-icon md-svg-src="github"></md-icon>
         </md-button>
     </div>

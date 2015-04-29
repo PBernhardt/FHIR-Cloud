@@ -3,7 +3,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, common, fhirServers, localValueSets, patientService) {
+    function patientSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -12,6 +12,12 @@
         var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
         var $q = common.$q;
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
 
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
@@ -157,10 +163,12 @@
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
+            vm.noresults = false;
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
                         vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
                     logError('Error getting patients', error, noToast);
@@ -286,5 +294,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets', 'patientService',
+            patientSearch]);
 })();

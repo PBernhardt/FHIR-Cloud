@@ -250,7 +250,7 @@
             .icon("listAdd", "./assets/svg/listAdd.svg",24)
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
-            .icon("menu", "./assets/svg/menu.svg", 24)
+            .icon("rectangle", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("order", "./assets/svg/flask.svg", 24)

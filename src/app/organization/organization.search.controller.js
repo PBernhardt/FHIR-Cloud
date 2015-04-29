@@ -3,7 +3,7 @@
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdBottomSheet, $mdSidenav, $scope, common, fhirServers, localValueSets, organizationService) {
+    function organizationSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, organizationService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -12,6 +12,12 @@
 
         /* jshint validthis:true */
         var vm = this;
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
 
         function getActiveServer() {
             fhirServers.getActiveServer()
@@ -49,19 +55,21 @@
             }
         }
 
-        function querySearch(searchText) {
+        function quickSearch(searchText) {
             var deferred = $q.defer();
+            vm.noresults = false;
             organizationService.getOrganizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
                     logError('Error getting organizations', error, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
         }
-        vm.querySearch = querySearch;
+        vm.quickSearch = quickSearch;
 
         function searchOrganizations(searchText) {
             var deferred = $q.defer();
@@ -237,5 +245,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', '$scope', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets',
+            'organizationService', organizationSearch]);
 })();

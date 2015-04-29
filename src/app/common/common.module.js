@@ -32,14 +32,13 @@
 
         function changeServer(server) {
             if (angular.isDefined(server)) {
-                var data = {"activeServer": server};
                 $window.localStorage.removeItem("patient");
                 $window.localStorage.removeItem("organization");
                 var currentLocation = $location.path();
                 if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
                     $location.path('/home');
                 }
-                $broadcast(commonConfig.config.serverChangeEvent, data);
+                $broadcast(commonConfig.config.serverChangeEvent, server);
             }
         }
 

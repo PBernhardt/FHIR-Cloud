@@ -47,14 +47,13 @@
 
         function changeServer(server) {
             if (angular.isDefined(server)) {
-                var data = {"activeServer": server};
                 $window.localStorage.removeItem("patient");
                 $window.localStorage.removeItem("organization");
                 var currentLocation = $location.path();
                 if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
                     $location.path('/home');
                 }
-                $broadcast(commonConfig.config.serverChangeEvent, data);
+                $broadcast(commonConfig.config.serverChangeEvent, server);
             }
         }
 
@@ -530,7 +529,7 @@
             .icon("listAdd", "./assets/svg/listAdd.svg",24)
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
-            .icon("menu", "./assets/svg/menu.svg", 24)
+            .icon("rectangle", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("order", "./assets/svg/flask.svg", 24)
@@ -15020,7 +15019,7 @@
     var controllerId = 'organizationDetail';
 
     function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
-                                $mdDialog, common, contactService, fhirServers, identifierService, localValueSets,
+                                $mdDialog, common, config, contactService, fhirServers, identifierService, localValueSets,
                                 organizationService, contactPointService, sessionService, patientService, personService,
                                 practitionerService) {
         /* jshint validthis:true */
@@ -15032,10 +15031,9 @@
         var $q = common.$q;
         var noToast = false;
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
             }
         );
 
@@ -15403,7 +15401,7 @@
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
-            'common', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService',
+            'common', 'config', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService',
             'contactPointService', 'sessionService', 'patientService', 'personService', 'practitionerService',
             organizationDetail]);
 
@@ -15413,7 +15411,7 @@
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdBottomSheet, $mdSidenav, $scope, common, fhirServers, localValueSets, organizationService) {
+    function organizationSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, organizationService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -15422,6 +15420,12 @@
 
         /* jshint validthis:true */
         var vm = this;
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
 
         function getActiveServer() {
             fhirServers.getActiveServer()
@@ -15459,19 +15463,21 @@
             }
         }
 
-        function querySearch(searchText) {
+        function quickSearch(searchText) {
             var deferred = $q.defer();
+            vm.noresults = false;
             organizationService.getOrganizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
                     logError('Error getting organizations', error, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
         }
-        vm.querySearch = querySearch;
+        vm.quickSearch = quickSearch;
 
         function searchOrganizations(searchText) {
             var deferred = $q.defer();
@@ -15647,7 +15653,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdSidenav', '$scope', 'common', 'fhirServers', 'localValueSets', 'organizationService', organizationSearch]);
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets',
+            'organizationService', organizationSearch]);
 })();
 (function () {
     'use strict';
@@ -16413,7 +16420,7 @@
 
     var controllerId = 'patientSearch';
 
-    function patientSearch($location, $mdBottomSheet, common, fhirServers, localValueSets, patientService) {
+    function patientSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, patientService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -16422,6 +16429,12 @@
         var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
         var $q = common.$q;
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
 
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
@@ -16567,10 +16580,12 @@
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
+            vm.noresults = false;
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
                         vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
                     logError('Error getting patients', error, noToast);
@@ -16696,7 +16711,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', 'common', 'fhirServers', 'localValueSets', 'patientService', patientSearch]);
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets', 'patientService',
+            patientSearch]);
 })();
 (function () {
     'use strict';

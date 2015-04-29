@@ -5,16 +5,19 @@
                 md-selected-item-change="vm.goToOrganization(vm.selectedOrganization)"
                 md-selected-item="vm.selectedOrganization"
                 md-search-text="vm.searchText"
-                md-items="org in vm.querySearch(vm.searchText)"
-                md-delay="200"
-                md-min-length="3"
+                md-items="org in vm.quickSearch(vm.searchText)"
+                md-delay="500"
+                md-min-length="4"
                 placeholder="What organization are you looking for?">
             <span md-highlight-text="vm.searchText">{{org.resource.name}}</span>
         </md-autocomplete>
     </div>
     <div flex="5">
-        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
+    </div>
+    <div ng-if="vm.noresults" style="position: relative; top:30px">
+        <md-subheader class="md-warn">No matches for "{{vm.searchText}}"</md-subheader>
     </div>
 </div>
