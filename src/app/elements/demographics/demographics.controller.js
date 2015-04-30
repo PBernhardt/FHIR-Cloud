@@ -154,7 +154,7 @@
             var codeableConcept = {
                 "text": ethnicityCoding.display,
                 "coding": [{
-                    "system": vm.ethnicities.system,
+                    "system": ethnicityCoding.system,
                     "code": ethnicityCoding.code,
                     "display": ethnicityCoding.display
                 }]

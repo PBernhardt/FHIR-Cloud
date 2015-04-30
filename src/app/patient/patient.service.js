@@ -430,43 +430,17 @@
             return extension;
         }
 
-        var allEthnicities = [];
-        var ethnicitySystem = '';
-
         function _randomEthnicity() {
-            function prepEthnicities() {
-                var ethnicities = localValueSets.ethnicity();
-                ethnicitySystem = ethnicities.system;
-                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
-                    var mainConcept = ethnicities.concept[i];
-                    allEthnicities.push(mainConcept);
-                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
-                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
-                            var groupConcept = mainConcept.concept[j];
-                            allEthnicities.push(groupConcept);
-                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
-                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
-                                    var leafConcept = groupConcept.concept[k];
-                                    allEthnicities.push(leafConcept);
-                                }
-                            }
-                        }
-                    }
+            var ethnicities = localValueSets.ethnicity();
 
-                }
-            }
-
-            if (allEthnicities.length === 0) {
-                prepEthnicities();
-            }
-            common.shuffle(allEthnicities);
-            var ethnicity = allEthnicities[1];
+            common.shuffle(ethnicities);
+            var ethnicity = ethnicities[1];
             var extension = {
                 "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
                 "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
             };
             extension.valueCodeableConcept.coding.push({
-                "system": ethnicitySystem,
+                "system": ethnicity.system,
                 "code": ethnicity.code,
                 "display": ethnicity.display
             });

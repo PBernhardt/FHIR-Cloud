@@ -44,7 +44,7 @@
         vm.goToPatient = goToPatient;
 
         function _loadLocalLookups() {
-            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.ethnicities = localValueSets.ethnicity();
             vm.races = localValueSets.race().concept;
             vm.languages = localValueSets.iso6391Languages();
         }
@@ -140,7 +140,7 @@
             }
             if (vm.patientSearch.ethnicity) {
                 queryParam.param = "ethnicity";
-                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.patientSearch.ethnicity.code);
+                queryParam.value = vm.patientSearch.ethnicity.system.concat("|", vm.patientSearch.ethnicity.code);
                 queryParams.push(_.clone(queryParam));
             }
 

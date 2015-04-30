@@ -52,43 +52,14 @@
             <p class="result">Marital Status</p>
         </div>
 
-        <!--        <div layout="column" layout-align="center center" style="height: 100px;">
-                    <select ng-model="vm.demographics.ethnicity"
-                            style="min-width: 200px;" ng-selected="vm.demographics.ethnicity.code">
-                        <optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
-                            <option ng-value="main">{{main.display}}</option>
-                            <optgroup ng-value="group" ng-repeat="group in main.concept">
-                                {{group.display}}
-                                <option ng-value="group">{{group.display}}</option>
-                                <option ng-value="class" ng-repeat="class in group.concept">
-                                    {{class.display}}
-                                </option>
-                            </optgroup>
-                        </optgroup>
-                    </select>
-
-                    <p class="result">Ethnicity</p>
-                </div>-->
-
         <div layout="column" layout-align="center center" style="height: 100px;">
-            <select ng-model="vm.demographics.ethnicity">
-                <option ng-repeat-start="main in vm.ethnicities.concept"
-                        ng-value="main"
-                        ng-selected="main.code===vm.demographics.ethnicity.coding[0].code">
-                    {{main.display}}
+            <select ng-model="vm.demographics.ethnicity"
+                    ng-change="vm.updateEthnicity()">
+                <option ng-repeat="coding in vm.ethnicities"
+                        ng-value="coding"
+                        ng-selected="coding.code===vm.demographics.ethnicities.coding[0].code">
+                    {{coding.display}}
                 </option>
-                <option ng-repeat-start="group in main.concept"
-                        ng-value="group"
-                        ng-selected="group.code===vm.demographics.ethnicity.coding[0].code">
-                    {{group.display}}
-                </option>
-                <option ng-repeat="class in group.concept"
-                        ng-value="class"
-                        ng-selected="class.code===vm.demographics.ethnicity.coding[0].code">
-                    {{class.display}}
-                </option>
-                <option ng-repeat-end ng-hide="true"></option>
-                <option ng-repeat-end ng-hide="true"></option>
             </select>
 
             <p class="result">Ethnicity</p>

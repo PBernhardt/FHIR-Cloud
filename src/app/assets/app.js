@@ -1719,280 +1719,28 @@
         }
 
         function ethnicity() {
-            return {
-                "system": "http://hl7.org/fhir/v3/Ethnicity",
-                "caseSensitive": true,
-                "concept": [
-                    {
-                        "code": "2135-2",
-                        "abstract": false,
-                        "display": "Hispanic or Latino",
-                        "definition": "Hispanic or Latino",
-                        "concept": [
-                            {
-                                "code": "2137-8",
-                                "abstract": false,
-                                "display": "Spaniard",
-                                "definition": "Spaniard",
-                                "concept": [
-                                    {
-                                        "code": "2138-6",
-                                        "abstract": false,
-                                        "display": "Andalusian",
-                                        "definition": "Andalusian"
-                                    },
-                                    {
-                                        "code": "2139-4",
-                                        "abstract": false,
-                                        "display": "Asturian",
-                                        "definition": "Asturian"
-                                    },
-                                    {
-                                        "code": "2140-2",
-                                        "abstract": false,
-                                        "display": "Castillian",
-                                        "definition": "Castillian"
-                                    },
-                                    {
-                                        "code": "2141-0",
-                                        "abstract": false,
-                                        "display": "Catalonian",
-                                        "definition": "Catalonian"
-                                    },
-                                    {
-                                        "code": "2142-8",
-                                        "abstract": false,
-                                        "display": "Belearic Islander",
-                                        "definition": "Belearic Islander"
-                                    },
-                                    {
-                                        "code": "2143-6",
-                                        "abstract": false,
-                                        "display": "Gallego",
-                                        "definition": "Gallego"
-                                    },
-                                    {
-                                        "code": "2144-4",
-                                        "abstract": false,
-                                        "display": "Valencian",
-                                        "definition": "Valencian"
-                                    },
-                                    {
-                                        "code": "2145-1",
-                                        "abstract": false,
-                                        "display": "Canarian",
-                                        "definition": "Canarian"
-                                    },
-                                    {
-                                        "code": "2146-9",
-                                        "abstract": false,
-                                        "display": "Spanish Basque",
-                                        "definition": "Spanish Basque"
-                                    }
-                                ]
-                            },
-                            {
-                                "code": "2148-5",
-                                "abstract": false,
-                                "display": "Mexican",
-                                "definition": "Mexican",
-                                "concept": [
-                                    {
-                                        "code": "2149-3",
-                                        "abstract": false,
-                                        "display": "Mexican American",
-                                        "definition": "Mexican American"
-                                    },
-                                    {
-                                        "code": "2150-1",
-                                        "abstract": false,
-                                        "display": "Mexicano",
-                                        "definition": "Mexicano"
-                                    },
-                                    {
-                                        "code": "2151-9",
-                                        "abstract": false,
-                                        "display": "Chicano",
-                                        "definition": "Chicano"
-                                    },
-                                    {
-                                        "code": "2152-7",
-                                        "abstract": false,
-                                        "display": "La Raza",
-                                        "definition": "La Raza"
-                                    },
-                                    {
-                                        "code": "2153-5",
-                                        "abstract": false,
-                                        "display": "Mexican American Indian",
-                                        "definition": "Mexican American Indian"
-                                    }
-                                ]
-                            },
-                            {
-                                "code": "2155-0",
-                                "abstract": false,
-                                "display": "Central American",
-                                "definition": "Central American",
-                                "concept": [
-                                    {
-                                        "code": "2156-8",
-                                        "abstract": false,
-                                        "display": "Costa Rican",
-                                        "definition": "Costa Rican"
-                                    },
-                                    {
-                                        "code": "2157-6",
-                                        "abstract": false,
-                                        "display": "Guatemalan",
-                                        "definition": "Guatemalan"
-                                    },
-                                    {
-                                        "code": "2158-4",
-                                        "abstract": false,
-                                        "display": "Honduran",
-                                        "definition": "Honduran"
-                                    },
-                                    {
-                                        "code": "2159-2",
-                                        "abstract": false,
-                                        "display": "Nicaraguan",
-                                        "definition": "Nicaraguan"
-                                    },
-                                    {
-                                        "code": "2160-0",
-                                        "abstract": false,
-                                        "display": "Panamanian",
-                                        "definition": "Panamanian"
-                                    },
-                                    {
-                                        "code": "2161-8",
-                                        "abstract": false,
-                                        "display": "Salvadoran",
-                                        "definition": "Salvadoran"
-                                    },
-                                    {
-                                        "code": "2162-6",
-                                        "abstract": false,
-                                        "display": "Central American Indian",
-                                        "definition": "Central American Indian"
-                                    },
-                                    {
-                                        "code": "2163-4",
-                                        "abstract": false,
-                                        "display": "Canal Zone",
-                                        "definition": "Canal Zone"
-                                    }
-                                ]
-                            },
-                            {
-                                "code": "2165-9",
-                                "abstract": false,
-                                "display": "South American",
-                                "definition": "South American",
-                                "concept": [
-                                    {
-                                        "code": "2166-7",
-                                        "abstract": false,
-                                        "display": "Argentinean",
-                                        "definition": "Argentinean"
-                                    },
-                                    {
-                                        "code": "2167-5",
-                                        "abstract": false,
-                                        "display": "Bolivian",
-                                        "definition": "Bolivian"
-                                    },
-                                    {
-                                        "code": "2168-3",
-                                        "abstract": false,
-                                        "display": "Chilean",
-                                        "definition": "Chilean"
-                                    },
-                                    {
-                                        "code": "2169-1",
-                                        "abstract": false,
-                                        "display": "Colombian",
-                                        "definition": "Colombian"
-                                    },
-                                    {
-                                        "code": "2170-9",
-                                        "abstract": false,
-                                        "display": "Ecuadorian",
-                                        "definition": "Ecuadorian"
-                                    },
-                                    {
-                                        "code": "2171-7",
-                                        "abstract": false,
-                                        "display": "Paraguayan",
-                                        "definition": "Paraguayan"
-                                    },
-                                    {
-                                        "code": "2172-5",
-                                        "abstract": false,
-                                        "display": "Peruvian",
-                                        "definition": "Peruvian"
-                                    },
-                                    {
-                                        "code": "2173-3",
-                                        "abstract": false,
-                                        "display": "Uruguayan",
-                                        "definition": "Uruguayan"
-                                    },
-                                    {
-                                        "code": "2174-1",
-                                        "abstract": false,
-                                        "display": "Venezuelan",
-                                        "definition": "Venezuelan"
-                                    },
-                                    {
-                                        "code": "2175-8",
-                                        "abstract": false,
-                                        "display": "South American Indian",
-                                        "definition": "South American Indian"
-                                    },
-                                    {
-                                        "code": "2176-6",
-                                        "abstract": false,
-                                        "display": "Criollo",
-                                        "definition": "Criollo"
-                                    }
-                                ]
-                            },
-                            {
-                                "code": "2178-2",
-                                "abstract": false,
-                                "display": "Latin American",
-                                "definition": "Latin American"
-                            },
-                            {
-                                "code": "2180-8",
-                                "abstract": false,
-                                "display": "Puerto Rican",
-                                "definition": "Puerto Rican"
-                            },
-                            {
-                                "code": "2182-4",
-                                "abstract": false,
-                                "display": "Cuban",
-                                "definition": "Cuban"
-                            },
-                            {
-                                "code": "2184-0",
-                                "abstract": false,
-                                "display": "Dominican",
-                                "definition": "Dominican"
-                            }
-                        ]
-                    },
-                    {
-                        "code": "2186-5",
-                        "abstract": false,
-                        "display": "Not Hispanic or Latino",
-                        "definition": "Note that this term remains in the table for completeness, even though within HL7, the notion of \"not otherwise coded\" term is deprecated."
-                    }
-                ]
-            }
+            return [
+                {
+                    "system": "http://hl7.org/fhir/v3/Ethnicity",
+                    "code": "2135-2",
+                    "display": "Hispanic or Latino"
+                },
+                {
+                    "system": "http://hl7.org/fhir/v3/Ethnicity",
+                    "code": "2186-5",
+                    "display": "Not Hispanic or Latino"
+                },
+                {
+                    "system": "http://hl7.org/fhir/v3/NullFlavor",
+                    "code": "UNK",
+                    "display": "Unknown"
+                },
+                {
+                    "system": "http://hl7.org/fhir/v3/NullFlavor",
+                    "code": "ASKU",
+                    "display": "Asked but no answer"
+                }
+            ]
         }
 
         function religion() {
@@ -5921,7 +5669,7 @@
             var codeableConcept = {
                 "text": ethnicityCoding.display,
                 "coding": [{
-                    "system": vm.ethnicities.system,
+                    "system": ethnicityCoding.system,
                     "code": ethnicityCoding.code,
                     "display": ethnicityCoding.display
                 }]
@@ -16458,7 +16206,7 @@
         vm.goToPatient = goToPatient;
 
         function _loadLocalLookups() {
-            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.ethnicities = localValueSets.ethnicity();
             vm.races = localValueSets.race().concept;
             vm.languages = localValueSets.iso6391Languages();
         }
@@ -16554,7 +16302,7 @@
             }
             if (vm.patientSearch.ethnicity) {
                 queryParam.param = "ethnicity";
-                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.patientSearch.ethnicity.code);
+                queryParam.value = vm.patientSearch.ethnicity.system.concat("|", vm.patientSearch.ethnicity.code);
                 queryParams.push(_.clone(queryParam));
             }
 
@@ -17143,43 +16891,17 @@
             return extension;
         }
 
-        var allEthnicities = [];
-        var ethnicitySystem = '';
-
         function _randomEthnicity() {
-            function prepEthnicities() {
-                var ethnicities = localValueSets.ethnicity();
-                ethnicitySystem = ethnicities.system;
-                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
-                    var mainConcept = ethnicities.concept[i];
-                    allEthnicities.push(mainConcept);
-                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
-                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
-                            var groupConcept = mainConcept.concept[j];
-                            allEthnicities.push(groupConcept);
-                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
-                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
-                                    var leafConcept = groupConcept.concept[k];
-                                    allEthnicities.push(leafConcept);
-                                }
-                            }
-                        }
-                    }
+            var ethnicities = localValueSets.ethnicity();
 
-                }
-            }
-
-            if (allEthnicities.length === 0) {
-                prepEthnicities();
-            }
-            common.shuffle(allEthnicities);
-            var ethnicity = allEthnicities[1];
+            common.shuffle(ethnicities);
+            var ethnicity = ethnicities[1];
             var extension = {
                 "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
                 "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
             };
             extension.valueCodeableConcept.coding.push({
-                "system": ethnicitySystem,
+                "system": ethnicity.system,
                 "code": ethnicity.code,
                 "display": ethnicity.display
             });
