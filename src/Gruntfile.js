@@ -123,6 +123,7 @@ module.exports = function (grunt) {
                     'app/common/main.controller.js',
                     'app/common/session.service.js',
                     'app/conformance/conformance.detail.controller.js',
+                    'app/conformance/conformance.resource.detail.controller.js',
                     'app/conformance/conformance.search.controller.js',
                     'app/conformance/conformance.service.js',
                     'app/diagnosticOrder/diagnosticOrder.detail.controller.js',

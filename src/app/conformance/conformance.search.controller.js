@@ -3,7 +3,7 @@
 
     var controllerId = 'conformanceSearch';
 
-    function conformanceSearch($location, $mdSidenav, common, config, fhirServers, conformanceService) {
+    function conformanceSearch($location, $mdBottomSheet, $mdSidenav, common, config, fhirServers, conformanceService) {
         var keyCodes = config.keyCodes;
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
@@ -95,6 +95,42 @@
             vm.isBusy = on;
         }
 
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/conformance/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/conformance/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/conformance');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new conformance', icon: 'hospital', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Conformance search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+
         vm.activeServer = null;
         vm.isBusy = false;
         vm.conformances = [];
@@ -117,5 +153,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'conformanceService', conformanceSearch]);
+        ['$location', '$mdBottomSheet', '$mdSidenav', 'common', 'config', 'fhirServers', 'conformanceService', conformanceSearch]);
 })();

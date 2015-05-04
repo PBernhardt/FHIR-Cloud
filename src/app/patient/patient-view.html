@@ -33,7 +33,7 @@
 
                     <md-input-container flex="15" ng-if="vm.patient.birthDate">
                         <label>Birth date</label>
-                        <input ng-model="vm.patient.birthDate | date: 'longDate'"
+                        <input ng-model="vm.patient.birthDate.$$display"
                                ng-readonly="true"/>
                     </md-input-container>
 
@@ -46,12 +46,12 @@
                     <md-input-container flex="15"
                                         ng-if="vm.patient.deceasedDateTime">
                         <label>Date of Death</label>
-                        <input ng-value="vm.patient.deceasedDateTime | date: 'longDate'" ng-readonly="true"/>
+                        <input ng-value="vm.patient.deceasedDateTime.$$display" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="20" ng-if="vm.patient.birthPlace">
                         <label>Birth place</label>
-                        <input ng-model="vm.patient.birthPlace | singleLineAddress" ng-readonly="true"/>
+                        <input ng-model="vm.patient.birthPlace.text" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.mothersMaidenName">
@@ -61,22 +61,22 @@
 
                     <md-input-container flex="25" ng-if="vm.patient.race">
                         <label>Race</label>
-                        <input ng-model="vm.patient.race | codeableConcept" readonly="true"/>
+                        <input ng-model="vm.patient.race.text" readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.religion">
                         <label>Religion</label>
-                        <input ng-model="vm.patient.religion | codeableConcept" readonly="true"/>
+                        <input ng-model="vm.patient.religion.text" readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.ethnicity">
                         <label>Ethnicity</label>
-                        <input ng-model="vm.patient.ethnicity | codeableConcept" ng-readonly="true"/>
+                        <input ng-model="vm.patient.ethnicity.text" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="25" ng-if="vm.patient.maritalStatus">
                         <label>Marital status</label>
-                        <input ng-model="vm.patient.maritalStatus | codeableConcept" ng-readonly="true"/>
+                        <input ng-model="vm.patient.maritalStatus.text" ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="20" ng-if="vm.patient.active">

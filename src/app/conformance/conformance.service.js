@@ -3,7 +3,7 @@
 
     var serviceId = 'conformanceService';
 
-    function conformanceService(common, dataCache, fhirClient, fhirServers) {
+    function conformanceService($window, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localConformances';
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
@@ -19,6 +19,7 @@
                 fhirClient.getResource(baseUrl + '/metadata')
                     .then(function (results) {
                         dataCache.addToCache(dataCacheKey, results.data);
+                        $window.localStorage.conformance = JSON.stringify(results.data);
                         deferred.resolve(results.data);
                     }, function (outcome) {
                         deferred.reject(outcome);
@@ -102,7 +103,7 @@
             if (cachedSearchResults) {
                 deferred.resolve(cachedSearchResults);
             } else {
-                deferred.reject('Search results not cached.');
+                deferred.resolve(undefined);
             }
             return deferred.promise;
         }
@@ -110,9 +111,15 @@
         function getCachedConformance(hashKey) {
             function getConformance(searchResults) {
                 var cachedConformance;
-                var cachedConformances = searchResults.entry;
-                cachedConformance = _.find(cachedConformances, {'$$hashKey': hashKey});
+                var cachedConformanceStatements;
+                if (angular.isDefined(searchResults) && angular.isDefined(searchResults.entry)) {
+                    cachedConformanceStatements = searchResults.entry;
+                    cachedConformance = _.find(cachedConformanceStatements, {'$$hashKey': hashKey});
+                }
                 if (cachedConformance) {
+                    deferred.resolve(cachedConformance);
+                } else if ($window.localStorage.conformance && $window.localStorage.conformance !== null) {
+                    cachedConformance = {"resource": JSON.parse($window.localStorage.conformance)};
                     deferred.resolve(cachedConformance);
                 } else {
                     deferred.reject('Conformance not found in cache: ' + hashKey);
@@ -121,10 +128,7 @@
 
             var deferred = $q.defer();
             getCachedSearchResults()
-                .then(getConformance,
-                function () {
-                    deferred.reject('Conformance search results not found in cache.');
-                });
+                .then(getConformance);
             return deferred.promise;
         }
 
@@ -133,6 +137,7 @@
             fhirClient.getResource(resourceId)
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
+                    $window.localStorage.conformance = JSON.stringify(results.data);
                     deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
@@ -169,6 +174,7 @@
             fhirClient.getResource(baseUrl + '/Conformance?name=' + nameFilter + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
+                    $window.localStorage.conformance = JSON.stringify(results.data);
                     deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
@@ -181,6 +187,7 @@
             fhirClient.getResource(url)
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
+                    $window.localStorage.conformance = JSON.stringify(results.data);
                     deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
@@ -249,5 +256,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', conformanceService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$window', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+        conformanceService]);
 })();

@@ -36,7 +36,7 @@
                 $window.localStorage.removeItem("organization");
                 var currentLocation = $location.path();
                 if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
-                    $location.path('/home');
+                    $location.path('/conformance/view/current');
                 }
                 $broadcast(commonConfig.config.serverChangeEvent, server);
             }

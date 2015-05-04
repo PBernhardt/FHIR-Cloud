@@ -66,6 +66,8 @@
             templateUrl: 'conformance/conformance-search.html'
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
+        }).when('/conformance/detailed-search', {
+            templateUrl: 'conformance/conformance-detailed-search.html'
         }).when('/consultation', {
             templateUrl: 'consultation/consultation-edit.html'
         }).when('/consultation/smart/:smartApp/:patientId', {
@@ -251,7 +253,7 @@
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
             .icon("rectangle", "./assets/svg/menu.svg", 24)
-            .icon("more", "./assets/svg/more.svg", 24)
+            .icon("more", "./assets/svg/more16.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("order", "./assets/svg/flask.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)

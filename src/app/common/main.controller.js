@@ -20,7 +20,7 @@
             {name: 'Related Person', href: 'relatedPerson/view/curren t'}
         ];
         var _conformancePages = [
-            {name: 'Conformance Statement', href: 'conformance'},
+            {name: 'Conformance Statement', href: 'conformance/view/current'},
             {name: 'Extension Definition', href: 'extensionDefinition'},
             {name: 'Operation Definition', href: 'operationDefinition'},
             {name: 'Profile', href: 'profile'},

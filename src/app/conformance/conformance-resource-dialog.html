@@ -1,0 +1,40 @@
+<md-dialog>
+    <md-content>
+        <md-input-container flex="45" ng-if="data.type">
+            <label>Type</label>
+            <input ng-model="data.type" ng-readonly="true"/>
+        </md-input-container>
+
+        <md-input-container flex="45" ng-if="data.versioning">
+            <label>Versioning</label>
+            <input ng-model="data.versioning" ng-readonly="true"/>
+        </md-input-container>
+
+        <md-list flex="30" ng-if="data.interaction" layout-fill>
+            <md-subheader>Interactions</md-subheader>
+            <md-list-item ng-repeat="ia in data.interaction">
+                <p>{{ia.code}}</p>
+                <md-divider ng-if="!$last"></md-divider>
+            </md-list-item>
+        </md-list>
+
+        <md-list flex="30" ng-if="data.searchParam" layout-fill>
+            <md-subheader>Search Parameters</md-subheader>
+            <md-list-item ng-repeat="param in data.searchParam">
+                <div class="md-list-item-text">
+                    <h3>{{param.name}} </h3>
+                    <h4>{{param.type}} {{param.target}}</h4>
+
+                    <p>{{param.documentation}}</p>
+                </div>
+                <md-divider ng-if="!$last"></md-divider>
+            </md-list-item>
+        </md-list>
+
+        <div class="md-actions">
+            <md-button ng-click="closeDialog()">
+                Close
+            </md-button>
+        </div>
+    </md-content>
+</md-dialog>

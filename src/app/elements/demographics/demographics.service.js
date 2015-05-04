@@ -19,18 +19,30 @@
         var _mothersMaidenName = undefined;
 
         function getRace() {
+            if (_race !== undefined) {
+                _race.text = ($filter)('codeableConcept')(_race);
+            }
             return _race;
         }
 
         function getReligion() {
+            if (_religion !== undefined) {
+                _religion.text = ($filter)('codeableConcept')(_religion);
+            }
             return _religion;
         }
 
         function getEthnicity() {
+            if (_ethnicity !== undefined) {
+                _ethnicity.text = ($filter)('codeableConcept')(_ethnicity);
+            }
             return _ethnicity;
         }
 
         function getBirthPlace() {
+            if (_birthPlace !== undefined) {
+                _birthPlace.text = $filter('singleLineAddress')(_birthPlace);
+            }
             return _birthPlace;
         }
 
@@ -39,6 +51,9 @@
         }
 
         function getBirthDate() {
+            if (_birthDate !== undefined) {
+                _birthDate.$$display = $filter('date')(_birthDate, 'longDate');
+            }
             return _birthDate;
         }
 
@@ -51,6 +66,9 @@
         }
 
         function getDeceasedDate() {
+            if (_deceasedDate !== undefined) {
+                _deceasedDate.$$display = $filter('date')(_deceasedDate, 'longDate');
+            }
             return _deceasedDate;
         }
 
@@ -63,6 +81,9 @@
         }
 
         function getMaritalStatus() {
+            if (_maritalStatus !== undefined) {
+                _maritalStatus.text = ($filter)('codeableConcept')(_maritalStatus);
+            }
             return _maritalStatus;
         }
 

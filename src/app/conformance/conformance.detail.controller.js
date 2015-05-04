@@ -3,7 +3,8 @@
 
     var controllerId = 'conformanceDetail';
 
-    function conformanceDetail($location, $mdDialog, $routeParams, common, fhirServers, identifierService, conformanceService, contactPointService) {
+    function conformanceDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $scope, common, config, fhirServers, identifierService,
+                               conformanceService, contactPointService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -12,16 +13,49 @@
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var noToast = false;
 
-        function cancel() {
 
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedConformance();
+            });
         }
 
-        function canDelete() {
-            return !vm.isEditing;
+        function showResource($event, resource) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'conformance/conformance-resource-dialog.html',
+                controller: 'conformanceResource',
+                locals: {
+                    data: resource
+                },
+                targetEvent: $event
+            });
         }
 
-        function canSave() {
-            return !vm.isSaving;
+        vm.showResource = showResource;
+
+        function showSource($event) {
+            _showRawData(vm.conformance, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
         }
 
         function deleteConformance(conformance) {
@@ -30,7 +64,7 @@
                     conformanceService.deleteCachedConformance(conformance.hashKey, conformance.resourceId)
                         .then(function () {
                             logSuccess("Deleted conformance " + conformance.name);
-                            $location.path('/conformances');
+                            $location.path('/conformance');
                         },
                         function (error) {
                             logError(common.unexpectedOutcome(error));
@@ -38,10 +72,13 @@
                     );
                 }
             }
+
             var confirm = $mdDialog.confirm().title('Delete ' + conformance.name + '?').ok('Yes').cancel('No');
             $mdDialog.show(confirm).then(executeDelete);
 
         }
+
+        vm.delete = deleteConformance;
 
         function edit(conformance) {
             if (conformance && conformance.hashKey) {
@@ -49,7 +86,9 @@
             }
         }
 
-        function getActiveServer() {
+        vm.edit = edit;
+
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
@@ -57,8 +96,8 @@
                 });
         }
 
-        function getRequestedConformance() {
-            function intitializeRelatedData(data) {
+        function _getRequestedConformance() {
+            function _initializeRelatedData(data) {
                 var rawData = angular.copy(data.resource);
                 if (angular.isDefined(rawData.text)) {
                     vm.narrative = (rawData.text.div || '<div>Not provided</div>');
@@ -66,9 +105,10 @@
                     vm.narrative = '<div>Not provided</div>';
                 }
                 vm.json = rawData;
-                vm.json.text = { div: "see narrative tab"};
+                vm.json.text = {div: "see narrative tab"};
                 vm.json = angular.toJson(rawData, true);
                 vm.conformance = rawData;
+                vm.conformance.resourceId = vm.activeServer.baseUrl + "/metadata";
                 if (angular.isUndefined(vm.conformance.code)) {
                     vm.conformance.code = {"coding": []};
                 }
@@ -79,13 +119,13 @@
 
             if ($routeParams.hashKey === 'new') {
                 var data = conformanceService.initializeNewConformance();
-                intitializeRelatedData(data);
+                _initializeRelatedData(data);
                 vm.title = 'Add New Conformance';
                 vm.isEditing = false;
             } else {
                 if ($routeParams.hashKey) {
                     conformanceService.getCachedConformance($routeParams.hashKey)
-                        .then(intitializeRelatedData).then(function () {
+                        .then(_initializeRelatedData).then(function () {
 
                         }, function (error) {
                             logError(error);
@@ -93,7 +133,7 @@
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/Conformance/' + $routeParams.id;
                     conformanceService.getConformance(resourceId)
-                        .then(intitializeRelatedData, function (error) {
+                        .then(_initializeRelatedData, function (error) {
                             logError(error);
                         });
                 }
@@ -111,19 +151,21 @@
             return vm.title;
         }
 
-        function processResult(results) {
-            var resourceVersionId = results.headers.location || results.headers["content-location"];
-            if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Conformance saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
-            } else {
-                vm.conformance.resourceId = common.setResourceId(vm.conformance.resourceId, resourceVersionId);
-                logSuccess("Conformance saved at " + resourceVersionId);
-            }
-            vm.isEditing = true;
-            getTitle();
-        }
+        vm.getTitle = getTitle;
 
         function save() {
+            function _processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Conformance saved, but location is unavailable. CORS not implemented correctly at remote host.", null, noToast);
+                } else {
+                    vm.conformance.resourceId = common.setResourceId(vm.conformance.resourceId, resourceVersionId);
+                    logSuccess("Conformance saved at " + resourceVersionId);
+                }
+                vm.isEditing = true;
+                getTitle();
+            }
+
             if (vm.conformance.name.length < 5) {
                 logError("Conformance Name must be at least 5 characters");
                 return;
@@ -133,50 +175,81 @@
             conformance.identifier = identifierService.getAll();
             if (vm.isEditing) {
                 conformanceService.updateConformance(vm.conformance.resourceId, conformance)
-                    .then(processResult,
+                    .then(_processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
                     });
             } else {
                 conformanceService.addConformance(conformance)
-                    .then(processResult,
+                    .then(_processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
                     });
             }
         }
 
-        Object.defineProperty(vm, 'canSave', {
-            get: canSave
-        });
+        vm.save = save;
 
-        Object.defineProperty(vm, 'canDelete', {
-            get: canDelete
-        });
-
-        function activate() {
-            common.activateController([getActiveServer()], controllerId).then(function () {
-                getRequestedConformance();
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/conformance/detailed-search');
+                        break;
+                    case 1:
+                        $location.path('/conformance');
+                        break;
+                    case 2:
+                        $location.path('/conformance/edit/current');
+                        break;
+                    case 3:
+                        $location.path('/conformance/edit/new');
+                        break;
+                    case 4:
+                        deleteConformance(vm.conformance);
+                        break;
+                }
             });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Quick find', icon: 'quickFind', index: 1},
+                        {name: 'Edit conformance', icon: 'edit', index: 2},
+                        {name: 'Add new conformance', icon: 'hospital', index: 3}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 0},
+                        {name: 'Quick find', icon: 'quickFind', index: 1}
+                    ];
+                }
+                this.title = 'Organization search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
         }
 
+        vm.actions = actions;
+
         vm.activeServer = null;
-        vm.cancel = cancel;
-        vm.activate = activate;
-        vm.delete = deleteConformance;
-        vm.edit = edit;
-        vm.getTitle = getTitle;
         vm.isSaving = false;
         vm.isEditing = true;
         vm.conformance = undefined;
-        vm.save = save;
-        vm.states = undefined;
-        vm.title = 'conformanceDetail';
+        vm.title = 'Conformance Statement';
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdDialog', '$routeParams', 'common', 'fhirServers', 'identifierService', 'conformanceService', 'contactPointService', conformanceDetail]);
-
-})();
+        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', 'common', 'config', 'fhirServers',
+            'identifierService', 'conformanceService', 'contactPointService', conformanceDetail]);
+})
+();

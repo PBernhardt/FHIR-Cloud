@@ -125,6 +125,7 @@
                 vm.patient.ethnicity = demographicsService.getEthnicity();
                 vm.patient.mothersMaidenName = demographicsService.getMothersMaidenName();
                 vm.patient.birthPlace = demographicsService.getBirthPlace();
+                vm.patient.birthDate = demographicsService.getBirthDate();
                 attachmentService.init(vm.patient.photo, "Photos");
                 identifierService.init(vm.patient.identifier, "multi", "patient");
                 addressService.init(vm.patient.address, true);
