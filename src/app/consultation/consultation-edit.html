@@ -1,6 +1,7 @@
 <div ng-controller="consultationDetail as vm" layout="row" layout-wrap>
     <div flex="95">
-        <h3 class="md-title">Consultation for {{vm.consultation.patient.fullName}} ({{vm.consultation.patient.gender}}, {{vm.consultation.patient.birthDate | displayAge}})</h3>
+        <h3 class="md-title">Consultation for {{vm.consultation.patient.fullName}} ({{vm.consultation.patient.gender}},
+            {{vm.consultation.patient.birthDate | displayAge}})</h3>
     </div>
     <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
@@ -20,7 +21,7 @@
                               <md-input-container>
                                   <label>Systolic</label>
                                   <input ng-model="vm.vitals.bp.systolic" name="systolic"
-                                         type="number" placeholder="mmHg" max="190" min="70" ng-change="vm.updateBP()"
+                                         type="number" max="190" min="70" ng-change="vm.updateBP()"
                                          required/>
                               </md-input-container>
                             </span>
@@ -37,7 +38,7 @@
                                 <md-input-container>
                                     <label>Diastolic</label>
                                     <input ng-model="vm.vitals.bp.diastolic" type="number" name="diastolic"
-                                           placeholder="mmHg" max="100" min="40" ng-change="vm.updateBP()" required/>
+                                           max="100" min="40" ng-change="vm.updateBP()" required/>
                                 </md-input-container>
                             </span>
                         </div>
@@ -65,7 +66,7 @@
                         </div>
                         <md-input-container>
                             <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" id="bp-date" type="datetime-local" />
+                            <input ng-model="vm.vitals.date" id="bp-date" type="datetime-local"/>
                         </md-input-container>
                     </div>
 
@@ -89,7 +90,7 @@
                                     <label>Pulse</label>
                                     <input ng-model="vm.vitals.hr.pulse" type="number" name="pulse"
                                            ng-change="vm.updatePulse()" aria-controls="pulse"
-                                           placeholder="bpm" min="10" max="200" required>
+                                           min="10" max="200" required>
                                 </md-input-container>
                             </span>
                         </div>
@@ -126,7 +127,7 @@
                                            aria-label="respiration rate"
                                            aria-controls="respiration-slider"
                                            ng-change="vm.updateRespiration()"
-                                           placeholder="bpm" min="0" max="150" required>
+                                           min="0" max="150" required>
                                 </md-input-container>
                             </span>
                         </div>
@@ -180,7 +181,7 @@
                                     <label>Weight (pounds)</label>
                                     <input tabindex="1" ng-model="vm.vitals.bmi.weight" type="number" name="weight"
                                            ng-change="vm.calculateBMI()"
-                                           placeholder="lbs" min="10" max="600" required/>
+                                           min="10" max="600" required/>
                                 </md-input-container>
                             </span>
                         </div>
@@ -197,7 +198,7 @@
                                     <label>Height (inches)</label>
                                     <input tabindex="2" ng-model="vm.vitals.bmi.height" type="number" name="height"
                                            ng-change="vm.calculateBMI()"
-                                           placeholder="in" min="20" max="100" required/>
+                                           min="20" max="100" required/>
                                 </md-input-container>
                             </span>
                         </div>
@@ -218,7 +219,7 @@
                                 <md-input-container>
                                     <label>BMI (computed)</label>
                                     <input ng-model="vm.vitals.bmi.calculated" type="number" name="bmi"
-                                           placeholder="bmi" min="10" max="50" readonly/>
+                                           min="10" max="50" readonly/>
                                 </md-input-container>
                             </span>
                         </div>
@@ -272,7 +273,6 @@
                                     <input ng-model="vm.vitals.temperature.value"
                                            type="number" step=".1"
                                            name="bodyTemp"
-                                           placeholder="F"
                                            min="85" max="110"
                                            aria-controls="temp-slider"
                                            ng-change="vm.updateTemperature()"/>
@@ -323,9 +323,8 @@
                                     <label>Head Size (in)</label>
                                     <input ng-model="vm.vitals.circumfrence" type="number"
                                            name="circumfrence"
-                                           placeholder="in"
                                            min="8" max="25"
-                                           aria-controls="circumfrence-slider" />
+                                           aria-controls="circumfrence-slider"/>
                                 </md-input-container>
                             </span>
                         </div>
@@ -338,7 +337,7 @@
                     <div layout-sm="column" layout="row" layout-align="start center">
                         <md-input-container>
                             <label>Date and time</label>
-                            <input ng-model="vm.vitals.date" id="other-date" type="datetime-local" />
+                            <input ng-model="vm.vitals.date" id="other-date" type="datetime-local"/>
                         </md-input-container>
 
                     </div>

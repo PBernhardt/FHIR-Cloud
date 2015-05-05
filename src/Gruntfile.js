@@ -183,6 +183,7 @@ module.exports = function (grunt) {
                     'app/person/person.detail.controller.js',
                     'app/person/person.search.controller.js',
                     'app/person/person.service.js',
+                    'app/practitioner/practitioner.detail.controller.js',
                     'app/practitioner/practitioner.search.controller.js',
                     'app/practitioner/practitioner.service.js',
                     'app/profile/profile.detail.controller.js',

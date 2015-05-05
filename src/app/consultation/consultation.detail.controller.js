@@ -131,7 +131,7 @@
                 vm.consultation.patient = JSON.parse($window.localStorage.patient);
                 vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
             } else {
-                logError("You must first select a patient before initiating a consultation", error);
+                logError("You must first select a patient before initiating a consultation");
                 $location.path('/patient');
             }
         }

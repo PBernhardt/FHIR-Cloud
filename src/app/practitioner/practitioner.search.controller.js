@@ -14,11 +14,10 @@
         var $q = common.$q;
 
         function activate() {
-            common.activateController([getActiveServer()], controllerId)
+            common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
                     if (angular.isDefined($routeParams.orgId)) {
-                        getOrganizationPractitioners($routeParams.orgId);
-                        logInfo("Retrieving practitioners for current organization, please wait...");
+
                     } else {
                         _loadLocalLookups();
                     }
@@ -27,16 +26,11 @@
                 });
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
-        }
-
-        function getOrganizationPractitioners(orgId) {
-            vm.practitionerSearch.organization = orgId;
-            detailSearch();
         }
 
         function goToPractitioner(practitioner) {

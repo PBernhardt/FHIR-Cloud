@@ -1,56 +1,43 @@
-<section ng-controller="personDetail as vm">
-    <div flex>
-        <h3>{{vm.title}}</h3>
-        <md-content class="md-padding">
-            <form name="personEditForm"
-                          ng-model="vm.person">
-                <div ng-include="'elements/humanName/humanName.html'"></div>
+<div ng-controller="personDetail as vm" layout="row" layout-wrap>
+    <div flex="90">
+        <h3 class="md-title" ng-if="vm.isEditing === false">Add New Person</h3>
 
-                <md-radio-group ng-model="vm.person.gender" layout="row">
-                    <md-radio-button value="female" aria-label="female">Female</md-radio-button>
-                    <md-radio-button value="male" aria-label="male">Male</md-radio-button>
-                    <md-radio-button value="other" aria-label="other">Other</md-radio-button>
-                    <md-radio-button value="unknown" aria-label="unknown">Unknown</md-radio-button>
-                </md-radio-group>
-
-                <label for="birthDate">Birth date</label>
-                <input type="date" ng-model="vm.person.birthDate" id="birthDate"/>
-
-                <div ng-include="'elements/attachment/attachment.html'"></div>
-                <md-input-container>
-                    <label>Managing Organization</label>
-                    <input
-                            type="text"
-                            typeahead="item as item.display for item in vm.getOrganizationReference($viewValue) | filter:$viewValue"
-                            typeahead-loading="vm.loadingOrganizations"
-                            typeahead-wait-ms="300"
-                            typeahead-editable="false"
-                            typeahead-min-length="5"
-                            ng-model="vm.person.managingOrganization">
-                </md-input-container>
-                <div ng-show="vm.person.managingOrganization.reference">
-                    <a href="{{vm.person.managingOrganization.reference}}"
-                       target="_blank">Referenced Organization:
-                        {{vm.person.managingOrganization.display || "Name Not Specified" }}</a>
-                </div>
-
-                <div ng-include="'elements/address/address.html'"></div>
-
-                <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
-
-                <div ng-include="'elements/identifier/identifier.html'"></div>
-
-                <div layout="row" layout-align="space-around center">
-                    <md-button class="md-raised md-primary" ng-click="vm.save()" ng-disabled="!vm.canSave">
-                        Save
-                    </md-button>
-                </div>
-                <div ng-show="vm.isBusy">
-                    <footer>
-                        <md-progress-linear md-mode="indeterminate"></md-progress-linear>
-                    </footer>
-                </div>
-            </form>
-        </md-content>
+        <h3 class="md-title" ng-if="vm.isEditing === true">Edit {{vm.person.name | fullName}}</h3>
     </div>
-</section>
+    <div flex="5">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100">
+        <ng-form name="personEditForm" class="form-horizontal"
+              ng-model="vm.person">
+            <md-tabs md-dynamic-height>
+                <md-tab label="Name">
+                    <div ng-include="'elements/humanName/humanName.html'"></div>
+                </md-tab>
+                <md-tab label="Demographics">
+
+                </md-tab>
+                <md-tab label="Address">
+                    <div ng-include="'elements/address/address.html'"></div>
+                </md-tab>
+                <md-tab label="Telecom">
+                    <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
+                </md-tab>
+                 <md-tab label="Photo">
+                    <div ng-include="'elements/attachment/attachment.html'"></div>
+                </md-tab>
+                <md-tab label="Identifier">
+                    <div ng-include="'elements/identifier/identifier.html'"></div>
+                </md-tab>
+            </md-tabs>
+            <div layout="row" layout-align="end end">
+                <md-button ng-click="vm.save()" aria-label="Execute save">
+                    <md-icon md-svg-icon="saveToCloud" aria-label="save person" alt="Save Person"></md-icon>
+                </md-button>
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            </div>
+        </ng-form>
+    </div>
+</div>

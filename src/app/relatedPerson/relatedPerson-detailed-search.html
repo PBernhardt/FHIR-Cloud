@@ -1,6 +1,6 @@
-﻿<div ng-controller="patientSearch as vm" layout="row" layout-wrap ng-cloak>
+﻿<div ng-controller="relatedPersonSearch as vm" layout="row" layout-wrap>
     <div flex="90">
-        <h3 class="md-title">Patient Detailed Search</h3>
+        <h3 class="md-title">Related Person Detailed Search</h3>
     </div>
     <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
@@ -8,70 +8,62 @@
         </md-button>
     </div>
     <div flex="100">
-        <md-tabs md-selected="vm.selectedTab" md-dynamic-height md-border-bottom>
+        <md-tabs md-selected="vm.selectedTab" md-dynamic-height md-border-bottom ng-cloak>
             <md-tab label="Search Options">
                 <md-content class="md-padding">
-                    <form name="patientSearch">
+                    <form name="relatedPersonSearch">
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>First Name</label>
-                                <input ng-model="vm.patientSearch.name.given">
+                                <input ng-model="vm.relatedPersonSearch.name.given">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Last Name</label>
-                                <input ng-model="vm.patientSearch.name.family">
+                                <input ng-model="vm.relatedPersonSearch.name.family">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Identifier system</label>
-                                <input ng-model="vm.patientSearch.identifier.system">
+                                <input ng-model="vm.relatedPersonSearch.identifier.system">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Identifier value</label>
-                                <input ng-model="vm.patientSearch.identifier.value">
+                                <input ng-model="vm.relatedPersonSearch.identifier.value">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Managing Organization</label>
-                                <input ng-model="vm.patientSearch.organization">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>Care Provider</label>
-                                <input ng-model="vm.patientSearch.careProvider">
+                                <input ng-model="vm.relatedPersonSearch.organization">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Street address</label>
-                                <input ng-model="vm.patientSearch.address.street">
+                                <input ng-model="vm.relatedPersonSearch.address.street">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>City</label>
-                                <input ng-model="vm.patientSearch.address.city">
+                                <input ng-model="vm.relatedPersonSearch.address.city">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>State</label>
-                                <input ng-model="vm.patientSearch.address.state">
+                                <input ng-model="vm.relatedPersonSearch.address.state">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Postal code</label>
-                                <input ng-model="vm.patientSearch.address.postalCode">
+                                <input ng-model="vm.relatedPersonSearch.address.postalCode">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
-                                <label>Mother's maiden name</label>
-                                <input ng-model="vm.patientSearch.mothersMaidenName">
-                            </md-input-container>
-                            <md-input-container flex>
                                 <label>Telephone or Email Address</label>
-                                <input ng-model="vm.patientSearch.telecom">
+                                <input ng-model="vm.relatedPersonSearch.telecom">
                             </md-input-container>
                         </div>
 
@@ -79,7 +71,7 @@
                             <div>
                                 <md-input-container flex>
                                     <label>Birth date</label>
-                                    <input ng-model="vm.patientSearch.dob" id="dob" type="date"
+                                    <input ng-model="vm.relatedPersonSearch.dob" id="dob" type="date"
                                            data-ng-change="vm.dobChange()">
                                 </md-input-container>
                             </div>
@@ -87,32 +79,32 @@
                                 <div layout="row" layout-align="space-around center">
                                     <md-input-container>
                                         <label>Starting Age</label>
-                                        <input type="number" min="0" max="99" ng-model="vm.patientSearch.age.start"
+                                        <input type="number" min="0" max="99" ng-model="vm.relatedPersonSearch.age.start"
                                                min="0"
                                                aria-controls="age-start"
                                                style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.patientSearch.dob">
+                                               ng-disabled="vm.relatedPersonSearch.dob">
 
                                     </md-input-container>
                                     <md-slider flex class="md-primary" min="0" max="99"
-                                               ng-model="vm.patientSearch.age.start" aria-label="Starting age"
+                                               ng-model="vm.relatedPersonSearch.age.start" aria-label="Starting age"
                                                id="age-start" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.patientSearch.dob">
+                                               ng-disabled="vm.relatedPersonSearch.dob">
                                     </md-slider>
                                 </div>
                                 <div layout="row" layout-align="space-around center">
                                     <md-input-container>
                                         <label>Ending Age</label>
-                                        <input type="number" min="0" max="99" ng-model="vm.patientSearch.age.end"
+                                        <input type="number" min="0" max="99" ng-model="vm.relatedPersonSearch.age.end"
                                                min="1"
                                                aria-controls="age-end"
                                                style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.patientSearch.dob">
+                                               ng-disabled="vm.relatedPersonSearch.dob">
                                     </md-input-container>
-                                    <md-slider flex min="0" max="99" ng-model="vm.patientSearch.age.end"
+                                    <md-slider flex min="0" max="99" ng-model="vm.relatedPersonSearch.age.end"
                                                aria-label="Ending age"
                                                id="age-end" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.patientSearch.dob">
+                                               ng-disabled="vm.relatedPersonSearch.dob">
                                     </md-slider>
                                 </div>
                             </div>
@@ -120,36 +112,13 @@
 
                         <div layout-gt-md="row" layout-align="space-between center">
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.patientSearch.gender" style="min-width: 100px;">
+                                <md-select ng-model="vm.relatedPersonSearch.gender" style="min-width: 100px;">
                                     <md-option value="female">Female</md-option>
                                     <md-option value="male">Male</md-option>
                                     <md-option value="other">Other</md-option>
                                     <md-option value="unknown">Unknown</md-option>
                                 </md-select>
                                 <p class="result">Gender</p>
-                            </div>
-
-                            <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.patientSearch.language">
-                                    <md-option ng-value="language" ng-repeat="language in vm.languages">
-                                        {{language.display}}
-                                    </md-option>
-                                </md-select>
-                                <p class="result">Language</p>
-                            </div>
-
-                            <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.patientSearch.race">
-                                    <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
-                                </md-select>
-                                <p class="result">Race</p>
-                            </div>
-                            <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.patientSearch.ethnicity"
-                                           style="min-width: 200px;">
-                                    <md-option ng-value="ethnicity" ng-repeat="ethnicity in vm.ethnicities">{{ethnicity.display}}</md-option>
-                                </md-select>
-                                <p class="result">Ethnicity</p>
                             </div>
                         </div>
                     </form>
@@ -160,7 +129,7 @@
                 </md-content>
             </md-tab>
             <md-tab id="results" label="Search Results">
-                <div ng-include="'elements/patientList/patientList.html'"></div>
+                <div ng-include="'elements/relatedPersonList/relatedPersonList.html'"></div>
             </md-tab>
         </md-tabs>
     </div>

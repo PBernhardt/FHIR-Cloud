@@ -17,7 +17,7 @@
             {name: 'Patient', href: 'patient/view/current'},
             {name: 'Person', href: 'person/view/current'},
             {name: 'Practitioner', href: 'practitioner/view/current'},
-            {name: 'Related Person', href: 'relatedPerson/view/curren t'}
+            {name: 'Related Person', href: 'relatedPerson/view/current'}
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance/view/current'},

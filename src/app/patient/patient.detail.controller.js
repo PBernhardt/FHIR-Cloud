@@ -3,8 +3,8 @@
 
     var controllerId = 'patientDetail';
 
-    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
+                           attachmentService, common, config, demographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, practitionerService, communicationService,
                            careProviderService, observationService) {
 
@@ -148,7 +148,7 @@
                     }
                 }
                 if (vm.lookupKey !== "new") {
-                    $window.localStorage.patient = JSON.stringify(vm.patient);
+                    patientService.setPatientContext(vm.patient);
                 }
             }
 
@@ -156,12 +156,10 @@
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
-                if (angular.isUndefined($window.localStorage.patient) || ($window.localStorage.patient === null)) {
-                    if (angular.isUndefined($routeParams.id)) {
+                vm.patient = patientService.getPatientContext();
+                if (angular.isUndefined(vm.patient) && angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
-                    }
                 } else {
-                    vm.patient = JSON.parse($window.localStorage.patient);
                     vm.patient.hashKey = "current";
                     initializeAdministrationData(vm.patient);
                 }
@@ -215,7 +213,7 @@
                 }
                 vm.patient.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
-                $window.localStorage.patient = JSON.stringify(vm.patient);
+                patientService.setPatientContext(vm.patient);
                 vm.isBusy = false;
             }
 
@@ -302,10 +300,9 @@
             return !vm.isEditing;
         }
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
             }
         );
 
@@ -397,8 +394,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
-            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope',
+            'addressService', 'attachmentService', 'common', 'config', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
             'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
 })();

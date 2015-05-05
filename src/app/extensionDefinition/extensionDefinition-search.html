@@ -1,76 +1,24 @@
-﻿<section data-ng-controller="extensionDefinitionSearch as vm">
-    <div>
-        <form name="searchForm" novalidate
-              data-ng-submit="vm.submit(searchForm.$valid)">
-            <div layout="row" layout-wrap>
-                <div flex="55">
-                    <md-input-container>
-                        <label>Search by extension definition name</label>
-                        <input data-ng-model="vm.searchText"
-                               data-ng-keyup="vm.keyPress($event)"
-                               name="searchText"
-                               type="search"
-                               maxlength="50"
-                               data-ng-model-options="{ debounce: {default: 300, blur: 0}}">
-                    </md-input-container>
-                </div>
-                <div flex="45">
-                    <input type="submit" value="Search" id="submit"
-                           class="md-button md-primary md-raised md-default-theme"/>
-                    <md-button data-ng-click="vm.toggleSideNav($event)" class="md-primary">Actions</md-button>
-                </div>
-                <div ng-if="searchForm.$submitted || searchForm.searchText.$touched"
-                     ng-messages="searchForm.searchText.$error">
-                    <div ng-message="maxlength">Search cannot exceed 50 characters</div>
-                </div>
-            </div>
-        </form>
+﻿<div ng-controller="extensionDefinitionSearch as vm" layout-wrap layout="row">
+    <div flex="90">
+        <h3 class="md-title">Extension Definition Quick Find</h3>
+        <md-autocomplete
+                md-no-cache="true"
+                md-selected-item-change="vm.goToExtension(vm.selectedExtension)"
+                md-selected-item="vm.selectedExtension"
+                md-search-text="vm.searchText"
+                md-items="ed in vm.quickSearch(vm.searchText)"
+                md-delay="500"
+                md-min-length="4"
+                placeholder="What extension definition are you looking for?">
+            <span md-highlight-text="vm.searchText">{{ed.resource.name}}</span>
+        </md-autocomplete>
     </div>
-
-    <div data-ng-show="vm.extensionDefinitions" flex layout-fill>
-        <md-content>
-            <section>
-                <md-subheader class="md-primary">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
-                <md-list layout="column">
-                    <md-item ng-repeat="ed in vm.extensionDefinitions">
-                        <md-item-content>
-                            <div class="md-tile-left">
-                                <md-button md-no-ink data-ng-click="vm.goToDetail(ed.$$hashKey)"
-                                           aria-label="Detail">
-                                    <md-icon icon="img/split4.svg" style="width: 24px; height: 24px;"></md-icon>
-                                </md-button>
-                            </div>
-                            <div class="md-tile-content">
-                                <h3>{{ed.resource.name}}</h3>
-
-                                <p>{{ed.resource.description | truncate:250 }}</p>
-
-                                <p>Version: {{ed.resource.meta.versionId }}, Last update:
-                                    {{ed.resource.meta.lastUpdated }}</p>
-                            </div>
-                        </md-item-content>
-                        <md-divider data-ng-if="!$last"></md-divider>
-                    </md-item>
-                </md-list>
-            </section>
-            <fs-pagination on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
-        </md-content>
+    <div flex="5">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
     </div>
-
-    <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right">
-        <md-content class="md-padding" layout="row" layout-sm="column" layout-align="space-between center">
-            <md-button class="md-fab" aria-label="New ExtensionDefinition"
-                       data-ng-href="#/extensionDefinition/edit/new">
-                <md-icon icon="img/add182.svg" style="width: 24px; height: 24px;"></md-icon>
-            </md-button>
-            <md-button class="md-fab" aria-label="Comment" ng-disabled="true">
-                <md-icon icon="img/search100.svg" style="width: 24px; height: 24px;"></md-icon>
-            </md-button>
-            <md-button ng-click="vm.toggleSideNav($event)" class="md-primary">
-                Close
-            </md-button>
-        </md-content>
-    </md-sidenav>
-</section>
-
-
+    <div ng-if="vm.noresults" style="position: relative; top:30px">
+        <md-subheader class="md-warn">No matches for "{{vm.searchText}}"</md-subheader>
+    </div>
+</div>

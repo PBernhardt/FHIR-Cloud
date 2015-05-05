@@ -1,20 +1,26 @@
 ﻿<div ng-controller="relatedPersonSearch as vm" layout="row" layout-wrap>
-    <div flex="80">
-        <h3>Related Person Quick Find</h3>
+    <div flex="90">
+        <h3 class="md-title">Related Person Quick Find</h3>
         <md-autocomplete
-                md-selected-item-change="vm.goToRelatedperson(vm.selectedRelatedperson)"
-                md-selected-item="vm.selectedRelatedperson"
+                md-no-cache="true"
+                md-selected-item-change="vm.goToRelatedPerson(vm.selectedRelatedPerson)"
+                md-selected-item="vm.selectedRelatedPerson"
                 md-search-text="vm.searchText"
-                md-items="relatedPerson in vm.querySearch(vm.searchText)"
-                md-delay="200"
+                md-items="relatedPerson in vm.quickSearch(vm.searchText)"
+                md-delay="500"
                 md-min-length="3"
                 placeholder="What related person are you looking for?">
             <span md-highlight-text="vm.searchText">{{relatedPerson.resource.name | fullName}}</span>
         </md-autocomplete>
     </div>
-    <div flex="20">
-        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+    <div flex="5">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
+    <div ng-if="vm.noresults" style="position: relative; top:30px">
+        <md-subheader class="md-warn">No matches for "{{vm.searchText}}"</md-subheader>
+    </div>
 </div>
+
+

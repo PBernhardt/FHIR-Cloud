@@ -3,11 +3,9 @@
 
     var serviceId = 'encounterService';
 
-    function encounterService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function encounterService($filter, $window, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localEncounters';
-        var itemCacheKey = 'contextEncounter';
-        var logError = common.logger.getLogFn(serviceId, 'error');
-        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var _encounterContext = undefined;
         var $q = common.$q;
 
         function addEncounter(resource) {
@@ -84,7 +82,10 @@
                     }
                 }
                 if (cachedEncounter) {
+                    setEncounterContext(cachedEncounter);
                     deferred.resolve(cachedEncounter);
+                } else if (getEncounterContext() !== undefined) {
+                    deferred.resolve(_encounterContext);
                 } else {
                     deferred.reject('Encounter not found in cache: ' + hashKey);
                 }
@@ -120,6 +121,7 @@
             fhirClient.getResource(resourceId)
                 .then(function (data) {
                     dataCache.addToCache(dataCacheKey, data);
+                    setEncounterContext(data);
                     deferred.resolve(data);
                 }, function (outcome) {
                     deferred.reject(outcome);
@@ -128,7 +130,11 @@
         }
 
         function getEncounterContext() {
-            return dataCache.readFromCache(dataCacheKey);
+            _encounterContext = undefined;
+            if ($window.localStorage.encounter && ($window.localStorage.encounter !== null)) {
+                _encounterContext = {"resource": JSON.parse($window.localStorage.encounter)};
+            }
+            return _encounterContext;
         }
 
         function getEncounterReference(baseUrl, input) {
@@ -273,7 +279,7 @@
         }
 
         function setEncounterContext(data) {
-            dataCache.addToCache(itemCacheKey, data);
+            $window.localStorage.encounter = JSON.stringify(data);
         }
 
         function updateEncounter(resourceVersionId, resource) {
@@ -286,237 +292,6 @@
                     deferred.reject(outcome);
                 });
             return deferred.promise;
-        }
-
-        function seedRandomEncounters(organizationId, organizationName) {
-            var deferred = $q.defer();
-            var birthPlace = [];
-            var mothersMaiden = [];
-            $http.get('http://api.randomuser.me/?results=25&nat=us')
-                .success(function (data) {
-                    angular.forEach(data.results, function (result) {
-                        var user = result.user;
-                        var birthDate = new Date(parseInt(user.dob));
-                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
-                        var resource = {
-                            "resourceType": "Encounter",
-                            "name": [{
-                                "family": [$filter('titleCase')(user.name.last)],
-                                "given": [$filter('titleCase')(user.name.first)],
-                                "prefix": [$filter('titleCase')(user.name.title)],
-                                "use": "usual"
-                            }],
-                            "gender": user.gender,
-                            "birthDate": _randomBirthDate(),
-                            "contact": [],
-                            "communication": _randomCommunication(),
-                            "maritalStatus": _randomMaritalStatus(),
-                            "telecom": [
-                                {"system": "email", "value": user.email, "use": "home"},
-                                {"system": "phone", "value": user.cell, "use": "mobile"},
-                                {"system": "phone", "value": user.phone, "use": "home"}],
-                            "address": [{
-                                "line": [$filter('titleCase')(user.location.street)],
-                                "city": $filter('titleCase')(user.location.city),
-                                "state": $filter('abbreviateState')(user.location.state),
-                                "postalCode": user.location.zip,
-                                "use": "home"
-                            }],
-                            "photo": [{"url": user.picture.large}],
-                            "identifier": [
-                                {
-                                    "system": "urn:oid:2.16.840.1.113883.4.1",
-                                    "value": user.SSN,
-                                    "use": "secondary",
-                                    "assigner": {"display": "Social Security Administration"}
-                                },
-                                {
-                                    "system": "urn:oid:2.16.840.1.113883.15.18",
-                                    "value": user.registered,
-                                    "use": "official",
-                                    "assigner": {"display": organizationName}
-                                },
-                                {
-                                    "system": "urn:fhir-cloud:encounter",
-                                    "value": common.randomHash(),
-                                    "use": "secondary",
-                                    "assigner": {"display": "FHIR Cloud"}
-                                }
-                            ],
-                            "managingOrganization": {
-                                "reference": "Organization/" + organizationId,
-                                "display": organizationName
-                            },
-                            "link": [],
-                            "active": true,
-                            "extension": []
-                        };
-                        resource.extension.push(_randomRace());
-                        resource.extension.push(_randomEthnicity());
-                        resource.extension.push(_randomReligion());
-                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
-                        resource.extension.push(_randomBirthPlace(birthPlace));
-
-                        mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
-
-                        var timer = $timeout(function () {
-                        }, 3000);
-                        timer.then(function () {
-                            addEncounter(resource).then(function (results) {
-                                logInfo("Created encounter " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
-                            }, function (error) {
-                                logError("Failed to create encounter " + user.name.first + " " + user.name.last, error, false);
-                            })
-                        })
-                    });
-                    deferred.resolve();
-                })
-                .error(function (error) {
-                    deferred.reject(error);
-                });
-            return deferred.promise;
-        }
-
-        function _randomMothersMaiden(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/encounter-mothersMaidenName",
-                "valueString": ''
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                extension.valueString = array[0];
-            } else {
-                extension.valueString = "Gibson";
-            }
-            return extension;
-        }
-
-        function _randomBirthDate() {
-            var start = new Date(1945, 1, 1);
-            var end = new Date(1995, 12, 31);
-            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-            return $filter('date')(randomDob, 'yyyy-MM-dd');
-        }
-
-        function _randomBirthPlace(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                "valueAddress": null
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                var parts = array[0].split(",");
-                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
-            } else {
-                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
-            }
-            return extension;
-        }
-
-        function _randomRace() {
-            var races = localValueSets.race();
-            common.shuffle(races.concept);
-            var race = races.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
-                "valueCodeableConcept": {"coding": [], "text": race.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": races.system,
-                "code": race.code,
-                "display": race.display
-            });
-            return extension;
-        }
-
-        var allEthnicities = [];
-        var ethnicitySystem = '';
-
-        function _randomEthnicity() {
-            function prepEthnicities() {
-                var ethnicities = localValueSets.ethnicity();
-                ethnicitySystem = ethnicities.system;
-                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
-                    var mainConcept = ethnicities.concept[i];
-                    allEthnicities.push(mainConcept);
-                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
-                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
-                            var groupConcept = mainConcept.concept[j];
-                            allEthnicities.push(groupConcept);
-                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
-                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
-                                    var leafConcept = groupConcept.concept[k];
-                                    allEthnicities.push(leafConcept);
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            if (allEthnicities.length === 0) {
-                prepEthnicities();
-            }
-            common.shuffle(allEthnicities);
-            var ethnicity = allEthnicities[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
-                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": ethnicitySystem,
-                "code": ethnicity.code,
-                "display": ethnicity.display
-            });
-            return extension;
-        }
-
-        function _randomReligion() {
-            var religions = localValueSets.religion();
-            common.shuffle(religions.concept);
-            var religion = religions.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
-                "valueCodeableConcept": {"coding": [], "text": religion.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": religions.system,
-                "code": religion.code,
-                "display": religion.display
-            });
-            return extension;
-        }
-
-        function _randomCommunication() {
-            var languages = localValueSets.iso6391Languages();
-            common.shuffle(languages);
-
-            var communication = [];
-            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
-            primaryLanguage.language.coding.push({
-                "system": languages[1].system,
-                "code": languages[1].code,
-                "display": languages[1].display
-            });
-            communication.push(primaryLanguage);
-            return communication;
-        }
-
-        function _randomMaritalStatus() {
-            var maritalStatuses = localValueSets.maritalStatus();
-            common.shuffle(maritalStatuses);
-            var maritalStatus = maritalStatuses[1];
-            var concept = {
-                "coding": [], "text": maritalStatus.display
-            };
-            concept.coding.push({
-                "system": maritalStatus.system,
-                "code": maritalStatus.code,
-                "display": maritalStatus.display
-            });
-            return concept;
         }
 
         var service = {
@@ -533,14 +308,13 @@
             initializeNewEncounter: initializeNewEncounter,
             setEncounterContext: setEncounterContext,
             updateEncounter: updateEncounter,
-            seedRandomEncounters: seedRandomEncounters,
             searchEncounters: searchEncounters
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
-        encounterService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$window', 'common', 'dataCache', 'fhirClient',
+        'fhirServers', encounterService]);
 })
 ();

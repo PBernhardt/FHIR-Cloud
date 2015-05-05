@@ -1,20 +1,26 @@
 ﻿<div ng-controller="personSearch as vm" layout="row" layout-wrap>
-    <div flex="80">
-        <h3>Person Quick Find</h3>
+    <div flex="90">
+        <h3 class="md-title">Person Quick Find</h3>
         <md-autocomplete
+                md-no-cache="true"
                 md-selected-item-change="vm.goToPerson(vm.selectedPerson)"
                 md-selected-item="vm.selectedPerson"
                 md-search-text="vm.searchText"
-                md-items="person in vm.querySearch(vm.searchText)"
-                md-delay="200"
+                md-items="person in vm.quickSearch(vm.searchText)"
+                md-delay="500"
                 md-min-length="3"
                 placeholder="What person are you looking for?">
             <span md-highlight-text="vm.searchText">{{person.resource.name | fullName}}</span>
         </md-autocomplete>
     </div>
-    <div flex="20">
-        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+    <div flex="5">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
+    <div ng-if="vm.noresults" style="position: relative; top:30px">
+        <md-subheader class="md-warn">No matches for "{{vm.searchText}}"</md-subheader>
+    </div>
 </div>
+
+

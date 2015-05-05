@@ -1,4 +1,4 @@
-﻿<div ng-controller="encounterSearch as vm" layout-gt-md="row" layout="column" layout-wrap>
+﻿<div ng-controller="encounterSearch as vm" layout-gt-md="row" layout="column" layout-wrap ng-cloak>
     <div flex="90">
         <h3 class="md-title">Encounter Detailed Search</h3>
     </div>
@@ -86,31 +86,26 @@
 
                             <md-input-container flex="30">
                                 <label>Appointment Fulfilled</label>
-                                <input ng-model="vm.encounterSearch.fulfills"
-                                       placeholder="Reference to related appointment">
+                                <input ng-model="vm.encounterSearch.fulfills">
                             </md-input-container>
 
                             <md-input-container flex="30">
                                 <label>Episode of Care</label>
-                                <input ng-model="vm.encounterSearch.episodeOfCare"
-                                       placeholder="Reference to episode of care">
+                                <input ng-model="vm.encounterSearch.episodeOfCare">
                             </md-input-container>
                             <md-input-container flex="30">
                                 <label>Incoming Referral</label>
-                                <input ng-model="vm.encounterSearch.incomingReferral"
-                                       placeholder="Reference to referral request">
+                                <input ng-model="vm.encounterSearch.incomingReferral">
                             </md-input-container>
 
                             <md-input-container flex="30">
                                 <label>Related Encounter</label>
-                                <input ng-model="vm.encounterSearch.partOf"
-                                       placeholder="Reference to related encounter">
+                                <input ng-model="vm.encounterSearch.partOf">
                             </md-input-container>
 
                             <md-input-container flex="30">
                                 <label>Indication</label>
-                                <input ng-model="vm.encounterSearch.indication"
-                                       placeholder="Reference to observation">
+                                <input ng-model="vm.encounterSearch.indication">
                             </md-input-container>
                         </div>
 
@@ -178,8 +173,7 @@
                         <div layout layout-sm="column" layout-align="space-between center" flex="40">
                             <md-input-container flex="40">
                                 <label>Identifier system</label>
-                                <input ng-model="vm.encounterSearch.identifier.system"
-                                       placeholder="Should be a valid URI">
+                                <input ng-model="vm.encounterSearch.identifier.system">
                             </md-input-container>
                             <md-input-container flex="40">
                                 <label>Identifier value</label>

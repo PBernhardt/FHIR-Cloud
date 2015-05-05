@@ -10,7 +10,7 @@
             <input ng-model="data.versioning" ng-readonly="true"/>
         </md-input-container>
 
-        <md-list flex="30" ng-if="data.interaction" layout-fill>
+        <md-list flex="30" ng-if="data.interaction">
             <md-subheader>Interactions</md-subheader>
             <md-list-item ng-repeat="ia in data.interaction">
                 <p>{{ia.code}}</p>
@@ -20,7 +20,7 @@
 
         <md-list flex="30" ng-if="data.searchParam" layout-fill>
             <md-subheader>Search Parameters</md-subheader>
-            <md-list-item ng-repeat="param in data.searchParam">
+            <md-list-item class="md-3-line" ng-repeat="param in data.searchParam">
                 <div class="md-list-item-text">
                     <h3>{{param.name}} </h3>
                     <h4>{{param.type}} {{param.target}}</h4>

@@ -174,7 +174,7 @@
             fhirClient.getResource(baseUrl + '/Conformance?name=' + nameFilter + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
-                    $window.localStorage.conformance = JSON.stringify(results.data);
+                    $window.localStorage.conformanceStatements = JSON.stringify(results.data);
                     deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);

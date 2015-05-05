@@ -3,9 +3,9 @@
 
     var serviceId = 'patientService';
 
-    function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function patientService($filter, $http, $timeout, $window, common, dataCache, fhirClient, fhirServers, localValueSets) {
         var dataCacheKey = 'localPatients';
-        var itemCacheKey = 'contextPatient';
+        var _patientContext = undefined;
         var logError = common.logger.getLogFn(serviceId, 'error');
         var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
@@ -104,6 +104,8 @@
                 }
                 if (cachedPatient) {
                     deferred.resolve(cachedPatient);
+                } else if (getPatientContext()) {
+                     deferred.resolve(_patientContext);
                 } else {
                     deferred.reject('Patient not found in cache: ' + hashKey);
                 }
@@ -137,17 +139,13 @@
         function getPatient(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId)
-                .then(function (data) {
-                    dataCache.addToCache(dataCacheKey, data);
-                    deferred.resolve(data);
+                .then(function (results) {
+                    setPatientContext(results.data);
+                    deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
             return deferred.promise;
-        }
-
-        function getPatientContext() {
-            return dataCache.readFromCache(dataCacheKey);
         }
 
         function getPatientReference(baseUrl, input) {
@@ -262,7 +260,15 @@
         }
 
         function setPatientContext(data) {
-            dataCache.addToCache(itemCacheKey, data);
+            $window.localStorage.patient = JSON.stringify(data);
+        }
+
+        function getPatientContext() {
+            _patientContext = undefined;
+            if ($window.localStorage.patient && ($window.localStorage.patient !== null)) {
+                _patientContext = {"resource": JSON.parse($window.localStorage.patient)};
+            }
+            return _patientContext;
         }
 
         function updatePatient(resourceVersionId, resource) {
@@ -546,7 +552,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
-        patientService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', '$window', 'common', 'dataCache',
+        'fhirClient', 'fhirServers', 'localValueSets', patientService]);
 })
 ();

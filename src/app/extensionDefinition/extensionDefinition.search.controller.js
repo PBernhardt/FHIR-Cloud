@@ -3,8 +3,7 @@
 
     var controllerId = 'extensionDefinitionSearch';
 
-    function extensionDefinitionSearch($location, $mdSidenav, common, config, fhirServers, extensionDefinitionService) {
-        var keyCodes = config.keyCodes;
+    function extensionDefinitionSearch($location, common, fhirServers, extensionDefinitionService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -12,7 +11,7 @@
         /* jshint validthis:true */
         var vm = this;
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
@@ -20,15 +19,14 @@
                 });
         }
 
-        function getCachedSearchResults() {
+        function _getCachedSearchResults() {
             extensionDefinitionService.getCachedSearchResults()
-                .then(processSearchResults);
+                .then(_processSearchResults);
         }
 
-        function activate() {
-            common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
+        function _activate() {
+            common.activateController([_getActiveServer(), _getCachedSearchResults()], controllerId)
                 .then(function () {
-                    $mdSidenav('right').close();
                 });
         }
 
@@ -38,7 +36,9 @@
             }
         }
 
-        function processSearchResults(searchResults) {
+        vm.goToDetail = goToDetail;
+
+        function _processSearchResults(searchResults) {
             if (searchResults) {
                 vm.extensionDefinitions = (searchResults.entry || []);
                 vm.paging.links = (searchResults.link || []);
@@ -46,76 +46,53 @@
             }
         }
 
-        function submit(valid) {
-            if (valid) {
-                toggleSpinner(true);
-                extensionDefinitionService.getExtensionDefinitions(vm.activeServer.baseUrl, vm.searchText)
-                    .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name, false);
-                        return data;
-                    }, function (error) {
-                        toggleSpinner(false);
-                        logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
-                    })
-                    .then(processSearchResults)
-                    .then(function () {
-                        toggleSpinner(false);
-                    });
-            }
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            extensionDefinitionService.getExtensionDefinitions(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' extension definitions from ' +
+                        vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry);
+                }, function (error) {
+                    logError('Error getting extension definitions', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
         }
+
+        vm.quickSearch = quickSearch;
 
         function dereferenceLink(url) {
-            toggleSpinner(true);
+            vm.isBusy = true;
             extensionDefinitionService.getExtensionDefinitionsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name);
+                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) +
+                        ' ExtensionDefinitions from ' + vm.activeServer.name);
                     return data;
                 }, function (error) {
-                    toggleSpinner(false);
+                    vm.isBusy = false;
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                 })
-                .then(processSearchResults)
+                .then(_processSearchResults)
                 .then(function () {
-                    toggleSpinner(false);
+                    vm.isBusy = false;
                 });
         }
-
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
-            }
-        }
-
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
-        function toggleSpinner(on) {
-            vm.isBusy = on;
-        }
-
+        vm.dereferenceLink = dereferenceLink;
+        
         vm.activeServer = null;
         vm.isBusy = false;
         vm.extensionDefinitions = [];
         vm.errorOutcome = null;
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'ExtensionDefinitions';
-        vm.keyPress = keyPress;
-        vm.dereferenceLink = dereferenceLink;
-        vm.submit = submit;
-        vm.goToDetail = goToDetail;
-        vm.toggleSideNav = toggleSideNav;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'extensionDefinitionService', extensionDefinitionSearch]);
+        ['$location', 'common', 'fhirServers', 'extensionDefinitionService', extensionDefinitionSearch]);
 })();

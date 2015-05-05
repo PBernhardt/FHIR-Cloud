@@ -2696,7 +2696,7 @@
             {name: 'Patient', href: 'patient/view/current'},
             {name: 'Person', href: 'person/view/current'},
             {name: 'Practitioner', href: 'practitioner/view/current'},
-            {name: 'Related Person', href: 'relatedPerson/view/curren t'}
+            {name: 'Related Person', href: 'relatedPerson/view/current'}
         ];
         var _conformancePages = [
             {name: 'Conformance Statement', href: 'conformance/view/current'},
@@ -3557,7 +3557,7 @@
             fhirClient.getResource(baseUrl + '/Conformance?name=' + nameFilter + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
-                    $window.localStorage.conformance = JSON.stringify(results.data);
+                    $window.localStorage.conformanceStatements = JSON.stringify(results.data);
                     deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
@@ -7074,8 +7074,8 @@
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
-                    _getPatientContext();
                     _getRequestedEncounter();
+                    _getPatientContext();
                 });
         }
 
@@ -7131,29 +7131,6 @@
             return deferred.promise;
         }
 
-        function _getEverything() {
-            encounterService.getEncounterEverything(vm.encounter.resourceId)
-                .then(function (data) {
-                    vm.summary = data.summary;
-                    vm.history = data.history;
-                    logInfo("Retrieved everything for encounter at " + vm.encounter.resourceId, null, noToast);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
-                });
-        }
-
-        function _getObservations() {
-            observationService.getObservations(vm.activeServer.baseUrl, null, vm.encounter.id)
-                .then(function (data) {
-                    vm.summary = data.entry;
-                    logInfo("Retrieved observations for encounter " + vm.encounter.fullName, null, noToast);
-                }, function (error) {
-                    vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                });
-        }
-
         function _getRequestedEncounter() {
             function initializeData(data) {
                 vm.encounter = data;
@@ -7167,13 +7144,10 @@
             vm.encounter = undefined;
             vm.lookupKey = $routeParams.hashKey;
 
-
             if (vm.lookupKey === "current") {
                 // Re-hydrate existing encounter
                 if (angular.isUndefined($window.localStorage.encounter) || ($window.localStorage.encounter === null)) {
-                    if (angular.isUndefined($routeParams.id)) {
-                        $location.path('/encounter');
-                    }
+                    $location.path('/encounter');
                 } else {
                     vm.encounter = JSON.parse($window.localStorage.encounter);
                     vm.encounter.hashKey = "current";
@@ -7187,7 +7161,7 @@
                     .then(function (resource) {
                         initializeData(resource.data);
                         if (vm.encounter) {
-                            _getEverything(resourceId);
+
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -7214,41 +7188,15 @@
                     vm.encounter.resourceVersionId = resourceVersionId;
                     vm.encounter.resourceId = common.setResourceId(vm.encounter.resourceId, resourceVersionId);
                 }
-                vm.encounter.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
                 $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 vm.isBusy = false;
             }
 
             var encounter = encounterService.initializeNewEncounter();
-            if (humanNameService.getAll().length === 0) {
-                logError("Encounter must have at least one name.");
-                return;
-            }
-            encounter.name = humanNameService.mapFromViewModel();
-            encounter.photo = attachmentService.getAll();
 
-            encounter.birthDate = $filter('dateString')(demographicsService.getBirthDate());
-            encounter.gender = demographicsService.getGender();
-            encounter.maritalStatus = demographicsService.getMaritalStatus();
-            encounter.multipleBirthBoolean = demographicsService.getMultipleBirth();
-            encounter.multipleBirthInteger = demographicsService.getBirthOrder();
-            encounter.deceasedBoolean = demographicsService.getDeceased();
-            encounter.deceasedDateTime = demographicsService.getDeceasedDate();
-            encounter.race = demographicsService.getRace();
-            encounter.religion = demographicsService.getReligion();
-            encounter.ethnicity = demographicsService.getEthnicity();
-            encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
-            encounter.birthPlace = demographicsService.getBirthPlace();
+            //TODO: populate encounter details
 
-            encounter.address = addressService.mapFromViewModel();
-            encounter.telecom = contactPointService.mapFromViewModel();
-            encounter.identifier = identifierService.getAll();
-            encounter.managingOrganization = vm.encounter.managingOrganization;
-            encounter.communication = communicationService.getAll();
-            encounter.careProvider = careProviderService.getAll();
-
-            encounter.active = vm.encounter.active;
             vm.isBusy = true;
             if (vm.isEditing) {
                 encounter.id = vm.encounter.id;
@@ -7271,9 +7219,6 @@
         function _getPatientContext() {
             if (angular.isDefined($window.localStorage.patient)) {
                 vm.patient = JSON.parse($window.localStorage.patient);
-            } else {
-                logError("You must first select a patient before initiating a consultation", error);
-                $location.path('/patient');
             }
         }
 
@@ -7605,11 +7550,9 @@
 
     var serviceId = 'encounterService';
 
-    function encounterService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function encounterService($filter, $window, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localEncounters';
-        var itemCacheKey = 'contextEncounter';
-        var logError = common.logger.getLogFn(serviceId, 'error');
-        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var _encounterContext = undefined;
         var $q = common.$q;
 
         function addEncounter(resource) {
@@ -7686,7 +7629,10 @@
                     }
                 }
                 if (cachedEncounter) {
+                    setEncounterContext(cachedEncounter);
                     deferred.resolve(cachedEncounter);
+                } else if (getEncounterContext() !== undefined) {
+                    deferred.resolve(_encounterContext);
                 } else {
                     deferred.reject('Encounter not found in cache: ' + hashKey);
                 }
@@ -7722,6 +7668,7 @@
             fhirClient.getResource(resourceId)
                 .then(function (data) {
                     dataCache.addToCache(dataCacheKey, data);
+                    setEncounterContext(data);
                     deferred.resolve(data);
                 }, function (outcome) {
                     deferred.reject(outcome);
@@ -7730,7 +7677,11 @@
         }
 
         function getEncounterContext() {
-            return dataCache.readFromCache(dataCacheKey);
+            _encounterContext = undefined;
+            if ($window.localStorage.encounter && ($window.localStorage.encounter !== null)) {
+                _encounterContext = {"resource": JSON.parse($window.localStorage.encounter)};
+            }
+            return _encounterContext;
         }
 
         function getEncounterReference(baseUrl, input) {
@@ -7875,7 +7826,7 @@
         }
 
         function setEncounterContext(data) {
-            dataCache.addToCache(itemCacheKey, data);
+            $window.localStorage.encounter = JSON.stringify(data);
         }
 
         function updateEncounter(resourceVersionId, resource) {
@@ -7888,237 +7839,6 @@
                     deferred.reject(outcome);
                 });
             return deferred.promise;
-        }
-
-        function seedRandomEncounters(organizationId, organizationName) {
-            var deferred = $q.defer();
-            var birthPlace = [];
-            var mothersMaiden = [];
-            $http.get('http://api.randomuser.me/?results=25&nat=us')
-                .success(function (data) {
-                    angular.forEach(data.results, function (result) {
-                        var user = result.user;
-                        var birthDate = new Date(parseInt(user.dob));
-                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
-                        var resource = {
-                            "resourceType": "Encounter",
-                            "name": [{
-                                "family": [$filter('titleCase')(user.name.last)],
-                                "given": [$filter('titleCase')(user.name.first)],
-                                "prefix": [$filter('titleCase')(user.name.title)],
-                                "use": "usual"
-                            }],
-                            "gender": user.gender,
-                            "birthDate": _randomBirthDate(),
-                            "contact": [],
-                            "communication": _randomCommunication(),
-                            "maritalStatus": _randomMaritalStatus(),
-                            "telecom": [
-                                {"system": "email", "value": user.email, "use": "home"},
-                                {"system": "phone", "value": user.cell, "use": "mobile"},
-                                {"system": "phone", "value": user.phone, "use": "home"}],
-                            "address": [{
-                                "line": [$filter('titleCase')(user.location.street)],
-                                "city": $filter('titleCase')(user.location.city),
-                                "state": $filter('abbreviateState')(user.location.state),
-                                "postalCode": user.location.zip,
-                                "use": "home"
-                            }],
-                            "photo": [{"url": user.picture.large}],
-                            "identifier": [
-                                {
-                                    "system": "urn:oid:2.16.840.1.113883.4.1",
-                                    "value": user.SSN,
-                                    "use": "secondary",
-                                    "assigner": {"display": "Social Security Administration"}
-                                },
-                                {
-                                    "system": "urn:oid:2.16.840.1.113883.15.18",
-                                    "value": user.registered,
-                                    "use": "official",
-                                    "assigner": {"display": organizationName}
-                                },
-                                {
-                                    "system": "urn:fhir-cloud:encounter",
-                                    "value": common.randomHash(),
-                                    "use": "secondary",
-                                    "assigner": {"display": "FHIR Cloud"}
-                                }
-                            ],
-                            "managingOrganization": {
-                                "reference": "Organization/" + organizationId,
-                                "display": organizationName
-                            },
-                            "link": [],
-                            "active": true,
-                            "extension": []
-                        };
-                        resource.extension.push(_randomRace());
-                        resource.extension.push(_randomEthnicity());
-                        resource.extension.push(_randomReligion());
-                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
-                        resource.extension.push(_randomBirthPlace(birthPlace));
-
-                        mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
-
-                        var timer = $timeout(function () {
-                        }, 3000);
-                        timer.then(function () {
-                            addEncounter(resource).then(function (results) {
-                                logInfo("Created encounter " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
-                            }, function (error) {
-                                logError("Failed to create encounter " + user.name.first + " " + user.name.last, error, false);
-                            })
-                        })
-                    });
-                    deferred.resolve();
-                })
-                .error(function (error) {
-                    deferred.reject(error);
-                });
-            return deferred.promise;
-        }
-
-        function _randomMothersMaiden(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/encounter-mothersMaidenName",
-                "valueString": ''
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                extension.valueString = array[0];
-            } else {
-                extension.valueString = "Gibson";
-            }
-            return extension;
-        }
-
-        function _randomBirthDate() {
-            var start = new Date(1945, 1, 1);
-            var end = new Date(1995, 12, 31);
-            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-            return $filter('date')(randomDob, 'yyyy-MM-dd');
-        }
-
-        function _randomBirthPlace(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                "valueAddress": null
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                var parts = array[0].split(",");
-                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
-            } else {
-                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
-            }
-            return extension;
-        }
-
-        function _randomRace() {
-            var races = localValueSets.race();
-            common.shuffle(races.concept);
-            var race = races.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
-                "valueCodeableConcept": {"coding": [], "text": race.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": races.system,
-                "code": race.code,
-                "display": race.display
-            });
-            return extension;
-        }
-
-        var allEthnicities = [];
-        var ethnicitySystem = '';
-
-        function _randomEthnicity() {
-            function prepEthnicities() {
-                var ethnicities = localValueSets.ethnicity();
-                ethnicitySystem = ethnicities.system;
-                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
-                    var mainConcept = ethnicities.concept[i];
-                    allEthnicities.push(mainConcept);
-                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
-                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
-                            var groupConcept = mainConcept.concept[j];
-                            allEthnicities.push(groupConcept);
-                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
-                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
-                                    var leafConcept = groupConcept.concept[k];
-                                    allEthnicities.push(leafConcept);
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            if (allEthnicities.length === 0) {
-                prepEthnicities();
-            }
-            common.shuffle(allEthnicities);
-            var ethnicity = allEthnicities[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
-                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": ethnicitySystem,
-                "code": ethnicity.code,
-                "display": ethnicity.display
-            });
-            return extension;
-        }
-
-        function _randomReligion() {
-            var religions = localValueSets.religion();
-            common.shuffle(religions.concept);
-            var religion = religions.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
-                "valueCodeableConcept": {"coding": [], "text": religion.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": religions.system,
-                "code": religion.code,
-                "display": religion.display
-            });
-            return extension;
-        }
-
-        function _randomCommunication() {
-            var languages = localValueSets.iso6391Languages();
-            common.shuffle(languages);
-
-            var communication = [];
-            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
-            primaryLanguage.language.coding.push({
-                "system": languages[1].system,
-                "code": languages[1].code,
-                "display": languages[1].display
-            });
-            communication.push(primaryLanguage);
-            return communication;
-        }
-
-        function _randomMaritalStatus() {
-            var maritalStatuses = localValueSets.maritalStatus();
-            common.shuffle(maritalStatuses);
-            var maritalStatus = maritalStatuses[1];
-            var concept = {
-                "coding": [], "text": maritalStatus.display
-            };
-            concept.coding.push({
-                "system": maritalStatus.system,
-                "code": maritalStatus.code,
-                "display": maritalStatus.display
-            });
-            return concept;
         }
 
         var service = {
@@ -8135,15 +7855,14 @@
             initializeNewEncounter: initializeNewEncounter,
             setEncounterContext: setEncounterContext,
             updateEncounter: updateEncounter,
-            seedRandomEncounters: seedRandomEncounters,
             searchEncounters: searchEncounters
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
-        encounterService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$window', 'common', 'dataCache', 'fhirClient',
+        'fhirServers', encounterService]);
 })
 ();(function () {
     'use strict';
@@ -8735,8 +8454,7 @@
 
     var controllerId = 'extensionDefinitionSearch';
 
-    function extensionDefinitionSearch($location, $mdSidenav, common, config, fhirServers, extensionDefinitionService) {
-        var keyCodes = config.keyCodes;
+    function extensionDefinitionSearch($location, common, fhirServers, extensionDefinitionService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -8744,7 +8462,7 @@
         /* jshint validthis:true */
         var vm = this;
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
@@ -8752,15 +8470,14 @@
                 });
         }
 
-        function getCachedSearchResults() {
+        function _getCachedSearchResults() {
             extensionDefinitionService.getCachedSearchResults()
-                .then(processSearchResults);
+                .then(_processSearchResults);
         }
 
-        function activate() {
-            common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
+        function _activate() {
+            common.activateController([_getActiveServer(), _getCachedSearchResults()], controllerId)
                 .then(function () {
-                    $mdSidenav('right').close();
                 });
         }
 
@@ -8770,7 +8487,9 @@
             }
         }
 
-        function processSearchResults(searchResults) {
+        vm.goToDetail = goToDetail;
+
+        function _processSearchResults(searchResults) {
             if (searchResults) {
                 vm.extensionDefinitions = (searchResults.entry || []);
                 vm.paging.links = (searchResults.link || []);
@@ -8778,78 +8497,55 @@
             }
         }
 
-        function submit(valid) {
-            if (valid) {
-                toggleSpinner(true);
-                extensionDefinitionService.getExtensionDefinitions(vm.activeServer.baseUrl, vm.searchText)
-                    .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name, false);
-                        return data;
-                    }, function (error) {
-                        toggleSpinner(false);
-                        logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
-                    })
-                    .then(processSearchResults)
-                    .then(function () {
-                        toggleSpinner(false);
-                    });
-            }
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            extensionDefinitionService.getExtensionDefinitions(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' extension definitions from ' +
+                        vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry);
+                }, function (error) {
+                    logError('Error getting extension definitions', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
         }
+
+        vm.quickSearch = quickSearch;
 
         function dereferenceLink(url) {
-            toggleSpinner(true);
+            vm.isBusy = true;
             extensionDefinitionService.getExtensionDefinitionsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) + ' ExtensionDefinitions from ' + vm.activeServer.name);
+                    logInfo('Returned ' + (angular.isArray(data.extensionDefinitions) ? data.extensionDefinitions.length : 0) +
+                        ' ExtensionDefinitions from ' + vm.activeServer.name);
                     return data;
                 }, function (error) {
-                    toggleSpinner(false);
+                    vm.isBusy = false;
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                 })
-                .then(processSearchResults)
+                .then(_processSearchResults)
                 .then(function () {
-                    toggleSpinner(false);
+                    vm.isBusy = false;
                 });
         }
-
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
-            }
-        }
-
-        function toggleSideNav(event) {
-            event.preventDefault();
-            $mdSidenav('right').toggle();
-        }
-
-        function toggleSpinner(on) {
-            vm.isBusy = on;
-        }
-
+        vm.dereferenceLink = dereferenceLink;
+        
         vm.activeServer = null;
         vm.isBusy = false;
         vm.extensionDefinitions = [];
         vm.errorOutcome = null;
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'ExtensionDefinitions';
-        vm.keyPress = keyPress;
-        vm.dereferenceLink = dereferenceLink;
-        vm.submit = submit;
-        vm.goToDetail = goToDetail;
-        vm.toggleSideNav = toggleSideNav;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdSidenav', 'common', 'config', 'fhirServers', 'extensionDefinitionService', extensionDefinitionSearch]);
+        ['$location', 'common', 'fhirServers', 'extensionDefinitionService', extensionDefinitionSearch]);
 })();
 (function () {
     'use strict';
@@ -11761,7 +11457,7 @@
                 vm.consultation.patient = JSON.parse($window.localStorage.patient);
                 vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
             } else {
-                logError("You must first select a patient before initiating a consultation", error);
+                logError("You must first select a patient before initiating a consultation");
                 $location.path('/patient');
             }
         }
@@ -13230,7 +12926,7 @@
                 vm.lab.patient = JSON.parse($window.localStorage.patient);
                 vm.lab.patient.fullName = $filter('fullName')(vm.lab.patient.name);
             } else {
-                logError("You must first select a patient before initiating a lab", error);
+                logError("You must first select a patient before initiating a lab");
                 $location.path('/patient');
             }
         }
@@ -15871,8 +15567,8 @@
 
     var controllerId = 'patientDetail';
 
-    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+    function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
+                           attachmentService, common, config, demographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, practitionerService, communicationService,
                            careProviderService, observationService) {
 
@@ -16016,7 +15712,7 @@
                     }
                 }
                 if (vm.lookupKey !== "new") {
-                    $window.localStorage.patient = JSON.stringify(vm.patient);
+                    patientService.setPatientContext(vm.patient);
                 }
             }
 
@@ -16024,12 +15720,10 @@
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
-                if (angular.isUndefined($window.localStorage.patient) || ($window.localStorage.patient === null)) {
-                    if (angular.isUndefined($routeParams.id)) {
+                vm.patient = patientService.getPatientContext();
+                if (angular.isUndefined(vm.patient) && angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
-                    }
                 } else {
-                    vm.patient = JSON.parse($window.localStorage.patient);
                     vm.patient.hashKey = "current";
                     initializeAdministrationData(vm.patient);
                 }
@@ -16083,7 +15777,7 @@
                 }
                 vm.patient.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
-                $window.localStorage.patient = JSON.stringify(vm.patient);
+                patientService.setPatientContext(vm.patient);
                 vm.isBusy = false;
             }
 
@@ -16170,10 +15864,9 @@
             return !vm.isEditing;
         }
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
             }
         );
 
@@ -16265,8 +15958,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
-            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope',
+            'addressService', 'attachmentService', 'common', 'config', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
             'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
 })();(function () {
@@ -16629,9 +16322,9 @@
 
     var serviceId = 'patientService';
 
-    function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function patientService($filter, $http, $timeout, $window, common, dataCache, fhirClient, fhirServers, localValueSets) {
         var dataCacheKey = 'localPatients';
-        var itemCacheKey = 'contextPatient';
+        var _patientContext = undefined;
         var logError = common.logger.getLogFn(serviceId, 'error');
         var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
@@ -16730,6 +16423,8 @@
                 }
                 if (cachedPatient) {
                     deferred.resolve(cachedPatient);
+                } else if (getPatientContext()) {
+                     deferred.resolve(_patientContext);
                 } else {
                     deferred.reject('Patient not found in cache: ' + hashKey);
                 }
@@ -16763,17 +16458,13 @@
         function getPatient(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId)
-                .then(function (data) {
-                    dataCache.addToCache(dataCacheKey, data);
-                    deferred.resolve(data);
+                .then(function (results) {
+                    setPatientContext(results.data);
+                    deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
             return deferred.promise;
-        }
-
-        function getPatientContext() {
-            return dataCache.readFromCache(dataCacheKey);
         }
 
         function getPatientReference(baseUrl, input) {
@@ -16888,7 +16579,15 @@
         }
 
         function setPatientContext(data) {
-            dataCache.addToCache(itemCacheKey, data);
+            $window.localStorage.patient = JSON.stringify(data);
+        }
+
+        function getPatientContext() {
+            _patientContext = undefined;
+            if ($window.localStorage.patient && ($window.localStorage.patient !== null)) {
+                _patientContext = {"resource": JSON.parse($window.localStorage.patient)};
+            }
+            return _patientContext;
         }
 
         function updatePatient(resourceVersionId, resource) {
@@ -17172,36 +16871,35 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
-        patientService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', '$window', 'common', 'dataCache',
+        'fhirClient', 'fhirServers', 'localValueSets', patientService]);
 })
 ();(function () {
     'use strict';
 
     var controllerId = 'personDetail';
 
-    function personDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $window, addressService, common, fhirServers, identifierService, personService, contactPointService, attachmentService, humanNameService, organizationService) {
-        /* jshint validthis:true */
+    function personDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, personService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService) {
+
+        /*jshint validthis:true */
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var $q = common.$q;
+        var noToast = false;
 
-        function cancel() {
-
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedPerson();
+            });
         }
 
-        function canDelete() {
-            return !vm.isEditing;
-        }
-
-        function canSave() {
-            return !vm.isSaving;
-        }
-
-        function deletePerson(person) {
+        function deletePerson(person, event) {
             function executeDelete() {
                 if (person && person.resourceId && person.hashKey) {
                     personService.deleteCachedPerson(person.hashKey, person.resourceId)
@@ -17228,158 +16926,267 @@
                 });
         }
 
+        vm.delete = deletePerson;
+
         function edit(person) {
             if (person && person.hashKey) {
-                $location.path('/person/edit/' + person.hashKey);
+                $location.path('/person/' + person.hashKey);
             }
         }
 
-        function getActiveServer() {
+        vm.edit = edit;
+
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
-                    return vm.activeServer;
                 });
         }
 
         function getOrganizationReference(input) {
             var deferred = $q.defer();
-            vm.loadingOrganizations = true;
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    vm.loadingOrganizations = false;
                     deferred.resolve(data);
                 }, function (error) {
-                    vm.loadingOrganizations = false;
-                    logError(common.unexpectedOutcome(error));
+                    logError(common.unexpectedOutcome(error), null, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
         }
 
-        function getRequestedPerson() {
-            function intitializeRelatedData(data) {
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function goToManagingOrganization(resourceReference) {
+            var id = ($filter)('idFromURL')(resourceReference.reference);
+            $location.path('/organization/get/' + id);
+        }
+
+        vm.goToManagingOrganization = goToManagingOrganization;
+
+        function _getEverything() {
+            personService.getPersonEverything(vm.person.resourceId)
+                .then(function (data) {
+                    vm.summary = data.summary;
+                    vm.history = data.history;
+                    logInfo("Retrieved everything for person at " + vm.person.resourceId, null, noToast);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.person.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for person " + vm.person.fullName, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getRequestedPerson() {
+            function initializeAdministrationData(data) {
                 vm.person = data;
-                attachmentService.init([vm.person.photo], 'Photo');
                 humanNameService.init(vm.person.name);
+                demographicsService.init(vm.person.gender, vm.person.maritalStatus, vm.person.communication);
+                demographicsService.initBirth(vm.person.multipleBirthBoolean, vm.person.multipleBirthInteger);
+                demographicsService.initDeath(vm.person.deceasedBoolean, vm.person.deceasedDateTime);
+                demographicsService.setBirthDate(vm.person.birthDate);
+                demographicsService.initializeKnownExtensions(vm.person.extension);
+                vm.person.race = demographicsService.getRace();
+                vm.person.religion = demographicsService.getReligion();
+                vm.person.ethnicity = demographicsService.getEthnicity();
+                vm.person.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.person.birthPlace = demographicsService.getBirthPlace();
+                vm.person.birthDate = demographicsService.getBirthDate();
+                attachmentService.init(vm.person.photo, "Photos");
                 identifierService.init(vm.person.identifier, "multi", "person");
                 addressService.init(vm.person.address, true);
                 contactPointService.init(vm.person.telecom, true, true);
+                careProviderService.init(vm.person.careProvider);
+                if (vm.person.communication) {
+                    communicationService.init(vm.person.communication, "multi");
+                }
                 vm.person.fullName = humanNameService.getFullName();
-            }
-
-            if ($routeParams.hashKey === 'new') {
-                vm.person = null;
-                attachmentService.reset();
-                humanNameService.reset();
-                identifierService.reset();
-                addressService.reset();
-                contactPointService.reset();
-                personService.seedNewPerson()
-                    .then(intitializeRelatedData)
-                    .then(function () {
-                        vm.title = 'Add New person';
-                        vm.isEditing = false;
-                    }, function (error) {
-                        logError(error);
-                    });
-            } else {
-                if ($routeParams.hashKey) {
-                    personService.getCachedPerson($routeParams.hashKey)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error);
-                        });
-                } else if ($routeParams.id) {
-                    var resourceId = vm.activeServer.baseUrl + '/Person/' + $routeParams.id;
-                    personService.getPerson(resourceId)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error);
-                        });
+                if (angular.isDefined(vm.person.id)) {
+                    vm.person.resourceId = (vm.activeServer.baseUrl + '/Person/' + vm.person.id);
+                }
+                if (vm.person.managingOrganization && vm.person.managingOrganization.reference) {
+                    var reference = vm.person.managingOrganization.reference;
+                    if (common.isAbsoluteUri(reference) === false) {
+                        vm.person.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                    }
+                    if (angular.isUndefined(vm.person.managingOrganization.display)) {
+                        vm.person.managingOrganization.display = reference;
+                    }
+                }
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.person = JSON.stringify(vm.person);
                 }
             }
-        }
 
-        function getTitle() {
-            var title = '';
-            if (vm.person) {
-                title = vm.title = 'Edit ' + ((vm.person && vm.person.fullName) || '');
+            vm.person = undefined;
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.person) || ($window.localStorage.person === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/person');
+                    }
+                } else {
+                    vm.person = JSON.parse($window.localStorage.person);
+                    vm.person.hashKey = "current";
+                    initializeAdministrationData(vm.person);
+                }
+            } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
+                var resourceId = vm.activeServer.baseUrl + '/Person/' + $routeParams.id;
+                personService.getPerson(resourceId)
+                    .then(function (resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.person) {
+                            _getEverything(resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
+                    });
+            } else if (vm.lookupKey === 'new') {
+                var data = personService.initializeNewPerson();
+                initializeAdministrationData(data);
+                vm.title = 'Add New Person';
+                vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
+                personService.getCachedPerson(vm.lookupKey)
+                    .then(function (data) {
+                        initializeAdministrationData(data);
+                        if (vm.person && vm.person.resourceId) {
+                            _getEverything(vm.person.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
             } else {
-                title = vm.title = 'Add New person';
+                logError("Unable to resolve person lookup");
             }
-            vm.title = title;
-            return vm.title;
-        }
-
-        function goBack() {
-            $window.history.back();
-        }
-
-        function processResult(results) {
-            var resourceVersionId = results.headers.location || results.headers["content-location"];
-            if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Person saved, but location is unavailable. CORS not implemented correctly at remote host.", true);
-            } else {
-                vm.person.resourceId = common.setResourceId(vm.person.resourceId, resourceVersionId);
-                logInfo("Person saved at " + resourceVersionId, true);
-            }
-            vm.person.fullName = vm.person.name;
-            vm.isEditing = true;
-            getTitle();
         }
 
         function save() {
-            var person = personService.initializePerson().resource;
+            function processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Person saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                } else {
+                    logInfo("Person saved at " + resourceVersionId);
+                    vm.person.resourceVersionId = resourceVersionId;
+                    vm.person.resourceId = common.setResourceId(vm.person.resourceId, resourceVersionId);
+                }
+                vm.person.fullName = humanNameService.getFullName();
+                vm.isEditing = true;
+                $window.localStorage.person = JSON.stringify(vm.person);
+                vm.isBusy = false;
+            }
+
+            var person = personService.initializeNewPerson();
+            if (humanNameService.getAll().length === 0) {
+                logError("Person must have at least one name.");
+                return;
+            }
             person.name = humanNameService.mapFromViewModel();
-            person.photo = attachmentService.getAll()[0];
+            person.photo = attachmentService.getAll();
+
+            person.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            person.gender = demographicsService.getGender();
+            person.maritalStatus = demographicsService.getMaritalStatus();
+            person.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            person.multipleBirthInteger = demographicsService.getBirthOrder();
+            person.deceasedBoolean = demographicsService.getDeceased();
+            person.deceasedDateTime = demographicsService.getDeceasedDate();
+            person.race = demographicsService.getRace();
+            person.religion = demographicsService.getReligion();
+            person.ethnicity = demographicsService.getEthnicity();
+            person.mothersMaidenName = demographicsService.getMothersMaidenName();
+            person.birthPlace = demographicsService.getBirthPlace();
+
             person.address = addressService.mapFromViewModel();
             person.telecom = contactPointService.mapFromViewModel();
             person.identifier = identifierService.getAll();
-            person.gender = vm.person.gender;
-            person.birthDate = vm.person.birthDate;
-            person.link = vm.person.link;
             person.managingOrganization = vm.person.managingOrganization;
+            person.communication = communicationService.getAll();
+            person.careProvider = careProviderService.getAll();
+
+            person.active = vm.person.active;
+            vm.isBusy = true;
             if (vm.isEditing) {
+                person.id = vm.person.id;
                 personService.updatePerson(vm.person.resourceId, person)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
                     });
             } else {
                 personService.addPerson(person)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
                     });
             }
         }
+        vm.save = save;
 
-        function personActionsMenu($event) {
-            var menuItems = [
-                {name: 'Edit', icon: 'img/account4.svg'},
-                {name: 'Add', icon: 'img/add184.svg'},
-                {name: 'Locate', icon: 'img/share39.svg'},
-                {name: 'Delete', icon: 'img/rubbish.svg'}
-            ];
-            $mdBottomSheet.show({
-                locals: {items: menuItems},
-                templateUrl: 'templates/bottomSheet.html',
-                controller: 'bottomSheetController',
-                targetEvent: $event
-            }).then(function (clickedItem) {
-                switch (clickedItem.name) {
-                    case 'Edit':
-                        $location.path('/person/edit/' + vm.person.$$hashKey);
-                        break;
-                    case 'Add':
-                        $location.path('/person/edit/new');
-                        break;
-                    case 'Locate':
-                        logInfo('TODO: implement Locate');
-                        break;
-                    case 'Delete':
-                        deletePerson(vm.person, $event);
-                }
+        function showSource($event) {
+            _showRawData(vm.person, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function showAuditData($index, $event) {
+            _showRawData(vm.history[$index], $event);
+        }
+
+        vm.showAuditData = showAuditData;
+
+        function showClinicalData($index, $event) {
+            _showRawData(vm.summary[$index], $event);
+        }
+
+        vm.showClinicalData = showClinicalData;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
             });
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
+        function canSave() {
+            return !vm.isSaving;
         }
 
         Object.defineProperty(vm, 'canSave', {
@@ -17390,59 +17197,113 @@
             get: canDelete
         });
 
-
-        function activate() {
-            common.activateController([getActiveServer()], controllerId).then(function () {
-                getRequestedPerson();
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/consultation');
+                        break;
+                    case 1:
+                        $location.path('/lab');
+                        break;
+                    case 2:
+                        $location.path('/person');
+                        break;
+                    case 3:
+                        $location.path('/person/edit/current');
+                        break;
+                    case 4:
+                        $location.path('/person/edit/new');
+                        break;
+                    case 5:
+                        $location.path('/person/detailed-search');
+                        break;
+                    case 6:
+                        deletePerson(vm.person);
+                        break;
+                }
             });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Vitals', icon: 'vitals', index: 0},
+                        {name: 'Lab', icon: 'lab', index: 1},
+                        {name: 'Find another person', icon: 'quickFind', index: 2},
+                        {name: 'Edit person', icon: 'edit', index: 3},
+                        {name: 'Add new person', icon: 'personAdd', index: 4}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 5},
+                        {name: 'Quick find', icon: 'quickFind', index: 2}
+                    ];
+                }
+                this.title = 'Person options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
         }
 
+        vm.actions = actions;
+
         vm.activeServer = null;
-        vm.cancel = cancel;
-        vm.activate = activate;
-        vm.contactTypes = undefined;
-        vm.delete = deletePerson;
-        vm.edit = edit;
-        vm.getOrganizationReference = getOrganizationReference;
-        vm.getTitle = getTitle;
-        vm.goBack = goBack;
+        vm.dataEvents = [];
+        vm.errors = [];
+        vm.history = [];
+        vm.isBusy = false;
+        vm.summary = [];
+        vm.lookupKey = undefined;
+        vm.isBusy = false;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.loadingOrganizations = false;
         vm.person = undefined;
-        vm.personTypes = undefined;
-        vm.save = save;
-        vm.states = undefined;
+        vm.practitionerSearchText = '';
+        vm.selectedPractitioner = null;
         vm.title = 'Person Detail';
-        vm.personActionsMenu = personActionsMenu;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$window', 'addressService', 'common', 'fhirServers', 'identifierService', 'personService', 'contactPointService', 'attachmentService', 'humanNameService', 'organizationService', personDetail]);
-
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'personService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', personDetail]);
 })();(function () {
     'use strict';
 
     var controllerId = 'personSearch';
 
-    function personSearch($location, $mdBottomSheet, common, config, fhirServers, personService) {
+    function personSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, personService) {
         /*jshint validthis:true */
         var vm = this;
 
         var getLogFn = common.logger.getLogFn;
-        var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
-        var keyCodes = config.keyCodes;
+        var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
+        var $q = common.$q;
 
-        function activate() {
-            common.activateController([_getActiveServer(), _getCachedPersons()], controllerId)
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
-
+                    _loadLocalLookups();
                 }, function (error) {
-                    logError('Error activating controller', error, noToast);
+                    logError('Error initializing person search', error);
                 });
         }
 
@@ -17450,19 +17311,7 @@
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
-                    return vm.activeServer;
                 });
-        }
-
-        function _getCachedPersons() {
-            personService.getCachedSearchResults()
-                .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' persons from cache', null, noToast);
-                    return data;
-                }, function (message) {
-                    logInfo(message, null, noToast);
-                })
-                .then(processSearchResults);
         }
 
         function goToPerson(person) {
@@ -17471,102 +17320,270 @@
             }
         }
 
-        function processSearchResults(searchResults) {
-            if (searchResults) {
-                vm.persons = (searchResults.entry || []);
-                vm.paging.links = (searchResults.link || []);
-                vm.paging.totalResults = (searchResults.total || 0);
+        vm.goToPerson = goToPerson;
+
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity();
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
+        }
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.personSearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.personSearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.name.given) {
+                queryParam.param = "given";
+                queryParam.value = vm.personSearch.name.given;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.name.family) {
+                queryParam.param = "family";
+                queryParam.value = vm.personSearch.name.family;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.mothersMaidenName) {
+                queryParam.param = "mothersMaidenName";
+                queryParam.value = vm.personSearch.mothersMaidenName;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.personSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.personSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.personSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.personSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.dob) {
+                queryParam.param = "birthDate";
+                queryParam.value = formatString(vm.personSearch.dob);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.age.start || vm.personSearch.age.end) {
+                if (vm.personSearch.age.start === vm.personSearch.age.end) {
+                    queryParam.param = "age";
+                    queryParam.value = vm.personSearch.age.start;
+                    queryParams.push(_.clone(queryParam));
+                }
+                else {
+                    queryParam.param = "age";
+                    queryParam.value = ">".concat(vm.personSearch.age.start === 0 ? vm.personSearch.age.start : (vm.personSearch.age.start - 1));
+                    queryParams.push(_.clone(queryParam));
+                    queryParam.value = "<".concat(vm.personSearch.age.end === 1 ? vm.personSearch.age.end : (vm.personSearch.age.end + 1));
+                    queryParams.push(_.clone(queryParam));
+                }
+            }
+            if (vm.personSearch.identifier.system && vm.personSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.personSearch.identifier.system.concat("|", vm.personSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.telecom) {
+                queryParam.param = "telecom";
+                queryParam.value = vm.personSearch.telecom;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.gender) {
+                queryParam.param = "gender";
+                queryParam.value = vm.personSearch.gender;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.race) {
+                queryParam.param = "race";
+                queryParam.value = localValueSets.race().system.concat("|", vm.personSearch.race.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.language) {
+                queryParam.param = "language";
+                queryParam.value = vm.personSearch.language.system.concat("|", vm.personSearch.language.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.personSearch.ethnicity) {
+                queryParam.param = "ethnicity";
+                queryParam.value = vm.personSearch.ethnicity.system.concat("|", vm.personSearch.ethnicity.code);
+                queryParams.push(_.clone(queryParam));
+            }
+
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            function formatString(input) {
+                var yyyy = input.getFullYear().toString();
+                var mm = (input.getMonth() + 1).toString();
+                var dd = input.getDate().toString();
+                return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
+            }
+
+            _searchPersons(queryString);
+        }
+
+        vm.detailSearch = detailSearch;
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            personService.getPersons(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Persons from ' +
+                        vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry);
+                }, function (error) {
+                    logError('Error getting persons', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.quickSearch = quickSearch;
+
+        function _searchPersons(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            personService.searchPersons(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Persons from ' +
+                        vm.activeServer.name, null, noToast);
+                    common.changePersonList(data);
+                    deferred.resolve();
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error getting persons', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function ageRangeChange() {
+            if (vm.personSearch.age.end === undefined) {
+                vm.personSearch.age.end = vm.personSearch.age.start;
+            }
+            if (vm.personSearch.age.start === undefined) {
+                vm.personSearch.age.start = vm.personSearch.age.end;
+            }
+            if (vm.personSearch.age.start > vm.personSearch.age.end) {
+                vm.personSearch.age.end = vm.personSearch.age.start;
             }
         }
 
-        function submit() {
-            if (vm.searchText.length > 0) {
-                toggleSpinner(true);
-                personService.getPersons(vm.activeServer.baseUrl, vm.searchText)
-                    .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' persons from ' + vm.activeServer.name);
-                        return data;
-                    }, function (error) {
-                        logError('Error: ' + error);
-                        toggleSpinner(false);
-                    })
-                    .then(processSearchResults)
-                    .then(function () {
-                        toggleSpinner(false);
-                    });
+        vm.ageRangeChange = ageRangeChange;
+
+        function dobChange() {
+            if (vm.personSearch.dob !== undefined) {
+                vm.personSearch.age.end = vm.personSearch.age.start = undefined;
             }
         }
 
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
-            }
-        }
+        vm.dobChange = dobChange;
 
-        function toggleSpinner(on) {
-            vm.isBusy = on;
-        }
-
-        function personSearchActionsMenu($event) {
-            var menuItems = [
-                {name: 'Add', icon: 'img/add184.svg'},
-                {name: 'Search', icon: 'img/search100.svg'},
-                {name: 'Clear', icon: 'img/clear5.svg'}
-            ];
+        function actions($event) {
             $mdBottomSheet.show({
-                locals: {items: menuItems},
-                templateUrl: 'templates/bottomSheet.html',
-                controller: 'bottomSheetController',
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
                 targetEvent: $event
             }).then(function (clickedItem) {
-                switch (clickedItem.name) {
-                    case 'Add':
+                switch (clickedItem.index) {
+                    case 0:
                         $location.path('/person/edit/new');
                         break;
-                    case 'Search':
-                        logInfo('TODO: implement Locate');
+                    case 1:
+                        $location.path('/person/detailed-search');
                         break;
-                    case 'Clear':
-                        personService.clearCache();
-                        vm.searchText = '';
-                        vm.persons = [];
-                        vm.paging = null;
+                    case 2:
                         $location.path('/person');
-                        logInfo('Search results cache cleared');
+                        break;
                 }
             });
+
+            /**
+             * Bottom Sheet controller for Person search
+             */
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new person', icon: 'personAdd', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Person search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
         }
 
+        vm.actions = actions;
+
         vm.activeServer = null;
-        vm.isBusy = false;
-        vm.keyPress = keyPress;
-        vm.goToPerson = goToPerson;
         vm.persons = [];
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
-        vm.submit = submit;
+        vm.selectedPerson = null;
         vm.searchResults = null;
         vm.searchText = '';
-        vm.title = 'Person';
-        vm.personSearchActionsMenu = personSearchActionsMenu;
+        vm.title = 'Persons';
+        vm.managingOrganization = undefined;
+        vm.practitioner = undefined;
+        vm.races = [];
+        vm.ethnicities = [];
+        vm.languages = [];
+        vm.isBusy = false;
+        vm.personSearch = {
+            name: {first: undefined, last: undefined},
+            mothersMaidenName: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            telecom: undefined,
+            identifier: {system: undefined, value: undefined},
+            age: {start: undefined, end: undefined},
+            dob: undefined,
+            race: undefined,
+            gender: undefined,
+            ethnicity: undefined,
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
+        };
+        vm.selectedTab = 0;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', 'common', 'config', 'fhirServers', 'personService', personSearch]);
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets', 'personService',
+            personSearch]);
 })();
 (function () {
     'use strict';
 
     var serviceId = 'personService';
 
-    function personService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
+    function personService($filter, $http, $timeout, $window, common, dataCache, fhirClient, fhirServers, localValueSets) {
         var dataCacheKey = 'localPersons';
-        var itemCacheKey = 'contextPerson';
+        var _personContext = undefined;
         var logError = common.logger.getLogFn(serviceId, 'error');
         var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
@@ -17631,6 +17648,25 @@
             return deferred.promise;
         }
 
+        function getPersonEverything(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId + '/$everything')
+                .then(function (results) {
+                    var everything = {"person": null, "summary": [], "history": []};
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'AuditEvent');
+                    });
+                    everything.person = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'Person');
+                    })[0];
+                    everything.summary = results.data.entry;
+                    deferred.resolve(everything);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function getCachedPerson(hashKey) {
             function getPerson(searchResults) {
                 var cachedPerson;
@@ -17638,8 +17674,8 @@
                 for (var i = 0, len = cachedPersons.length; i < len; i++) {
                     if (cachedPersons[i].$$hashKey === hashKey) {
                         cachedPerson = cachedPersons[i].resource;
-                        //TODO: FHIR Change request to make fully-qualified resourceId part of meta data
-                        cachedPerson.resourceId = (searchResults.base + cachedPerson.resourceType + '/' + cachedPerson.id);
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedPerson.resourceId = (baseUrl + cachedPerson.resourceType + '/' + cachedPerson.id);
                         cachedPerson.hashKey = hashKey;
                         break;
                     }
@@ -17652,7 +17688,12 @@
             }
 
             var deferred = $q.defer();
+            var activeServer;
             getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
                 .then(getPerson,
                 function () {
                     deferred.reject('Person search results not found in cache.');
@@ -17684,46 +17725,65 @@
         }
 
         function getPersonContext() {
-            return dataCache.readFromCache(dataCacheKey);
+            _personContext = undefined;
+            if ($window.localStorage.person && ($window.localStorage.person !== null)) {
+                _personContext = {"resource": JSON.parse($window.localStorage.person)};
+            }
+            return _personContext;
         }
 
         function getPersonReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Person/?name=' + input + '&_count=20&_summary=true')
+            fhirClient.getResource(baseUrl + '/Person?name=' + input + '&_count=20')
                 .then(function (results) {
-                    var Persons = [];
+                    var persons = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
                                 if (item.content && item.content.resourceType === 'Person') {
-                                    //  var display = com
-                                    Persons.push({
+                                    persons.push({
                                         display: $filter('fullName')(item.content.name),
                                         reference: item.id
                                     });
                                 }
                             });
                     }
-                    if (Persons.length === 0) {
-                        Persons.push({display: "No matches", reference: ''});
+                    if (persons.length === 0) {
+                        persons.push({display: "No matches", reference: ''});
                     }
-                    deferred.resolve(Persons);
+                    deferred.resolve(persons);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
             return deferred.promise;
         }
 
-        function getPersons(baseUrl, nameFilter, organizationId) {
+        function searchPersons(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/Person?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getPersons(baseUrl, searchFilter, organizationId) {
             var deferred = $q.defer();
             var params = '';
 
-            if (angular.isUndefined(nameFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
 
-            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
-                var names = nameFilter.split(' ');
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
                 if (names.length === 1) {
                     params = 'name=' + names[0];
                 } else {
@@ -17732,7 +17792,7 @@
             }
 
             if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:Organization=' + organizationId;
+                var orgParam = 'organization=' + organizationId;
                 if (params.length > 1) {
                     params = params + '&' + orgParam;
                 } else {
@@ -17750,70 +17810,62 @@
             return deferred.promise;
         }
 
-        function seedNewPerson() {
+        function getPersonsByLink(url) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me')
-                .success(function (data) {
-                    var user = data.results[0].user;
-                    var resource = {
-                        "resourceType": "Person",
-                        "name": [{
-                            "family": [$filter('titleCase')(user.name.last)],
-                            "given": [$filter('titleCase')(user.name.first)],
-                            "prefix": [$filter('titleCase')(user.name.title)],
-                            "use": "usual"
-                        }],
-                        "gender": user.gender,
-                        "birthDate": new Date(parseInt(user.dob)),
-                        "telecom": [
-                            {"system": "email", "value": user.email, "use": "home"},
-                            {"system": "phone", "value": user.cell, "use": "mobile"},
-                            {"system": "phone", "value": user.phone, "use": "home"}],
-                        "address": [{
-                            "line": [$filter('titleCase')(user.location.street)],
-                            "city": $filter('titleCase')(user.location.city),
-                            "state": $filter('abbreviateState')(user.location.state),
-                            "postalCode": user.location.zip,
-                            "use": "home"
-                        }],
-                        "photo": {"url": user.picture.large},
-                        "identifier": [{"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official"}],
-                        "managingOrganization": null,
-                        "link": [],
-                        "active": true
-                    };
-                    var randomPerson = {"resource": resource};
-                    deferred.resolve(randomPerson.resource);
-                })
-                .error(function (error) {
-                    deferred.reject(error);
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
                 });
             return deferred.promise;
         }
 
-        function initializePerson() {
-            var data = {};
-            data.resource = {
+        function initializeNewPerson() {
+            return {
                 "resourceType": "Person",
                 "name": [],
+                "identifier": [],
                 "gender": undefined,
                 "birthDate": undefined,
+                "maritalStatus": undefined,
+                "multipleBirth": false,
                 "telecom": [],
                 "address": [],
-                "photo": undefined,
-                "identifier": [],
-                "managingOrganization": undefined,
+                "photo": [],
+                "communication": [],
+                "managingOrganization": null,
+                "careProvider": [],
+                "contact": [],
                 "link": [],
-                "active": true
+                "extension": []
             };
-            return data;
         }
 
-        function seedRandomPersons(resourceId, organizationName) {
+        function setPersonContext(data) {
+            $window.localStorage.person = JSON.stringify(data);
+        }
+
+        function updatePerson(resourceVersionId, resource) {
+            _prepArrays(resource);
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=100')
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomPersons(organizationId, organizationName) {
+            var deferred = $q.defer();
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
-                    angular.forEach(data.results, function(result) {
+                    angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
@@ -17826,7 +17878,10 @@
                                 "use": "usual"
                             }],
                             "gender": user.gender,
-                            "birthDate": stringDOB,
+                            "birthDate": _randomBirthDate(),
+                            "contact": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
                             "telecom": [
                                 {"system": "email", "value": user.email, "use": "home"},
                                 {"system": "phone", "value": user.cell, "use": "mobile"},
@@ -17838,16 +17893,57 @@
                                 "postalCode": user.location.zip,
                                 "use": "home"
                             }],
-                            "photo": {"url": user.picture.large},
+                            "photo": [{"url": user.picture.large}],
                             "identifier": [
-                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
-                                {"system": "urn:oid:2.16.840.1.113883.15.34", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "usual",
+                                    "type": {
+                                        "text": "Social Security Number",
+                                        "coding": [{
+                                            "code": "SS",
+                                            "display": "Social Security Number",
+                                            "system": "http://hl7.org/fhir/v2/0203"
+                                        }]
+                                    },
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "type": {
+                                        "text": organizationName + " identifier"
+                                    },
+                                    "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:person",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
+                                }
                             ],
-                            "managingOrganization": { "reference": resourceId, "display": organizationName },
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
                             "link": [],
-                            "active": true
+                            "active": true,
+                            "extension": []
                         };
-                        var timer = $timeout(function () {}, 5000);
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
+
+                        var timer = $timeout(function () {
+                        }, 3000);
                         timer.then(function () {
                             addPerson(resource).then(function (results) {
                                 logInfo("Created person " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
@@ -17864,20 +17960,119 @@
             return deferred.promise;
         }
 
-        function setPersonContext(data) {
-            dataCache.addToCache(itemCacheKey, data);
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/person-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
         }
 
-        function updatePerson(resourceVersionId, resource) {
-            _prepArrays(resource);
-            var deferred = $q.defer();
-            fhirClient.updateResource(resourceVersionId, resource)
-                .then(function (results) {
-                    deferred.resolve(results);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
+        function _randomBirthDate() {
+            var start = new Date(1945, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        function _randomEthnicity() {
+            var ethnicities = localValueSets.ethnicity();
+
+            common.shuffle(ethnicities);
+            var ethnicity = ethnicities[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicity.system,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
         }
 
         function _prepArrays(resource) {
@@ -17887,15 +18082,28 @@
             if (resource.identifier.length === 0) {
                 resource.identifier = null;
             }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
             if (resource.telecom.length === 0) {
                 resource.telecom = null;
+            }
+            if (resource.photo.length === 0) {
+                resource.photo = null;
+            }
+            if (resource.communication.length === 0) {
+                resource.communication = null;
             }
             if (resource.link.length === 0) {
                 resource.link = null;
             }
+            if (angular.isDefined(resource.maritalStatus)) {
+                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
+                    resource.maritalStatus = null;
+                }
+            }
             return $q.when(resource);
         }
-
 
         var service = {
             addPerson: addPerson,
@@ -17908,18 +18116,370 @@
             getPersonContext: getPersonContext,
             getPersonReference: getPersonReference,
             getPersons: getPersons,
-            initializePerson: initializePerson,
-            seedNewPerson: seedNewPerson,
-            seedRandomPersons: seedRandomPersons,
+            getPersonsByLink: getPersonsByLink,
+            getPersonEverything: getPersonEverything,
+            initializeNewPerson: initializeNewPerson,
             setPersonContext: setPersonContext,
-            updatePerson: updatePerson
+            updatePerson: updatePerson,
+            seedRandomPersons: seedRandomPersons,
+            searchPersons: searchPersons
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
-        personService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', '$window', 'common', 'dataCache',
+        'fhirClient', 'fhirServers', 'localValueSets', personService]);
+})
+();(function () {
+    'use strict';
+
+    var controllerId = 'practitionerDetail';
+
+    function practitionerDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                                attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                                organizationService, practitionerService, contactPointService, patientService, communicationService,
+                                careProviderService, config) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedPractitioner();
+            });
+        }
+
+        function deletePractitioner(practitioner, event) {
+            function executeDelete() {
+                if (practitioner && practitioner.resourceId && practitioner.hashKey) {
+                    practitionerService.deleteCachedPractitioner(practitioner.hashKey, practitioner.resourceId)
+                        .then(function () {
+                            logInfo("Deleted practitioner " + practitioner.fullName);
+                            $location.path('/practitioner');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            var confirm = $mdDialog.confirm()
+                .title('Delete ' + practitioner.fullName + '?')
+                .ariaLabel('delete practitioner')
+                .ok('Yes')
+                .cancel('No')
+                .targetEvent(event);
+            $mdDialog.show(confirm).then(executeDelete,
+                function () {
+                    logInfo('You decided to keep ' + practitioner.fullName);
+                });
+        }
+
+        function edit(practitioner) {
+            if (practitioner && practitioner.hashKey) {
+                $location.path('/practitioner/' + practitioner.hashKey);
+            }
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function _getRequestedPractitioner() {
+            function initializeAdministrationData(data) {
+                vm.practitioner = data;
+                humanNameService.init(vm.practitioner.name);
+                demographicsService.init(vm.practitioner.gender, vm.practitioner.maritalStatus, vm.practitioner.communication);
+                demographicsService.initBirth(vm.practitioner.multipleBirthBoolean, vm.practitioner.multipleBirthInteger);
+                demographicsService.initDeath(vm.practitioner.deceasedBoolean, vm.practitioner.deceasedDateTime);
+                demographicsService.setBirthDate(vm.practitioner.birthDate);
+                demographicsService.initializeKnownExtensions(vm.practitioner.extension);
+                vm.practitioner.race = demographicsService.getRace();
+                vm.practitioner.religion = demographicsService.getReligion();
+                vm.practitioner.ethnicity = demographicsService.getEthnicity();
+                vm.practitioner.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.practitioner.birthPlace = demographicsService.getBirthPlace();
+                attachmentService.init(vm.practitioner.photo, "Photos");
+                identifierService.init(vm.practitioner.identifier, "multi", "practitioner");
+                addressService.init(vm.practitioner.address, true);
+                contactPointService.init(vm.practitioner.telecom, true, true);
+                careProviderService.init(vm.practitioner.careProvider);
+                if (vm.practitioner.communication) {
+                    communicationService.init(vm.practitioner.communication, "multi");
+                }
+                vm.practitioner.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.practitioner.id)) {
+                    vm.practitioner.resourceId = (vm.activeServer.baseUrl + '/Practitioner/' + vm.practitioner.id);
+                }
+                if (vm.practitioner.managingOrganization && vm.practitioner.managingOrganization.reference) {
+                    var reference = vm.practitioner.managingOrganization.reference;
+                    if (common.isAbsoluteUri(reference) === false) {
+                        vm.practitioner.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                    }
+                    if (angular.isUndefined(vm.practitioner.managingOrganization.display)) {
+                        vm.practitioner.managingOrganization.display = reference;
+                    }
+                }
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.practitioner = JSON.stringify(vm.practitioner);
+                }
+            }
+
+            vm.practitioner = undefined;
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.practitioner) || ($window.localStorage.practitioner === null)) {
+                    $location.path('/practitioner');
+                } else {
+                    vm.practitioner = JSON.parse($window.localStorage.practitioner);
+                    vm.practitioner.hashKey = "current";
+                    initializeAdministrationData(vm.practitioner);
+                }
+            } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
+                var resourceId = vm.activeServer.baseUrl + '/Practitioner/' + $routeParams.id;
+                practitionerService.getPractitioner(resourceId)
+                    .then(function (resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.practitioner) {
+                            //TODO: load practitioner's patients
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
+                    });
+            } else if (vm.lookupKey === 'new') {
+                var data = practitionerService.initializeNewPractitioner();
+                initializeAdministrationData(data);
+                vm.title = 'Add New Practitioner';
+                vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
+                practitionerService.getCachedPractitioner(vm.lookupKey)
+                    .then(function (data) {
+                        initializeAdministrationData(data);
+                        if (vm.practitioner && vm.practitioner.resourceId) {
+                            //TODO: load practitioner's patients
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
+            } else {
+                logError("Unable to resolve practitioner lookup");
+            }
+        }
+
+        function save() {
+            function processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Practitioner saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                } else {
+                    logInfo("Practitioner saved at " + resourceVersionId);
+                    vm.practitioner.resourceVersionId = resourceVersionId;
+                    vm.practitioner.resourceId = common.setResourceId(vm.practitioner.resourceId, resourceVersionId);
+                }
+                vm.practitioner.fullName = humanNameService.getFullName();
+                vm.isEditing = true;
+                $window.localStorage.practitioner = JSON.stringify(vm.practitioner);
+                vm.isBusy = false;
+            }
+
+            var practitioner = practitionerService.initializeNewPractitioner();
+            if (humanNameService.getAll().length === 0) {
+                logError("Practitioner must have at least one name.");
+                return;
+            }
+            practitioner.name = humanNameService.mapFromViewModel();
+            practitioner.photo = attachmentService.getAll();
+
+            practitioner.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            practitioner.gender = demographicsService.getGender();
+            practitioner.maritalStatus = demographicsService.getMaritalStatus();
+            practitioner.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            practitioner.multipleBirthInteger = demographicsService.getBirthOrder();
+            practitioner.deceasedBoolean = demographicsService.getDeceased();
+            practitioner.deceasedDateTime = demographicsService.getDeceasedDate();
+            practitioner.race = demographicsService.getRace();
+            practitioner.religion = demographicsService.getReligion();
+            practitioner.ethnicity = demographicsService.getEthnicity();
+            practitioner.mothersMaidenName = demographicsService.getMothersMaidenName();
+            practitioner.birthPlace = demographicsService.getBirthPlace();
+
+            practitioner.address = addressService.mapFromViewModel();
+            practitioner.telecom = contactPointService.mapFromViewModel();
+            practitioner.identifier = identifierService.getAll();
+            practitioner.managingOrganization = vm.practitioner.managingOrganization;
+            practitioner.communication = communicationService.getAll();
+            practitioner.careProvider = careProviderService.getAll();
+
+            practitioner.active = vm.practitioner.active;
+            vm.isBusy = true;
+            if (vm.isEditing) {
+                practitioner.id = vm.practitioner.id;
+                practitionerService.updatePractitioner(vm.practitioner.resourceId, practitioner)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            } else {
+                practitionerService.addPractitioner(practitioner)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            }
+        }
+
+        function showAuditData($index, $event) {
+            _showRawData(vm.history[$index], $event);
+        }
+
+        function showClinicalData($index, $event) {
+            _showRawData(vm.summary[$index], $event);
+        }
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/practitioner');
+                        break;
+                    case 1:
+                        $location.path('/practitioner/edit/current');
+                        break;
+                    case 2:
+                        $location.path('/practitioner/edit/new');
+                        break;
+                    case 3:
+                        $location.path('/practitioner/detailed-search');
+                        break;
+                    case 4:
+                        deletePractitioner(vm.practitioner);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Find another practitioner', icon: 'search', index: 0},
+                        {name: 'Edit practitioner', icon: 'edit', index: 1},
+                        {name: 'Add new practitioner', icon: 'doctor', index: 2}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 3},
+                        {name: 'Quick find', icon: 'quickFind', index: 0}
+                    ];
+                }
+                this.title = 'Practitioner options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.delete = deletePractitioner;
+        vm.dataEvents = [];
+        vm.errors = [];
+        vm.history = [];
+        vm.isBusy = false;
+        vm.summary = [];
+        vm.edit = edit;
+        vm.getOrganizationReference = getOrganizationReference;
+        vm.lookupKey = undefined;
+        vm.isBusy = false;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.practitioner = undefined;
+        vm.practitionerSearchText = '';
+        vm.save = save;
+        vm.selectedPractitioner = null;
+        vm.title = 'Practitioner Detail';
+        vm.showAuditData = showAuditData;
+        vm.showClinicalData = showClinicalData;
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'practitionerService', 'contactPointService',
+            'patientService', 'communicationService', 'careProviderService', 'config', practitionerDetail]);
 })();(function () {
     'use strict';
 
@@ -17936,11 +18496,10 @@
         var $q = common.$q;
 
         function activate() {
-            common.activateController([getActiveServer()], controllerId)
+            common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
                     if (angular.isDefined($routeParams.orgId)) {
-                        getOrganizationPractitioners($routeParams.orgId);
-                        logInfo("Retrieving practitioners for current organization, please wait...");
+
                     } else {
                         _loadLocalLookups();
                     }
@@ -17949,16 +18508,11 @@
                 });
         }
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
-        }
-
-        function getOrganizationPractitioners(orgId) {
-            vm.practitionerSearch.organization = orgId;
-            detailSearch();
         }
 
         function goToPractitioner(practitioner) {
@@ -19399,31 +19953,30 @@
 
     var controllerId = 'relatedPersonDetail';
 
-    function relatedPersonDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $window, addressService, common, fhirServers, identifierService, relatedPersonService, contactPointService, attachmentService, humanNameService, organizationService) {
-        /* jshint validthis:true */
+    function relatedPersonDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, relatedPersonService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService) {
+
+        /*jshint validthis:true */
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var $q = common.$q;
+        var noToast = false;
 
-        function cancel() {
-
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedPerson();
+            });
         }
 
-        function canDelete() {
-            return !vm.isEditing;
-        }
-
-        function canSave() {
-            return !vm.isSaving;
-        }
-
-        function deleteRelatedperson(relatedPerson) {
+        function deletePerson(relatedPerson, event) {
             function executeDelete() {
                 if (relatedPerson && relatedPerson.resourceId && relatedPerson.hashKey) {
-                    relatedPersonService.deleteCachedRelatedperson(relatedPerson.hashKey, relatedPerson.resourceId)
+                    relatedPersonService.deleteCachedPerson(relatedPerson.hashKey, relatedPerson.resourceId)
                         .then(function () {
                             logInfo("Deleted relatedPerson " + relatedPerson.fullName);
                             $location.path('/relatedPerson');
@@ -19447,158 +20000,267 @@
                 });
         }
 
+        vm.delete = deletePerson;
+
         function edit(relatedPerson) {
             if (relatedPerson && relatedPerson.hashKey) {
-                $location.path('/relatedPerson/edit/' + relatedPerson.hashKey);
+                $location.path('/relatedPerson/' + relatedPerson.hashKey);
             }
         }
 
-        function getActiveServer() {
+        vm.edit = edit;
+
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
-                    return vm.activeServer;
                 });
         }
 
         function getOrganizationReference(input) {
             var deferred = $q.defer();
-            vm.loadingOrganizations = true;
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    vm.loadingOrganizations = false;
                     deferred.resolve(data);
                 }, function (error) {
-                    vm.loadingOrganizations = false;
-                    logError(common.unexpectedOutcome(error));
+                    logError(common.unexpectedOutcome(error), null, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
         }
 
-        function getRequestedRelatedperson() {
-            function intitializeRelatedData(data) {
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function goToManagingOrganization(resourceReference) {
+            var id = ($filter)('idFromURL')(resourceReference.reference);
+            $location.path('/organization/get/' + id);
+        }
+
+        vm.goToManagingOrganization = goToManagingOrganization;
+
+        function _getEverything() {
+            relatedPersonService.getPersonEverything(vm.relatedPerson.resourceId)
+                .then(function (data) {
+                    vm.summary = data.summary;
+                    vm.history = data.history;
+                    logInfo("Retrieved everything for relatedPerson at " + vm.relatedPerson.resourceId, null, noToast);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.relatedPerson.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for relatedPerson " + vm.relatedPerson.fullName, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getRequestedPerson() {
+            function initializeAdministrationData(data) {
                 vm.relatedPerson = data;
-                attachmentService.init([vm.relatedPerson.photo], 'Photo');
                 humanNameService.init(vm.relatedPerson.name);
+                demographicsService.init(vm.relatedPerson.gender, vm.relatedPerson.maritalStatus, vm.relatedPerson.communication);
+                demographicsService.initBirth(vm.relatedPerson.multipleBirthBoolean, vm.relatedPerson.multipleBirthInteger);
+                demographicsService.initDeath(vm.relatedPerson.deceasedBoolean, vm.relatedPerson.deceasedDateTime);
+                demographicsService.setBirthDate(vm.relatedPerson.birthDate);
+                demographicsService.initializeKnownExtensions(vm.relatedPerson.extension);
+                vm.relatedPerson.race = demographicsService.getRace();
+                vm.relatedPerson.religion = demographicsService.getReligion();
+                vm.relatedPerson.ethnicity = demographicsService.getEthnicity();
+                vm.relatedPerson.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.relatedPerson.birthPlace = demographicsService.getBirthPlace();
+                vm.relatedPerson.birthDate = demographicsService.getBirthDate();
+                attachmentService.init(vm.relatedPerson.photo, "Photos");
                 identifierService.init(vm.relatedPerson.identifier, "multi", "relatedPerson");
                 addressService.init(vm.relatedPerson.address, true);
                 contactPointService.init(vm.relatedPerson.telecom, true, true);
+                careProviderService.init(vm.relatedPerson.careProvider);
+                if (vm.relatedPerson.communication) {
+                    communicationService.init(vm.relatedPerson.communication, "multi");
+                }
                 vm.relatedPerson.fullName = humanNameService.getFullName();
-            }
-
-            if ($routeParams.hashKey === 'new') {
-                vm.relatedPerson = null;
-                attachmentService.reset();
-                humanNameService.reset();
-                identifierService.reset();
-                addressService.reset();
-                contactPointService.reset();
-                relatedPersonService.seedNewRelatedperson()
-                    .then(intitializeRelatedData)
-                    .then(function () {
-                        vm.title = 'Add New relatedPerson';
-                        vm.isEditing = false;
-                    }, function (error) {
-                        logError(error);
-                    });
-            } else {
-                if ($routeParams.hashKey) {
-                    relatedPersonService.getCachedRelatedperson($routeParams.hashKey)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error);
-                        });
-                } else if ($routeParams.id) {
-                    var resourceId = vm.activeServer.baseUrl + '/Relatedperson/' + $routeParams.id;
-                    relatedPersonService.getRelatedperson(resourceId)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error);
-                        });
+                if (angular.isDefined(vm.relatedPerson.id)) {
+                    vm.relatedPerson.resourceId = (vm.activeServer.baseUrl + '/RelatedPerson/' + vm.relatedPerson.id);
+                }
+                if (vm.relatedPerson.managingOrganization && vm.relatedPerson.managingOrganization.reference) {
+                    var reference = vm.relatedPerson.managingOrganization.reference;
+                    if (common.isAbsoluteUri(reference) === false) {
+                        vm.relatedPerson.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                    }
+                    if (angular.isUndefined(vm.relatedPerson.managingOrganization.display)) {
+                        vm.relatedPerson.managingOrganization.display = reference;
+                    }
+                }
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.relatedPerson = JSON.stringify(vm.relatedPerson);
                 }
             }
-        }
 
-        function getTitle() {
-            var title = '';
-            if (vm.relatedPerson) {
-                title = vm.title = 'Edit ' + ((vm.relatedPerson && vm.relatedPerson.fullName) || '');
+            vm.relatedPerson = undefined;
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.relatedPerson) || ($window.localStorage.relatedPerson === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/relatedPerson');
+                    }
+                } else {
+                    vm.relatedPerson = JSON.parse($window.localStorage.relatedPerson);
+                    vm.relatedPerson.hashKey = "current";
+                    initializeAdministrationData(vm.relatedPerson);
+                }
+            } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
+                var resourceId = vm.activeServer.baseUrl + '/RelatedPerson/' + $routeParams.id;
+                relatedPersonService.getPerson(resourceId)
+                    .then(function (resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.relatedPerson) {
+                            _getEverything(resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
+                    });
+            } else if (vm.lookupKey === 'new') {
+                var data = relatedPersonService.initializeNewPerson();
+                initializeAdministrationData(data);
+                vm.title = 'Add New Related Person';
+                vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
+                relatedPersonService.getCachedPerson(vm.lookupKey)
+                    .then(function (data) {
+                        initializeAdministrationData(data);
+                        if (vm.relatedPerson && vm.relatedPerson.resourceId) {
+                            _getEverything(vm.relatedPerson.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
             } else {
-                title = vm.title = 'Add New relatedPerson';
+                logError("Unable to resolve relatedPerson lookup");
             }
-            vm.title = title;
-            return vm.title;
-        }
-
-        function goBack() {
-            $window.history.back();
-        }
-
-        function processResult(results) {
-            var resourceVersionId = results.headers.location || results.headers["content-location"];
-            if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Relatedperson saved, but location is unavailable. CORS not implemented correctly at remote host.", true);
-            } else {
-                vm.relatedPerson.resourceId = common.setResourceId(vm.relatedPerson.resourceId, resourceVersionId);
-                logInfo("Relatedperson saved at " + resourceVersionId, true);
-            }
-            vm.relatedPerson.fullName = vm.relatedPerson.name;
-            vm.isEditing = true;
-            getTitle();
         }
 
         function save() {
-            var relatedPerson = relatedPersonService.initializeRelatedperson().resource;
+            function processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Related Person saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                } else {
+                    logInfo("Related Person saved at " + resourceVersionId);
+                    vm.relatedPerson.resourceVersionId = resourceVersionId;
+                    vm.relatedPerson.resourceId = common.setResourceId(vm.relatedPerson.resourceId, resourceVersionId);
+                }
+                vm.relatedPerson.fullName = humanNameService.getFullName();
+                vm.isEditing = true;
+                $window.localStorage.relatedPerson = JSON.stringify(vm.relatedPerson);
+                vm.isBusy = false;
+            }
+
+            var relatedPerson = relatedPersonService.initializeNewPerson();
+            if (humanNameService.getAll().length === 0) {
+                logError("Related Person must have at least one name.");
+                return;
+            }
             relatedPerson.name = humanNameService.mapFromViewModel();
-            relatedPerson.photo = attachmentService.getAll()[0];
+            relatedPerson.photo = attachmentService.getAll();
+
+            relatedPerson.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            relatedPerson.gender = demographicsService.getGender();
+            relatedPerson.maritalStatus = demographicsService.getMaritalStatus();
+            relatedPerson.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            relatedPerson.multipleBirthInteger = demographicsService.getBirthOrder();
+            relatedPerson.deceasedBoolean = demographicsService.getDeceased();
+            relatedPerson.deceasedDateTime = demographicsService.getDeceasedDate();
+            relatedPerson.race = demographicsService.getRace();
+            relatedPerson.religion = demographicsService.getReligion();
+            relatedPerson.ethnicity = demographicsService.getEthnicity();
+            relatedPerson.mothersMaidenName = demographicsService.getMothersMaidenName();
+            relatedPerson.birthPlace = demographicsService.getBirthPlace();
+
             relatedPerson.address = addressService.mapFromViewModel();
             relatedPerson.telecom = contactPointService.mapFromViewModel();
             relatedPerson.identifier = identifierService.getAll();
-            relatedPerson.gender = vm.relatedPerson.gender;
-            relatedPerson.birthDate = vm.relatedPerson.birthDate;
-            relatedPerson.link = vm.relatedPerson.link;
             relatedPerson.managingOrganization = vm.relatedPerson.managingOrganization;
+            relatedPerson.communication = communicationService.getAll();
+            relatedPerson.careProvider = careProviderService.getAll();
+
+            relatedPerson.active = vm.relatedPerson.active;
+            vm.isBusy = true;
             if (vm.isEditing) {
-                relatedPersonService.updateRelatedperson(vm.relatedPerson.resourceId, relatedPerson)
+                relatedPerson.id = vm.relatedPerson.id;
+                relatedPersonService.updatePerson(vm.relatedPerson.resourceId, relatedPerson)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
                     });
             } else {
-                relatedPersonService.addRelatedperson(relatedPerson)
+                relatedPersonService.addPerson(relatedPerson)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
                     });
             }
         }
+        vm.save = save;
 
-        function relatedPersonActionsMenu($event) {
-            var menuItems = [
-                {name: 'Edit', icon: 'img/account4.svg'},
-                {name: 'Add', icon: 'img/add184.svg'},
-                {name: 'Locate', icon: 'img/share39.svg'},
-                {name: 'Delete', icon: 'img/rubbish.svg'}
-            ];
-            $mdBottomSheet.show({
-                locals: {items: menuItems},
-                templateUrl: 'templates/bottomSheet.html',
-                controller: 'bottomSheetController',
-                targetEvent: $event
-            }).then(function (clickedItem) {
-                switch (clickedItem.name) {
-                    case 'Edit':
-                        $location.path('/relatedPerson/edit/' + vm.relatedPerson.$$hashKey);
-                        break;
-                    case 'Add':
-                        $location.path('/relatedPerson/edit/new');
-                        break;
-                    case 'Locate':
-                        logInfo('TODO: implement Locate');
-                        break;
-                    case 'Delete':
-                        deleteRelatedperson(vm.relatedPerson, $event);
-                }
+        function showSource($event) {
+            _showRawData(vm.relatedPerson, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function showAuditData($index, $event) {
+            _showRawData(vm.history[$index], $event);
+        }
+
+        vm.showAuditData = showAuditData;
+
+        function showClinicalData($index, $event) {
+            _showRawData(vm.summary[$index], $event);
+        }
+
+        vm.showClinicalData = showClinicalData;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
             });
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
+        function canSave() {
+            return !vm.isSaving;
         }
 
         Object.defineProperty(vm, 'canSave', {
@@ -19609,58 +20271,105 @@
             get: canDelete
         });
 
-
-        function activate() {
-            common.activateController([getActiveServer()], controllerId).then(function () {
-                getRequestedRelatedperson();
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/relatedPerson');
+                        break;
+                    case 1:
+                        $location.path('/relatedPerson/edit/current');
+                        break;
+                    case 2:
+                        $location.path('/relatedPerson/edit/new');
+                        break;
+                    case 3:
+                        $location.path('/relatedPerson/detailed-search');
+                        break;
+                    case 4:
+                        deletePerson(vm.relatedPerson);
+                        break;
+                }
             });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Find another related person', icon: 'quickFind', index: 0},
+                        {name: 'Edit related person', icon: 'edit', index: 1},
+                        {name: 'Add new related person', icon: 'groupAdd', index: 2}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 3},
+                        {name: 'Quick find', icon: 'quickFind', index: 0}
+                    ];
+                }
+                this.title = 'Related Person options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
         }
 
+        vm.actions = actions;
+
         vm.activeServer = null;
-        vm.cancel = cancel;
-        vm.activate = activate;
-        vm.contactTypes = undefined;
-        vm.delete = deleteRelatedperson;
-        vm.edit = edit;
-        vm.getOrganizationReference = getOrganizationReference;
-        vm.getTitle = getTitle;
-        vm.goBack = goBack;
+        vm.dataEvents = [];
+        vm.errors = [];
+        vm.history = [];
+        vm.isBusy = false;
+        vm.summary = [];
+        vm.lookupKey = undefined;
+        vm.isBusy = false;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.loadingOrganizations = false;
         vm.relatedPerson = undefined;
-        vm.relatedPersonTypes = undefined;
-        vm.save = save;
-        vm.states = undefined;
-        vm.title = 'Relatedperson Detail';
-        vm.relatedPersonActionsMenu = relatedPersonActionsMenu;
+        vm.practitionerSearchText = '';
+        vm.selectedPractitioner = null;
+        vm.title = 'Related Person Detail';
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$window', 'addressService', 'common', 'fhirServers', 'identifierService', 'relatedPersonService', 'contactPointService', 'attachmentService', 'humanNameService', 'organizationService', relatedPersonDetail]);
-
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'relatedPersonService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', relatedPersonDetail]);
 })();(function () {
     'use strict';
 
     var controllerId = 'relatedPersonSearch';
 
-    function relatedPersonSearch($location, $mdBottomSheet, common, config, fhirServers, relatedPersonService) {
+    function relatedPersonSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, relatedPersonService) {
         /*jshint validthis:true */
         var vm = this;
 
         var getLogFn = common.logger.getLogFn;
-        var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
+        var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
+        var $q = common.$q;
 
-        function activate() {
-            common.activateController([_getActiveServer(), _getCachedRelatedpersons()], controllerId)
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
-
+                    _loadLocalLookups();
                 }, function (error) {
-                    logError('Error activating controller', error, noToast);
+                    logError('Error initializing relatedPerson search', error);
                 });
         }
 
@@ -19668,52 +20377,194 @@
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
-                    return vm.activeServer;
                 });
         }
 
-        function _getCachedRelatedpersons() {
-            relatedPersonService.getCachedSearchResults()
-                .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' related persons from cache', null, noToast);
-                    return data;
-                }, function (message) {
-                    logInfo(message, null, noToast);
-                })
-                .then(processSearchResults);
-        }
-
-        function goToRelatedperson(relatedPerson) {
+        function goToPerson(relatedPerson) {
             if (relatedPerson && relatedPerson.$$hashKey) {
                 $location.path('/relatedPerson/view/' + relatedPerson.$$hashKey);
             }
         }
 
-        function processSearchResults(searchResults) {
-            if (searchResults) {
-                vm.relatedPersons = (searchResults.entry || []);
-                vm.paging.links = (searchResults.link || []);
-                vm.paging.totalResults = (searchResults.total || 0);
+        vm.goToPerson = goToPerson;
+
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity();
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
+        }
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.relatedPersonSearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.relatedPersonSearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.name.given) {
+                queryParam.param = "given";
+                queryParam.value = vm.relatedPersonSearch.name.given;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.name.family) {
+                queryParam.param = "family";
+                queryParam.value = vm.relatedPersonSearch.name.family;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.mothersMaidenName) {
+                queryParam.param = "mothersMaidenName";
+                queryParam.value = vm.relatedPersonSearch.mothersMaidenName;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.relatedPersonSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.relatedPersonSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.relatedPersonSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.relatedPersonSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.dob) {
+                queryParam.param = "birthDate";
+                queryParam.value = formatString(vm.relatedPersonSearch.dob);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.age.start || vm.relatedPersonSearch.age.end) {
+                if (vm.relatedPersonSearch.age.start === vm.relatedPersonSearch.age.end) {
+                    queryParam.param = "age";
+                    queryParam.value = vm.relatedPersonSearch.age.start;
+                    queryParams.push(_.clone(queryParam));
+                }
+                else {
+                    queryParam.param = "age";
+                    queryParam.value = ">".concat(vm.relatedPersonSearch.age.start === 0 ? vm.relatedPersonSearch.age.start : (vm.relatedPersonSearch.age.start - 1));
+                    queryParams.push(_.clone(queryParam));
+                    queryParam.value = "<".concat(vm.relatedPersonSearch.age.end === 1 ? vm.relatedPersonSearch.age.end : (vm.relatedPersonSearch.age.end + 1));
+                    queryParams.push(_.clone(queryParam));
+                }
+            }
+            if (vm.relatedPersonSearch.identifier.system && vm.relatedPersonSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.relatedPersonSearch.identifier.system.concat("|", vm.relatedPersonSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.telecom) {
+                queryParam.param = "telecom";
+                queryParam.value = vm.relatedPersonSearch.telecom;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.gender) {
+                queryParam.param = "gender";
+                queryParam.value = vm.relatedPersonSearch.gender;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.race) {
+                queryParam.param = "race";
+                queryParam.value = localValueSets.race().system.concat("|", vm.relatedPersonSearch.race.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.language) {
+                queryParam.param = "language";
+                queryParam.value = vm.relatedPersonSearch.language.system.concat("|", vm.relatedPersonSearch.language.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.relatedPersonSearch.ethnicity) {
+                queryParam.param = "ethnicity";
+                queryParam.value = vm.relatedPersonSearch.ethnicity.system.concat("|", vm.relatedPersonSearch.ethnicity.code);
+                queryParams.push(_.clone(queryParam));
+            }
+
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            function formatString(input) {
+                var yyyy = input.getFullYear().toString();
+                var mm = (input.getMonth() + 1).toString();
+                var dd = input.getDate().toString();
+                return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
+            }
+
+            _searchPersons(queryString);
+        }
+
+        vm.detailSearch = detailSearch;
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            relatedPersonService.getPersons(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Persons from ' +
+                        vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry);
+                }, function (error) {
+                    logError('Error getting relatedPersons', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.quickSearch = quickSearch;
+
+        function _searchPersons(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            relatedPersonService.searchPersons(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Persons from ' +
+                        vm.activeServer.name, null, noToast);
+                    common.changePersonList(data);
+                    deferred.resolve();
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error getting relatedPersons', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function ageRangeChange() {
+            if (vm.relatedPersonSearch.age.end === undefined) {
+                vm.relatedPersonSearch.age.end = vm.relatedPersonSearch.age.start;
+            }
+            if (vm.relatedPersonSearch.age.start === undefined) {
+                vm.relatedPersonSearch.age.start = vm.relatedPersonSearch.age.end;
+            }
+            if (vm.relatedPersonSearch.age.start > vm.relatedPersonSearch.age.end) {
+                vm.relatedPersonSearch.age.end = vm.relatedPersonSearch.age.start;
             }
         }
 
-        function submit() {
-            if (vm.searchText.length > 0) {
-                toggleSpinner(true);
-                relatedPersonService.getRelatedpersons(vm.activeServer.baseUrl, vm.searchText)
-                    .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' related persons from ' + vm.activeServer.name);
-                        return data;
-                    }, function (error) {
-                        logError('Error: ' + error);
-                        toggleSpinner(false);
-                    })
-                    .then(processSearchResults)
-                    .then(function () {
-                        toggleSpinner(false);
-                    });
+        vm.ageRangeChange = ageRangeChange;
+
+        function dobChange() {
+            if (vm.relatedPersonSearch.dob !== undefined) {
+                vm.relatedPersonSearch.age.end = vm.relatedPersonSearch.age.start = undefined;
             }
         }
+
+        vm.dobChange = dobChange;
 
         function actions($event) {
             $mdBottomSheet.show({
@@ -19736,13 +20587,17 @@
                         break;
                 }
             });
+
+            /**
+             * Bottom Sheet controller for Related Person search
+             */
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new related person', icon: 'relatedPerson', index: 0},
+                    {name: 'Add new related person', icon: 'groupAdd', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
                     {name: 'Quick find', icon: 'quickFind', index: 2}
                 ];
-                this.title = 'Related person search options';
+                this.title = 'Related Person search options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
                 };
@@ -19752,43 +20607,59 @@
         vm.actions = actions;
 
         vm.activeServer = null;
-        vm.isBusy = false;
-        vm.goToRelatedperson = goToRelatedperson;
         vm.relatedPersons = [];
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
-        vm.submit = submit;
+        vm.selectedPerson = null;
         vm.searchResults = null;
         vm.searchText = '';
-        vm.title = 'Related Person';
+        vm.title = 'Persons';
+        vm.managingOrganization = undefined;
+        vm.practitioner = undefined;
+        vm.races = [];
+        vm.ethnicities = [];
+        vm.languages = [];
+        vm.isBusy = false;
+        vm.relatedPersonSearch = {
+            name: {first: undefined, last: undefined},
+            mothersMaidenName: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            telecom: undefined,
+            identifier: {system: undefined, value: undefined},
+            age: {start: undefined, end: undefined},
+            dob: undefined,
+            race: undefined,
+            gender: undefined,
+            ethnicity: undefined,
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
+        };
+        vm.selectedTab = 0;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', 'common', 'config', 'fhirServers', 'relatedPersonService', relatedPersonSearch]);
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets', 'relatedPersonService',
+            relatedPersonSearch]);
 })();
 (function () {
     'use strict';
 
     var serviceId = 'relatedPersonService';
 
-    function relatedPersonService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers) {
-        var dataCacheKey = 'localRelatedPersons';
-        var itemCacheKey = 'contextRelatedPerson';
+    function relatedPersonService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+        var dataCacheKey = 'localPersons';
+        var itemCacheKey = 'contextPerson';
         var logError = common.logger.getLogFn(serviceId, 'error');
         var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
 
-        function addRelatedperson(resource) {
+        function addPerson(resource) {
             _prepArrays(resource);
             var deferred = $q.defer();
             fhirServers.getActiveServer()
                 .then(function (server) {
-                    var url = server.baseUrl + "/relatedPerson";
+                    var url = server.baseUrl + "/RelatedPerson";
                     fhirClient.addResource(url, resource)
                         .then(function (results) {
                             deferred.resolve(results);
@@ -19803,11 +20674,11 @@
             dataCache.addToCache(dataCacheKey, null);
         }
 
-        function deleteCachedRelatedperson(hashKey, resourceId) {
+        function deleteCachedPerson(hashKey, resourceId) {
             function removeFromCache(searchResults) {
                 if (searchResults && searchResults.entry) {
-                    var cachedRelatedpersons = searchResults.entry;
-                    searchResults.entry = _.remove(cachedRelatedpersons, function (item) {
+                    var cachedPersons = searchResults.entry;
+                    searchResults.entry = _.remove(cachedPersons, function (item) {
                         return item.$$hashKey !== hashKey;
                     });
                     searchResults.totalResults = (searchResults.totalResults - 1);
@@ -19817,7 +20688,7 @@
             }
 
             var deferred = $q.defer();
-            deleteRelatedperson(resourceId)
+            deletePerson(resourceId)
                 .then(getCachedSearchResults,
                 function (error) {
                     deferred.reject(error);
@@ -19832,7 +20703,7 @@
             return deferred.promise;
         }
 
-        function deleteRelatedperson(resourceId) {
+        function deletePerson(resourceId) {
             var deferred = $q.defer();
             fhirClient.deleteResource(resourceId)
                 .then(function (results) {
@@ -19843,31 +20714,55 @@
             return deferred.promise;
         }
 
-        function getCachedRelatedperson(hashKey) {
-            function getRelatedperson(searchResults) {
-                var cachedRelatedperson;
-                var cachedRelatedpersons = searchResults.entry;
-                for (var i = 0, len = cachedRelatedpersons.length; i < len; i++) {
-                    if (cachedRelatedpersons[i].$$hashKey === hashKey) {
-                        cachedRelatedperson = cachedRelatedpersons[i].resource;
-                        //TODO: FHIR Change request to make fully-qualified resourceId part of meta data
-                        cachedRelatedperson.resourceId = (searchResults.base + cachedRelatedperson.resourceType + '/' + cachedRelatedperson.id);
-                        cachedRelatedperson.hashKey = hashKey;
+        function getPersonEverything(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId + '/$everything')
+                .then(function (results) {
+                    var everything = {"relatedPerson": null, "summary": [], "history": []};
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'AuditEvent');
+                    });
+                    everything.relatedPerson = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'RelatedPerson');
+                    })[0];
+                    everything.summary = results.data.entry;
+                    deferred.resolve(everything);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedPerson(hashKey) {
+            function getPerson(searchResults) {
+                var cachedPerson;
+                var cachedPersons = searchResults.entry;
+                for (var i = 0, len = cachedPersons.length; i < len; i++) {
+                    if (cachedPersons[i].$$hashKey === hashKey) {
+                        cachedPerson = cachedPersons[i].resource;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedPerson.resourceId = (baseUrl + cachedPerson.resourceType + '/' + cachedPerson.id);
+                        cachedPerson.hashKey = hashKey;
                         break;
                     }
                 }
-                if (cachedRelatedperson) {
-                    deferred.resolve(cachedRelatedperson);
+                if (cachedPerson) {
+                    deferred.resolve(cachedPerson);
                 } else {
-                    deferred.reject('Relatedperson not found in cache: ' + hashKey);
+                    deferred.reject('Related Person not found in cache: ' + hashKey);
                 }
             }
 
             var deferred = $q.defer();
+            var activeServer;
             getCachedSearchResults()
-                .then(getRelatedperson,
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
+                .then(getPerson,
                 function () {
-                    deferred.reject('Relatedperson search results not found in cache.');
+                    deferred.reject('Related Person search results not found in cache.');
                 });
             return deferred.promise;
         }
@@ -19883,7 +20778,7 @@
             return deferred.promise;
         }
 
-        function getRelatedperson(resourceId) {
+        function getPerson(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId)
                 .then(function (data) {
@@ -19895,64 +20790,43 @@
             return deferred.promise;
         }
 
-        function getRelatedpersonContext() {
+        function getPersonContext() {
             return dataCache.readFromCache(dataCacheKey);
         }
 
-        function getRelatedpersonReference(baseUrl, input) {
+        function getPersonReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Relatedperson/?name=' + input + '&_count=20&_summary=true')
+            fhirClient.getResource(baseUrl + '/RelatedPerson?name=' + input + '&_count=20')
                 .then(function (results) {
-                    var Relatedpersons = [];
+                    var relatedPersons = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
-                                if (item.content && item.content.resourceType === 'Relatedperson') {
-                                    //  var display = com
-                                    Relatedpersons.push({
+                                if (item.content && item.content.resourceType === 'RelatedPerson') {
+                                    relatedPersons.push({
                                         display: $filter('fullName')(item.content.name),
                                         reference: item.id
                                     });
                                 }
                             });
                     }
-                    if (Relatedpersons.length === 0) {
-                        Relatedpersons.push({display: "No matches", reference: ''});
+                    if (relatedPersons.length === 0) {
+                        relatedPersons.push({display: "No matches", reference: ''});
                     }
-                    deferred.resolve(Relatedpersons);
+                    deferred.resolve(relatedPersons);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
             return deferred.promise;
         }
 
-        function getRelatedpersons(baseUrl, nameFilter, organizationId) {
+        function searchPersons(baseUrl, searchFilter) {
             var deferred = $q.defer();
-            var params = '';
 
-            if (angular.isUndefined(nameFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
-
-            if (angular.isDefined(nameFilter) && nameFilter.length > 1) {
-                var names = nameFilter.split(' ');
-                if (names.length === 1) {
-                    params = 'name=' + names[0];
-                } else {
-                    params = 'given=' + names[0] + '&family=' + names[1];
-                }
-            }
-
-            if (angular.isDefined(organizationId)) {
-                var orgParam = 'organization:Organization=' + organizationId;
-                if (params.length > 1) {
-                    params = params + '&' + orgParam;
-                } else {
-                    params = orgParam;
-                }
-            }
-
-            fhirClient.getResource(baseUrl + '/Relatedperson?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/RelatedPerson?' + searchFilter + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -19962,75 +20836,103 @@
             return deferred.promise;
         }
 
-        function seedNewRelatedperson() {
+        function getPersons(baseUrl, searchFilter, organizationId) {
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me')
-                .success(function (data) {
-                    var user = data.results[0].user;
-                    var resource = {
-                        "resourceType": "Relatedperson",
-                        "name": [{
-                            "family": [$filter('titleCase')(user.name.last)],
-                            "given": [$filter('titleCase')(user.name.first)],
-                            "prefix": [$filter('titleCase')(user.name.title)],
-                            "use": "usual"
-                        }],
-                        "gender": user.gender,
-                        "birthDate": new Date(parseInt(user.dob)),
-                        "telecom": [
-                            {"system": "email", "value": user.email, "use": "home"},
-                            {"system": "phone", "value": user.cell, "use": "mobile"},
-                            {"system": "phone", "value": user.phone, "use": "home"}],
-                        "address": [{
-                            "line": [$filter('titleCase')(user.location.street)],
-                            "city": $filter('titleCase')(user.location.city),
-                            "state": $filter('abbreviateState')(user.location.state),
-                            "postalCode": user.location.zip,
-                            "use": "home"
-                        }],
-                        "photo": {"url": user.picture.large},
-                        "identifier": [{"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official"}],
-                        "managingOrganization": null,
-                        "link": [],
-                        "active": true
-                    };
-                    var randomRelatedperson = {"resource": resource};
-                    deferred.resolve(randomRelatedperson.resource);
-                })
-                .error(function (error) {
-                    deferred.reject(error);
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/RelatedPerson?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
                 });
             return deferred.promise;
         }
 
-        function initializeRelatedperson() {
-            var data = {};
-            data.resource = {
-                "resourceType": "Relatedperson",
-                "name": [],
-                "gender": undefined,
-                "birthDate": undefined,
-                "telecom": [],
-                "address": [],
-                "photo": undefined,
-                "identifier": [],
-                "managingOrganization": undefined,
-                "link": [],
-                "active": true
-            };
-            return data;
+        function getPersonsByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
         }
 
-        function seedRandomRelatedpersons(resourceId, organizationName) {
+        function initializeNewPerson() {
+            return {
+                "resourceType": "RelatedPerson",
+                "name": [],
+                "identifier": [],
+                "gender": undefined,
+                "birthDate": undefined,
+                "maritalStatus": undefined,
+                "multipleBirth": false,
+                "telecom": [],
+                "address": [],
+                "photo": [],
+                "communication": [],
+                "managingOrganization": null,
+                "careProvider": [],
+                "contact": [],
+                "link": [],
+                "extension": []
+            };
+        }
+
+        function setPersonContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updatePerson(resourceVersionId, resource) {
+            _prepArrays(resource);
             var deferred = $q.defer();
-            $http.get('http://api.randomuser.me/?results=100')
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomPersons(organizationId, organizationName) {
+            var deferred = $q.defer();
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
-                    angular.forEach(data.results, function(result) {
+                    angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
                         var resource = {
-                            "resourceType": "Relatedperson",
+                            "resourceType": "RelatedPerson",
                             "name": [{
                                 "family": [$filter('titleCase')(user.name.last)],
                                 "given": [$filter('titleCase')(user.name.first)],
@@ -20038,7 +20940,10 @@
                                 "use": "usual"
                             }],
                             "gender": user.gender,
-                            "birthDate": stringDOB,
+                            "birthDate": _randomBirthDate(),
+                            "contact": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
                             "telecom": [
                                 {"system": "email", "value": user.email, "use": "home"},
                                 {"system": "phone", "value": user.cell, "use": "mobile"},
@@ -20050,18 +20955,59 @@
                                 "postalCode": user.location.zip,
                                 "use": "home"
                             }],
-                            "photo": {"url": user.picture.large},
+                            "photo": [{"url": user.picture.large}],
                             "identifier": [
-                                {"system": "urn:oid:2.16.840.1.113883.4.1", "value": user.SSN, "use": "official", "label":"Social Security Number", "assigner": {"display" : "Social Security Administration"}},
-                                {"system": "urn:oid:2.16.840.1.113883.15.34", "value": user.registered, "use": "official", "label": organizationName + " master Id", "assigner": {"reference": resourceId, "display": organizationName}}
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "usual",
+                                    "type": {
+                                        "text": "Social Security Number",
+                                        "coding": [{
+                                            "code": "SS",
+                                            "display": "Social Security Number",
+                                            "system": "http://hl7.org/fhir/v2/0203"
+                                        }]
+                                    },
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "type": {
+                                        "text": organizationName + " identifier"
+                                    },
+                                    "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:relatedPerson",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
+                                }
                             ],
-                            "managingOrganization": { "reference": resourceId, "display": organizationName },
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
                             "link": [],
-                            "active": true
+                            "active": true,
+                            "extension": []
                         };
-                        var timer = $timeout(function () {}, 5000);
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
+
+                        var timer = $timeout(function () {
+                        }, 3000);
                         timer.then(function () {
-                            addRelatedperson(resource).then(function (results) {
+                            addPerson(resource).then(function (results) {
                                 logInfo("Created relatedPerson " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
                             }, function (error) {
                                 logError("Failed to create relatedPerson " + user.name.first + " " + user.name.last, error, false);
@@ -20076,20 +21022,119 @@
             return deferred.promise;
         }
 
-        function setRelatedpersonContext(data) {
-            dataCache.addToCache(itemCacheKey, data);
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/relatedPerson-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
         }
 
-        function updateRelatedperson(resourceVersionId, resource) {
-            _prepArrays(resource);
-            var deferred = $q.defer();
-            fhirClient.updateResource(resourceVersionId, resource)
-                .then(function (results) {
-                    deferred.resolve(results);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
+        function _randomBirthDate() {
+            var start = new Date(1945, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        function _randomEthnicity() {
+            var ethnicities = localValueSets.ethnicity();
+
+            common.shuffle(ethnicities);
+            var ethnicity = ethnicities[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicity.system,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
         }
 
         function _prepArrays(resource) {
@@ -20099,40 +21144,56 @@
             if (resource.identifier.length === 0) {
                 resource.identifier = null;
             }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
             if (resource.telecom.length === 0) {
                 resource.telecom = null;
+            }
+            if (resource.photo.length === 0) {
+                resource.photo = null;
+            }
+            if (resource.communication.length === 0) {
+                resource.communication = null;
             }
             if (resource.link.length === 0) {
                 resource.link = null;
             }
+            if (angular.isDefined(resource.maritalStatus)) {
+                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
+                    resource.maritalStatus = null;
+                }
+            }
             return $q.when(resource);
         }
 
-
         var service = {
-            addRelatedperson: addRelatedperson,
+            addPerson: addPerson,
             clearCache: clearCache,
-            deleteCachedRelatedperson: deleteCachedRelatedperson,
-            deleteRelatedperson: deleteRelatedperson,
-            getCachedRelatedperson: getCachedRelatedperson,
+            deleteCachedPerson: deleteCachedPerson,
+            deletePerson: deletePerson,
+            getCachedPerson: getCachedPerson,
             getCachedSearchResults: getCachedSearchResults,
-            getRelatedperson: getRelatedperson,
-            getRelatedpersonContext: getRelatedpersonContext,
-            getRelatedpersonReference: getRelatedpersonReference,
-            getRelatedpersons: getRelatedpersons,
-            initializeRelatedperson: initializeRelatedperson,
-            seedNewRelatedperson: seedNewRelatedperson,
-            seedRandomRelatedpersons: seedRandomRelatedpersons,
-            setRelatedpersonContext: setRelatedpersonContext,
-            updateRelatedperson: updateRelatedperson
+            getPerson: getPerson,
+            getPersonContext: getPersonContext,
+            getPersonReference: getPersonReference,
+            getPersons: getPersons,
+            getPersonsByLink: getPersonsByLink,
+            getPersonEverything: getPersonEverything,
+            initializeNewPerson: initializeNewPerson,
+            setPersonContext: setPersonContext,
+            updatePerson: updatePerson,
+            seedRandomPersons: seedRandomPersons,
+            searchPersons: searchPersons
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
         relatedPersonService]);
-})();(function () {
+})
+();(function () {
     'use strict';
 
     var controllerId = 'bottomSheetController';

@@ -20,8 +20,8 @@
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
-                    _getPatientContext();
                     _getRequestedEncounter();
+                    _getPatientContext();
                 });
         }
 
@@ -77,29 +77,6 @@
             return deferred.promise;
         }
 
-        function _getEverything() {
-            encounterService.getEncounterEverything(vm.encounter.resourceId)
-                .then(function (data) {
-                    vm.summary = data.summary;
-                    vm.history = data.history;
-                    logInfo("Retrieved everything for encounter at " + vm.encounter.resourceId, null, noToast);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
-                });
-        }
-
-        function _getObservations() {
-            observationService.getObservations(vm.activeServer.baseUrl, null, vm.encounter.id)
-                .then(function (data) {
-                    vm.summary = data.entry;
-                    logInfo("Retrieved observations for encounter " + vm.encounter.fullName, null, noToast);
-                }, function (error) {
-                    vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                });
-        }
-
         function _getRequestedEncounter() {
             function initializeData(data) {
                 vm.encounter = data;
@@ -113,13 +90,10 @@
             vm.encounter = undefined;
             vm.lookupKey = $routeParams.hashKey;
 
-
             if (vm.lookupKey === "current") {
                 // Re-hydrate existing encounter
                 if (angular.isUndefined($window.localStorage.encounter) || ($window.localStorage.encounter === null)) {
-                    if (angular.isUndefined($routeParams.id)) {
-                        $location.path('/encounter');
-                    }
+                    $location.path('/encounter');
                 } else {
                     vm.encounter = JSON.parse($window.localStorage.encounter);
                     vm.encounter.hashKey = "current";
@@ -133,7 +107,7 @@
                     .then(function (resource) {
                         initializeData(resource.data);
                         if (vm.encounter) {
-                            _getEverything(resourceId);
+
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -160,41 +134,15 @@
                     vm.encounter.resourceVersionId = resourceVersionId;
                     vm.encounter.resourceId = common.setResourceId(vm.encounter.resourceId, resourceVersionId);
                 }
-                vm.encounter.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
                 $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 vm.isBusy = false;
             }
 
             var encounter = encounterService.initializeNewEncounter();
-            if (humanNameService.getAll().length === 0) {
-                logError("Encounter must have at least one name.");
-                return;
-            }
-            encounter.name = humanNameService.mapFromViewModel();
-            encounter.photo = attachmentService.getAll();
 
-            encounter.birthDate = $filter('dateString')(demographicsService.getBirthDate());
-            encounter.gender = demographicsService.getGender();
-            encounter.maritalStatus = demographicsService.getMaritalStatus();
-            encounter.multipleBirthBoolean = demographicsService.getMultipleBirth();
-            encounter.multipleBirthInteger = demographicsService.getBirthOrder();
-            encounter.deceasedBoolean = demographicsService.getDeceased();
-            encounter.deceasedDateTime = demographicsService.getDeceasedDate();
-            encounter.race = demographicsService.getRace();
-            encounter.religion = demographicsService.getReligion();
-            encounter.ethnicity = demographicsService.getEthnicity();
-            encounter.mothersMaidenName = demographicsService.getMothersMaidenName();
-            encounter.birthPlace = demographicsService.getBirthPlace();
+            //TODO: populate encounter details
 
-            encounter.address = addressService.mapFromViewModel();
-            encounter.telecom = contactPointService.mapFromViewModel();
-            encounter.identifier = identifierService.getAll();
-            encounter.managingOrganization = vm.encounter.managingOrganization;
-            encounter.communication = communicationService.getAll();
-            encounter.careProvider = careProviderService.getAll();
-
-            encounter.active = vm.encounter.active;
             vm.isBusy = true;
             if (vm.isEditing) {
                 encounter.id = vm.encounter.id;
@@ -217,9 +165,6 @@
         function _getPatientContext() {
             if (angular.isDefined($window.localStorage.patient)) {
                 vm.patient = JSON.parse($window.localStorage.patient);
-            } else {
-                logError("You must first select a patient before initiating a consultation", error);
-                $location.path('/patient');
             }
         }
 

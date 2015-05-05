@@ -4,9 +4,9 @@
     var controllerId = 'practitionerDetail';
 
     function practitionerDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, practitionerService, contactPointService, patientService, communicationService,
-                           careProviderService, observationService, config) {
+                                attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                                organizationService, practitionerService, contactPointService, patientService, communicationService,
+                                careProviderService, config) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -17,7 +17,7 @@
         var $q = common.$q;
         var noToast = false;
 
-        function activate() {
+        function _activate() {
             common.activateController([_getActiveServer()], controllerId).then(function () {
                 _getRequestedPractitioner();
             });
@@ -75,29 +75,6 @@
             return deferred.promise;
         }
 
-        function _getEverything() {
-            practitionerService.getPractitionerEverything(vm.practitioner.resourceId)
-                .then(function (data) {
-                    vm.summary = data.summary;
-                    vm.history = data.history;
-                    logInfo("Retrieved everything for practitioner at " + vm.practitioner.resourceId, null, noToast);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
-                });
-        }
-
-        function _getObservations() {
-            observationService.getObservations(vm.activeServer.baseUrl, null, vm.practitioner.id)
-                .then(function (data) {
-                    vm.summary = data.entry;
-                    logInfo("Retrieved observations for practitioner " + vm.practitioner.fullName, null, noToast);
-                }, function (error) {
-                    vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                });
-        }
-
         function _getRequestedPractitioner() {
             function initializeAdministrationData(data) {
                 vm.practitioner = data;
@@ -143,9 +120,7 @@
 
             if (vm.lookupKey === "current") {
                 if (angular.isUndefined($window.localStorage.practitioner) || ($window.localStorage.practitioner === null)) {
-                    if (angular.isUndefined($routeParams.id)) {
-                        $location.path('/practitioner');
-                    }
+                    $location.path('/practitioner');
                 } else {
                     vm.practitioner = JSON.parse($window.localStorage.practitioner);
                     vm.practitioner.hashKey = "current";
@@ -158,7 +133,7 @@
                     .then(function (resource) {
                         initializeAdministrationData(resource.data);
                         if (vm.practitioner) {
-                            _getEverything(resourceId);
+                            //TODO: load practitioner's patients
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -176,7 +151,7 @@
                     .then(function (data) {
                         initializeAdministrationData(data);
                         if (vm.practitioner && vm.practitioner.resourceId) {
-                            _getEverything(vm.practitioner.resourceId);
+                            //TODO: load practitioner's patients
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -254,14 +229,14 @@
         }
 
         function showAuditData($index, $event) {
-            showRawData(vm.history[$index], $event);
+            _showRawData(vm.history[$index], $event);
         }
 
         function showClinicalData($index, $event) {
-            showRawData(vm.summary[$index], $event);
+            _showRawData(vm.summary[$index], $event);
         }
 
-        function showRawData(item, event) {
+        function _showRawData(item, event) {
             $mdDialog.show({
                 optionsOrPresent: {disableParentScroll: false},
                 templateUrl: 'templates/rawData-dialog.html',
@@ -277,10 +252,9 @@
             return !vm.isEditing;
         }
 
-        $scope.$on('server.changed',
-            function (event, data) {
-                vm.activeServer = data.activeServer;
-                logInfo("Remote server changed to " + vm.activeServer.name);
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
             }
         );
 
@@ -365,12 +339,12 @@
         vm.showAuditData = showAuditData;
         vm.showClinicalData = showClinicalData;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'practitionerService', 'contactPointService',
-            'patientService', 'communicationService', 'careProviderService', 'observationService', 'config', practitionerDetail]);
+            'patientService', 'communicationService', 'careProviderService', 'config', practitionerDetail]);
 })();

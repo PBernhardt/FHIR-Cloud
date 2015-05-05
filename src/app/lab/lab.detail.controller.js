@@ -48,7 +48,7 @@
                 vm.lab.patient = JSON.parse($window.localStorage.patient);
                 vm.lab.patient.fullName = $filter('fullName')(vm.lab.patient.name);
             } else {
-                logError("You must first select a patient before initiating a lab", error);
+                logError("You must first select a patient before initiating a lab");
                 $location.path('/patient');
             }
         }
