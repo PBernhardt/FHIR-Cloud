@@ -1,0 +1,52 @@
+<div ng-controller="conditionDetail as vm" layout="row" layout-wrap ng-cloak>
+    <div flex="100">
+        <h3 ng-if="vm.isEditing === false">Add New Condition</h3>
+
+        <h3 ng-if="vm.isEditing === true">Edit {{vm.condition.name | fullName}}</h3>
+    </div>
+    <div flex="20">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100">
+        <form name="conditionEditForm" class="form-horizontal"
+              ng-model="vm.condition">
+            <md-tabs>
+                <md-tab label="Name">
+                    <div ng-include="'elements/humanName/humanName.html'"></div>
+                </md-tab>
+                <md-tab label="Demographics">
+                    <div ng-include="'elements/demographics/demographics.html'"></div>
+                </md-tab>
+                <md-tab label="Address">
+                    <div ng-include="'elements/address/address.html'"></div>
+                </md-tab>
+                <md-tab label="Telecom">
+                    <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
+                </md-tab>
+                <md-tab label="Contact">
+                    <div ng-include="'elements/contact/contact.html'"></div>
+                </md-tab>
+                <md-tab label="Photo">
+                    <div ng-include="'elements/attachment/attachment.html'"></div>
+                </md-tab>
+                <md-tab label="Identifier">
+                    <div ng-include="'elements/identifier/identifier.html'"></div>
+                </md-tab>
+                <md-tab label="Languages">
+                    <div ng-include="'elements/communication/communication.html'"></div>
+                </md-tab>
+                <md-tab label="Care Providers">
+                    <div ng-include="'elements/careProvider/careProvider.html'"></div>
+                </md-tab>
+            </md-tabs>
+            <div layout="row" layout-align="end end">
+                <md-button ng-click="vm.save()" aria-label="Execute save">
+                    <md-icon md-svg-icon="saveToCloud" aria-label="save condition" alt="Save Condition"></md-icon>
+                </md-button>
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            </div>
+        </form>
+    </div>
+</div>

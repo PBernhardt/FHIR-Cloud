@@ -1,21 +1,21 @@
 ﻿(function () {
     'use strict';
 
-    var serviceId = 'familyHistoryService';
+    var serviceId = 'conditionService';
 
-    function familyHistoryService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function conditionService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
         var dataCacheKey = 'localFamilyHistories';
-        var itemCacheKey = 'contextFamilyHistory';
+        var itemCacheKey = 'contextCondition';
         var logError = common.logger.getLogFn(serviceId, 'error');
         var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
 
-        function addFamilyHistory(resource) {
+        function addCondition(resource) {
             _prepArrays(resource);
             var deferred = $q.defer();
             fhirServers.getActiveServer()
                 .then(function (server) {
-                    var url = server.baseUrl + "/FamilyHistory";
+                    var url = server.baseUrl + "/Condition";
                     fhirClient.addResource(url, resource)
                         .then(function (results) {
                             deferred.resolve(results);
@@ -30,7 +30,7 @@
             dataCache.addToCache(dataCacheKey, null);
         }
 
-        function deleteCachedFamilyHistory(hashKey, resourceId) {
+        function deleteCachedCondition(hashKey, resourceId) {
             function removeFromCache(searchResults) {
                 if (searchResults && searchResults.entry) {
                     var cachedFamilyHistories = searchResults.entry;
@@ -44,7 +44,7 @@
             }
 
             var deferred = $q.defer();
-            deleteFamilyHistory(resourceId)
+            deleteCondition(resourceId)
                 .then(getCachedSearchResults,
                 function (error) {
                     deferred.reject(error);
@@ -59,7 +59,7 @@
             return deferred.promise;
         }
 
-        function deleteFamilyHistory(resourceId) {
+        function deleteCondition(resourceId) {
             var deferred = $q.defer();
             fhirClient.deleteResource(resourceId)
                 .then(function (results) {
@@ -70,16 +70,16 @@
             return deferred.promise;
         }
 
-        function getFamilyHistoryEverything(resourceId) {
+        function getConditionEverything(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId + '/$everything')
                 .then(function (results) {
-                    var everything = {"familyHistory": null, "summary": [], "history": []};
+                    var everything = {"condition": null, "summary": [], "history": []};
                     everything.history = _.remove(results.data.entry, function (item) {
                         return (item.resource.resourceType === 'AuditEvent');
                     });
-                    everything.familyHistory = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'FamilyHistory');
+                    everything.condition = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'Condition');
                     })[0];
                     everything.summary = results.data.entry;
                     deferred.resolve(everything);
@@ -89,23 +89,23 @@
             return deferred.promise;
         }
 
-        function getCachedFamilyHistory(hashKey) {
-            function getFamilyHistory(searchResults) {
-                var cachedFamilyHistory;
+        function getCachedCondition(hashKey) {
+            function getCondition(searchResults) {
+                var cachedCondition;
                 var cachedFamilyHistories = searchResults.entry;
                 for (var i = 0, len = cachedFamilyHistories.length; i < len; i++) {
                     if (cachedFamilyHistories[i].$$hashKey === hashKey) {
-                        cachedFamilyHistory = cachedFamilyHistories[i].resource;
+                        cachedCondition = cachedFamilyHistories[i].resource;
                         var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
-                        cachedFamilyHistory.resourceId = (baseUrl + cachedFamilyHistory.resourceType + '/' + cachedFamilyHistory.id);
-                        cachedFamilyHistory.hashKey = hashKey;
+                        cachedCondition.resourceId = (baseUrl + cachedCondition.resourceType + '/' + cachedCondition.id);
+                        cachedCondition.hashKey = hashKey;
                         break;
                     }
                 }
-                if (cachedFamilyHistory) {
-                    deferred.resolve(cachedFamilyHistory);
+                if (cachedCondition) {
+                    deferred.resolve(cachedCondition);
                 } else {
-                    deferred.reject('Family History not found in cache: ' + hashKey);
+                    deferred.reject('Condition not found in cache: ' + hashKey);
                 }
             }
 
@@ -116,9 +116,9 @@
                     .then(function (server) {
                         activeServer = server;
                     }))
-                .then(getFamilyHistory,
+                .then(getCondition,
                 function () {
-                    deferred.reject('Family History search results not found in cache.');
+                    deferred.reject('Condition search results not found in cache.');
                 });
             return deferred.promise;
         }
@@ -134,7 +134,7 @@
             return deferred.promise;
         }
 
-        function getFamilyHistory(resourceId) {
+        function getCondition(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId)
                 .then(function (data) {
@@ -146,19 +146,19 @@
             return deferred.promise;
         }
 
-        function getFamilyHistoryContext() {
+        function getConditionContext() {
             return dataCache.readFromCache(dataCacheKey);
         }
 
-        function getFamilyHistoryReference(baseUrl, input) {
+        function getConditionReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/FamilyHistory?name=' + input + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Condition?name=' + input + '&_count=20')
                 .then(function (results) {
                     var familyHistories = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
-                                if (item.content && item.content.resourceType === 'FamilyHistory') {
+                                if (item.content && item.content.resourceType === 'Condition') {
                                     familyHistories.push({
                                         display: $filter('fullName')(item.content.name),
                                         reference: item.id
@@ -182,7 +182,7 @@
             if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
                 deferred.reject('Invalid search input');
             }
-            fhirClient.getResource(baseUrl + '/FamilyHistory?' + searchFilter + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Condition?' + searchFilter + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -218,7 +218,7 @@
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/FamilyHistory?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Condition?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -240,9 +240,9 @@
             return deferred.promise;
         }
 
-        function initializeNewFamilyHistory() {
+        function initializeNewCondition() {
             return {
-                "resourceType": "FamilyMemberHistory",
+                "resourceType": "Condition",
                 "identifier": [],
                 "patient": null,
                 "date": null,
@@ -276,11 +276,11 @@
             };
         }
 
-        function setFamilyHistoryContext(data) {
+        function setConditionContext(data) {
             dataCache.addToCache(itemCacheKey, data);
         }
 
-        function updateFamilyHistory(resourceVersionId, resource) {
+        function updateCondition(resourceVersionId, resource) {
             _prepArrays(resource);
             var deferred = $q.defer();
             fhirClient.updateResource(resourceVersionId, resource)
@@ -303,7 +303,7 @@
                         var birthDate = new Date(parseInt(user.dob));
                         var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
                         var resource = {
-                            "resourceType": "FamilyHistory",
+                            "resourceType": "Condition",
                             "name": [{
                                 "family": [$filter('titleCase')(user.name.last)],
                                 "given": [$filter('titleCase')(user.name.first)],
@@ -341,7 +341,7 @@
                                     "assigner": {"display": organizationName}
                                 },
                                 {
-                                    "system": "urn:fhir-cloud:familyHistory",
+                                    "system": "urn:fhir-cloud:condition",
                                     "value": common.randomHash(),
                                     "use": "secondary",
                                     "assigner": {"display": "FHIR Cloud"}
@@ -367,10 +367,10 @@
                         var timer = $timeout(function () {
                         }, 3000);
                         timer.then(function () {
-                            addFamilyHistory(resource).then(function (results) {
-                                logInfo("Created familyHistory " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            addCondition(resource).then(function (results) {
+                                logInfo("Created condition " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
                             }, function (error) {
-                                logError("Failed to create familyHistory " + user.name.first + " " + user.name.last, error, false);
+                                logError("Failed to create condition " + user.name.first + " " + user.name.last, error, false);
                             })
                         })
                     });
@@ -384,7 +384,7 @@
 
         function _randomMothersMaiden(array) {
             var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/familyHistory-mothersMaidenName",
+                "url": "http://hl7.org/fhir/StructureDefinition/condition-mothersMaidenName",
                 "valueString": ''
             };
             if (array.length > 0) {
@@ -554,21 +554,21 @@
         }
 
         var service = {
-            addFamilyHistory: addFamilyHistory,
+            addCondition: addCondition,
             clearCache: clearCache,
-            deleteCachedFamilyHistory: deleteCachedFamilyHistory,
-            deleteFamilyHistory: deleteFamilyHistory,
-            getCachedFamilyHistory: getCachedFamilyHistory,
+            deleteCachedCondition: deleteCachedCondition,
+            deleteCondition: deleteCondition,
+            getCachedCondition: getCachedCondition,
             getCachedSearchResults: getCachedSearchResults,
-            getFamilyHistory: getFamilyHistory,
-            getFamilyHistoryContext: getFamilyHistoryContext,
-            getFamilyHistoryReference: getFamilyHistoryReference,
+            getCondition: getCondition,
+            getConditionContext: getConditionContext,
+            getConditionReference: getConditionReference,
             getFamilyHistories: getFamilyHistories,
             getFamilyHistoriesByLink: getFamilyHistoriesByLink,
-            getFamilyHistoryEverything: getFamilyHistoryEverything,
-            initializeNewFamilyHistory: initializeNewFamilyHistory,
-            setFamilyHistoryContext: setFamilyHistoryContext,
-            updateFamilyHistory: updateFamilyHistory,
+            getConditionEverything: getConditionEverything,
+            initializeNewCondition: initializeNewCondition,
+            setConditionContext: setConditionContext,
+            updateCondition: updateCondition,
             seedRandomFamilyHistories: seedRandomFamilyHistories,
             searchFamilyHistories: searchFamilyHistories
         };
@@ -577,6 +577,6 @@
     }
 
     angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
-        familyHistoryService]);
+        conditionService]);
 })
 ();

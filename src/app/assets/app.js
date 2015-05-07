@@ -2949,6 +2949,1289 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'conditionDetail';
+
+    function conditionDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, conditionService, contactPointService, practitionerService, communicationService,
+                           careProviderService, observationService, config) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+                _getRequestedCondition();
+            });
+        }
+
+        function deleteCondition(condition, event) {
+            function executeDelete() {
+                if (condition && condition.resourceId && condition.hashKey) {
+                    conditionService.deleteCachedCondition(condition.hashKey, condition.resourceId)
+                        .then(function () {
+                            logInfo("Deleted condition " + condition.fullName);
+                            $location.path('/condition');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            var confirm = $mdDialog.confirm()
+                .title('Delete ' + condition.fullName + '?')
+                .ariaLabel('delete condition')
+                .ok('Yes')
+                .cancel('No')
+                .targetEvent(event);
+            $mdDialog.show(confirm).then(executeDelete,
+                function () {
+                    logInfo('You decided to keep ' + condition.fullName);
+                });
+        }
+
+        function edit(condition) {
+            if (condition && condition.hashKey) {
+                $location.path('/condition/' + condition.hashKey);
+            }
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function _getEverything() {
+            conditionService.getConditionEverything(vm.condition.resourceId)
+                .then(function (data) {
+                    vm.summary = data.summary;
+                    vm.history = data.history;
+                    logInfo("Retrieved everything for condition at " + vm.condition.resourceId, null, noToast);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
+                });
+        }
+
+        function _getObservations() {
+            observationService.getObservations(vm.activeServer.baseUrl, null, vm.condition.id)
+                .then(function (data) {
+                    vm.summary = data.entry;
+                    logInfo("Retrieved observations for condition " + vm.condition.fullName, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getRequestedCondition() {
+            function initializeAdministrationData(data) {
+                vm.condition = data;
+                humanNameService.init(vm.condition.name);
+                demographicsService.init(vm.condition.gender, vm.condition.maritalStatus, vm.condition.communication);
+                demographicsService.initBirth(vm.condition.multipleBirthBoolean, vm.condition.multipleBirthInteger);
+                demographicsService.initDeath(vm.condition.deceasedBoolean, vm.condition.deceasedDateTime);
+                demographicsService.setBirthDate(vm.condition.birthDate);
+                demographicsService.initializeKnownExtensions(vm.condition.extension);
+                vm.condition.race = demographicsService.getRace();
+                vm.condition.religion = demographicsService.getReligion();
+                vm.condition.ethnicity = demographicsService.getEthnicity();
+                vm.condition.mothersMaidenName = demographicsService.getMothersMaidenName();
+                vm.condition.birthPlace = demographicsService.getBirthPlace();
+                attachmentService.init(vm.condition.photo, "Photos");
+                identifierService.init(vm.condition.identifier, "multi", "condition");
+                addressService.init(vm.condition.address, true);
+                contactPointService.init(vm.condition.telecom, true, true);
+                careProviderService.init(vm.condition.careProvider);
+                if (vm.condition.communication) {
+                    communicationService.init(vm.condition.communication, "multi");
+                }
+                vm.condition.fullName = humanNameService.getFullName();
+                if (angular.isDefined(vm.condition.id)) {
+                    vm.condition.resourceId = (vm.activeServer.baseUrl + '/Condition/' + vm.condition.id);
+                }
+                if (vm.condition.managingOrganization && vm.condition.managingOrganization.reference) {
+                    var reference = vm.condition.managingOrganization.reference;
+                    if (common.isAbsoluteUri(reference) === false) {
+                        vm.condition.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
+                    }
+                    if (angular.isUndefined(vm.condition.managingOrganization.display)) {
+                        vm.condition.managingOrganization.display = reference;
+                    }
+                }
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.condition = JSON.stringify(vm.condition);
+                }
+            }
+
+            vm.condition = undefined;
+            vm.lookupKey = $routeParams.hashKey;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.condition) || ($window.localStorage.condition === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/condition');
+                    }
+                } else {
+                    vm.condition = JSON.parse($window.localStorage.condition);
+                    vm.condition.hashKey = "current";
+                    initializeAdministrationData(vm.condition);
+                }
+            } else if (angular.isDefined($routeParams.id)) {
+                vm.isBusy = true;
+                var resourceId = vm.activeServer.baseUrl + '/Condition/' + $routeParams.id;
+                conditionService.getCondition(resourceId)
+                    .then(function (resource) {
+                        initializeAdministrationData(resource.data);
+                        if (vm.condition) {
+                            _getEverything(resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    }).then(function () {
+                        vm.isBusy = false;
+                    });
+            } else if (vm.lookupKey === 'new') {
+                var data = conditionService.initializeNewCondition();
+                initializeAdministrationData(data);
+                vm.title = 'Add New Condition';
+                vm.isEditing = false;
+            } else if (vm.lookupKey !== "current") {
+                vm.isBusy = true;
+                conditionService.getCachedCondition(vm.lookupKey)
+                    .then(function (data) {
+                        initializeAdministrationData(data);
+                        if (vm.condition && vm.condition.resourceId) {
+                            _getEverything(vm.condition.resourceId);
+                        }
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
+            } else {
+                logError("Unable to resolve condition lookup");
+            }
+        }
+
+        function save() {
+            function processResult(results) {
+                var resourceVersionId = results.headers.location || results.headers["content-location"];
+                if (angular.isUndefined(resourceVersionId)) {
+                    logWarning("Condition saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                } else {
+                    logInfo("Condition saved at " + resourceVersionId);
+                    vm.condition.resourceVersionId = resourceVersionId;
+                    vm.condition.resourceId = common.setResourceId(vm.condition.resourceId, resourceVersionId);
+                }
+                vm.condition.fullName = humanNameService.getFullName();
+                vm.isEditing = true;
+                $window.localStorage.condition = JSON.stringify(vm.condition);
+                vm.isBusy = false;
+            }
+
+            var condition = conditionService.initializeNewCondition();
+            if (humanNameService.getAll().length === 0) {
+                logError("Condition must have at least one name.");
+                return;
+            }
+            condition.name = humanNameService.mapFromViewModel();
+            condition.photo = attachmentService.getAll();
+
+            condition.birthDate = $filter('dateString')(demographicsService.getBirthDate());
+            condition.gender = demographicsService.getGender();
+            condition.maritalStatus = demographicsService.getMaritalStatus();
+            condition.multipleBirthBoolean = demographicsService.getMultipleBirth();
+            condition.multipleBirthInteger = demographicsService.getBirthOrder();
+            condition.deceasedBoolean = demographicsService.getDeceased();
+            condition.deceasedDateTime = demographicsService.getDeceasedDate();
+            condition.race = demographicsService.getRace();
+            condition.religion = demographicsService.getReligion();
+            condition.ethnicity = demographicsService.getEthnicity();
+            condition.mothersMaidenName = demographicsService.getMothersMaidenName();
+            condition.birthPlace = demographicsService.getBirthPlace();
+
+            condition.address = addressService.mapFromViewModel();
+            condition.telecom = contactPointService.mapFromViewModel();
+            condition.identifier = identifierService.getAll();
+            condition.managingOrganization = vm.condition.managingOrganization;
+            condition.communication = communicationService.getAll();
+            condition.careProvider = careProviderService.getAll();
+
+            condition.active = vm.condition.active;
+            vm.isBusy = true;
+            if (vm.isEditing) {
+                condition.id = vm.condition.id;
+                conditionService.updateCondition(vm.condition.resourceId, condition)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            } else {
+                conditionService.addCondition(condition)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                        vm.isBusy = false;
+                    });
+            }
+        }
+
+        function showAuditData($index, $event) {
+            showRawData(vm.history[$index], $event);
+        }
+
+        function showClinicalData($index, $event) {
+            showRawData(vm.summary[$index], $event);
+        }
+
+        function showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        $scope.$on('server.changed',
+            function (event, data) {
+                vm.activeServer = data.activeServer;
+                logInfo("Remote server changed to " + vm.activeServer.name);
+            }
+        );
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/consultation');
+                        break;
+                    case 1:
+                        $location.path('/lab');
+                        break;
+                    case 2:
+                        logInfo("Refreshing condition data from " + vm.activeServer.name);
+                        $location.path('/condition/get/' + vm.condition.id);
+                        break;
+                    case 3:
+                        $location.path('/condition');
+                        break;
+                    case 4:
+                        $location.path('/condition/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/condition/edit/new');
+                        break;
+                    case 6:
+                        deleteCondition(vm.condition);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Vitals', icon: 'vitals', index: 0},
+                        {name: 'Lab', icon: 'lab', index: 1},
+                        {name: 'Refresh data', icon: 'refresh', index: 2},
+                        {name: 'Find another condition', icon: 'person', index: 3},
+                        {name: 'Edit condition', icon: 'edit', index: 4},
+                        {name: 'Add new condition', icon: 'personAdd', index: 5}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Find another condition', icon: 'person', index: 3},
+                    ];
+                }
+                this.title = 'Condition options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.delete = deleteCondition;
+        vm.dataEvents = [];
+        vm.errors = [];
+        vm.history = [];
+        vm.isBusy = false;
+        vm.summary = [];
+        vm.edit = edit;
+        vm.getOrganizationReference = getOrganizationReference;
+        vm.lookupKey = undefined;
+        vm.isBusy = false;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.condition = undefined;
+        vm.practitionerSearchText = '';
+        vm.save = save;
+        vm.selectedPractitioner = null;
+        vm.title = 'Condition Detail';
+        vm.showAuditData = showAuditData;
+        vm.showClinicalData = showClinicalData;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
+            'humanNameService', 'identifierService', 'organizationService', 'conditionService', 'contactPointService',
+            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', conditionDetail]);
+})();(function () {
+    'use strict';
+
+    var controllerId = 'conditionSearch';
+
+    function conditionSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, conditionService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var getLogFn = common.logger.getLogFn;
+        var logError = getLogFn(controllerId, 'error');
+        var logInfo = getLogFn(controllerId, 'info');
+        var noToast = false;
+        var $q = common.$q;
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId)
+                .then(function () {
+                    if (angular.isDefined($routeParams.orgId)) {
+
+                    } else {
+                        _loadLocalLookups();
+                    }
+                }, function (error) {
+                    logError('Error initializing condition search', error);
+                });
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToCondition(condition) {
+            if (condition && condition.$$hashKey) {
+                $location.path('/condition/view/' + condition.$$hashKey);
+            }
+        }
+
+        function _loadLocalLookups() {
+            vm.ethnicities = localValueSets.ethnicity().concept;
+            vm.races = localValueSets.race().concept;
+            vm.languages = localValueSets.iso6391Languages();
+        }
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.conditionSearch.organization) {
+                queryParam.param = "organization";
+                queryParam.value = vm.conditionSearch.organization;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.name.given) {
+                queryParam.param = "given";
+                queryParam.value = vm.conditionSearch.name.given;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.name.family) {
+                queryParam.param = "family";
+                queryParam.value = vm.conditionSearch.name.family;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.mothersMaidenName) {
+                queryParam.param = "mothersMaidenName";
+                queryParam.value = vm.conditionSearch.mothersMaidenName;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.conditionSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.conditionSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.conditionSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.conditionSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.dob) {
+                queryParam.param = "birthDate";
+                queryParam.value = formatString(vm.conditionSearch.dob);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.age.start || vm.conditionSearch.age.end) {
+                if (vm.conditionSearch.age.start === vm.conditionSearch.age.end) {
+                    queryParam.param = "age";
+                    queryParam.value = vm.conditionSearch.age.start;
+                    queryParams.push(_.clone(queryParam));
+                }
+                else {
+                    queryParam.param = "age";
+                    queryParam.value = ">".concat(vm.conditionSearch.age.start === 0 ? vm.conditionSearch.age.start : (vm.conditionSearch.age.start - 1));
+                    queryParams.push(_.clone(queryParam));
+                    queryParam.value = "<".concat(vm.conditionSearch.age.end === 1 ? vm.conditionSearch.age.end : (vm.conditionSearch.age.end + 1));
+                    queryParams.push(_.clone(queryParam));
+                }
+            }
+            if (vm.conditionSearch.identifier.system && vm.conditionSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.conditionSearch.identifier.system.concat("|", vm.conditionSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.telecom) {
+                queryParam.param = "telecom";
+                queryParam.value = vm.conditionSearch.telecom;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.gender) {
+                queryParam.param = "gender";
+                queryParam.value = vm.conditionSearch.gender;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.race) {
+                queryParam.param = "race";
+                queryParam.value = localValueSets.race().system.concat("|", vm.conditionSearch.race.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.language) {
+                queryParam.param = "language";
+                queryParam.value = vm.conditionSearch.language.system.concat("|", vm.conditionSearch.language.code);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.conditionSearch.ethnicity) {
+                queryParam.param = "ethnicity";
+                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.conditionSearch.ethnicity.code);
+                queryParams.push(_.clone(queryParam));
+            }
+
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            function formatString(input) {
+                var yyyy = input.getFullYear().toString();
+                var mm = (input.getMonth() + 1).toString();
+                var dd = input.getDate().toString();
+                return yyyy.concat('-', mm[1] ? mm : '0' + mm[0]).concat('-', dd[1] ? dd : '0' + dd[0]);
+            }
+
+            searchFamilyHistories(queryString);
+        }
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            conditionService.getFamilyHistoriesByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' conditions from ' +
+                    vm.activeServer.name, null, noToast);
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            conditionService.getFamilyHistories(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' conditions from ' +
+                    vm.activeServer.name, null, noToast);
+                    deferred.resolve(data.entry || []);
+                }, function (error) {
+                    logError('Error getting familyHistories', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.quickSearch = quickSearch;
+
+        function searchFamilyHistories(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            conditionService.searchFamilyHistories(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' s from ' +
+                    vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error getting conditions', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.familyHistories = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function ageRangeChange() {
+            if (vm.conditionSearch.age.end === undefined) {
+                vm.conditionSearch.age.end = vm.conditionSearch.age.start;
+            }
+            if (vm.conditionSearch.age.start === undefined) {
+                vm.conditionSearch.age.start = vm.conditionSearch.age.end;
+            }
+            if (vm.conditionSearch.age.start > vm.conditionSearch.age.end) {
+                vm.conditionSearch.age.end = vm.conditionSearch.age.start;
+            }
+        }
+
+        function dobChange() {
+            if (vm.conditionSearch.dob !== undefined) {
+                vm.conditionSearch.age.end = vm.conditionSearch.age.start = undefined;
+            }
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/condition/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/condition/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/condition');
+                        break;
+                }
+            });
+
+            /**
+             * Bottom Sheet controller for Condition search
+             */
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new family history', icon: 'family', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Condition search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.activeServer = null;
+        vm.dereferenceLink = dereferenceLink;
+        vm.goToCondition = goToCondition;
+        vm.familyHistories = [];
+        vm.selectedCondition = null;
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'Conditions';
+        vm.managingOrganization = undefined;
+        vm.practitioner = undefined;
+        vm.actions = actions;
+        vm.races = [];
+        vm.ethnicities = [];
+        vm.languages = [];
+        vm.detailSearch = detailSearch;
+        vm.isBusy = false;
+        vm.ageRangeChange = ageRangeChange;
+        vm.dobChange = dobChange;
+        vm.conditionSearch = {
+            name: {first: undefined, last: undefined},
+            mothersMaidenName: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            telecom: undefined,
+            identifier: {system: undefined, value: undefined},
+            age: {start: undefined, end: undefined},
+            dob: undefined,
+            race: undefined,
+            gender: undefined,
+            ethnicity: undefined,
+            language: undefined,
+            organization: undefined,
+            careProvider: undefined
+        };
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.selectedTab = 0;
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'conditionService', conditionSearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'conditionService';
+
+    function conditionService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+        var dataCacheKey = 'localFamilyHistories';
+        var itemCacheKey = 'contextCondition';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var $q = common.$q;
+
+        function addCondition(resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/Condition";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedCondition(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                if (searchResults && searchResults.entry) {
+                    var cachedFamilyHistories = searchResults.entry;
+                    searchResults.entry = _.remove(cachedFamilyHistories, function (item) {
+                        return item.$$hashKey !== hashKey;
+                    });
+                    searchResults.totalResults = (searchResults.totalResults - 1);
+                    dataCache.addToCache(dataCacheKey, searchResults);
+                }
+                deferred.resolve();
+            }
+
+            var deferred = $q.defer();
+            deleteCondition(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteCondition(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getConditionEverything(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId + '/$everything')
+                .then(function (results) {
+                    var everything = {"condition": null, "summary": [], "history": []};
+                    everything.history = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'AuditEvent');
+                    });
+                    everything.condition = _.remove(results.data.entry, function (item) {
+                        return (item.resource.resourceType === 'Condition');
+                    })[0];
+                    everything.summary = results.data.entry;
+                    deferred.resolve(everything);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedCondition(hashKey) {
+            function getCondition(searchResults) {
+                var cachedCondition;
+                var cachedFamilyHistories = searchResults.entry;
+                for (var i = 0, len = cachedFamilyHistories.length; i < len; i++) {
+                    if (cachedFamilyHistories[i].$$hashKey === hashKey) {
+                        cachedCondition = cachedFamilyHistories[i].resource;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedCondition.resourceId = (baseUrl + cachedCondition.resourceType + '/' + cachedCondition.id);
+                        cachedCondition.hashKey = hashKey;
+                        break;
+                    }
+                }
+                if (cachedCondition) {
+                    deferred.resolve(cachedCondition);
+                } else {
+                    deferred.reject('Condition not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            var activeServer;
+            getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
+                .then(getCondition,
+                function () {
+                    deferred.reject('Condition search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getCondition(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (data) {
+                    dataCache.addToCache(dataCacheKey, data);
+                    deferred.resolve(data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getConditionContext() {
+            return dataCache.readFromCache(dataCacheKey);
+        }
+
+        function getConditionReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Condition?name=' + input + '&_count=20')
+                .then(function (results) {
+                    var familyHistories = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'Condition') {
+                                    familyHistories.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
+                    }
+                    if (familyHistories.length === 0) {
+                        familyHistories.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(familyHistories);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchFamilyHistories(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/Condition?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getFamilyHistories(baseUrl, searchFilter, organizationId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
+            if (angular.isDefined(organizationId)) {
+                var orgParam = 'organization:=' + organizationId;
+                if (params.length > 1) {
+                    params = params + '&' + orgParam;
+                } else {
+                    params = orgParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Condition?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getFamilyHistoriesByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewCondition() {
+            return {
+                "resourceType": "Condition",
+                "identifier": [],
+                "patient": null,
+                "date": null,
+                "name": null,
+                "relationship": null,
+                "gender": null,
+                // born[x]: (approximate) date of birth. One of these 3:
+                "bornPeriod": null,
+                "bornDate": null,
+                "bornString": null,
+                // age[x]: (approximate) age. One of these 3:
+                "ageAge": null,
+                "ageRange": null,
+                "ageString": null,
+                // deceased[x]: Dead? How old/when?. One of these 5:
+                "deceasedBoolean": null,
+                "deceasedAge": null,
+                "deceasedRange": null,
+                "deceasedDate": null,
+                "deceasedString": null,
+                "note": null,
+                "condition": [{
+                    "type": null,
+                    "outcome": null,
+                    // onset[x]: When condition first manifested. One of these 3:
+                    "onsetAge": null,
+                    "onsetRange": null,
+                    "onsetString": null,
+                    "note": null
+                }]
+            };
+        }
+
+        function setConditionContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updateCondition(resourceVersionId, resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomFamilyHistories(organizationId, organizationName) {
+            var deferred = $q.defer();
+            var birthPlace = [];
+            var mothersMaiden = [];
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
+                .success(function (data) {
+                    angular.forEach(data.results, function (result) {
+                        var user = result.user;
+                        var birthDate = new Date(parseInt(user.dob));
+                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
+                        var resource = {
+                            "resourceType": "Condition",
+                            "name": [{
+                                "family": [$filter('titleCase')(user.name.last)],
+                                "given": [$filter('titleCase')(user.name.first)],
+                                "prefix": [$filter('titleCase')(user.name.title)],
+                                "use": "usual"
+                            }],
+                            "gender": user.gender,
+                            "birthDate": _randomBirthDate(),
+                            "contact": [],
+                            "communication": _randomCommunication(),
+                            "maritalStatus": _randomMaritalStatus(),
+                            "telecom": [
+                                {"system": "email", "value": user.email, "use": "home"},
+                                {"system": "phone", "value": user.cell, "use": "mobile"},
+                                {"system": "phone", "value": user.phone, "use": "home"}],
+                            "address": [{
+                                "line": [$filter('titleCase')(user.location.street)],
+                                "city": $filter('titleCase')(user.location.city),
+                                "state": $filter('abbreviateState')(user.location.state),
+                                "postalCode": user.location.zip,
+                                "use": "home"
+                            }],
+                            "photo": [{"url": user.picture.large}],
+                            "identifier": [
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.4.1",
+                                    "value": user.SSN,
+                                    "use": "secondary",
+                                    "assigner": {"display": "Social Security Administration"}
+                                },
+                                {
+                                    "system": "urn:oid:2.16.840.1.113883.15.18",
+                                    "value": user.registered,
+                                    "use": "official",
+                                    "assigner": {"display": organizationName}
+                                },
+                                {
+                                    "system": "urn:fhir-cloud:condition",
+                                    "value": common.randomHash(),
+                                    "use": "secondary",
+                                    "assigner": {"display": "FHIR Cloud"}
+                                }
+                            ],
+                            "managingOrganization": {
+                                "reference": "Organization/" + organizationId,
+                                "display": organizationName
+                            },
+                            "link": [],
+                            "active": true,
+                            "extension": []
+                        };
+                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomEthnicity());
+                        resource.extension.push(_randomReligion());
+                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
+                        resource.extension.push(_randomBirthPlace(birthPlace));
+
+                        mothersMaiden.push($filter('titleCase')(user.name.last));
+                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
+
+                        var timer = $timeout(function () {
+                        }, 3000);
+                        timer.then(function () {
+                            addCondition(resource).then(function (results) {
+                                logInfo("Created condition " + user.name.first + " " + user.name.last + " at " + (results.headers.location || results.headers["content-location"]), null, false);
+                            }, function (error) {
+                                logError("Failed to create condition " + user.name.first + " " + user.name.last, error, false);
+                            })
+                        })
+                    });
+                    deferred.resolve();
+                })
+                .error(function (error) {
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function _randomMothersMaiden(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/condition-mothersMaidenName",
+                "valueString": ''
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                extension.valueString = array[0];
+            } else {
+                extension.valueString = "Gibson";
+            }
+            return extension;
+        }
+
+        function _randomBirthDate() {
+            var start = new Date(1945, 1, 1);
+            var end = new Date(1995, 12, 31);
+            var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return $filter('date')(randomDob, 'yyyy-MM-dd');
+        }
+
+        function _randomBirthPlace(array) {
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                "valueAddress": null
+            };
+            if (array.length > 0) {
+                common.shuffle(array);
+                var parts = array[0].split(",");
+                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
+            } else {
+                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
+            }
+            return extension;
+        }
+
+        function _randomRace() {
+            var races = localValueSets.race();
+            common.shuffle(races.concept);
+            var race = races.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                "valueCodeableConcept": {"coding": [], "text": race.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": races.system,
+                "code": race.code,
+                "display": race.display
+            });
+            return extension;
+        }
+
+        var allEthnicities = [];
+        var ethnicitySystem = '';
+
+        function _randomEthnicity() {
+            function prepEthnicities() {
+                var ethnicities = localValueSets.ethnicity();
+                ethnicitySystem = ethnicities.system;
+                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
+                    var mainConcept = ethnicities.concept[i];
+                    allEthnicities.push(mainConcept);
+                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
+                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
+                            var groupConcept = mainConcept.concept[j];
+                            allEthnicities.push(groupConcept);
+                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
+                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
+                                    var leafConcept = groupConcept.concept[k];
+                                    allEthnicities.push(leafConcept);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            if (allEthnicities.length === 0) {
+                prepEthnicities();
+            }
+            common.shuffle(allEthnicities);
+            var ethnicity = allEthnicities[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": ethnicitySystem,
+                "code": ethnicity.code,
+                "display": ethnicity.display
+            });
+            return extension;
+        }
+
+        function _randomReligion() {
+            var religions = localValueSets.religion();
+            common.shuffle(religions.concept);
+            var religion = religions.concept[1];
+            var extension = {
+                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                "valueCodeableConcept": {"coding": [], "text": religion.display}
+            };
+            extension.valueCodeableConcept.coding.push({
+                "system": religions.system,
+                "code": religion.code,
+                "display": religion.display
+            });
+            return extension;
+        }
+
+        function _randomCommunication() {
+            var languages = localValueSets.iso6391Languages();
+            common.shuffle(languages);
+
+            var communication = [];
+            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
+            primaryLanguage.language.coding.push({
+                "system": languages[1].system,
+                "code": languages[1].code,
+                "display": languages[1].display
+            });
+            communication.push(primaryLanguage);
+            return communication;
+        }
+
+        function _randomMaritalStatus() {
+            var maritalStatuses = localValueSets.maritalStatus();
+            common.shuffle(maritalStatuses);
+            var maritalStatus = maritalStatuses[1];
+            var concept = {
+                "coding": [], "text": maritalStatus.display
+            };
+            concept.coding.push({
+                "system": maritalStatus.system,
+                "code": maritalStatus.code,
+                "display": maritalStatus.display
+            });
+            return concept;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.photo.length === 0) {
+                resource.photo = null;
+            }
+            if (resource.communication.length === 0) {
+                resource.communication = null;
+            }
+            if (resource.link.length === 0) {
+                resource.link = null;
+            }
+            if (angular.isDefined(resource.maritalStatus)) {
+                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
+                    resource.maritalStatus = null;
+                }
+            }
+            return $q.when(resource);
+        }
+
+        var service = {
+            addCondition: addCondition,
+            clearCache: clearCache,
+            deleteCachedCondition: deleteCachedCondition,
+            deleteCondition: deleteCondition,
+            getCachedCondition: getCachedCondition,
+            getCachedSearchResults: getCachedSearchResults,
+            getCondition: getCondition,
+            getConditionContext: getConditionContext,
+            getConditionReference: getConditionReference,
+            getFamilyHistories: getFamilyHistories,
+            getFamilyHistoriesByLink: getFamilyHistoriesByLink,
+            getConditionEverything: getConditionEverything,
+            initializeNewCondition: initializeNewCondition,
+            setConditionContext: setConditionContext,
+            updateCondition: updateCondition,
+            seedRandomFamilyHistories: seedRandomFamilyHistories,
+            searchFamilyHistories: searchFamilyHistories
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
+        conditionService]);
+})
+();(function () {
+    'use strict';
+
     var controllerId = 'conformanceDetail';
 
     function conformanceDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $scope, common, config, fhirServers, identifierService,
@@ -7136,6 +8419,20 @@
                 vm.encounter = data;
                 //Set encounter data
 
+                if (vm.encounter.patient) {
+                    vm.encounter.patient.display = (vm.encounter.patient.display ? vm.encounter.patient.display : vm.encounter.patient.reference);
+                }
+                if (vm.encounter.episodeOfCare) {
+                    vm.encounter.episodeOfCare.display = (vm.encounter.episodeOfCare.display ? vm.encounter.episodeOfCare.display : vm.encounter.episodeOfCare.reference);
+                }
+                if (vm.encounter.partOf) {
+                    vm.encounter.partOf.display = (vm.encounter.partOf.display ? vm.encounter.partOf.display : vm.encounter.partOf.reference);
+                }
+                if (vm.encounter.serviceProvider) {
+                    vm.encounter.serviceProvider.display = (vm.encounter.serviceProvider.display ? vm.encounter.serviceProvider.display : vm.encounter.serviceProvider.reference);
+                }
+
+
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 }
@@ -7173,6 +8470,17 @@
                 var data = encounterService.initializeNewEncounter();
                 initializeData(data);
                 vm.isEditing = false;
+            } else if (angular.isDefined(vm.lookupKey)) {
+                vm.isBusy = true;
+                encounterService.getCachedEncounter(vm.lookupKey)
+                    .then(function (data) {
+                        initializeData(data);
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
             } else {
                 logError("Unable to resolve encounter lookup");
             }
@@ -7248,7 +8556,7 @@
 
         $scope.$on('server.changed',
             function (event, data) {
-                vm.activeServer = data.activeServer;
+                vm.activeServer = data;
                 logInfo("Remote server changed to " + vm.activeServer.name);
             }
         );
@@ -9098,25 +10406,15 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/consultation');
-                        break;
-                    case 1:
-                        $location.path('/lab');
-                        break;
-                    case 2:
-                        logInfo("Refreshing familyHistory data from " + vm.activeServer.name);
-                        $location.path('/familyHistory/get/' + vm.familyHistory.id);
-                        break;
-                    case 3:
                         $location.path('/familyHistory');
                         break;
-                    case 4:
+                    case 1:
                         $location.path('/familyHistory/edit/current');
                         break;
-                    case 5:
+                    case 2:
                         $location.path('/familyHistory/edit/new');
                         break;
-                    case 6:
+                    case 3:
                         deleteFamilyHistory(vm.familyHistory);
                         break;
                 }
@@ -9124,16 +10422,13 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Vitals', icon: 'vitals', index: 0},
-                        {name: 'Lab', icon: 'lab', index: 1},
-                        {name: 'Refresh data', icon: 'refresh', index: 2},
-                        {name: 'Find another familyHistory', icon: 'person', index: 3},
-                        {name: 'Edit familyHistory', icon: 'edit', index: 4},
-                        {name: 'Add new familyHistory', icon: 'personAdd', index: 5}
+                        {name: 'Find another family history', icon: 'family', index: 0},
+                        {name: 'Edit family history', icon: 'edit', index: 1},
+                        {name: 'Add new family history', icon: 'groupAdd', index: 2}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Find another familyHistory', icon: 'person', index: 3},
+                        {name: 'Find another family history', icon: 'family', index: 0},
                     ];
                 }
                 this.title = 'Family History options';
@@ -9193,12 +10488,12 @@
                 .then(function () {
                     if (angular.isDefined($routeParams.orgId)) {
                         getOrganizationFamilyHistories($routeParams.orgId);
-                        logInfo("Retrieving familyHistories for current organization, please wait...");
+                        logInfo("Retrieving family histories for current organization, please wait...");
                     } else {
                         _loadLocalLookups();
                     }
                 }, function (error) {
-                    logError('Error initializing familyHistory search', error);
+                    logError('Error initializing family history search', error);
                 });
         }
 
@@ -9381,7 +10676,7 @@
                     vm.selectedTab = 1;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError('Error getting familyHistories', error);
+                    logError('Error getting family histories', error);
                     deferred.reject();
                 })
                 .then(deferred.resolve());
@@ -9741,22 +11036,37 @@
 
         function initializeNewFamilyHistory() {
             return {
-                "resourceType": "FamilyHistory",
-                "name": [],
-                "gender": undefined,
-                "birthDate": null,
-                "maritalStatus": undefined,
-                "multipleBirth": false,
-                "telecom": [],
-                "address": [],
-                "photo": [],
-                "communication": [],
-                "managingOrganization": null,
-                "careProvider": [],
-                "contact": [],
-                "link": [],
-                "extension": [],
-                "active": true
+                "resourceType": "FamilyMemberHistory",
+                "identifier": [],
+                "patient": null,
+                "date": null,
+                "name": null,
+                "relationship": null,
+                "gender": null,
+                // born[x]: (approximate) date of birth. One of these 3:
+                "bornPeriod": null,
+                "bornDate": null,
+                "bornString": null,
+                // age[x]: (approximate) age. One of these 3:
+                "ageAge": null,
+                "ageRange": null,
+                "ageString": null,
+                // deceased[x]: Dead? How old/when?. One of these 5:
+                "deceasedBoolean": null,
+                "deceasedAge": null,
+                "deceasedRange": null,
+                "deceasedDate": null,
+                "deceasedString": null,
+                "note": null,
+                "condition": [{
+                    "type": null,
+                    "outcome": null,
+                    // onset[x]: When condition first manifested. One of these 3:
+                    "onsetAge": null,
+                    "onsetRange": null,
+                    "onsetString": null,
+                    "note": null
+                }]
             };
         }
 
@@ -9846,7 +11156,7 @@
                         resource.extension.push(_randomBirthPlace(birthPlace));
 
                         mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' +  $filter('abbreviateState')(user.location.state));
+                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
 
                         var timer = $timeout(function () {
                         }, 3000);

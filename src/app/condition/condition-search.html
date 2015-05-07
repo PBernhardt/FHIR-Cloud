@@ -1,0 +1,21 @@
+﻿<div ng-controller="conditionSearch as vm" layout="row" layout-wrap>
+        <div flex="80">
+            <h3 class="md-title">Condition Quick Find</h3>
+            <md-autocomplete
+                    md-no-cache="true"
+                    md-selected-item-change="vm.goToCondition(vm.selectedCondition)"
+                    md-selected-item="vm.selectedCondition"
+                    md-search-text="vm.searchText"
+                    md-items="condition in vm.quickSearch(vm.searchText)"
+                    md-delay="300"
+                    md-min-length="3"
+                    placeholder="Whose family history are you looking for?">
+              <span md-highlight-text="vm.searchText">{{vm.condition.resource.patient.name | fullName}}</span>
+            </md-autocomplete>
+        </div>
+        <div flex="20">
+            <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+                <md-icon md-svg-icon="actions"></md-icon>
+            </md-button>
+        </div>
+</div>

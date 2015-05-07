@@ -1,80 +1,80 @@
-﻿<div ng-controller="familyHistorySearch as vm" layout="row" layout-wrap>
-    <div flex="90">
-        <h3 class="md-title">Family History Detailed Search</h3>
+﻿<div ng-controller="conditionSearch as vm" layout="column" layout-wrap>
+    <div flex="100">
+        <h3 class="md-title">Condition Detailed Search</h3>
     </div>
-    <div flex="5">
+    <div flex="20">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
-    <div flex="100">
-        <md-tabs md-selected="vm.selectedTab" ng-cloak md-dynamic-height md-border-bottom>
+    <div flex>
+        <md-tabs md-selected="vm.selectedTab" ng-cloak>
             <md-tab label="Search Options">
                 <md-content class="md-padding">
-                    <form name="familyHistorySearch">
+                    <form name="conditionSearch">
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>First Name</label>
-                                <input ng-model="vm.familyHistorySearch.name.given">
+                                <input ng-model="vm.conditionSearch.name.given">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Last Name</label>
-                                <input ng-model="vm.familyHistorySearch.name.family">
+                                <input ng-model="vm.conditionSearch.name.family">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Identifier system</label>
-                                <input ng-model="vm.familyHistorySearch.identifier.system"
+                                <input ng-model="vm.conditionSearch.identifier.system"
                                        placeholder="Should be a valid URI">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Identifier value</label>
-                                <input ng-model="vm.familyHistorySearch.identifier.value">
+                                <input ng-model="vm.conditionSearch.identifier.value">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Managing Organization</label>
-                                <input ng-model="vm.familyHistorySearch.organization"
+                                <input ng-model="vm.conditionSearch.organization"
                                        placeholder="Id of organization">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Care Provider</label>
-                                <input ng-model="vm.familyHistorySearch.careProvider"
-                                       placeholder="Id of practitioner">
+                                <input ng-model="vm.conditionSearch.careProvider"
+                                        placeholder="Id of practitioner">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Street address</label>
-                                <input ng-model="vm.familyHistorySearch.address.street">
+                                <input ng-model="vm.conditionSearch.address.street">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>City</label>
-                                <input ng-model="vm.familyHistorySearch.address.city">
+                                <input ng-model="vm.conditionSearch.address.city">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>State</label>
-                                <input ng-model="vm.familyHistorySearch.address.state">
+                                <input ng-model="vm.conditionSearch.address.state">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Postal code</label>
-                                <input ng-model="vm.familyHistorySearch.address.postalCode">
+                                <input ng-model="vm.conditionSearch.address.postalCode">
                             </md-input-container>
                         </div>
 
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Mother's maiden name</label>
-                                <input ng-model="vm.familyHistorySearch.mothersMaidenName">
+                                <input ng-model="vm.conditionSearch.mothersMaidenName">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Telephone or Email Address</label>
-                                <input ng-model="vm.familyHistorySearch.telecom">
+                                <input ng-model="vm.conditionSearch.telecom">
                             </md-input-container>
                         </div>
 
@@ -82,7 +82,7 @@
                             <div>
                                 <md-input-container flex>
                                     <label>Birth date</label>
-                                    <input ng-model="vm.familyHistorySearch.dob" id="dob" type="date"
+                                    <input ng-model="vm.conditionSearch.dob" id="dob" type="date"
                                            data-ng-change="vm.dobChange()">
                                 </md-input-container>
                             </div>
@@ -90,33 +90,32 @@
                                 <div layout="row" layout-align="space-around center">
                                     <md-input-container>
                                         <label>Starting Age</label>
-                                        <input type="number" min="0" max="99"
-                                               ng-model="vm.familyHistorySearch.age.start"
+                                        <input type="number" min="0" max="99" ng-model="vm.conditionSearch.age.start"
                                                min="0"
                                                aria-controls="age-start"
                                                style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.familyHistorySearch.dob">
+                                               ng-disabled="vm.conditionSearch.dob">
 
                                     </md-input-container>
                                     <md-slider flex class="md-primary" min="0" max="99"
-                                               ng-model="vm.familyHistorySearch.age.start" aria-label="Starting age"
+                                               ng-model="vm.conditionSearch.age.start" aria-label="Starting age"
                                                id="age-start" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.familyHistorySearch.dob">
+                                               ng-disabled="vm.conditionSearch.dob">
                                     </md-slider>
                                 </div>
                                 <div layout="row" layout-align="space-around center">
                                     <md-input-container>
                                         <label>Ending Age</label>
-                                        <input type="number" min="0" max="99" ng-model="vm.familyHistorySearch.age.end"
+                                        <input type="number" min="0" max="99" ng-model="vm.conditionSearch.age.end"
                                                min="1"
                                                aria-controls="age-end"
                                                style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.familyHistorySearch.dob">
+                                               ng-disabled="vm.conditionSearch.dob">
                                     </md-input-container>
-                                    <md-slider flex min="0" max="99" ng-model="vm.familyHistorySearch.age.end"
+                                    <md-slider flex min="0" max="99" ng-model="vm.conditionSearch.age.end"
                                                aria-label="Ending age"
                                                id="age-end" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.familyHistorySearch.dob">
+                                               ng-disabled="vm.conditionSearch.dob">
                                     </md-slider>
                                 </div>
                             </div>
@@ -124,7 +123,7 @@
 
                         <div layout-gt-md="row" layout-align="space-between center">
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.familyHistorySearch.gender" style="min-width: 100px;">
+                                <md-select ng-model="vm.conditionSearch.gender" style="min-width: 100px;">
                                     <md-option value="female">Female</md-option>
                                     <md-option value="male">Male</md-option>
                                     <md-option value="other">Other</md-option>
@@ -134,7 +133,7 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.familyHistorySearch.language">
+                                <md-select ng-model="vm.conditionSearch.language">
                                     <md-option ng-value="language" ng-repeat="language in vm.languages">
                                         {{language.display}}
                                     </md-option>
@@ -143,13 +142,13 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.familyHistorySearch.race">
+                                <md-select ng-model="vm.conditionSearch.race">
                                     <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
                                 </md-select>
                                 <p class="result">Race</p>
                             </div>
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.familyHistorySearch.ethnicity"
+                                <md-select ng-model="vm.conditionSearch.ethnicity"
                                            style="min-width: 200px;">
                                     <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
                                         <md-option ng-value="main">{{main.display}}</md-option>
@@ -182,11 +181,9 @@
                                     <img fs-img-person="p.resource.photo[0]" class="face" alt="{{p.name}}">
                                 </div>
                                 <div class="md-tile-content">
-                                    <md-button data-ng-click="vm.goToFamilyHistory(p)">{{p.resource.name | fullName}}
+                                    <md-button data-ng-click="vm.goToCondition(p)">{{p.resource.name | fullName}}
                                     </md-button>
-                                    <p>{{p.resource.birthDate | displayAge }}
-                                        <fc-gender-icon gender="p.resource.gender"></fc-gender-icon>
-                                    </p>
+                                    <p>{{p.resource.birthDate | displayAge }} <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></p>
                                     <p>{{p.resource.managingOrganization.display ||
                                         p.resource.managingOrganization.reference || "No Organization"}}</p>
                                 </div>

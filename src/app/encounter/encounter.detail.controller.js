@@ -82,6 +82,20 @@
                 vm.encounter = data;
                 //Set encounter data
 
+                if (vm.encounter.patient) {
+                    vm.encounter.patient.display = (vm.encounter.patient.display ? vm.encounter.patient.display : vm.encounter.patient.reference);
+                }
+                if (vm.encounter.episodeOfCare) {
+                    vm.encounter.episodeOfCare.display = (vm.encounter.episodeOfCare.display ? vm.encounter.episodeOfCare.display : vm.encounter.episodeOfCare.reference);
+                }
+                if (vm.encounter.partOf) {
+                    vm.encounter.partOf.display = (vm.encounter.partOf.display ? vm.encounter.partOf.display : vm.encounter.partOf.reference);
+                }
+                if (vm.encounter.serviceProvider) {
+                    vm.encounter.serviceProvider.display = (vm.encounter.serviceProvider.display ? vm.encounter.serviceProvider.display : vm.encounter.serviceProvider.reference);
+                }
+
+
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.encounter = JSON.stringify(vm.encounter);
                 }
@@ -119,6 +133,17 @@
                 var data = encounterService.initializeNewEncounter();
                 initializeData(data);
                 vm.isEditing = false;
+            } else if (angular.isDefined(vm.lookupKey)) {
+                vm.isBusy = true;
+                encounterService.getCachedEncounter(vm.lookupKey)
+                    .then(function (data) {
+                        initializeData(data);
+                    }, function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    })
+                    .then(function () {
+                        vm.isBusy = false;
+                    });
             } else {
                 logError("Unable to resolve encounter lookup");
             }
@@ -194,7 +219,7 @@
 
         $scope.$on('server.changed',
             function (event, data) {
-                vm.activeServer = data.activeServer;
+                vm.activeServer = data;
                 logInfo("Remote server changed to " + vm.activeServer.name);
             }
         );

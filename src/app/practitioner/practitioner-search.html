@@ -1,23 +1,26 @@
 ﻿<div ng-controller="practitionerSearch as vm" layout="row" layout-wrap ng-cloak>
-        <div flex="80">
-            <h3 class="md-title">Practitioner Quick Find</h3>
-            <md-autocomplete
-                    md-no-cache="true"
-                    md-selected-item-change="vm.goToPractitioner(vm.selectedPractitioner)"
-                    md-selected-item="vm.selectedPractitioner"
-                    md-search-text="vm.searchText"
-                    md-items="practitioner in vm.quickSearch(vm.searchText)"
-                    md-delay="300"
-                    md-min-length="3"
-                    placeholder="What practitioner are you looking for?">
-              <span md-highlight-text="vm.searchText">{{practitioner.resource.name | fullName}}</span>
-            </md-autocomplete>
-        </div>
-        <div flex="20">
-            <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
-                <md-icon md-svg-icon="actions"></md-icon>
-            </md-button>
-        </div>
+    <div flex="90">
+        <h3 class="md-title">Practitioner Quick Find</h3>
+        <md-autocomplete
+                md-no-cache="true"
+                md-selected-item-change="vm.goToPractitioner(vm.selectedPractitioner)"
+                md-selected-item="vm.selectedPractitioner"
+                md-search-text="vm.searchText"
+                md-items="practitioner in vm.quickSearch(vm.searchText)"
+                md-delay="300"
+                md-min-length="3"
+                placeholder="What practitioner are you looking for?">
+            <span md-highlight-text="vm.searchText">{{practitioner.resource.name | fullName}}</span>
+        </md-autocomplete>
+    </div>
+    <div flex="5">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div ng-if="vm.noresults" style="position: relative; top:30px">
+        <md-subheader class="md-warn">No matches for "{{vm.searchText}}"</md-subheader>
+    </div>
 </div>
 
 

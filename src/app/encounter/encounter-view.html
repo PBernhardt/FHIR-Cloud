@@ -1,11 +1,11 @@
 <div ng-controller="encounterDetail as vm" layout="row" layout-wrap ng-cloak>
     <div flex="25" hide-sm>
-        <img data-fs-img-person="vm.encounter.photo[0]" class="largeFace" ng-if="vm.isBusy === false"/>
+        <img data-fs-img-person="vm.encounter.patient.photo[0]" class="largeFace" ng-if="vm.isBusy === false"/>
     </div>
     <div flex="65" layout="row" layout-align="start center">
-        <h3 ng-if="vm.isBusy === false">{{ vm.encounter.name | fullName }}</h3>
+        <h3 ng-if="vm.isBusy === false">{{ vm.encounter.patient.name | fullName }}</h3>
     </div>
-    <div flex="10">
+    <div flex="9">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
@@ -14,219 +14,151 @@
         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
     </div>
     <div flex="100" ng-if="vm.isBusy === false">
-        <md-tabs md-selected="selectedIndex">
-            <md-tab label="Administration Detail">
-                <div flex="100" class="table-responsive-vertical shadow-z-1">
-                    <table id="encounterView" class="table table-hover table-mc-blue">
-                        <tr ng-if="vm.encounter.resourceId">
-                            <td>Resource Id</td>
-                            <td>
-                                {{vm.encounter.resourceId}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.name">
-                            <td>Name</td>
-                            <td>{{vm.encounter.name | fullName }}</td>
-                        </tr>
-                        <tr ng-if="vm.encounter.birthDate">
-                            <td>Date of Birth</td>
-                            <td>
-                                {{vm.encounter.birthDate | date: longDate}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.birthPlace">
-                            <td>Birth Place</td>
-                            <td>
-                                {{vm.encounter.birthPlace | singleLineAddress}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.gender">
-                            <td>Gender</td>
-                            <td>
-                                {{vm.encounter.gender}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.address">
-                            <td>Address</td>
-                            <td>
-                                <p class="small" ng-repeat="a in vm.encounter.address">
-                                    <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.telecom">
-                            <td>Telecommunication</td>
-                            <td>
-                                <p class="small" ng-repeat="t in vm.encounter.telecom">
-                                    <strong>{{t.use}} {{t.system}}</strong>: {{t.value}}
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.contact">
-                            <td>Contact</td>
-                            <td>
-                                <p class="small" ng-repeat="c in vm.encounter.contact">
-                                    {{c.name.given.join(' ')}} {{c.name.family.join(' ')}}
-                                    ({{c.relationship.text || "relationship unspecified"}})
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.link">
-                            <td>Links</td>
-                            <td>
-                                <div ng-repeat="l in vm.encounter.link">
-                                    <a href="{{l.other.reference}}">{{l.other.type || "Link Type Unspecified"}}</a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.communication">
-                            <td>Languages</td>
-                            <td>
-                                <div ng-if="vm.encounter.communication">
-                                    <p class="small" ng-repeat="l in vm.encounter.communication">
-                                        {{l.language | codeableConcept}}<br/>
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.ethnicity">
-                            <td>Ethnicity</td>
-                            <td>
-                                {{vm.encounter.ethnicity | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.race">
-                            <td>Race</td>
-                            <td>
-                                {{vm.encounter.race | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.religion">
-                            <td>Religion</td>
-                            <td>
-                                {{vm.encounter.religion | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.maritalStatus">
-                            <td>Marital Status</td>
-                            <td>
-                                {{vm.encounter.maritalStatus | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.mothersMaidenName">
-                            <td>Mother's Maiden Name</td>
-                            <td>
-                                {{vm.encounter.mothersMaidenName}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.multipleBirthInteger || vm.encounter.multipleBirthBoolean">
-                            <td>Multiple Birth</td>
-                            <td>
-                                {{vm.encounter.multipleBirthInteger || vm.encounter.multipleBirthBoolean}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.deceasedDateTime || vm.encounter.deceasedBoolean">
-                            <td>Deceased</td>
-                            <td>
-                                {{vm.encounter.deceasedDateTime || vm.encounter.deceasedBoolean}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.managingOrganization">
-                            <td>Managing Organization</td>
-                            <td>
-                                <a ng-href="#/organization/get/{{vm.encounter.managingOrganization.reference | idFromURL }}">{{vm.encounter.managingOrganization.display}}</a>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.careProvider">
-                            <td>Care Provider</td>
-                            <td>
-                                <p ng-repeat="cp in vm.encounter.careProvider">
-                                    <a ng-href="#/practitioner/get/{{cp.reference | idFromURL }}">{{cp.display}}</a>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-show="vm.encounter.identifier">
-                            <td>Identifiers</td>
-                            <td>
-                                <table class="table table-hover">
-                                    <thead>
-                                    <tr>
-                                        <th>System</th>
-                                        <th>Value</th>
-                                        <th>Use</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr ng-repeat="id in vm.encounter.identifier">
-                                        <td>{{id.system}}</td>
-                                        <td>{{id.value}}</td>
-                                        <td>{{id.use}}</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.encounter.active">
-                            <td>Active</td>
-                            <td>
-                                {{vm.encounter.active}}
-                            </td>
-                        </tr>
-                    </table>
+        <md-tabs md-selected="selectedIndex" md-dynamic-height>
+            <md-tab label="Overview">
+                <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between end"
+                     ng-if="vm.encounter"
+                     layout-wrap style="position: relative; top:15px">
+                    <md-input-container flex="100" class="md-icon-float" ng-if="vm.encounter.resourceId">
+                        <label>Resource Id</label>
+                        <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
+                        <input ng-model="vm.encounter.resourceId" ng-readonly/>
+                    </md-input-container>
+
+
+                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.encounter.patient">
+                        <label>Patient</label>
+                        <md-icon md-svg-icon="person"
+                                 ng-click="vm.goToPatient(vm.encounter.patient)"></md-icon>
+                        <input ng-model="vm.encounter.patient.display" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.class">
+                        <label>Class</label>
+                        <input ng-model="vm.encounter.class" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.status">
+                        <label>Status</label>
+                        <input ng-model="vm.encounter.status" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.type">
+                        <label>Type</label>
+                        <input ng-model="vm.encounter.type.text" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.encounter.episodeOfCare">
+                        <label>Episode of Care</label>
+                        <md-icon md-svg-icon="hospital"
+                                 ng-click="vm.goToPatient(vm.encounter.episodeOfCare)"></md-icon>
+                        <input ng-model="vm.encounter.episodeOfCare.display" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.encounter.serviceProvider">
+                        <label>Service Provider</label>
+                        <md-icon md-svg-icon="hospital"
+                                 ng-click="vm.goToPatient(vm.encounter.serviceProvider)"></md-icon>
+                        <input ng-model="vm.encounter.serviceProvider.display" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.encounter.partOf">
+                        <label>Related Encounter</label>
+                        <md-icon md-svg-icon="hospital"
+                                 ng-click="vm.goToPatient(vm.encounter.partOf)"></md-icon>
+                        <input ng-model="vm.encounter.episodeOfCare.display" ng-readonly="true"/>
+                    </md-input-container>
+
                 </div>
             </md-tab>
-            <md-tab label="Clinical Summary">
-                <md-list>
-                    <md-item ng-repeat="item in vm.summary">
-                        <md-item-content md-is-locked-open="true">
-                            <div class="md-tile-left">
-                                <md-button layout-align="start start"
-                                           ng-click="vm.showClinicalData($index, $event)"
-                                           aria-label="{{item.resource.id}}">
-                                    <md-icon md-svg-src="view"></md-icon>
-                                </md-button>
-                            </div>
-                            <div class="md-tile-content">
-                                <div ng-hide="item.resource.code && item.resource.code.text">
-                                    <h4>{{ item.resource.resourceType }}</h4>
-                                </div>
-                                <div ng-show="item.resource.code && item.resource.code.text">
-                                    <h4>{{ item.resource.code.text }}</h4>
-                                </div>
-                                <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
-                                </div>
-                                <div ng-show="item.resource.emptyReason.text">
-                                    <p> {{ item.resource.emptyReason.text }}</p>
-                                </div>
-                                <div ng-show="item.resource.appliesDateTime">
-                                    <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
-                                </div>
-                            </div>
-                        </md-item-content>
-                        <md-divider ng-if="!$last"></md-divider>
-                    </md-item>
+
+            <md-tab label="Participants" ng-if="vm.encounter.participant">
+
+            </md-tab>
+
+            <md-tab label="Indications" ng-if="vm.encounter.indication">
+                <md-list flex="100">
+                    <md-list-item class="md-1-line" ng-repeat="i in vm.encounter.indication">
+                        <md-icon md-svg-icon="rx" ng-if="$index === 0"></md-icon>
+                        <p>{{i.display ? i.display : i.reference}}</p>
+                        <md-divider ng-if="$last"></md-divider>
+                    </md-list-item>
                 </md-list>
             </md-tab>
-            <md-tab label="Audit History">
-                <md-list>
-                    <md-item ng-repeat="ev in vm.history">
-                        <md-item-content>
-                            <div class="md-tile-left">
-                                <md-button
-                                        ng-click="vm.showAuditData($index, $event)"
-                                        aria-label="{{ev.resource.id}}">
-                                    <md-icon md-svg-src="view"></md-icon>
-                                </md-button>
-                            </div>
-                            <div class="md-tile-content">
-                                <h3>{{ev.resource.event.dateTime | date: 'medium'}}</h3>
-                                <h4>{{ev.resource.event.subtype[0].coding[0].display}}</h4>
 
-                                <p ng-repeat="p in ev.resource.participant">{{p.name}}
-                            </div>
-                        </md-item-content>
-                        <md-divider ng-if="!$last"></md-divider>
-                    </md-item>
+            <md-tab label="Hospitalization" ng-if="vm.encounter.hospitalization">
+                <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between end"
+                     layout-wrap style="position: relative; top:15px">
+                    <md-input-container flex="15" ng-if="(angular.isDefined(vm.encounter.hospitalization.reAdmission))">
+                        <label>Readmission</label>
+                        <input ng-model="vm.encounter.hospitalization.reAdmission" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="25" ng-if="vm.encounter.hospitalization.preAdmissionIdentifier">
+                        <label>Pre-Admission Identifier</label>
+                        <input ng-model="vm.encounter.hospitalization.preAdmissionIdentifier" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.hospitalization.admitSource">
+                        <label>Admit Source</label>
+                        <input ng-model="vm.encounter.hospitalization.admitSource.text" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.hospitalization.dietPreference">
+                        <label>Diet Preference</label>
+                        <input ng-model="vm.encounter.hospitalization.dietPreference.text" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.hospitalization.specialCourtesy">
+                        <label>Special Courtesy</label>
+                        <input ng-model="vm.encounter.hospitalization.specialCourtesy.text" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.hospitalization.specialArrangement">
+                        <label>Special Arrangement</label>
+                        <input ng-model="vm.encounter.hospitalization.specialArrangement.text" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="15" ng-if="vm.encounter.hospitalization.dischargeDisposition">
+                        <label>Discharge Disposition</label>
+                        <input ng-model="vm.encounter.hospitalization.dischargeDisposition.text" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="60" class="md-icon-float"
+                                        ng-if="vm.encounter.hospitalization.dischargeDiagnosis">
+                        <label>Discharge Diagnosis</label>
+                        <md-icon md-svg-icon="rx"
+                                 ng-click="vm.goToPatient(vm.encounter.hospitalization.dischargeDiagnosis)"></md-icon>
+                        <input ng-model="vm.encounter.hospitalization.dischargeDiagnosis.display" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.encounter.hospitalization.origin">
+                        <label>Origin</label>
+                        <md-icon md-svg-icon="hospital"
+                                 ng-click="vm.goToPatient(vm.encounter.hospitalization.origin)"></md-icon>
+                        <input ng-model="vm.encounter.hospitalization.origin.display" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="60" class="md-icon-float"
+                                        ng-if="vm.encounter.hospitalization.destination">
+                        <label>Destination</label>
+                        <md-icon md-svg-icon="hospital"
+                                 ng-click="vm.goToPatient(vm.encounter.hospitalization.destination)"></md-icon>
+                        <input ng-model="vm.encounter.hospitalization.destination.display" ng-readonly="true"/>
+                    </md-input-container>
+                </div>
+            </md-tab>
+            <md-tab label="Status History" ng-if="vm.encounter.statusHistory">
+                <md-list flex="100">
+                    <md-list-item class="md-2-line" ng-repeat="sh in vm.encounter.statusHistory">
+                        <md-icon md-svg-icon="person" ng-if="$index === 0"></md-icon>
+                        <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                            <h3> {{ sh.status }} </h3>
+
+                            <p>{{sh.period.start}} - {{sh.period.end}}</p>
+                        </div>
+                        <md-divider ng-if="$last"></md-divider>
+                    </md-list-item>
                 </md-list>
             </md-tab>
         </md-tabs>

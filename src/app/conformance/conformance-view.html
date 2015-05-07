@@ -125,7 +125,30 @@
             </md-tab>
 
             <md-tab label="Security">
+                <md-list flex="100" ng-if="vm.conformance.rest">
 
+                    <md-input-container flex="40" ng-if="vm.conformance.rest[0].security.description">
+                        <label>Description</label>
+                        <input ng-model="vm.conformance.rest[0].security.description" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-input-container flex="20">
+                        <label>CORS</label>
+                        <input ng-model="vm.conformance.rest[0].security.cors" ng-readonly="true"/>
+                    </md-input-container>
+
+                    <md-list-item class="md-2-line" ng-click="vm.showResource($event, item)"
+                                  ng-repeat="ext in vm.conformance.rest[0].security.extension">
+                        <md-icon md-svg-icon="openId"></md-icon>
+                        <div class="md-list-item-text">
+                            <h3>{{ext.url}} </h3>
+
+                            <p>{{ext.valueUri}}</p>
+                        </div>
+
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-list-item>
+                </md-list>
             </md-tab>
             <md-tab label="Resources">
                 <md-list flex="100" ng-if="vm.conformance.rest">

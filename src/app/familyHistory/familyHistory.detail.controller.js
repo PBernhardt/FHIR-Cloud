@@ -307,25 +307,15 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/consultation');
-                        break;
-                    case 1:
-                        $location.path('/lab');
-                        break;
-                    case 2:
-                        logInfo("Refreshing familyHistory data from " + vm.activeServer.name);
-                        $location.path('/familyHistory/get/' + vm.familyHistory.id);
-                        break;
-                    case 3:
                         $location.path('/familyHistory');
                         break;
-                    case 4:
+                    case 1:
                         $location.path('/familyHistory/edit/current');
                         break;
-                    case 5:
+                    case 2:
                         $location.path('/familyHistory/edit/new');
                         break;
-                    case 6:
+                    case 3:
                         deleteFamilyHistory(vm.familyHistory);
                         break;
                 }
@@ -333,16 +323,13 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Vitals', icon: 'vitals', index: 0},
-                        {name: 'Lab', icon: 'lab', index: 1},
-                        {name: 'Refresh data', icon: 'refresh', index: 2},
-                        {name: 'Find another familyHistory', icon: 'person', index: 3},
-                        {name: 'Edit familyHistory', icon: 'edit', index: 4},
-                        {name: 'Add new familyHistory', icon: 'personAdd', index: 5}
+                        {name: 'Find another family history', icon: 'family', index: 0},
+                        {name: 'Edit family history', icon: 'edit', index: 1},
+                        {name: 'Add new family history', icon: 'groupAdd', index: 2}
                     ];
                 } else {
                     this.items = [
-                        {name: 'Find another familyHistory', icon: 'person', index: 3},
+                        {name: 'Find another family history', icon: 'family', index: 0},
                     ];
                 }
                 this.title = 'Family History options';
