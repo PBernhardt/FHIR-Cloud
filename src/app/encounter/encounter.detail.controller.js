@@ -22,6 +22,7 @@
                 .then(function () {
                     _getRequestedEncounter();
                     _getPatientContext();
+                    _loadEncounterValueSets();
                 });
         }
 
@@ -56,6 +57,18 @@
             if (encounter && encounter.hashKey) {
                 $location.path('/encounter/' + encounter.hashKey);
             }
+        }
+
+        function _loadEncounterValueSets() {
+            vm.statuses = encounterValueSets.encounterState();
+            vm.classes = encounterValueSets.encounterClass();
+            vm.types = encounterValueSets.encounterType();
+            vm.priorities = encounterValueSets.encounterPriority();
+            vm.specialArrangements = encounterValueSets.encounterSpecialArrangement();
+            vm.participantTypes = encounterValueSets.encounterParticipantType();
+            vm.dietPreferences = encounterValueSets.encounterDietPreference();
+            vm.admitSources = encounterValueSets.encounterAdmitSource();
+            vm.specialCourtesies = encounterValueSets.encounterSpecialCourtesy();
         }
 
         function _getActiveServer() {
@@ -94,7 +107,6 @@
                 if (vm.encounter.serviceProvider) {
                     vm.encounter.serviceProvider.display = (vm.encounter.serviceProvider.display ? vm.encounter.serviceProvider.display : vm.encounter.serviceProvider.reference);
                 }
-
 
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.encounter = JSON.stringify(vm.encounter);

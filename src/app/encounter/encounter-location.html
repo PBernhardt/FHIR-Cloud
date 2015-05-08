@@ -1,0 +1,28 @@
+<div ng-controller="encounterLocation as vm" layout="row" layout-sm="column">
+    <div flex="50">
+        <md-content class="md-padding">
+            <md-divider>
+                <div ng-if="vm.practitioners.length > 0">
+                    <md-subheader>Locations</md-subheader>
+                    <md-list>
+                        <md-item ng-repeat="dr in vm.practitioners track by $index">
+                            <md-item-content>
+                                <div class="md-tile-left">
+                                    <md-button ng-click="vm.removeFromPractitionerList(dr)" aria-label="Remove from list">
+                                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
+                                    </md-button>
+                                </div>
+                                <div class="md-tile-content">
+                                    <h3>{{::dr.display}}</h3>
+
+                                    <p>{{::dr.reference}}</p>
+                                </div>
+                            </md-item-content>
+                        </md-item>
+                    </md-list>
+                </div>
+            </md-divider>
+        </md-content>
+    </div>
+
+</div>

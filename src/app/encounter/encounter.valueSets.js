@@ -115,31 +115,38 @@
                 "concept": [
                     {
                         "code": "vegetarian",
-                        "definition": "Food without meat, poultry or seafood"
+                        "definition": "Food without meat, poultry or seafood",
+                        "display": "Vegetarian"
                     },
                     {
                         "code": "dairy-free",
-                        "definition": "Exludes dairy products"
+                        "definition": "Exludes dairy products",
+                        "display": "Dairy-free"
                     },
                     {
                         "code": "nut-free",
-                        "definition": "Excludes ingredients containing nuts"
+                        "definition": "Excludes ingredients containing nuts",
+                        "display": "Nut-free"
                     },
                     {
                         "code": "gluten-free",
-                        "definition": "Excludes ingredients containing gluten"
+                        "definition": "Excludes ingredients containing gluten",
+                        "display": "Gluten-free"
                     },
                     {
                         "code": "vegan",
-                        "definition": "Food without meat, poultry, seafood, eggs, dairy products and other animal-derived substances"
+                        "definition": "Food without meat, poultry, seafood, eggs, dairy products and other animal-derived substances",
+                        "display": "Vegan"
                     },
                     {
                         "code": "halal",
-                        "definition": "Foods that conform to Islamic law"
+                        "definition": "Foods that conform to Islamic law",
+                        "display": "Halal"
                     },
                     {
                         "code": "kosher",
-                        "definition": "foods that conform to Jewish dietary law"
+                        "definition": "foods that conform to Jewish dietary law",
+                        "display": "Kosher"
                     }
                 ]
             };

@@ -8338,6 +8338,184 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'encounterLocation';
+
+    function encounterLocation(common, fhirServers, organizationReferenceService, practitionerReferenceService, encounterLocationService) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var noToast = false;
+        var $q = common.$q;
+
+        function activate() {
+            common.activateController([getActiveServer(), initializeReferences()], controllerId).then(function () {
+            });
+        }
+        vm.activate = activate;
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function initializeReferences()
+        {
+            var encounterLocations = encounterLocationService.getAll();
+            for (var i = 0, len = encounterLocations.length; i < len; i++) {
+                var item = encounterLocations[i];
+                if (item.reference.indexOf('Practitioner/') !== -1) {
+                    practitionerReferenceService.add(item);
+                } else {
+                    organizationReferenceService.add(item);
+                }
+            }
+            vm.practitioners = practitionerReferenceService.getAll();
+            vm.organizations = organizationReferenceService.getAll();
+        }
+
+        function getOrganizationReference(input) {
+            var deferred = $q.defer();
+            organizationReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getOrganizationReference = getOrganizationReference;
+
+        function addToOrganizationList(organization) {
+            if (organization) {
+                organizationReferenceService.add(organization);
+                vm.organizations = organizationReferenceService.getAll();
+                encounterLocationService.add(organization);
+            }
+        }
+
+        vm.addToOrganizationList = addToOrganizationList;
+
+        function removeFromOrganizationList(organization) {
+            organizationReferenceService.remove(organization);
+            vm.organizations = organizationReferenceService.getAll();
+            encounterLocationService.remove(organization);
+        }
+
+        vm.removeFromOrganizationList = removeFromOrganizationList;
+
+        function getPractitionerReference(input) {
+            var deferred = $q.defer();
+            practitionerReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getPractitionerReference = getPractitionerReference;
+
+        function addToPractitionerList(practitioner) {
+            if (practitioner) {
+                practitionerReferenceService.add(practitioner);
+                vm.practitioners = practitionerReferenceService.getAll();
+                encounterLocationService.add(practitioner);
+            }
+        }
+
+        vm.addToPractitionerList = addToPractitionerList;
+
+        function removeFromPractitionerList(practitioner) {
+            practitionerReferenceService.remove(practitioner);
+            vm.practitioners = practitionerReferenceService.getAll();
+            encounterLocationService.remove(practitioner);
+        }
+
+        vm.removeFromPractitionerList = removeFromPractitionerList;
+
+        vm.activeServer = null;
+        vm.organizations = [];
+        vm.organizationSearchText = '';
+        vm.practitioners = [];
+        vm.practitionerSearchText = '';
+        vm.selectedOrganization = null;
+        vm.selectedPractitioner = null;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['common', 'fhirServers', 'organizationReferenceService', 'practitionerReferenceService', 'encounterLocationService', encounterLocation]);
+})();(function () {
+    'use strict';
+
+    var serviceId = 'encounterLocationService';
+
+    function encounterLocationService(common) {
+        var encounterLocations = [];
+
+        function add(item) {
+            var index = getIndex(item.$$hashKey);
+            if (index > -1) {
+                encounterLocations[index] = item;
+            } else {
+                encounterLocations.push(item);
+            }
+        }
+
+        function getAll() {
+            return _.compact(encounterLocations);
+        }
+
+        function getIndex(hashKey) {
+            if (angular.isUndefined(hashKey) === false) {
+                for (var i = 0, len = encounterLocations.length; i < len; i++) {
+                    if (encounterLocations[i].$$hashKey === hashKey) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        function init(items) {
+            if (angular.isArray(items)) {
+                encounterLocations = items;
+            } else if (angular.isObject(items)) {
+                encounterLocations = [];
+                encounterLocations.push(items);
+            }
+            return encounterLocations;
+        }
+
+        function remove(item) {
+            var index = getIndex(item.$$hashKey);
+            encounterLocations.splice(index, 1);
+        }
+
+        var service = {
+            add: add,
+            remove: remove,
+            getAll: getAll,
+            init: init
+        };
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['common', encounterLocationService]);
+
+})();(function () {
+    'use strict';
+
     var controllerId = 'encounterDetail';
 
     function encounterDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
@@ -8359,6 +8537,7 @@
                 .then(function () {
                     _getRequestedEncounter();
                     _getPatientContext();
+                    _loadEncounterValueSets();
                 });
         }
 
@@ -8393,6 +8572,18 @@
             if (encounter && encounter.hashKey) {
                 $location.path('/encounter/' + encounter.hashKey);
             }
+        }
+
+        function _loadEncounterValueSets() {
+            vm.statuses = encounterValueSets.encounterState();
+            vm.classes = encounterValueSets.encounterClass();
+            vm.types = encounterValueSets.encounterType();
+            vm.priorities = encounterValueSets.encounterPriority();
+            vm.specialArrangements = encounterValueSets.encounterSpecialArrangement();
+            vm.participantTypes = encounterValueSets.encounterParticipantType();
+            vm.dietPreferences = encounterValueSets.encounterDietPreference();
+            vm.admitSources = encounterValueSets.encounterAdmitSource();
+            vm.specialCourtesies = encounterValueSets.encounterSpecialCourtesy();
         }
 
         function _getActiveServer() {
@@ -8431,7 +8622,6 @@
                 if (vm.encounter.serviceProvider) {
                     vm.encounter.serviceProvider.display = (vm.encounter.serviceProvider.display ? vm.encounter.serviceProvider.display : vm.encounter.serviceProvider.reference);
                 }
-
 
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.encounter = JSON.stringify(vm.encounter);
@@ -9289,31 +9479,38 @@
                 "concept": [
                     {
                         "code": "vegetarian",
-                        "definition": "Food without meat, poultry or seafood"
+                        "definition": "Food without meat, poultry or seafood",
+                        "display": "Vegetarian"
                     },
                     {
                         "code": "dairy-free",
-                        "definition": "Exludes dairy products"
+                        "definition": "Exludes dairy products",
+                        "display": "Dairy-free"
                     },
                     {
                         "code": "nut-free",
-                        "definition": "Excludes ingredients containing nuts"
+                        "definition": "Excludes ingredients containing nuts",
+                        "display": "Nut-free"
                     },
                     {
                         "code": "gluten-free",
-                        "definition": "Excludes ingredients containing gluten"
+                        "definition": "Excludes ingredients containing gluten",
+                        "display": "Gluten-free"
                     },
                     {
                         "code": "vegan",
-                        "definition": "Food without meat, poultry, seafood, eggs, dairy products and other animal-derived substances"
+                        "definition": "Food without meat, poultry, seafood, eggs, dairy products and other animal-derived substances",
+                        "display": "Vegan"
                     },
                     {
                         "code": "halal",
-                        "definition": "Foods that conform to Islamic law"
+                        "definition": "Foods that conform to Islamic law",
+                        "display": "Halal"
                     },
                     {
                         "code": "kosher",
-                        "definition": "foods that conform to Jewish dietary law"
+                        "definition": "foods that conform to Jewish dietary law",
+                        "display": "Kosher"
                     }
                 ]
             };

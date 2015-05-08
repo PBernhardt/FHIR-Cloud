@@ -13,30 +13,178 @@
         <form name="encounterEditForm" class="form-horizontal"
               ng-model="vm.encounter">
             <md-tabs md-dynamic-height>
-                <md-tab label="Status">
-                    <div ng-include="'elements/humanName/humanName.html'"></div>
+                <md-tab label="Overview">
+                    <div layout="row" layout-sm="column" layout-align="space-between center" layout-wrap>
+                        <md-input-container flex="15">
+                            <label>Start Date</label>
+                            <input ng-model="vm.encounter.period.start" type="date">
+                        </md-input-container>
+                        <md-input-container flex="15">
+                            <label>End Date</label>
+                            <input ng-model="vm.encounter.period.end" type="date">
+                        </md-input-container>
+                        <md-input-container flex="20">
+                            <label>Length in Days</label>
+                            <input ng-model="vm.encounter.length" type="number" min="1">
+                        </md-input-container>
+
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.status" style="min-width: 100px;">
+                                <md-option ng-value="status" ng-repeat="status in vm.statuses.concept">
+                                    {{status.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Status</p>
+                        </div>
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.type" style="min-width: 100px;">
+                                <md-option ng-value="type" ng-repeat="type in vm.types.concept">
+                                    {{type.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Type</p>
+                        </div>
+
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.reason" style="min-width: 100px;">
+
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Reason</p>
+                        </div>
+
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="25">
+                            <md-select ng-model="vm.encounter.specialArrangement" style="min-width: 100px;">
+                                <md-option ng-value="sa" ng-repeat="sa in vm.specialArrangements.concept">
+                                    {{sa.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Special Arrangement</p>
+                        </div>
+
+                        <md-autocomplete flex="30"
+                                         md-selected-item="vm.encounter.practitioner"
+                                         md-search-text="vm.searchCareProviderText"
+                                         md-items="dr in vm.getPractitionerReference(vm.searchCareProviderText)"
+                                         md-delay="200"
+                                         md-item-text="dr.display"
+                                         md-min-length="3"
+                                         placeholder="Who is the care provider?">
+                            <span md-highlight-text="vm.searchCareProviderText">{{dr.display}}</span>
+                        </md-autocomplete>
+
+                        <md-input-container flex="30">
+                            <label>Appointment Fulfilled</label>
+                            <input ng-model="vm.encounter.fulfills">
+                        </md-input-container>
+
+                        <md-input-container flex="30">
+                            <label>Episode of Care</label>
+                            <input ng-model="vm.encounter.episodeOfCare">
+                        </md-input-container>
+
+                        <md-input-container flex="30">
+                            <label>Incoming Referral</label>
+                            <input ng-model="vm.encounter.incomingReferral">
+                        </md-input-container>
+
+                        <md-input-container flex="30">
+                            <label>Related Encounter</label>
+                            <input ng-model="vm.encounter.partOf">
+                        </md-input-container>
+
+                        <md-input-container flex="30">
+                            <label>Indication</label>
+                            <input ng-model="vm.encounter.indication">
+                        </md-input-container>
+                    </div>
                 </md-tab>
                 <md-tab label="Hospitalization">
-                    <div layout-gt-lg="row" layout-align="space-between center" layout-wrap>
-                        <md-input-container flex>
+                    <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between end"
+                         layout-wrap style="position: relative; top:15px">
+
+                        <md-input-container flex="50">
                             <label>Pre-Admission Identifier</label>
-                            <input ng-model="vm.encounter.hospitalization.preAdmissionIdentifier">
+                            <input ng-model="vm.encounter.hospitalization.preAdmissionIdentifier"/>
                         </md-input-container>
 
-                        <md-input-container flex>
-                            <label>Birth order</label>
-                            <input ng-model="vm.demographics.birthOrder" id="order" type="number">
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.hospitalization.admitSource" style="min-width: 100px;">
+                                <md-option ng-value="status" ng-repeat="status in vm.admitSources.concept">
+                                    {{status.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Admit Source</p>
+                        </div>
+
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.hospitalization.dietPreference" style="min-width: 100px;">
+                                <md-option ng-value="diet" ng-repeat="diet in vm.dietPreferences.concept">
+                                    {{diet.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Diet Preference</p>
+                        </div>
+
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.hospitalization.specialCourtesy" style="min-width: 100px;">
+                                <md-option ng-value="courtesy" ng-repeat="courtesy in vm.specialCourtesies.concept">
+                                    {{courtesy.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Special Courtesy</p>
+                        </div>
+
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.hospitalization.specialArrangement" style="min-width: 100px;">
+                                <md-option ng-value="arrange" ng-repeat="arrange in vm.specialArrangements.concept">
+                                    {{arrange.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Special Arrangement</p>
+                        </div>
+
+                        <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
+                            <md-select ng-model="vm.encounter.hospitalization.dischargeDisposition" style="min-width: 100px;">
+                                <md-option ng-value="discharge" ng-repeat="discharge in vm.dischargeDispositions.concept">
+                                    {{discharge.display}}
+                                </md-option>
+                                <md-option></md-option>
+                            </md-select>
+                            <p class="result">Discharge Disposition</p>
+                        </div>
+
+                        <md-input-container flex="60" class="md-icon-float"                                           >
+                            <label>Discharge Diagnosis</label>
+                            <md-icon md-svg-icon="rx"
+                                     ng-click="vm.goToPatient(vm.encounter.hospitalization.dischargeDiagnosis)"></md-icon>
+                            <input ng-model="vm.encounter.hospitalization.dischargeDiagnosis.display"/>
                         </md-input-container>
 
-                        <md-input-container flex>
-                            <label>Place of birth</label>
-                            <input ng-model="vm.demographics.placeOfBirth.text">
+                        <md-input-container flex="60" class="md-icon-float">
+                            <label>Origin</label>
+                            <md-icon md-svg-icon="hospital"
+                                     ng-click="vm.goToPatient(vm.encounter.hospitalization.origin)"></md-icon>
+                            <input ng-model="vm.encounter.hospitalization.origin.display"/>
                         </md-input-container>
 
-                        <md-input-container flex>
-                            <label>Mother's maiden name</label>
-                            <input ng-model="vm.demographics.mothersMaidenName">
+                        <md-input-container flex="60" class="md-icon-float">
+                            <label>Destination</label>
+                            <md-icon md-svg-icon="hospital"
+                                     ng-click="vm.goToPatient(vm.encounter.hospitalization.destination)"></md-icon>
+                            <input ng-model="vm.encounter.hospitalization.destination.display"/>
                         </md-input-container>
+
+                        <md-checkbox flex="20" ng-model="vm.encounter.hospitalization.reAdmission">
+                            Re-Admission
+                        </md-checkbox>
                     </div>
                 </md-tab>
                 <md-tab label="Participants">
@@ -46,12 +194,8 @@
 
                 </md-tab>
                 <md-tab label="Locations">
-                    <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
+                    <div ng-include="'encounter/encounter-location.html'"></div>
                 </md-tab>
-                <md-tab label="Status History">
-                    <div ng-include="'elements/contact/contact.html'"></div>
-                </md-tab>
-
             </md-tabs>
             <div layout="row" layout-align="end end">
                 <md-button ng-click="vm.save()" aria-label="Execute save">
