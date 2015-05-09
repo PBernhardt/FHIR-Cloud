@@ -3,20 +3,20 @@
         <ng-form name="encounterLocationForm" ng-model="vm.encounterLocale">
 
             <md-autocomplete flex="100"
-                    id="locationSearch"
-                    md-no-cache="true"
-                    md-selected-item="vm.encounterLocale.location"
-                    md-search-text="vm.locationSearchText"
-                    md-items="location in vm.getLocationReference(vm.locationSearchText)"
-                    md-delay="300"
-                    md-min-length="3"
-                    md-item-text="location"
-                    md-floating-label="Location Search">
+                             id="locationSearch"
+                             md-no-cache="true"
+                             md-selected-item="vm.encounterLocale.location"
+                             md-search-text="vm.locationSearchText"
+                             md-items="location in vm.getLocationReference(vm.locationSearchText)"
+                             md-delay="300"
+                             md-min-length="3"
+                             md-item-text="location"
+                             md-floating-label="Location Search">
                 <span md-highlight-text="vm.searchText">{{location.display}}</span>
             </md-autocomplete>
 
             <div layout="column" layout-align="start start" style="height: 100px;">
-                <md-select ng-model="vm.encounterLocale.status">
+                <md-select aria-label="location status" ng-model="vm.encounterLocale.status">
                     <md-option ng-value="status" ng-repeat="status in vm.locationStatuses.concept">
                         {{status.display}}
                     </md-option>

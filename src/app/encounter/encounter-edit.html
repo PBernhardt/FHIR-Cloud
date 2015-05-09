@@ -10,8 +10,7 @@
         </md-button>
     </div>
     <div flex="100">
-        <ng-form name="encounterEditForm" class="form-horizontal"
-                 ng-model="vm.encounter">
+        <ng-form name="encounterEditForm" ng-model="vm.encounter">
             <md-tabs md-dynamic-height>
                 <md-tab label="Overview">
                     <div layout="row" layout-sm="column" layout-align="space-between center" layout-wrap>
@@ -29,7 +28,7 @@
                         </md-input-container>
 
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.status" style="min-width: 100px;">
+                            <md-select aria-label="status" ng-model="vm.encounter.status" style="min-width: 100px;">
                                 <md-option ng-value="status" ng-repeat="status in vm.statuses.concept">
                                     {{status.display}}
                                 </md-option>
@@ -38,7 +37,7 @@
                             <p class="result">Status</p>
                         </div>
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.type" style="min-width: 100px;">
+                            <md-select aria-label="type" ng-model="vm.encounter.type" style="min-width: 100px;">
                                 <md-option ng-value="type" ng-repeat="type in vm.types.concept">
                                     {{type.display}}
                                 </md-option>
@@ -48,21 +47,11 @@
                         </div>
 
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.reason" style="min-width: 100px;">
+                            <md-select aria-label="reason" ng-model="vm.encounter.reason" style="min-width: 100px;">
 
                                 <md-option></md-option>
                             </md-select>
                             <p class="result">Reason</p>
-                        </div>
-
-                        <div layout="column" layout-align="center center" style="height: 100px;" flex="25">
-                            <md-select ng-model="vm.encounter.specialArrangement" style="min-width: 100px;">
-                                <md-option ng-value="sa" ng-repeat="sa in vm.specialArrangements.concept">
-                                    {{sa.display}}
-                                </md-option>
-                                <md-option></md-option>
-                            </md-select>
-                            <p class="result">Special Arrangement</p>
                         </div>
 
                         <md-autocomplete flex="30"
@@ -112,7 +101,8 @@
                         </md-input-container>
 
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.hospitalization.admitSource" style="min-width: 100px;">
+                            <md-select aria-label="admit source" ng-model="vm.encounter.hospitalization.admitSource"
+                                       style="min-width: 100px;">
                                 <md-option ng-value="status" ng-repeat="status in vm.admitSources.concept">
                                     {{status.display}}
                                 </md-option>
@@ -122,7 +112,8 @@
                         </div>
 
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.hospitalization.dietPreference" style="min-width: 100px;">
+                            <md-select aria-label="diet preference"
+                                       ng-model="vm.encounter.hospitalization.dietPreference" style="min-width: 100px;">
                                 <md-option ng-value="diet" ng-repeat="diet in vm.dietPreferences.concept">
                                     {{diet.display}}
                                 </md-option>
@@ -132,7 +123,9 @@
                         </div>
 
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.hospitalization.specialCourtesy" style="min-width: 100px;">
+                            <md-select aria-label="special courtesy"
+                                       ng-model="vm.encounter.hospitalization.specialCourtesy"
+                                       style="min-width: 100px;">
                                 <md-option ng-value="courtesy" ng-repeat="courtesy in vm.specialCourtesies.concept">
                                     {{courtesy.display}}
                                 </md-option>
@@ -142,7 +135,9 @@
                         </div>
 
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.hospitalization.specialArrangement" style="min-width: 100px;">
+                            <md-select aria-label="special arrangement"
+                                       ng-model="vm.encounter.hospitalization.specialArrangement"
+                                       style="min-width: 100px;">
                                 <md-option ng-value="arrange" ng-repeat="arrange in vm.specialArrangements.concept">
                                     {{arrange.display}}
                                 </md-option>
@@ -152,8 +147,11 @@
                         </div>
 
                         <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                            <md-select ng-model="vm.encounter.hospitalization.dischargeDisposition" style="min-width: 100px;">
-                                <md-option ng-value="discharge" ng-repeat="discharge in vm.dischargeDispositions.concept">
+                            <md-select aria-label="discharge disposition"
+                                       ng-model="vm.encounter.hospitalization.dischargeDisposition"
+                                       style="min-width: 100px;">
+                                <md-option ng-value="discharge"
+                                           ng-repeat="discharge in vm.dischargeDispositions.concept">
                                     {{discharge.display}}
                                 </md-option>
                                 <md-option></md-option>
@@ -161,7 +159,7 @@
                             <p class="result">Discharge Disposition</p>
                         </div>
 
-                        <md-input-container flex="60" class="md-icon-float"                                           >
+                        <md-input-container flex="60" class="md-icon-float">
                             <label>Discharge Diagnosis</label>
                             <md-icon md-svg-icon="rx"
                                      ng-click="vm.goToPatient(vm.encounter.hospitalization.dischargeDiagnosis)"></md-icon>

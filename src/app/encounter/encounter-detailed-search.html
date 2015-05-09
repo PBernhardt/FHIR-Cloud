@@ -27,7 +27,8 @@
                             </md-input-container>
 
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                                <md-select ng-model="vm.encounterSearch.status" style="min-width: 100px;">
+                                <md-select aria-label="status" ng-model="vm.encounterSearch.status"
+                                           style="min-width: 100px;">
                                     <md-option ng-value="status" ng-repeat="status in vm.states.concept">
                                         {{status.display}}
                                     </md-option>
@@ -36,7 +37,8 @@
                                 <p class="result">Status</p>
                             </div>
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                                <md-select ng-model="vm.encounterSearch.type" style="min-width: 100px;">
+                                <md-select aria-label="type" ng-model="vm.encounterSearch.type"
+                                           style="min-width: 100px;">
                                     <md-option ng-value="type" ng-repeat="type in vm.types.concept">
                                         {{type.display}}
                                     </md-option>
@@ -46,7 +48,8 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                                <md-select ng-model="vm.encounterSearch.reason" style="min-width: 100px;">
+                                <md-select aria-label="reason" ng-model="vm.encounterSearch.reason"
+                                           style="min-width: 100px;">
 
                                     <md-option></md-option>
                                 </md-select>
@@ -54,7 +57,8 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="25">
-                                <md-select ng-model="vm.encounterSearch.specialArrangement" style="min-width: 100px;">
+                                <md-select aria-label="special arrangement"
+                                           ng-model="vm.encounterSearch.specialArrangement" style="min-width: 100px;">
                                     <md-option ng-value="sa" ng-repeat="sa in vm.specialArrangements.concept">
                                         {{sa.display}}
                                     </md-option>
@@ -159,8 +163,9 @@
                             </md-autocomplete>
                             <div flex="30">
                                 <div layout="column" layout-align="center center" style="height: 100px;">
-                                    <md-select ng-model="vm.encounterSearch.participantType">
-                                        <md-option ng-value="language" ng-repeat="pt in vm.participantTypes">
+                                    <md-select aria-label="participant type"
+                                               ng-model="vm.encounterSearch.participantType">
+                                        <md-option ng-value="pt" ng-repeat="pt in vm.participantTypes">
                                             {{pt.display}}
                                         </md-option>
                                         <md-option></md-option>
