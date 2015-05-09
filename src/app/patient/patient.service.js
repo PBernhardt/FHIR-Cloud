@@ -266,7 +266,7 @@
         function getPatientContext() {
             _patientContext = undefined;
             if ($window.localStorage.patient && ($window.localStorage.patient !== null)) {
-                _patientContext = {"resource": JSON.parse($window.localStorage.patient)};
+                _patientContext = JSON.parse($window.localStorage.patient);
             }
             return _patientContext;
         }

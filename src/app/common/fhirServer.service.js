@@ -39,7 +39,7 @@
                     {
                         "id": 0,
                         "name": "SMART",
-                        "baseUrl": "https://fhir-open-api-dstu2.smarthealthit.org",
+                        "baseUrl": "https://fhir-api-dstu2.smarthealthit.org",
                         "secure": true
                     },
                     {
@@ -67,15 +67,23 @@
                         "secure": false
                     },
                     {
+                        "id": 5,
+                        "name": "Aegis",
+                        "baseUrl": "http://wildfhir.aegis.net/fhir2",
+                        "secure": false
+                    },
+                    {
                         "id": 7,
                         "name": "HealthConnex",
-                        "baseUrl": "http://sqlonfhir.azurewebsites.net/api"
+                        "baseUrl": "https://sqlonfhir.azurewebsites.net/api",
+                        "secure": true
                     },
 
                     {
                         "id": 8,
                         "name": "EPIC",
-                        "baseUrl": "http://open.epic.com/Clinical/FHIR"
+                        "baseUrl": "http://open.epic.com/Clinical/FHIR",
+                        "secure": false
                     },
                     {
                         "id": 9,
