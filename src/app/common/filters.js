@@ -14,7 +14,7 @@
         };
     });
 
-    app.filter('displayAge', function() {
+    app.filter('displayAge', function () {
         return function (birthDate) {
             if (birthDate) {
                 var retValue;
@@ -28,11 +28,11 @@
                 var years = Math.floor(ageDate.getUTCFullYear() - 1970);
                 retValue = "age " + years;
                 if (years < 2) {
-                    var months = Math.floor(ageDifMs/2628000000);
+                    var months = Math.floor(ageDifMs / 2628000000);
                     retValue = "age " + months + ' months';
 
                     if (months < 6) {
-                        var weeks = Math.floor(ageDifMs/604800000);
+                        var weeks = Math.floor(ageDifMs / 604800000);
                         retValue = "age " + weeks + ' weeks';
                     }
                 }
@@ -109,6 +109,24 @@
             }
         }
     });
+
+    app.filter('listItems', function () {
+        return function (array) {
+            if (angular.isUndefined(array) || angular.isArray(array) === false) {
+                return array;
+            } else {
+                var retVal = '';
+                _.each(array, function (item) {
+                    if (retVal.length === 0) {
+                        retVal = item;
+                    } else {
+                        retVal = retVal + ", " + item;
+                    }
+                });
+                return retVal;
+            }
+        }
+    })
 
     app.filter('periodText', function () {
         return function (period) {
