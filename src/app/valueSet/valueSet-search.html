@@ -3,12 +3,12 @@
         <h3 class="md-title">Value Set Quick Find</h3>
         <md-autocomplete
                 md-no-cache="true"
-                md-selected-item-change="vm.goToValueSet(vm.selectedValueSet)"
+                md-selected-item-change="vm.goToDetail(vm.selectedValueSet)"
                 md-selected-item="vm.selectedValueSet"
                 md-search-text="vm.searchText"
                 md-items="vs in vm.quickSearch(vm.searchText)"
-                md-delay="500"
-                md-min-length="4"
+                md-delay="300"
+                md-min-length="3"
                 placeholder="What value set are you looking for?">
             <span md-highlight-text="vm.searchText">{{vs.resource.name}}</span>
         </md-autocomplete>

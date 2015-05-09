@@ -63,8 +63,7 @@
 
     app.config(['$routeProvider', 'authProvider', function ($routeProvider) {
         $routeProvider.when('/conformance', {
-            templateUrl: 'conformance/conformance-search.html',
-            requiresLogin: true
+            templateUrl: 'conformance/conformance-search.html'
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
         }).when('/conformance/detailed-search', {
@@ -144,8 +143,7 @@
         }).when('/patient/org/:orgId', {
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
-            templateUrl: 'patient/patient-search.html',
-            requiresLogin: true
+            templateUrl: 'patient/patient-search.html'
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {

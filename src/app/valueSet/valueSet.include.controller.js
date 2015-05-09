@@ -1,9 +1,9 @@
 (function () {
     'use strict';
 
-    var controllerId = 'conformanceResource';
+    var controllerId = 'valueSetInclude';
 
-    function conformanceResource($scope, $mdDialog, common, data) {
+    function valueSetInclude($scope, $mdDialog, common, data) {
         function closeDialog() {
             $mdDialog.hide();
         }
@@ -21,5 +21,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$scope', '$mdDialog', 'common', 'data', conformanceResource]);
+        ['$scope', '$mdDialog', 'common', 'data', valueSetInclude]);
 })();

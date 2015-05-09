@@ -346,8 +346,7 @@
 
     app.config(['$routeProvider', 'authProvider', function ($routeProvider) {
         $routeProvider.when('/conformance', {
-            templateUrl: 'conformance/conformance-search.html',
-            requiresLogin: true
+            templateUrl: 'conformance/conformance-search.html'
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
         }).when('/conformance/detailed-search', {
@@ -427,8 +426,7 @@
         }).when('/patient/org/:orgId', {
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
-            templateUrl: 'patient/patient-search.html',
-            requiresLogin: true
+            templateUrl: 'patient/patient-search.html'
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
@@ -4569,7 +4567,7 @@
 
     var controllerId = 'conformanceResource';
 
-    function rawData($scope, $mdDialog, common, data) {
+    function conformanceResource($scope, $mdDialog, common, data) {
         function closeDialog() {
             $mdDialog.hide();
         }
@@ -4587,7 +4585,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$scope', '$mdDialog', 'common', 'data', rawData]);
+        ['$scope', '$mdDialog', 'common', 'data', conformanceResource]);
 })();(function () {
     'use strict';
 
@@ -23915,6 +23913,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var noToast = false;
 
         function cancel() {
 
@@ -23942,6 +23941,7 @@
                     );
                 }
             }
+
             var confirm = $mdDialog.confirm().title('Delete ' + valueSet.name + '?').ok('Yes').cancel('No');
             $mdDialog.show(confirm).then(executeDelete);
 
@@ -23961,16 +23961,52 @@
                 });
         }
 
+        function showSource($event) {
+            _showRawData(vm.valueSet, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function showInclude($event, resource) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'valueSet/include-dialog.html',
+                controller: 'valueSetInclude',
+                locals: {
+                    data: resource
+                },
+                targetEvent: $event
+            });
+        }
+
+        vm.showInclude = showInclude;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
         function getRequestedValueSet() {
             function intitializeRelatedData(data) {
                 var rawData = angular.copy(data.resource);
                 vm.narrative = (rawData.text.div || '<div>Not provided</div>');
                 vm.json = rawData;
-                vm.json.text = { div: "see narrative tab"};
+                vm.json.text = {div: "see narrative tab"};
                 vm.json = angular.toJson(rawData, true);
                 vm.valueSet = rawData;
                 contactPointService.init(vm.valueSet.telecom, false, false);
                 vm.title = vm.valueSet.name;
+                if (angular.isDefined(vm.valueSet.id)) {
+                    vm.valueSet.resourceId = (vm.activeServer.baseUrl + '/ValueSet/' + vm.valueSet.id);
+                }
+                valueSetService.setActiveValueSet(vm.valueSet);
             }
 
             if ($routeParams.hashKey === 'new') {
@@ -23983,13 +24019,13 @@
                     valueSetService.getCachedValueSet($routeParams.hashKey)
                         .then(intitializeRelatedData).then(function () {
                         }, function (error) {
-                            logError(error);
+                            logError(error, null, noToast);
                         });
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/ValueSet/' + $routeParams.id;
                     valueSetService.getValueSet(resourceId)
                         .then(intitializeRelatedData, function (error) {
-                            logError(error);
+                            logError(error, null, noToast);
                         });
                 }
             }
@@ -24085,13 +24121,92 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'valueSetExpandController';
+
+    function valueSetExpandController(common, fhirServers, valueSetService) {
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var $q = common.$q;
+        var noToast = false;
+        /* jshint validthis:true */
+        var vm = this;
+        
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId).then(function () {
+            });
+        }
+
+        function expandValueSet(searchText) {
+            var deferred = $q.defer();
+            var vs = valueSetService.getActiveValueSet();
+            valueSetService.getFilteredExpansion(vm.activeServer.baseUrl, vs.id, searchText)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError("Error fetching expansion", error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+        vm.expandValueSet = expandValueSet;
+
+        function setConcept(concept) {
+            vm.concept = concept;
+        }
+        vm.setConcept = setConcept;
+
+        vm.concept = undefined;
+        vm.selectedConcept = undefined;
+        vm.searchText = undefined;
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['common', 'fhirServers', 'valueSetService', valueSetExpandController]);
+})();(function () {
+    'use strict';
+
+    var controllerId = 'valueSetInclude';
+
+    function valueSetInclude($scope, $mdDialog, common, data) {
+        function closeDialog() {
+            $mdDialog.hide();
+        }
+
+        function activate() {
+            common.activateController(controllerId).then(function () {
+            });
+        }
+
+        $scope.data = data;
+        $scope.closeDialog = closeDialog;
+        $scope.activate = activate;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$scope', '$mdDialog', 'common', 'data', valueSetInclude]);
+})();(function () {
+    'use strict';
+
     var controllerId = 'valueSetSearch';
 
     function valueSetSearch($location, common, config, fhirServers, valueSetService) {
-        var keyCodes = config.keyCodes;
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
+        var $q = common.$q;
+        var noToast = false;
 
         /* jshint validthis:true */
         var vm = this;
@@ -24116,11 +24231,12 @@
                 });
         }
 
-        function goToDetail(hash) {
-            if (hash) {
-                $location.path('/valueSet/view/' + hash);
+        function goToDetail(valueSet) {
+            if (valueSet) {
+                $location.path('/valueSet/view/' + valueSet.$$hashKey);
             }
         }
+        vm.goToDetail = goToDetail;
 
         function processSearchResults(searchResults) {
             if (searchResults) {
@@ -24130,23 +24246,23 @@
             }
         }
 
-        function submit(valid) {
-            if (valid) {
-                toggleSpinner(true);
-                valueSetService.getValueSets(vm.activeServer.baseUrl, vm.searchText)
-                    .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets from ' + vm.activeServer.name, false);
-                        return data;
-                    }, function (error) {
-                        toggleSpinner(false);
-                        logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
-                    })
-                    .then(processSearchResults)
-                    .then(function () {
-                        toggleSpinner(false);
-                    });
-            }
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            valueSetService.getValueSets(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets from ' +
+                        vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry);
+                }, function (error) {
+                    logError('Error getting value sets', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
         }
+
+        vm.quickSearch = quickSearch;
 
         function dereferenceLink(url) {
             toggleSpinner(true);
@@ -24163,16 +24279,51 @@
                     toggleSpinner(false);
                 });
         }
-
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
-            }
-        }
+        vm.dereferenceLink = dereferenceLink;
 
         function toggleSpinner(on) {
             vm.isBusy = on;
+        }        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/patient/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/patient/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/patient');
+                        break;
+                }
+            });
+
+            /**
+             * Bottom Sheet controller for Patient search
+             */
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new patient', icon: 'personAdd', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Patient search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
         }
+
+        vm.actions = actions;
+
+
 
         vm.activeServer = null;
         vm.isBusy = false;
@@ -24186,10 +24337,8 @@
         vm.searchResults = null;
         vm.searchText = '';
         vm.title = 'ValueSets';
-        vm.keyPress = keyPress;
-        vm.dereferenceLink = dereferenceLink;
-        vm.submit = submit;
-        vm.goToDetail = goToDetail;
+        vm.selectedValueSet = null;
+        vm.noresults = undefined;
 
         activate();
     }
@@ -24204,6 +24353,7 @@
 
     function valueSetService(common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localValueSets';
+        var activeValueSetKey = 'activeValueSet';
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
         var $q = common.$q;
@@ -24275,6 +24425,13 @@
                     deferred.reject(outcome);
                 });
             return deferred.promise;
+        }
+
+        function setActiveValueSet(item) {
+            dataCache.addToCache(activeValueSetKey, item);
+        }
+        function getActiveValueSet() {
+            return dataCache.readFromCache(activeValueSetKey);
         }
 
         function getCachedSearchResults() {
@@ -24463,6 +24620,7 @@
             clearCache: clearCache,
             deleteCachedValueSet: deleteCachedValueSet,
             deleteValueSet: deleteValueSet,
+            getActiveValueSet: getActiveValueSet,
             getFilteredExpansion: getFilteredExpansion,
             getCachedValueSet: getCachedValueSet,
             getCachedSearchResults: getCachedSearchResults,
@@ -24470,6 +24628,7 @@
             getValueSets: getValueSets,
             getValueSetsByLink: getValueSetsByLink,
             getValueSetReference: getValueSetReference,
+            setActiveValueSet: setActiveValueSet,
             initializeNewValueSet: initializeNewValueSet,
             updateValueSet: updateValueSet
         };

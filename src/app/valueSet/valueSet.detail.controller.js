@@ -10,6 +10,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var noToast = false;
 
         function cancel() {
 
@@ -37,6 +38,7 @@
                     );
                 }
             }
+
             var confirm = $mdDialog.confirm().title('Delete ' + valueSet.name + '?').ok('Yes').cancel('No');
             $mdDialog.show(confirm).then(executeDelete);
 
@@ -56,16 +58,52 @@
                 });
         }
 
+        function showSource($event) {
+            _showRawData(vm.valueSet, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function showInclude($event, resource) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'valueSet/include-dialog.html',
+                controller: 'valueSetInclude',
+                locals: {
+                    data: resource
+                },
+                targetEvent: $event
+            });
+        }
+
+        vm.showInclude = showInclude;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
         function getRequestedValueSet() {
             function intitializeRelatedData(data) {
                 var rawData = angular.copy(data.resource);
                 vm.narrative = (rawData.text.div || '<div>Not provided</div>');
                 vm.json = rawData;
-                vm.json.text = { div: "see narrative tab"};
+                vm.json.text = {div: "see narrative tab"};
                 vm.json = angular.toJson(rawData, true);
                 vm.valueSet = rawData;
                 contactPointService.init(vm.valueSet.telecom, false, false);
                 vm.title = vm.valueSet.name;
+                if (angular.isDefined(vm.valueSet.id)) {
+                    vm.valueSet.resourceId = (vm.activeServer.baseUrl + '/ValueSet/' + vm.valueSet.id);
+                }
+                valueSetService.setActiveValueSet(vm.valueSet);
             }
 
             if ($routeParams.hashKey === 'new') {
@@ -78,13 +116,13 @@
                     valueSetService.getCachedValueSet($routeParams.hashKey)
                         .then(intitializeRelatedData).then(function () {
                         }, function (error) {
-                            logError(error);
+                            logError(error, null, noToast);
                         });
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/ValueSet/' + $routeParams.id;
                     valueSetService.getValueSet(resourceId)
                         .then(intitializeRelatedData, function (error) {
-                            logError(error);
+                            logError(error, null, noToast);
                         });
                 }
             }

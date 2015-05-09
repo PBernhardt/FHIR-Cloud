@@ -1,0 +1,42 @@
+<md-dialog>
+    <md-content>
+        <md-input-container flex="45" ng-if="data.system">
+            <label>System</label>
+            <input ng-model="data.system" ng-readonly="true"/>
+        </md-input-container>
+
+        <md-input-container flex="45" ng-if="data.version">
+            <label>Version</label>
+            <input ng-model="data.version" ng-readonly="true"/>
+        </md-input-container>
+
+        <md-list flex="100" ng-if="data.concept">
+            <md-subheader>Concepts</md-subheader>
+            <md-list-item class="md-2-line" ng-repeat="concept in data.concept">
+                <div class="md-list-item-text">
+                    <h3>{{concept.code}} </h3>
+
+                    <p>{{concept.display}}</p>
+                </div>
+            </md-list-item>
+        </md-list>
+
+        <md-list flex="100" ng-if="data.filter">
+            <md-subheader>Filters</md-subheader>
+            <md-list-item class="md-3-line" ng-repeat="filter in data.filter">
+                <div class="md-list-item-text">
+                    <h3>{{filter.property}} </h3>
+                    <h4>{{filter.op}}</h4>
+
+                    <p>{{filter.value}}</p>
+                </div>
+            </md-list-item>
+        </md-list>
+
+        <div class="md-actions">
+            <md-button ng-click="closeDialog()">
+                Close
+            </md-button>
+        </div>
+    </md-content>
+</md-dialog>

@@ -4,59 +4,83 @@
             <h3>{{vm.valueSet.name}}</h3>
         </div>
         <div flex="100">
-            <md-tabs md-selected="selectedIndex">
-                <md-tab label="Structured Data">
-                    <table class="table table-striped table-hover">
-                        <tr>
-                            <td>Identifier</td>
-                            <td>{{vm.valueSet.identifier}}</td>
-                        </tr>
-                        <tr>
-                            <td>Description</td>
-                            <td>{{vm.valueSet.description}}</td>
-                        </tr>
-                        <tr>
-                            <td>Publisher</td>
-                            <td>{{vm.valueSet.publisher}}</td>
-                        </tr>
-                        <tr>
-                            <td>Status</td>
-                            <td>{{vm.valueSet.status}}</td>
-                        </tr>
-                        <tr>
-                            <td>Date</td>
-                            <td>{{vm.valueSet.date}}</td>
-                        </tr>
-                        <tr>
-                            <td>Copyright</td>
-                            <td>{{vm.valueSet.copyright}}</td>
-                        </tr>
-                        <tr>
-                            <td>Definition</td>
-                            <td>
-                                <table class="small">
-                                    <thead>
-                                    <th>System</th>
-                                    <th>Case Sensitive</th>
-                                    <th>Concept</th>
-                                    </thead>
-                                    <tr>
-                                        <td>{{vm.valueSet.define.system}}</td>
-                                        <td>{{vm.valueSet.define.caseSensitive}}</td>
-                                        <td>{{vm.valueSet.define.concept.length}} concepts</td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
+            <md-tabs md-selected="selectedIndex" md-dynamic-height>
+                <md-tab label="Summary">
+                    <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between end"
+                         ng-if="vm.valueSet"
+                         layout-wrap style="position: relative; top:15px">
+                        <md-input-container flex="100" class="md-icon-float" ng-if="vm.valueSet.resourceId">
+                            <label>Resource Id</label>
+                            <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
+                            <input ng-model="vm.valueSet.resourceId" ng-readonly/>
+                        </md-input-container>
+
+                        <md-input-container flex="25" ng-if="vm.valueSet.identifier">
+                            <label>Identifier</label>
+                            <input ng-model="vm.valueSet.identifier" ng-readonly="true"/>
+                        </md-input-container>
+
+                        <md-input-container flex="45" ng-if="vm.valueSet.description">
+                            <label>Description</label>
+                            <textarea columns="1" ng-model="vm.valueSet.description" ng-readonly="true"></textarea>
+                        </md-input-container>
+
+                        <md-input-container flex="25" ng-if="vm.valueSet.publisher">
+                            <label>Publisher</label>
+                            <input ng-model="vm.valueSet.publisher" ng-readonly="true"/>
+                        </md-input-container>
+
+                        <md-input-container flex="25" ng-if="vm.valueSet.status">
+                            <label>Status</label>
+                            <input ng-model="vm.valueSet.status" ng-readonly="true"/>
+                        </md-input-container>
+
+                        <md-input-container flex="25" ng-if="vm.valueSet.date">
+                            <label>Date</label>
+                            <input ng-model="vm.valueSet.date" ng-readonly="true"/>
+                        </md-input-container>
+
+                        <md-input-container flex="45" if="vm.valueSet.copyright">
+                            <label>Copyright</label>
+                            <textarea columns="1" ng-model="vm.valueSet.copyright" ng-readonly="true"></textarea>
+                        </md-input-container>
+
+                        <md-list flex="100" ng-if="vm.valueSet.define.concept">
+                            <md-subheader class="md-no-sticky">Concepts</md-subheader>
+                            <md-list-item class="md-3-line" ng-repeat="concept in vm.valueSet.define.concept">
+                                <div class="md-list-item-text">
+                                    <h3>{{concept.code}} </h3>
+                                    <h4>{{concept.display}}</h4>
+
+                                    <p>{{concept.definition}}</p>
+                                </div>
+                                <md-divider ng-if="!$last"></md-divider>
+                            </md-list-item>
+                        </md-list>
+                    </div>
+                </md-tab>
+                <md-tab label="Compose" ng-if="vm.valueSet.compose">
+                    <md-list flex="100" ng-if="vm.valueSet.compose.include">
+                        <md-subheader>Include</md-subheader>
+                        <md-list-item class="md-2-line" ng-click="vm.showInclude($event, include)"
+                                      ng-repeat="include in vm.valueSet.compose.include">
+                            <md-icon md-svg-icon="more"></md-icon>
+                            <div class="md-list-item-text">
+                                <h3>{{include.system}}</h3>
+
+                                <p>{{include.version}}</p>
+                            </div>
+
+                            <md-divider ng-if="!$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
                 </md-tab>
                 <md-tab label="Narrative">
                     <div data-ng-bind-html="vm.narrative"></div>
                 </md-tab>
-                <md-tab label="Raw Data">
-                    <div>
-                        <pre>{{vm.json}}</pre>
-                    </div>
+
+                <md-tab label="Expansion">
+                    <div ng-include="'valueSet/valueSet-expand.html'"></div>
                 </md-tab>
             </md-tabs>
         </div>

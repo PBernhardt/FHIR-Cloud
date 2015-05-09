@@ -5,6 +5,7 @@
 
     function valueSetService(common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localValueSets';
+        var activeValueSetKey = 'activeValueSet';
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
         var $q = common.$q;
@@ -76,6 +77,13 @@
                     deferred.reject(outcome);
                 });
             return deferred.promise;
+        }
+
+        function setActiveValueSet(item) {
+            dataCache.addToCache(activeValueSetKey, item);
+        }
+        function getActiveValueSet() {
+            return dataCache.readFromCache(activeValueSetKey);
         }
 
         function getCachedSearchResults() {
@@ -264,6 +272,7 @@
             clearCache: clearCache,
             deleteCachedValueSet: deleteCachedValueSet,
             deleteValueSet: deleteValueSet,
+            getActiveValueSet: getActiveValueSet,
             getFilteredExpansion: getFilteredExpansion,
             getCachedValueSet: getCachedValueSet,
             getCachedSearchResults: getCachedSearchResults,
@@ -271,6 +280,7 @@
             getValueSets: getValueSets,
             getValueSetsByLink: getValueSetsByLink,
             getValueSetReference: getValueSetReference,
+            setActiveValueSet: setActiveValueSet,
             initializeNewValueSet: initializeNewValueSet,
             updateValueSet: updateValueSet
         };

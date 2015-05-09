@@ -205,6 +205,8 @@ module.exports = function (grunt) {
                     'app/templates/rawData.controller.js',
                     'app/templates/valueSet-popup.controller.js',
                     'app/valueSet/valueSet.detail.controller.js',
+                    'app/valueSet/valueSet.expand.controller.js',
+                    'app/valueSet/valueSet.include.controller.js',
                     'app/valueSet/valueSet.search.controller.js',
                     'app/valueSet/valueSet.service.js'
                     //place your JavaScript files here

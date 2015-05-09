@@ -1,0 +1,36 @@
+<div ng-controller="valueSetExpandController as vm">
+    <md-content class="md-padding">
+        <md-autocomplete
+                md-no-cache="false"
+                md-selected-item-change="vm.setConcept(vm.selectedConcept)"
+                md-selected-item="vm.selectedConcept"
+                md-search-text="vm.searchText"
+                md-items="term in vm.expandValueSet(vm.searchText)"
+                md-delay="300"
+                md-min-length="3"
+                placeholder="What concept are you looking for?">
+            <span md-highlight-text="vm.searchText">{{term.display}}</span>
+        </md-autocomplete>
+
+        <div ng-if="vm.concept && !vm.noresults" style="position: relative; top:15px">
+            <h3 class="md-subtitle">Selected Concept</h3>
+            <md-input-container flex="100" ng-if="vm.concept.system">
+                <label>System</label>
+                <input ng-model="vm.concept.system" readonly="true"/>
+            </md-input-container>
+            <md-input-container flex="100" ng-if="vm.concept.code">
+                <label>Code</label>
+                <input ng-model="vm.concept.code" readonly="true"/>
+            </md-input-container>
+            <md-input-container flex="100" ng-if="vm.concept.display">
+                <label>Display</label>
+                <input ng-model="vm.concept.display" readonly="true"/>
+            </md-input-container>
+        </div>
+
+        <div ng-if="vm.noresults" style="position: relative; top:30px">
+            <md-subheader class="md-warn">No matches for "{{vm.searchText}}"</md-subheader>
+        </div>
+    </md-content>
+
+</div>
