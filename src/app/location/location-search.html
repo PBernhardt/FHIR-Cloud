@@ -1,0 +1,24 @@
+﻿<div ng-controller="locationSearch as vm" layout="row" layout-wrap>
+    <div flex="90">
+        <h3 class="md-title">Location Quick Find</h3>
+        <md-autocomplete
+                md-no-cache="true"
+                md-selected-item-change="vm.goToLocation(vm.selectedLocation)"
+                md-selected-item="vm.selectedLocation"
+                md-search-text="vm.searchText"
+                md-items="org in vm.quickSearch(vm.searchText)"
+                md-delay="500"
+                md-min-length="4"
+                placeholder="What location are you looking for?">
+            <span md-highlight-text="vm.searchText">{{org.resource.name}}</span>
+        </md-autocomplete>
+    </div>
+    <div flex="5">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div ng-if="vm.noresults" style="position: relative; top:30px">
+        <md-subheader class="md-warn">No matches for "{{vm.searchText}}"</md-subheader>
+    </div>
+</div>

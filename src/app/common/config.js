@@ -61,9 +61,10 @@
      }]);
      */
 
-    app.config(['$routeProvider', function ($routeProvider) {
+    app.config(['$routeProvider', 'authProvider', function ($routeProvider) {
         $routeProvider.when('/conformance', {
-            templateUrl: 'conformance/conformance-search.html'
+            templateUrl: 'conformance/conformance-search.html',
+            requiresLogin: true
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
         }).when('/conformance/detailed-search', {
@@ -143,7 +144,8 @@
         }).when('/patient/org/:orgId', {
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
-            templateUrl: 'patient/patient-search.html'
+            templateUrl: 'patient/patient-search.html',
+            requiresLogin: true
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
@@ -200,13 +202,19 @@
             templateUrl: 'valueSet/valueSet-view.html'
         }).when('/valueSet/edit/:hashKey', {
             templateUrl: 'valueSet/valueSet-edit.html'
-        })
-            .when('/daf/:profile', {
-                templateUrl: 'templates/daf.html'
-            })
-            .otherwise({
-                redirectTo: '/home'
-            });
+        }).when('/daf/:profile', {
+            templateUrl: 'templates/daf.html'
+        }).when('/access_token=:accessToken', {
+            template: '',
+            controller: function ($location, AccessToken) {
+                var hash = $location.path().substr(1);
+                AccessToken.setTokenFromString(hash);
+                $location.path('/');
+                $location.replace();
+            }
+        }).otherwise({
+            redirectTo: '/home'
+        });
     }]);
 
     app.config(['$mdThemingProvider', '$mdIconProvider', function ($mdThemingProvider, $mdIconProvider) {
@@ -249,7 +257,7 @@
             .icon("language", "./assets/svg/language.svg", 24)
             .icon("link", "./assets/svg/link.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
-            .icon("listAdd", "./assets/svg/listAdd.svg",24)
+            .icon("listAdd", "./assets/svg/listAdd.svg", 24)
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
             .icon("rectangle", "./assets/svg/menu.svg", 24)
@@ -281,10 +289,15 @@
             .icon("web", "./assets/svg/www.svg", 16);
     }]);
 
-    app.config(['$httpProvider', function ($httpProvider) {
+    app.config(['$httpProvider', 'jwtInterceptorProvider', function ($httpProvider, jwtInterceptorProvider) {
+        jwtInterceptorProvider.tokenGetter = ['store', function (store) {
+            return store.get('token');
+        }];
+
         $httpProvider.defaults.headers.common = {'Accept': 'application/json+fhir, application/json, text/plain, */*'};
         $httpProvider.defaults.headers.put = {'Content-Type': 'application/json+fhir'};
         $httpProvider.defaults.headers.post = {'Content-Type': 'application/json+fhir'};
+        $httpProvider.interceptors.push('jwtInterceptor');
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {
@@ -302,4 +315,17 @@
         //  chrome-extension: will be added to the end of the expression
         $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|file|chrome-extension):|data:image\//);
     }]);
+
+    app.config(['authProvider', function (authProvider) {
+        authProvider.init({
+            domain: 'fhir-cloud.auth0.com',
+            clientID: 'NT5hRGyonHkBXmDrr0QeAtq9ykDqCmyR',
+            loginUrl: '/home'
+        });
+    }]);
+
+    app.run(function (auth) {
+        // This hooks al auth events to check everything as soon as the app starts
+        auth.hookEvents();
+    });
 })();

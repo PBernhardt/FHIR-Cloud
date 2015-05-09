@@ -10,6 +10,8 @@
         'ngMessages',
         'ngCookies',
         'common',
-        //'ui.bootstrap'
+        'auth0',
+        'angular-storage',
+        'angular-jwt'
     ]);
 })();

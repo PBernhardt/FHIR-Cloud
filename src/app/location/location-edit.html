@@ -1,0 +1,80 @@
+﻿<div ng-controller="locationDetail as vm" layout="row" layout-wrap>
+    <div flex="90">
+        <h3 class="md-title" ng-if="vm.isEditing === false">Add New Location</h3>
+
+        <h3 class="md-title" ng-if="vm.isEditing === true">Edit {{vm.location.name}}</h3>
+    </div>
+    <div flex="5">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100">
+        <ng-form name="locationEditForm"
+                 ng-model="vm.location">
+            <md-tabs md-selected="vm.selectedTab" md-dynamic-height md-border-bottom>
+                <md-tab label="Basic Information">
+                    <div flex layout-padding>
+                        <div flex>
+                            <md-input-container>
+                                <label>Location Name</label>
+                                <input ng-model="vm.location.name" name="name" minlength="5" required>
+
+                                <div ng-messages="locationEditForm.name.$error"
+                                     ng-show="locationEditForm.$dirty">
+                                    <div ng-message="required">Location name is required!</div>
+                                    <div ng-message="minlength">Location name must be at least 5 characters.</div>
+                                </div>
+                            </md-input-container>
+                        </div>
+
+                        <md-autocomplete flex="100"
+                                         md-no-cache="false"
+                                         md-selected-item="vm.location.partOf"
+                                         md-search-text="vm.searchText"
+                                         md-items="org in vm.getLocationReference(vm.searchText)"
+                                         md-delay="300"
+                                         md-item-text="org.display"
+                                         md-min-length="3"
+                                         md-floating-label="Affiliated location">
+                            <span md-highlight-text="vm.searchText">{{org.display}}</span>
+                        </md-autocomplete>
+
+
+                        <div layout="column" layout-align="start start" style="height: 100px;">
+                            <md-select ng-model="vm.location.type.coding[0]">
+                                <md-option ng-selected="coding.code===vm.location.type.coding[0].code"
+                                           ng-value="coding"
+                                           ng-repeat="coding in vm.locationTypes">
+                                    {{ coding.display || '' }}
+                                </md-option>
+                            </md-select>
+                            <p class="md-caption">Location Type</p>
+                        </div>
+                    </div>
+                </md-tab>
+                <md-tab label="Address">
+                    <div ng-include="'elements/address/address.html'"></div>
+                </md-tab>
+                <md-tab label="Telecom">
+                    <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
+                </md-tab>
+                <md-tab label="Admin Contact">
+                    <div ng-include="'elements/contact/contact.html'"></div>
+                </md-tab>
+                <md-tab label="Identifiers">
+                    <div ng-include="'elements/identifier/identifier.html'"></div>
+                </md-tab>
+            </md-tabs>
+
+            <div layout="row" layout-align="end end">
+                <md-button ng-click="vm.save()" aria-label="Execute save"
+                           ng-disabled="locationEditForm.$pristine || locationEditForm.$invalid">
+                    <md-icon md-svg-icon="saveToCloud" alt="Save Location"></md-icon>
+                </md-button>
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            </div>
+        </ng-form>
+    </div>
+</div>
+

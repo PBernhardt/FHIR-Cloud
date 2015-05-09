@@ -1,0 +1,100 @@
+﻿<div ng-controller="locationDetail as vm" layout="row" layout-wrap>
+    <div flex="90">
+        <h3 class="md-title">{{vm.location.name}}</h3>
+    </div>
+    <div flex="10">
+        <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100" ng-if="vm.isBusy === true" layout="row" layout-align="center end" style="height: 300px">
+        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+    </div>
+
+    <md-tabs md-dynamic-height ng-if="vm.isBusy === false">
+        <md-tab label="Administrative">
+            <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between center"
+                 ng-if="vm.location"
+                 layout-wrap style="position: relative; top:15px">
+                <md-input-container flex="100" class="md-icon-float" ng-if="vm.location.resourceId">
+                    <label>Resource Id</label>
+                    <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
+                    <input ng-model="vm.location.resourceId" readonly/>
+                </md-input-container>
+
+                <md-input-container flex="25" ng-if="vm.location.type && vm.location.type.coding[0]">
+                    <label>Type</label>
+                    <input ng-model="vm.location.type.coding[0].display" readonly/>
+                </md-input-container>
+
+                <md-input-container flex="20" ng-if="vm.location.active">
+                    <label>Active</label>
+                    <input ng-model="vm.location.active" readonly/>
+                </md-input-container>
+
+                <md-input-container flex="60" class="md-icon-float" ng-if="vm.location.partOf">
+                    <label>Parent Location</label>
+                    <md-icon md-svg-icon="hospital" ng-click="vm.goToPartOf(vm.location.partOf)"></md-icon>
+                    <input ng-model="vm.location.partOf.display" readonly/>
+                </md-input-container>
+
+                <md-list flex="100" ng-if="vm.location.address">
+                    <md-subheader class="md-no-sticky">Addresses</md-subheader>
+                    <md-list-item class="md-2-line" ng-repeat="a in vm.location.address">
+                        <md-icon md-svg-icon="address" ng-if="$index === 0"></md-icon>
+                        <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                            <h3> {{ a | singleLineAddress }} </h3>
+
+                            <p>{{a.use}}</p>
+                        </div>
+                    </md-list-item>
+                </md-list>
+
+                <md-list flex="100" ng-if="vm.location.telecom">
+                    <md-subheader class="md-no-sticky">Telecommunications</md-subheader>
+                    <md-list-item class="md-2-line" ng-repeat="t in vm.location.telecom">
+                        <md-icon md-svg-icon="telecom" ng-if="$index === 0"></md-icon>
+                        <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                            <h3>{{ t.value }} </h3>
+
+                            <p>{{t.use}} {{t.system || "unspecified"}}</p>
+                        </div>
+                    </md-list-item>
+                </md-list>
+
+                <md-list flex="100" ng-if="vm.location.contact">
+                    <md-subheader class="md-no-sticky">Contacts</md-subheader>
+                    <md-list-item class="md-3-line" ng-repeat="ac in vm.location.contact">
+                        <md-icon md-svg-icon="contacts" ng-if="$index === 0"></md-icon>
+                        <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                            <h3>{{ac.name | fullName}}</h3>
+
+                            <p ng-if="ac.purpose">{{ac.purpose.coding[0].display}}</p>
+                        </div>
+                    </md-list-item>
+                </md-list>
+                <md-divider ng-if="vm.location.contact"></md-divider>
+
+                <md-list flex="100" ng-if="vm.location.identifier">
+                    <md-subheader class="md-no-sticky">Identifiers</md-subheader>
+                    <md-list-item class="md-2-line" ng-repeat="id in vm.location.identifier">
+                        <md-icon md-svg-icon="identifier" ng-if="$index === 0"></md-icon>
+                        <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                            <h3>{{id.system}} | {{id.value }} </h3>
+                            <h4>{{id.type | codeableConcept}}</h4>
+
+                            <p>{{id.use}}</p>
+                        </div>
+                    </md-list-item>
+                </md-list>
+
+            </div>
+        </md-tab>
+        <md-tab label="Practitioners">
+            <div ng-include="'elements/practitionerList/practitionerList.html'"></div>
+        </md-tab>
+        <md-tab label="Patients">
+            <div ng-include="'elements/patientList/patientList.html'"></div>
+        </md-tab>
+    </md-tabs>
+</div>

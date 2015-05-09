@@ -3,8 +3,8 @@
 
     var controllerId = 'mainController';
 
-    function mainController($filter, $mdDialog, $mdSidenav, $location, $scope, $window, common, config,
-                            conformanceService, fhirServers) {
+    function mainController($filter, $mdDialog, $mdSidenav, $location, $rootScope, $scope, $window, common, config,
+                            conformanceService, fhirServers, auth, store, jwtHelper) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -130,6 +130,29 @@
 
         vm.authenticate = authenticate;
 
+        function login() {
+            auth.signin({}, function (profile, token) {
+                // Success callback
+                store.set('profile', profile);
+                store.set('token', token);
+                $location.path('/');
+                common.changeUser(profile);
+            }, function () {
+                // Error callback
+            });
+        }
+
+        vm.login = login;
+
+        function logout() {
+            auth.signout();
+            store.remove('profile');
+            store.remove('token');
+            common.changeUser(null);
+        }
+
+        vm.logout = logout;
+
         function authenticateController($scope, $mdDialog) {
             function close() {
                 $mdDialog.hide();
@@ -157,9 +180,28 @@
 
         $scope.$on(config.events.authenticatedUserChanged,
             function (event, user) {
+                if (user === null && vm.user !== null) {
+                    logInfo(vm.user.name + " has been logged out");
+                }
                 vm.user = user;
             }
         );
+
+        $rootScope.$on('$locationChangeStart', function() {
+            if (!auth.isAuthenticated) {
+                var token = store.get('token');
+                vm.user = store.get('profile');
+                if (token) {
+                    if (!jwtHelper.isTokenExpired(token)) {
+                        auth.authenticate(vm.user, token);
+                    } else {
+                        // Either show Login page or use the refresh token to get a new idToken
+                        logInfo("Authorization token has expired");
+                        $location.path('/');
+                    }
+                }
+            }
+        });
 
         function selectServer(fhirServer) {
             $mdSidenav('right').close();
@@ -231,7 +273,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$scope', '$window', 'common', 'config',
-            'conformanceService', 'fhirServers', mainController]);
+        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$rootScope', '$scope', '$window', 'common', 'config',
+            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', mainController]);
 
-})();
+})
+();

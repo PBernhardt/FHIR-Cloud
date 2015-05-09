@@ -1,28 +1,54 @@
 <div ng-controller="encounterLocation as vm" layout="row" layout-sm="column">
-    <div flex="50">
-        <md-content class="md-padding">
-            <md-divider>
-                <div ng-if="vm.practitioners.length > 0">
-                    <md-subheader>Locations</md-subheader>
-                    <md-list>
-                        <md-item ng-repeat="dr in vm.practitioners track by $index">
-                            <md-item-content>
-                                <div class="md-tile-left">
-                                    <md-button ng-click="vm.removeFromPractitionerList(dr)" aria-label="Remove from list">
-                                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
-                                    </md-button>
-                                </div>
-                                <div class="md-tile-content">
-                                    <h3>{{::dr.display}}</h3>
+    <md-content class="md-padding">
+        <ng-form name="encounterLocationForm" ng-model="vm.encounterLocale">
 
-                                    <p>{{::dr.reference}}</p>
-                                </div>
-                            </md-item-content>
-                        </md-item>
-                    </md-list>
-                </div>
-            </md-divider>
-        </md-content>
-    </div>
+            <md-autocomplete flex="100"
+                    id="locationSearch"
+                    md-no-cache="true"
+                    md-selected-item="vm.encounterLocale.location"
+                    md-search-text="vm.locationSearchText"
+                    md-items="location in vm.getLocationReference(vm.locationSearchText)"
+                    md-delay="300"
+                    md-min-length="3"
+                    md-item-text="location"
+                    md-floating-label="Location Search">
+                <span md-highlight-text="vm.searchText">{{location.display}}</span>
+            </md-autocomplete>
 
+            <div layout="column" layout-align="start start" style="height: 100px;">
+                <md-select ng-model="vm.encounterLocale.status">
+                    <md-option ng-value="status" ng-repeat="status in vm.locationStatuses.concept">
+                        {{status.display}}
+                    </md-option>
+                </md-select>
+                <p class="md-caption">Status</p>
+            </div>
+
+            <md-input-container flex="15">
+                <label>Start Date</label>
+                <input ng-model="vm.encounterLocale.period.start" type="date">
+            </md-input-container>
+            <md-input-container flex="15">
+                <label>End Date</label>
+                <input ng-model="vm.encounterLocale.period.end" type="date">
+            </md-input-container>
+
+            <div class="md-padding">
+                <md-button ng-click="vm.addToList(encounterLocationForm, vm.encounterLocale)" aria-lable="Save to list"
+                           ng-if="vm.encounterLocale.location">
+                    <md-icon md-svg-icon="listAdd"></md-icon>
+                </md-button>
+            </div>
+
+            <div ng-if="vm.encounterLocations.length > 0">
+                <md-subheader>Encounter Locations</md-subheader>
+                <md-list>
+                    <md-list-item ng-click="vm.removeListItem(el)" ng-repeat="el in vm.encounterLocations">
+                        <md-icon md-svg-icon="delete"></md-icon>
+                        <p>{{el.location.display}} </p>
+                    </md-list-item>
+                </md-list>
+            </div>
+        </ng-form>
+    </md-content>
 </div>

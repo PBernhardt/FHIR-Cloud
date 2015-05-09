@@ -34,6 +34,10 @@
             if (angular.isDefined(server)) {
                 $window.localStorage.removeItem("patient");
                 $window.localStorage.removeItem("organization");
+                $window.localStorage.removeItem("encounter");
+                $window.localStorage.removeItem("practitioner");
+                $window.localStorage.removeItem("person");
+                $window.localStorage.removeItem("relatedPerson");
                 var currentLocation = $location.path();
                 if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
                     $location.path('/conformance/view/current');
@@ -71,8 +75,6 @@
                 $broadcast(commonConfig.config.authenticatedUserChangeEvent, user);
             }
         }
-
-
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
         }

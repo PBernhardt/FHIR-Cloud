@@ -10,7 +10,9 @@
         'ngMessages',
         'ngCookies',
         'common',
-        //'ui.bootstrap'
+        'auth0',
+        'angular-storage',
+        'angular-jwt'
     ]);
 })();
 (function () {
@@ -49,6 +51,10 @@
             if (angular.isDefined(server)) {
                 $window.localStorage.removeItem("patient");
                 $window.localStorage.removeItem("organization");
+                $window.localStorage.removeItem("encounter");
+                $window.localStorage.removeItem("practitioner");
+                $window.localStorage.removeItem("person");
+                $window.localStorage.removeItem("relatedPerson");
                 var currentLocation = $location.path();
                 if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
                     $location.path('/conformance/view/current');
@@ -86,8 +92,6 @@
                 $broadcast(commonConfig.config.authenticatedUserChangeEvent, user);
             }
         }
-
-
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
         }
@@ -340,9 +344,10 @@
      }]);
      */
 
-    app.config(['$routeProvider', function ($routeProvider) {
+    app.config(['$routeProvider', 'authProvider', function ($routeProvider) {
         $routeProvider.when('/conformance', {
-            templateUrl: 'conformance/conformance-search.html'
+            templateUrl: 'conformance/conformance-search.html',
+            requiresLogin: true
         }).when('/conformance/view/:hashKey', {
             templateUrl: 'conformance/conformance-view.html'
         }).when('/conformance/detailed-search', {
@@ -422,7 +427,8 @@
         }).when('/patient/org/:orgId', {
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
-            templateUrl: 'patient/patient-search.html'
+            templateUrl: 'patient/patient-search.html',
+            requiresLogin: true
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
@@ -479,13 +485,19 @@
             templateUrl: 'valueSet/valueSet-view.html'
         }).when('/valueSet/edit/:hashKey', {
             templateUrl: 'valueSet/valueSet-edit.html'
-        })
-            .when('/daf/:profile', {
-                templateUrl: 'templates/daf.html'
-            })
-            .otherwise({
-                redirectTo: '/home'
-            });
+        }).when('/daf/:profile', {
+            templateUrl: 'templates/daf.html'
+        }).when('/access_token=:accessToken', {
+            template: '',
+            controller: function ($location, AccessToken) {
+                var hash = $location.path().substr(1);
+                AccessToken.setTokenFromString(hash);
+                $location.path('/');
+                $location.replace();
+            }
+        }).otherwise({
+            redirectTo: '/home'
+        });
     }]);
 
     app.config(['$mdThemingProvider', '$mdIconProvider', function ($mdThemingProvider, $mdIconProvider) {
@@ -528,7 +540,7 @@
             .icon("language", "./assets/svg/language.svg", 24)
             .icon("link", "./assets/svg/link.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
-            .icon("listAdd", "./assets/svg/listAdd.svg",24)
+            .icon("listAdd", "./assets/svg/listAdd.svg", 24)
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
             .icon("rectangle", "./assets/svg/menu.svg", 24)
@@ -560,10 +572,15 @@
             .icon("web", "./assets/svg/www.svg", 16);
     }]);
 
-    app.config(['$httpProvider', function ($httpProvider) {
+    app.config(['$httpProvider', 'jwtInterceptorProvider', function ($httpProvider, jwtInterceptorProvider) {
+        jwtInterceptorProvider.tokenGetter = ['store', function (store) {
+            return store.get('token');
+        }];
+
         $httpProvider.defaults.headers.common = {'Accept': 'application/json+fhir, application/json, text/plain, */*'};
         $httpProvider.defaults.headers.put = {'Content-Type': 'application/json+fhir'};
         $httpProvider.defaults.headers.post = {'Content-Type': 'application/json+fhir'};
+        $httpProvider.interceptors.push('jwtInterceptor');
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {
@@ -581,6 +598,19 @@
         //  chrome-extension: will be added to the end of the expression
         $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|file|chrome-extension):|data:image\//);
     }]);
+
+    app.config(['authProvider', function (authProvider) {
+        authProvider.init({
+            domain: 'fhir-cloud.auth0.com',
+            clientID: 'NT5hRGyonHkBXmDrr0QeAtq9ykDqCmyR',
+            loginUrl: '/home'
+        });
+    }]);
+
+    app.run(function (auth) {
+        // This hooks al auth events to check everything as soon as the app starts
+        auth.hookEvents();
+    });
 })();(function () {
     'use strict';
 
@@ -1032,7 +1062,7 @@
                     {
                         "id": 2,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
+                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                     },
                     {
@@ -1044,7 +1074,7 @@
                     {
                         "id": 4,
                         "name": "Argonaut Reference",
-                        "baseUrl": "http://argonaut.healthintersections.com.au/open",
+                        "baseUrl": "http://argonaut.healthintersections.com.au",
                         "secure": false
                     },
                     {
@@ -2682,8 +2712,8 @@
 
     var controllerId = 'mainController';
 
-    function mainController($filter, $mdDialog, $mdSidenav, $location, $scope, $window, common, config,
-                            conformanceService, fhirServers) {
+    function mainController($filter, $mdDialog, $mdSidenav, $location, $rootScope, $scope, $window, common, config,
+                            conformanceService, fhirServers, auth, store, jwtHelper) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -2809,6 +2839,29 @@
 
         vm.authenticate = authenticate;
 
+        function login() {
+            auth.signin({}, function (profile, token) {
+                // Success callback
+                store.set('profile', profile);
+                store.set('token', token);
+                $location.path('/');
+                common.changeUser(profile);
+            }, function () {
+                // Error callback
+            });
+        }
+
+        vm.login = login;
+
+        function logout() {
+            auth.signout();
+            store.remove('profile');
+            store.remove('token');
+            common.changeUser(null);
+        }
+
+        vm.logout = logout;
+
         function authenticateController($scope, $mdDialog) {
             function close() {
                 $mdDialog.hide();
@@ -2836,9 +2889,28 @@
 
         $scope.$on(config.events.authenticatedUserChanged,
             function (event, user) {
+                if (user === null && vm.user !== null) {
+                    logInfo(vm.user.name + " has been logged out");
+                }
                 vm.user = user;
             }
         );
+
+        $rootScope.$on('$locationChangeStart', function() {
+            if (!auth.isAuthenticated) {
+                var token = store.get('token');
+                vm.user = store.get('profile');
+                if (token) {
+                    if (!jwtHelper.isTokenExpired(token)) {
+                        auth.authenticate(vm.user, token);
+                    } else {
+                        // Either show Login page or use the refresh token to get a new idToken
+                        logInfo("Authorization token has expired");
+                        $location.path('/');
+                    }
+                }
+            }
+        });
 
         function selectServer(fhirServer) {
             $mdSidenav('right').close();
@@ -2910,10 +2982,11 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$scope', '$window', 'common', 'config',
-            'conformanceService', 'fhirServers', mainController]);
+        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$rootScope', '$scope', '$window', 'common', 'config',
+            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', mainController]);
 
-})();
+})
+();
 (function () {
     'use strict';
 
@@ -8340,7 +8413,7 @@
 
     var controllerId = 'encounterLocation';
 
-    function encounterLocation(common, fhirServers, organizationReferenceService, practitionerReferenceService, encounterLocationService) {
+    function encounterLocation(common, fhirServers, encounterValueSets, locationService, encounterLocationService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -8350,37 +8423,26 @@
         var noToast = false;
         var $q = common.$q;
 
-        function activate() {
-            common.activateController([getActiveServer(), initializeReferences()], controllerId).then(function () {
+        function _activate() {
+            common.activateController([_getActiveServer(), _initializeReferences()], controllerId).then(function () {
             });
         }
-        vm.activate = activate;
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
         }
 
-        function initializeReferences()
-        {
-            var encounterLocations = encounterLocationService.getAll();
-            for (var i = 0, len = encounterLocations.length; i < len; i++) {
-                var item = encounterLocations[i];
-                if (item.reference.indexOf('Practitioner/') !== -1) {
-                    practitionerReferenceService.add(item);
-                } else {
-                    organizationReferenceService.add(item);
-                }
-            }
-            vm.practitioners = practitionerReferenceService.getAll();
-            vm.organizations = organizationReferenceService.getAll();
+        function _initializeReferences() {
+            vm.encounterLocations = encounterLocationService.getAll();
+            vm.locationStatuses = encounterValueSets.encounterLocationStatus();
         }
 
-        function getOrganizationReference(input) {
+        function getLocationReference(input) {
             var deferred = $q.defer();
-            organizationReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+            locationService.remoteLookup(vm.activeServer.baseUrl, input)
                 .then(function (data) {
                     deferred.resolve(data);
                 }, function (error) {
@@ -8390,71 +8452,38 @@
             return deferred.promise;
         }
 
-        vm.getOrganizationReference = getOrganizationReference;
+        vm.getLocationReference = getLocationReference;
 
-        function addToOrganizationList(organization) {
-            if (organization) {
-                organizationReferenceService.add(organization);
-                vm.organizations = organizationReferenceService.getAll();
-                encounterLocationService.add(organization);
-            }
+        function addToList(form, location) {
+            encounterLocationService.add(location);
+            vm.encounterLocations = encounterLocationService.getAll();
+            form.$setPristine();
         }
 
-        vm.addToOrganizationList = addToOrganizationList;
+        vm.addToList = addToList;
 
-        function removeFromOrganizationList(organization) {
-            organizationReferenceService.remove(organization);
-            vm.organizations = organizationReferenceService.getAll();
-            encounterLocationService.remove(organization);
+        function removeFromList(location) {
+            encounterLocationService.remove(location);
+            vm.encounterLocations = encounterLocationService.getAll();
         }
 
-        vm.removeFromOrganizationList = removeFromOrganizationList;
-
-        function getPractitionerReference(input) {
-            var deferred = $q.defer();
-            practitionerReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
-                .then(function (data) {
-                    deferred.resolve(data);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    deferred.reject();
-                });
-            return deferred.promise;
-        }
-
-        vm.getPractitionerReference = getPractitionerReference;
-
-        function addToPractitionerList(practitioner) {
-            if (practitioner) {
-                practitionerReferenceService.add(practitioner);
-                vm.practitioners = practitionerReferenceService.getAll();
-                encounterLocationService.add(practitioner);
-            }
-        }
-
-        vm.addToPractitionerList = addToPractitionerList;
-
-        function removeFromPractitionerList(practitioner) {
-            practitionerReferenceService.remove(practitioner);
-            vm.practitioners = practitionerReferenceService.getAll();
-            encounterLocationService.remove(practitioner);
-        }
-
-        vm.removeFromPractitionerList = removeFromPractitionerList;
+        vm.removeFromList = removeFromList;
 
         vm.activeServer = null;
-        vm.organizations = [];
-        vm.organizationSearchText = '';
-        vm.practitioners = [];
-        vm.practitionerSearchText = '';
-        vm.selectedOrganization = null;
-        vm.selectedPractitioner = null;
+        vm.encounterLocations = [];
+        vm.locationSearchText = '';
+        vm.selectedEncounterLocation = null;
+        vm.encounterLocale = {
+            "location": null,
+            "status": null,
+            "period": null
+        };
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['common', 'fhirServers', 'organizationReferenceService', 'practitionerReferenceService', 'encounterLocationService', encounterLocation]);
+        ['common', 'fhirServers', 'encounterValueSets', 'locationService', 'encounterLocationService', encounterLocation]);
 })();(function () {
     'use strict';
 
@@ -15126,6 +15155,950 @@
 
 })
 ();(function () {
+    'use strict';
+
+    var controllerId = 'locationDetail';
+
+    function locationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
+                                $mdDialog, common, config, contactService, fhirServers, identifierService, localValueSets,
+                                locationService, contactPointService, sessionService, patientService, personService,
+                                practitionerService) {
+        /* jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var $q = common.$q;
+        var noToast = false;
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
+
+        function cancel() {
+
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        function deleteLocation(location) {
+            function executeDelete() {
+                if (location && location.resourceId) {
+                    locationService.deleteCachedLocation(location.hashKey, location.resourceId)
+                        .then(function () {
+                            logSuccess("Deleted location " + location.name);
+                            $location.path('/location');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+
+            if (angular.isDefined(location) && location.resourceId) {
+                var confirm = $mdDialog.confirm().title('Delete ' + location.name + '?').ok('Yes').cancel('No');
+                $mdDialog.show(confirm).then(executeDelete);
+            } else {
+                logInfo("You must first select an location to delete.")
+            }
+        }
+
+        function edit(location) {
+            if (location && location.hashKey) {
+                $location.path('/location/edit/' + location.hashKey);
+            }
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function getLocationReference(input) {
+            var deferred = $q.defer();
+            locationService.getLocationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Locations from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data || []);
+                }, function (error) {
+                    logError('Error getting locations', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function getLocationTypes() {
+            vm.locationTypes = localValueSets.locationType();
+        }
+
+        function getRequestedLocation() {
+            function initializeRelatedData(data) {
+                vm.location = data.resource || data;
+                if (angular.isUndefined(vm.location.type)) {
+                    vm.location.type = {"coding": []};
+                }
+                vm.location.resourceId = vm.activeServer.baseUrl + '/Location/' + vm.location.id;
+                vm.title = vm.location.name;
+                identifierService.init(vm.location.identifier, "multi", "location");
+                addressService.init(vm.location.address, false);
+                contactService.init(vm.location.contact);
+                contactPointService.init(vm.location.telecom, false, false);
+                vm.isBusy = false;
+                if (vm.lookupKey !== "new") {
+                    $window.localStorage.location = JSON.stringify(vm.location);
+                    _getAffiliatedPatients();
+                    _getAffiliatedPractitioners();
+                }
+
+            }
+
+            vm.lookupKey = $routeParams.hashKey;
+            vm.isBusy = true;
+
+            if (vm.lookupKey === "current") {
+                if (angular.isUndefined($window.localStorage.location) || ($window.localStorage.location === null)) {
+                    if (angular.isUndefined($routeParams.id)) {
+                        $location.path('/location');
+                    }
+                } else {
+                    vm.location = JSON.parse($window.localStorage.location);
+                    vm.location.hashKey = "current";
+                    initializeRelatedData(vm.location);
+                }
+            } else if (vm.lookupKey === 'new') {
+                var data = locationService.initializeNewLocation();
+                initializeRelatedData(data);
+                vm.title = 'Add New Location';
+                vm.isEditing = false;
+            } else if (angular.isDefined($routeParams.resourceId)) {
+                var fullPath = vm.activeServer.baseUrl + '/Location/' + $routeParams.resourceId;
+                logInfo("Fetching " + fullPath, null, noToast);
+                locationService.getLocation(fullPath)
+                    .then(initializeRelatedData).then(function () {
+                        var session = sessionService.getSession();
+                        session.location = vm.location;
+                        sessionService.updateSession(session);
+                    }, function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                        vm.isBusy = false;
+                    });
+            } else {
+                if (vm.lookupKey) {
+                    locationService.getCachedLocation(vm.lookupKey)
+                        .then(initializeRelatedData).then(function () {
+                            var session = sessionService.getSession();
+                            session.location = vm.location;
+                            sessionService.updateSession(session);
+                        }, function (error) {
+                            logError($filter('unexpectedOutcome')(error));
+                            vm.isBusy = false;
+                        });
+                } else if ($routeParams.id) {
+                    var resourceId = vm.activeServer.baseUrl + '/Location/' + $routeParams.id;
+                    locationService.getLocation(resourceId)
+                        .then(initializeRelatedData, function (error) {
+                            logError($filter('unexpectedOutcome')(error));
+                            vm.isBusy = false;
+                        });
+                }
+            }
+        }
+
+        function getTitle() {
+            var title = '';
+            if (vm.location) {
+                title = vm.title = 'Edit ' + ((vm.location && vm.location.fullName) || '');
+            } else {
+                title = vm.title = 'Add New Location';
+            }
+            vm.title = title;
+            return vm.title;
+        }
+
+        function goBack() {
+            $window.history.back();
+        }
+
+        function processResult(results) {
+            var resourceVersionId = results.headers.location || results.headers["content-location"];
+            if (angular.isUndefined(resourceVersionId)) {
+                logInfo("Location saved, but location is unavailable. CORS is not implemented correctly at " + vm.activeServer.name);
+            } else {
+                logInfo("Location saved at " + resourceVersionId);
+                vm.location.resourceVersionId = resourceVersionId;
+                vm.location.resourceId = common.setResourceId(vm.location.resourceId, resourceVersionId);
+            }
+            vm.isEditing = true;
+            getTitle();
+        }
+
+        function save() {
+            if (vm.location.name.length < 5) {
+                logError("Location Name must be at least 5 characters");
+                return;
+            }
+            var location = locationService.initializeNewLocation().resource;
+            location.name = vm.location.name;
+            location.type = vm.location.type;
+            location.address = addressService.mapFromViewModel();
+            location.telecom = contactPointService.mapFromViewModel();
+            location.contact = contactService.getAll();
+            location.partOf = vm.location.partOf;
+            location.identifier = identifierService.getAll();
+            location.active = vm.location.active;
+            if (vm.isEditing) {
+                location.id = vm.location.id;
+                locationService.updateLocation(vm.location.resourceId, location)
+                    .then(processResult,
+                    function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                    });
+            } else {
+                locationService.addLocation(location)
+                    .then(processResult,
+                    function (error) {
+                        logError($filter('unexpectedOutcome')(error));
+                    });
+            }
+        }
+
+        function _getAffiliatedPractitioners() {
+            var deferred = $q.defer();
+            practitionerService.getPractitioners(vm.activeServer.baseUrl, undefined, vm.location.id)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' + vm.activeServer.name, null, noToast);
+                    common.changePractitionerList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError('Error getting Practitioners', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function _getAffiliatedPatients() {
+            var deferred = $q.defer();
+            patientService.getPatients(vm.activeServer.baseUrl, undefined, vm.location.id)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    common.changePatientList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError('Error getting Patients', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        function showSource($event) {
+            _showRawData(vm.location, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                optionsOrPresent: {disableParentScroll: false},
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event
+            });
+        }
+
+        function goToPartOf(resourceReference) {
+            var id = ($filter)('idFromURL')(resourceReference.reference);
+            $location.path('/location/get/' + id);
+        }
+
+        vm.goToPartOf = goToPartOf;
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function _activate() {
+            common.activateController([getActiveServer(), getLocationTypes()], controllerId).then(function () {
+                getRequestedLocation();
+            });
+        }
+
+        function createRandomPatients(event) {
+            vm.location.resourceId = vm.activeServer.baseUrl + '/Location/' + vm.location.id;
+            logSuccess("Creating random patients for " + vm.location.name);
+            patientService.seedRandomPatients(vm.location.id, vm.location.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });
+        }
+
+        function createRandomPersons(event) {
+            vm.location.resourceId = vm.activeServer.baseUrl + '/Location/' + vm.location.id;
+            logSuccess("Creating random patients for " + vm.location.resourceId);
+            personService.seedRandomPersons(vm.location.resourceId, vm.location.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        createRandomPatients();
+                        break;
+                    case 1:
+                        $location.path('/location/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/location');
+                        break;
+                    case 3:
+                        $location.path('/location/edit/current');
+                        break;
+                    case 4:
+                        $location.path('/location/edit/new');
+                        break;
+                    case 5:
+                        deleteLocation(vm.location);
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                if (vm.isEditing) {
+                    this.items = [
+                        {name: 'Add random patients', icon: 'groupAdd', index: 0},
+                        {name: 'Quick find', icon: 'quickFind', index: 2},
+                        {name: 'Edit location', icon: 'edit', index: 3},
+                        {name: 'Add new location', icon: 'hospital', index: 4}
+                    ];
+                } else {
+                    this.items = [
+                        {name: 'Detailed search', icon: 'search', index: 1},
+                        {name: 'Quick find', icon: 'quickFind', index: 2}
+                    ];
+                }
+                this.title = 'Location search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.cancel = cancel;
+        vm.contactTypes = undefined;
+        vm.delete = deleteLocation;
+        vm.edit = edit;
+        vm.getLocationReference = getLocationReference;
+        vm.getTitle = getTitle;
+        vm.goBack = goBack;
+        vm.isBusy = false;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.loadingLocations = false;
+        vm.location = undefined;
+        vm.locationTypes = undefined;
+        vm.save = save;
+        vm.searchText = undefined;
+        vm.states = undefined;
+        vm.title = 'locationDetail';
+        vm.createRandomPatients = createRandomPatients;
+        vm.createRandomPersons = createRandomPersons;
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
+            'common', 'config', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'locationService',
+            'contactPointService', 'sessionService', 'patientService', 'personService', 'practitionerService',
+            locationDetail]);
+
+})
+();(function () {
+    'use strict';
+
+    var controllerId = 'locationSearch';
+
+    function locationSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, locationService) {
+        var getLogFn = common.logger.getLogFn;
+        var logInfo = getLogFn(controllerId, 'info');
+        var logError = getLogFn(controllerId, 'error');
+        var noToast = false;
+        var $q = common.$q;
+
+        /* jshint validthis:true */
+        var vm = this;
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function getCachedSearchResults() {
+            locationService.getCachedSearchResults()
+                .then(processSearchResults);
+        }
+
+        function activate() {
+            common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
+                .then(function () {
+                    _loadLocationTypes();
+                });
+        }
+
+        function goToDetail(hash) {
+            if (hash) {
+                $location.path('/location/view/' + hash);
+            }
+        }
+
+        vm.goToDetail = goToDetail;
+
+        function processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.locations = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            locationService.getLocations(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Locations from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data.entry || []);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                }, function (error) {
+                    logError('Error getting locations', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+        vm.quickSearch = quickSearch;
+
+        function searchLocations(searchText) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            locationService.searchLocations(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Locations from ' + vm.activeServer.name, null, noToast);
+                    processSearchResults(data);
+                    vm.isBusy = false;
+                    vm.selectedTab = 1;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError('Error finding locations: ', error);
+                    deferred.reject();
+                })
+                .then(deferred.resolve());
+            return deferred.promise;
+        }
+
+        function dereferenceLink(url) {
+            locationService.getLocationsByLink(url)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.locations) ? data.locations.length : 0) + ' Locations from ' + vm.activeServer.name, null, noToast);
+                    return data;
+                }, function (error) {
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                })
+                .then(processSearchResults)
+                .then(function () {
+                });
+        }
+
+        vm.dereferenceLink = dereferenceLink;
+
+        function getLocationReference(input) {
+            var deferred = $q.defer();
+            locationService.getLocationReference(vm.activeServer.baseUrl, input)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Locations from ' + vm.activeServer.name, null, noToast);
+                    deferred.resolve(data || []);
+                }, function (error) {
+                    logError('Error getting locations', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.getLocationReference = getLocationReference;
+
+        function goToLocation(location) {
+            if (location && location.$$hashKey) {
+                $location.path('/location/view/' + location.$$hashKey);
+            }
+        }
+        vm.goToLocation = goToLocation;
+
+        function _loadLocationTypes() {
+            vm.locationTypes = localValueSets.locationType();
+        }
+
+        function actions($event) {
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('/location/edit/new');
+                        break;
+                    case 1:
+                        $location.path('/location/detailed-search');
+                        break;
+                    case 2:
+                        $location.path('/location');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Add new location', icon: 'hospital', index: 0},
+                    {name: 'Detailed search', icon: 'search', index: 1},
+                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                ];
+                this.title = 'Location search options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
+        }
+
+        vm.actions = actions;
+
+        function detailSearch() {
+            // build query string from inputs
+            var queryString = '';
+            var queryParam = {param: '', value: ''};
+            var queryParams = [];
+            if (vm.locationSearch.name) {
+                queryParam.param = "name";
+                queryParam.value = vm.locationSearch.name;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.locationSearch.address.street) {
+                queryParam.param = "addressLine";
+                queryParam.value = vm.locationSearch.address.street;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.locationSearch.address.city) {
+                queryParam.param = "city";
+                queryParam.value = vm.locationSearch.address.city;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.locationSearch.address.state) {
+                queryParam.param = "state";
+                queryParam.value = vm.locationSearch.address.state;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.locationSearch.address.postalCode) {
+                queryParam.param = "postalCode";
+                queryParam.value = vm.locationSearch.address.postalCode;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.locationSearch.identifier.system && vm.locationSearch.identifier.value) {
+                queryParam.param = "identifier";
+                queryParam.value = vm.locationSearch.identifier.system.concat("|", vm.locationSearch.identifier.value);
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.locationSearch.type) {
+                queryParam.param = "type";
+                queryParam.value = vm.locationSearch.type;
+                queryParams.push(_.clone(queryParam));
+            }
+            if (vm.locationSearch.partOf) {
+                queryParam.param = "partOf";
+                queryParam.value = vm.locationSearch.partOf.reference;
+                queryParams.push(_.clone(queryParam));
+            }
+            _.forEach(queryParams, function (item) {
+                queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
+            });
+            queryString = _.trimRight(queryString, '&');
+
+            searchLocations(queryString);
+        }
+
+        vm.detailSearch = detailSearch;
+
+        vm.activeServer = null;
+        vm.isBusy = false;
+        vm.locations = [];
+        vm.errorOutcome = null;
+        vm.locationTypes = null;
+        vm.locationSearch = {
+            name: undefined,
+            address: {street: undefined, city: undefined, state: undefined, postalCode: undefined},
+            identifier: {system: undefined, value: undefined},
+            type: undefined,
+            partOf: undefined
+        };
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+        vm.searchResults = null;
+        vm.searchText = '';
+        vm.title = 'Locations';
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets',
+            'locationService', locationSearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'locationService';
+
+    function locationService(common, dataCache, fhirClient, fhirServers) {
+        var dataCacheKey = 'localLocations';
+        var getLogFn = common.logger.getLogFn;
+        var logWarning = getLogFn(serviceId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function addLocation(resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/Location";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedLocation(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                var removed = false;
+                var cachedLocations = searchResults.entry;
+                for (var i = 0, len = cachedLocations.length; i < len; i++) {
+                    if (cachedLocations[i].$$hashKey === hashKey) {
+                        cachedLocations.splice(i, 1);
+                        searchResults.entry = cachedLocations;
+                        searchResults.totalResults = (searchResults.totalResults - 1);
+                        dataCache.addToCache(dataCacheKey, searchResults);
+                        removed = true;
+                        break;
+                    }
+                }
+                if (removed) {
+                    deferred.resolve();
+                } else {
+                    logWarning('Location not found in cache: ' + hashKey, null, noToast);
+                    deferred.resolve();
+                }
+            }
+
+            var deferred = $q.defer();
+            deleteLocation(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache)
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteLocation(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getCachedLocation(hashKey) {
+            function getLocation(searchResults) {
+                var cachedLocation;
+                var cachedLocations = searchResults.entry;
+                cachedLocation = _.find(cachedLocations, {'$$hashKey': hashKey});
+                if (cachedLocation) {
+                    deferred.resolve(cachedLocation);
+                } else {
+                    deferred.reject('Location not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            getCachedSearchResults()
+                .then(getLocation,
+                function () {
+                    deferred.reject('Location search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getLocation(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: add support for summary when DSTU2 server implementers have support
+        function getLocationReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/Location?name=' + input + '&_count=10')
+                .then(function (results) {
+                    var locations = [];
+                    if (results.data.entry) {
+                        for (var i = 0, len = results.data.entry.length; i < len; i++) {
+                            var item = results.data.entry[i];
+                            if (item.resource && item.resource.resourceType === 'Location') {
+                                locations.push({
+                                    display: item.resource.name,
+                                    reference: baseUrl + '/Location/' + item.resource.id
+                                });
+                            }
+                            if (10 === i) {
+                                break;
+                            }
+                        }
+                    }
+                    if (locations.length === 0) {
+                        locations.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(locations);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: waiting for server implementers to add support for _summary
+        function getLocations(baseUrl, nameFilter) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/Location?name=' + nameFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchLocations(baseUrl, filter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(filter)) {
+                deferred.reject('Invalid search input');
+            }
+
+            fhirClient.getResource(baseUrl + '/Location?' + filter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getLocationsByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    var searchResults = {"links": {}, "locations": []};
+                    var locations = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'Location') {
+                                    locations.push({display: item.content.name, reference: item.id});
+                                }
+                            });
+
+                    }
+                    if (locations.length === 0) {
+                        locations.push({display: "No matches", reference: ''});
+                    }
+                    searchResults.locations = locations;
+                    if (results.data.link) {
+                        searchResults.links = results.data.link;
+                    }
+                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
+                    deferred.resolve(searchResults);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewLocation() {
+            var data = {};
+            data.resource = {
+                "resourceType": "Location",
+                "identifier": [],
+                "type": {"coding": []},
+                "telecom": [],
+                "contact": [],
+                "address": [],
+                "partOf": null,
+                "location": [],
+                "active": true
+            };
+            return data;
+        }
+
+        function updateLocation(resourceVersionId, resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.location.length === 0) {
+                resource.location = null;
+            }
+            return $q.when(resource);
+        }
+
+        function _prepCoding(coding) {
+            var result = null;
+            if (angular.isArray(coding) && angular.isDefined(coding[0])) {
+                if (angular.isObject(coding[0])) {
+                    result = coding;
+                } else {
+                    var parsedCoding = JSON.parse(coding[0]);
+                    result = [];
+                    result.push(parsedCoding ? parsedCoding : null);
+                }
+            }
+            return result;
+        }
+
+        var service = {
+            addLocation: addLocation,
+            clearCache: clearCache,
+            deleteCachedLocation: deleteCachedLocation,
+            deleteLocation: deleteLocation,
+            getCachedLocation: getCachedLocation,
+            getCachedSearchResults: getCachedSearchResults,
+            getLocation: getLocation,
+            getLocations: getLocations,
+            getLocationsByLink: getLocationsByLink,
+            getLocationReference: getLocationReference,
+            initializeNewLocation: initializeNewLocation,
+            searchLocations: searchLocations,
+            updateLocation: updateLocation
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', locationService]);
+
+})();(function () {
     'use strict';
 
     var serviceId = 'observationValueSets';

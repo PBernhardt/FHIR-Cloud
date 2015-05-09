@@ -7,13 +7,14 @@
     <link rel="stylesheet" href="assets/lib/angular-material.min.css">
     <link rel="stylesheet" href="assets/app.css"/>
     <link rel="stylesheet" href="assets/lib/angular-csp.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 </head>
 
 <body ng-app="FHIRCloud" layout="column" ng-controller="mainController as vm" ng-cloak>
 <md-toolbar layout="row" class="fill-height">
     <div flex="25" layout="row" layout-align="space-between center">
         <md-button title="Menu"
-                class="md-icon-button launch"
+                   class="md-icon-button launch"
                    hide-gt-sm
                    ng-click="vm.toggleMenu()"
                    aria-label="menu">
@@ -29,12 +30,24 @@
     </div>
 
     <div flex layout="row" layout-align="end center">
-        <h4 hide-sm class="md-subhead">User: {{vm.user || "Guest"}}</h4>
-        <md-button title="Authenticate user" class="md-icon-button launch" ng-click="vm.authenticate()" aria-label="Account">
-            <md-icon md-svg-src="account"></md-icon>
-        </md-button>
+        <h4 hide-sm class="md-subhead">User: {{vm.user.name || "Guest"}}</h4>
+
+        <div ng-if="vm.user.name">
+            <md-button title="Logout" class="md-icon-button launch" ng-click="vm.logout()"
+                       aria-label="Account">
+                <md-icon md-svg-src="account"></md-icon>
+            </md-button>
+        </div>
+        <div ng-if="!vm.user.name">
+            <md-button title="Login" class="md-icon-button launch" ng-click="vm.login()"
+                       aria-label="Account">
+                <md-icon md-svg-src="account"></md-icon>
+            </md-button>
+        </div>
+
         <h4 hide-sm class="md-subhead">Server: {{vm.activeServer.name || "Select a server"}}</h4>
-        <md-button title="Change remote FHIR Server" class="md-icon-button launch" ng-click="vm.toggleServers()" aria-label="FHIR Servers">
+        <md-button title="Change remote FHIR Server" class="md-icon-button launch" ng-click="vm.toggleServers()"
+                   aria-label="FHIR Servers">
             <md-icon md-svg-src="fire"></md-icon>
         </md-button>
         <md-button title="About FHIR Cloud"
@@ -107,5 +120,12 @@
 <script src="assets/lib/lodash.min.js"></script>
 <script src="assets/lib/moment.min.js"></script>
 <script src="assets/app.js"></script>
+<!-- Auth0 Lock script and AngularJS module -->
+<script src="//cdn.auth0.com/js/lock-7.1.min.js"></script>
+<!-- angular-jwt and angular-storage -->
+<script type="text/javascript" src="//cdn.rawgit.com/auth0/angular-storage/master/dist/angular-storage.js"></script>
+<script type="text/javascript" src="//cdn.rawgit.com/auth0/angular-jwt/master/dist/angular-jwt.js"></script>
+
+<script src="//cdn.auth0.com/w2/auth0-angular-4.js"></script>
 </body>
 </html>

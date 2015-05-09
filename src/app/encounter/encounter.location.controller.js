@@ -3,7 +3,7 @@
 
     var controllerId = 'encounterLocation';
 
-    function encounterLocation(common, fhirServers, organizationReferenceService, practitionerReferenceService, encounterLocationService) {
+    function encounterLocation(common, fhirServers, encounterValueSets, locationService, encounterLocationService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -13,37 +13,26 @@
         var noToast = false;
         var $q = common.$q;
 
-        function activate() {
-            common.activateController([getActiveServer(), initializeReferences()], controllerId).then(function () {
+        function _activate() {
+            common.activateController([_getActiveServer(), _initializeReferences()], controllerId).then(function () {
             });
         }
-        vm.activate = activate;
 
-        function getActiveServer() {
+        function _getActiveServer() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
         }
 
-        function initializeReferences()
-        {
-            var encounterLocations = encounterLocationService.getAll();
-            for (var i = 0, len = encounterLocations.length; i < len; i++) {
-                var item = encounterLocations[i];
-                if (item.reference.indexOf('Practitioner/') !== -1) {
-                    practitionerReferenceService.add(item);
-                } else {
-                    organizationReferenceService.add(item);
-                }
-            }
-            vm.practitioners = practitionerReferenceService.getAll();
-            vm.organizations = organizationReferenceService.getAll();
+        function _initializeReferences() {
+            vm.encounterLocations = encounterLocationService.getAll();
+            vm.locationStatuses = encounterValueSets.encounterLocationStatus();
         }
 
-        function getOrganizationReference(input) {
+        function getLocationReference(input) {
             var deferred = $q.defer();
-            organizationReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
+            locationService.remoteLookup(vm.activeServer.baseUrl, input)
                 .then(function (data) {
                     deferred.resolve(data);
                 }, function (error) {
@@ -53,69 +42,36 @@
             return deferred.promise;
         }
 
-        vm.getOrganizationReference = getOrganizationReference;
+        vm.getLocationReference = getLocationReference;
 
-        function addToOrganizationList(organization) {
-            if (organization) {
-                organizationReferenceService.add(organization);
-                vm.organizations = organizationReferenceService.getAll();
-                encounterLocationService.add(organization);
-            }
+        function addToList(form, location) {
+            encounterLocationService.add(location);
+            vm.encounterLocations = encounterLocationService.getAll();
+            form.$setPristine();
         }
 
-        vm.addToOrganizationList = addToOrganizationList;
+        vm.addToList = addToList;
 
-        function removeFromOrganizationList(organization) {
-            organizationReferenceService.remove(organization);
-            vm.organizations = organizationReferenceService.getAll();
-            encounterLocationService.remove(organization);
+        function removeFromList(location) {
+            encounterLocationService.remove(location);
+            vm.encounterLocations = encounterLocationService.getAll();
         }
 
-        vm.removeFromOrganizationList = removeFromOrganizationList;
-
-        function getPractitionerReference(input) {
-            var deferred = $q.defer();
-            practitionerReferenceService.remoteLookup(vm.activeServer.baseUrl, input)
-                .then(function (data) {
-                    deferred.resolve(data);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    deferred.reject();
-                });
-            return deferred.promise;
-        }
-
-        vm.getPractitionerReference = getPractitionerReference;
-
-        function addToPractitionerList(practitioner) {
-            if (practitioner) {
-                practitionerReferenceService.add(practitioner);
-                vm.practitioners = practitionerReferenceService.getAll();
-                encounterLocationService.add(practitioner);
-            }
-        }
-
-        vm.addToPractitionerList = addToPractitionerList;
-
-        function removeFromPractitionerList(practitioner) {
-            practitionerReferenceService.remove(practitioner);
-            vm.practitioners = practitionerReferenceService.getAll();
-            encounterLocationService.remove(practitioner);
-        }
-
-        vm.removeFromPractitionerList = removeFromPractitionerList;
+        vm.removeFromList = removeFromList;
 
         vm.activeServer = null;
-        vm.organizations = [];
-        vm.organizationSearchText = '';
-        vm.practitioners = [];
-        vm.practitionerSearchText = '';
-        vm.selectedOrganization = null;
-        vm.selectedPractitioner = null;
+        vm.encounterLocations = [];
+        vm.locationSearchText = '';
+        vm.selectedEncounterLocation = null;
+        vm.encounterLocale = {
+            "location": null,
+            "status": null,
+            "period": null
+        };
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['common', 'fhirServers', 'organizationReferenceService', 'practitionerReferenceService', 'encounterLocationService', encounterLocation]);
+        ['common', 'fhirServers', 'encounterValueSets', 'locationService', 'encounterLocationService', encounterLocation]);
 })();

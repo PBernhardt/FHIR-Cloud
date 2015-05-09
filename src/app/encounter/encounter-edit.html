@@ -10,8 +10,8 @@
         </md-button>
     </div>
     <div flex="100">
-        <form name="encounterEditForm" class="form-horizontal"
-              ng-model="vm.encounter">
+        <ng-form name="encounterEditForm" class="form-horizontal"
+                 ng-model="vm.encounter">
             <md-tabs md-dynamic-height>
                 <md-tab label="Overview">
                     <div layout="row" layout-sm="column" layout-align="space-between center" layout-wrap>
@@ -103,7 +103,7 @@
                     </div>
                 </md-tab>
                 <md-tab label="Hospitalization">
-                    <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between end"
+                    <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between center"
                          layout-wrap style="position: relative; top:15px">
 
                         <md-input-container flex="50">
@@ -203,6 +203,6 @@
                 </md-button>
                 <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
             </div>
-        </form>
+        </ng-form>
     </div>
 </div>
