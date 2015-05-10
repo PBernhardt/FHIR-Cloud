@@ -1072,8 +1072,8 @@
                     },
                     {
                         "id": 4,
-                        "name": "Argonaut Reference",
-                        "baseUrl": "http://argonaut.healthintersections.com.au",
+                        "name": "Furore Spark",
+                        "baseUrl": "http://spark-dstu2.furore.com/fhir",
                         "secure": false
                     },
                     {
@@ -2893,6 +2893,7 @@
             } else {
                 logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
                 logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
+
             }
 
         }
