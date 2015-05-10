@@ -30,7 +30,7 @@
     </div>
 
     <div flex layout="row" layout-align="end center">
-        <h4 hide-sm class="md-subhead">SMART Access</h4>
+        <h4 hide-sm class="md-subhead" ng-if="vm.user.name">SMART Access</h4>
 
         <div ng-if="vm.user.name">
             <md-button title="SMART Access" class="md-icon-button launch" ng-click="vm.smartAuth()"
@@ -38,7 +38,7 @@
                 <md-icon md-svg-src="security"></md-icon>
             </md-button>
         </div>
-git
+
         <h4 hide-sm class="md-subhead">User: {{vm.user.name || "Guest"}}</h4>
 
         <div ng-if="vm.user.name">
