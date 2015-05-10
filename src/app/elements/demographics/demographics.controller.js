@@ -23,7 +23,7 @@
                     if (_.first(vm.demographics.language, coding).length === 0) {
                         vm.demographics.language.push(coding);
                     }
-                    updateLanguage();
+                  //  updateLanguage();
                 }
                 vm.selectedLanguage = null;
             }

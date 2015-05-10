@@ -7181,7 +7181,7 @@
                     if (_.first(vm.demographics.language, coding).length === 0) {
                         vm.demographics.language.push(coding);
                     }
-                    updateLanguage();
+                  //  updateLanguage();
                 }
                 vm.selectedLanguage = null;
             }
@@ -7411,7 +7411,7 @@
         }
 
         function getBirthDate() {
-            if (_birthDate !== undefined) {
+            if (_birthDate !== undefined && _birthDate !== null) {
                 _birthDate.$$display = $filter('date')(_birthDate, 'longDate');
             }
             return _birthDate;
@@ -7426,7 +7426,7 @@
         }
 
         function getDeceasedDate() {
-            if (_deceasedDate !== undefined) {
+            if (_deceasedDate !== undefined && _deceasedDate !== null) {
                 _deceasedDate.$$display = $filter('date')(_deceasedDate, 'longDate');
             }
             return _deceasedDate;
