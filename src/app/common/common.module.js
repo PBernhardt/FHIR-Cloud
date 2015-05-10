@@ -38,6 +38,7 @@
                 $window.localStorage.removeItem("practitioner");
                 $window.localStorage.removeItem("person");
                 $window.localStorage.removeItem("relatedPerson");
+                $window.localStorage.removeItem("authToken");
                 var currentLocation = $location.path();
                 if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
                     $location.path('/conformance/view/current');

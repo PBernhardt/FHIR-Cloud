@@ -4,7 +4,7 @@
     var controllerId = 'mainController';
 
     function mainController($filter, $mdDialog, $mdSidenav, $location, $rootScope, $scope, $window, common, config,
-                            conformanceService, fhirServers, auth, store, jwtHelper) {
+                            conformanceService, fhirServers, auth, store, jwtHelper, smartAuthorizationService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -132,7 +132,6 @@
 
         function login() {
             auth.signin({}, function (profile, token) {
-                // Success callback
                 store.set('profile', profile);
                 store.set('token', token);
                 $location.path('/');
@@ -152,6 +151,20 @@
         }
 
         vm.logout = logout;
+
+        function smartAuth() {
+            logInfo("Initiating SMART on FHIR authorization ...", null, noToast);
+            if (angular.isUndefined(vm.activeServer.authorizeUri) ||angular.isUndefined(vm.activeServer.tokenUri)) {
+                logInfo("Selected server does NOT support SMART on FHIR security");
+            } else {
+                logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
+                logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
+
+            }
+
+        }
+
+        vm.smartAuth = smartAuth;
 
         function authenticateController($scope, $mdDialog) {
             function close() {
@@ -187,7 +200,7 @@
             }
         );
 
-        $rootScope.$on('$locationChangeStart', function() {
+        $rootScope.$on('$locationChangeStart', function () {
             if (!auth.isAuthenticated) {
                 var token = store.get('token');
                 vm.user = store.get('profile');
@@ -274,7 +287,6 @@
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$mdDialog', '$mdSidenav', '$location', '$rootScope', '$scope', '$window', 'common', 'config',
-            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', mainController]);
-
+            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', 'smartAuthorizationService', mainController]);
 })
 ();

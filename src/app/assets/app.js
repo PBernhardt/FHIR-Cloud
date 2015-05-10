@@ -55,6 +55,7 @@
                 $window.localStorage.removeItem("practitioner");
                 $window.localStorage.removeItem("person");
                 $window.localStorage.removeItem("relatedPerson");
+                $window.localStorage.removeItem("authToken");
                 var currentLocation = $location.path();
                 if ((currentLocation !== '/patient') && (currentLocation !== '/organization')) {
                     $location.path('/conformance/view/current');
@@ -572,7 +573,7 @@
 
     app.config(['$httpProvider', 'jwtInterceptorProvider', function ($httpProvider, jwtInterceptorProvider) {
         jwtInterceptorProvider.tokenGetter = ['store', function (store) {
-            return store.get('token');
+            return store.get('authToken');
         }];
 
         $httpProvider.defaults.headers.common = {'Accept': 'application/json+fhir, application/json, text/plain, */*'};
@@ -2737,7 +2738,7 @@
     var controllerId = 'mainController';
 
     function mainController($filter, $mdDialog, $mdSidenav, $location, $rootScope, $scope, $window, common, config,
-                            conformanceService, fhirServers, auth, store, jwtHelper) {
+                            conformanceService, fhirServers, auth, store, jwtHelper, smartAuthorizationService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -2865,7 +2866,6 @@
 
         function login() {
             auth.signin({}, function (profile, token) {
-                // Success callback
                 store.set('profile', profile);
                 store.set('token', token);
                 $location.path('/');
@@ -2885,6 +2885,19 @@
         }
 
         vm.logout = logout;
+
+        function smartAuth() {
+            logInfo("Initiating SMART on FHIR authorization ...", null, noToast);
+            if (angular.isUndefined(vm.activeServer.authorizeUri) ||angular.isUndefined(vm.activeServer.tokenUri)) {
+                logInfo("Selected server does NOT support SMART on FHIR security");
+            } else {
+                logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
+                logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
+            }
+
+        }
+
+        vm.smartAuth = smartAuth;
 
         function authenticateController($scope, $mdDialog) {
             function close() {
@@ -2920,7 +2933,7 @@
             }
         );
 
-        $rootScope.$on('$locationChangeStart', function() {
+        $rootScope.$on('$locationChangeStart', function () {
             if (!auth.isAuthenticated) {
                 var token = store.get('token');
                 vm.user = store.get('profile');
@@ -3007,8 +3020,7 @@
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$mdDialog', '$mdSidenav', '$location', '$rootScope', '$scope', '$window', 'common', 'config',
-            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', mainController]);
-
+            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', 'smartAuthorizationService', mainController]);
 })
 ();
 (function () {
@@ -3042,6 +3054,109 @@
     }
 
     angular.module('FHIRCloud').factory(serviceId, ['dataCache', sessionService]);
+
+})();(function () {
+    'use strict';
+
+    var serviceId = 'smartAuthorizationService';
+
+    function smartAuthorizationService($http, common) {
+        var $q = common.$q;
+
+        function addResource(baseUrl, resource) {
+            var fhirResource = common.removeNullProperties(resource);
+            var deferred = $q.defer();
+            $http.post(baseUrl, fhirResource)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status) {
+                    var error = { "status": status, "outcome": data };
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function deleteResource(resourceUrl) {
+            var deferred = $q.defer();
+            $http.delete(resourceUrl)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status, headers) {
+                    if (status === 410) {
+                        // already deleted
+                        var results = {};
+                        results.data = data;
+                        results.status = status;
+                        results.headers = headers;
+                        deferred.resolve(results);
+                    } else {
+                        var error = { "status": status, "outcome": data };
+                        deferred.reject(error);
+                    }
+                });
+            return deferred.promise;
+        }
+
+        function getResource(resourceUrl) {
+            var deferred = $q.defer();
+            $http.get(resourceUrl)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status) {
+                    var error = { "status": status, "outcome": data };
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function updateResource(resourceUrl, resource) {
+            var fhirResource = common.removeNullProperties(resource);
+            var deferred = $q.defer();
+            $http.put(resourceUrl, fhirResource)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status) {
+                    var error = { "status": status, "outcome": data };
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        var service = {
+            deleteResource: deleteResource,
+            getResource: getResource,
+            addResource: addResource,
+            updateResource: updateResource
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', smartAuthorizationService]);
 
 })();(function () {
     'use strict';

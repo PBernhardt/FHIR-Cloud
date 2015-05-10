@@ -289,7 +289,7 @@
 
     app.config(['$httpProvider', 'jwtInterceptorProvider', function ($httpProvider, jwtInterceptorProvider) {
         jwtInterceptorProvider.tokenGetter = ['store', function (store) {
-            return store.get('token');
+            return store.get('authToken');
         }];
 
         $httpProvider.defaults.headers.common = {'Accept': 'application/json+fhir, application/json, text/plain, */*'};

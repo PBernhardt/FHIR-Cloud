@@ -122,6 +122,7 @@ module.exports = function (grunt) {
                     'app/common/logger.service.js',
                     'app/common/main.controller.js',
                     'app/common/session.service.js',
+                    'app/common/smartAuthorization.service.js',
                     'app/condition/condition.detail.controller.js',
                     'app/condition/condition.search.controller.js',
                     'app/condition/condition.service.js',
