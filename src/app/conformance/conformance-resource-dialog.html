@@ -32,7 +32,7 @@
                 <div class="md-list-item-text">
                     <h3>{{param.name}} ({{param.type}})</h3>
                     <h4 ng-if="param.target">{{param.target | listItems }}</h4>
-                    <p ng-if="param.chain"><strong>Chain:</strong> {{param.chain | listItems }}</p>
+                    <p ng-if="param.chain"><strong>Chain:</strong><small class="md-caption"> {{param.chain | listItems }}</small></p>
                 </div>
                 <md-divider ng-if="!$last"></md-divider>
             </md-list-item>

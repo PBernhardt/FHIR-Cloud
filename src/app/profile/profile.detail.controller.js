@@ -152,8 +152,7 @@
 
         function showFullDescription(element, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: element
@@ -172,8 +171,7 @@
 
         function viewBoundValueSet(reference, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/valueSet-popup.html',
+                 templateUrl: 'templates/valueSet-popup.html',
                 controller: 'valueSetPopupController',
                 locals: {
                     data: reference

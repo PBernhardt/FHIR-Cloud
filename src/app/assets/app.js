@@ -1060,7 +1060,7 @@
                     {
                         "id": 2,
                         "name": "RelayHealth",
-                        "baseUrl": "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                     },
                     {
@@ -3308,7 +3308,6 @@
 
         function showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
@@ -4345,6 +4344,7 @@
         $scope.$on(config.events.serverChanged,
             function (event, server) {
                 vm.activeServer = server;
+                _getRequestedConformance();
             }
         );
 
@@ -4356,10 +4356,10 @@
 
         function showResource($event, resource) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
                 templateUrl: 'conformance/conformance-resource-dialog.html',
                 controller: 'conformanceResource',
-                locals: {
+                clickOutsideToClose: true,
+                    locals: {
                     data: resource
                 },
                 targetEvent: $event
@@ -4376,10 +4376,10 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
-                locals: {
+                clickOutsideToClose: true,
+                    locals: {
                     data: item
                 },
                 targetEvent: event
@@ -4437,9 +4437,6 @@
                 vm.json = angular.toJson(rawData, true);
                 vm.conformance = rawData;
                 vm.conformance.resourceId = vm.activeServer.baseUrl + "/metadata";
-                if (angular.isUndefined(vm.conformance.code)) {
-                    vm.conformance.code = {"coding": []};
-                }
                 vm.title = vm.conformance.name;
                 identifierService.init(vm.conformance.identifier);
                 contactPointService.init(vm.conformance.telecom, false, false);
@@ -4462,6 +4459,13 @@
                     var resourceId = vm.activeServer.baseUrl + '/Conformance/' + $routeParams.id;
                     conformanceService.getConformance(resourceId)
                         .then(_initializeRelatedData, function (error) {
+                            logError(error);
+                        });
+                } else {
+                    conformanceService.getCachedConformance(null)
+                        .then(_initializeRelatedData).then(function () {
+
+                        }, function (error) {
                             logError(error);
                         });
                 }
@@ -8783,8 +8787,7 @@
 
         function showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -10612,8 +10615,7 @@
 
         function showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -11888,8 +11890,7 @@
 
         function showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -15435,8 +15436,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -17379,8 +17379,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -18354,8 +18353,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -19668,8 +19666,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -20875,8 +20872,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -21997,8 +21993,7 @@
 
         function showFullDescription(element, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: element
@@ -22017,8 +22012,7 @@
 
         function viewBoundValueSet(reference, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/valueSet-popup.html',
+                 templateUrl: 'templates/valueSet-popup.html',
                 controller: 'valueSetPopupController',
                 locals: {
                     data: reference
@@ -22742,8 +22736,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -23987,8 +23980,7 @@
 
         function showInclude($event, resource) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'valueSet/include-dialog.html',
+                 templateUrl: 'valueSet/include-dialog.html',
                 controller: 'valueSetInclude',
                 locals: {
                     data: resource
@@ -24001,8 +23993,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item

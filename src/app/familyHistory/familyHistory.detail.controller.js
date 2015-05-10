@@ -263,8 +263,7 @@
 
         function showRawData(item, event) {
             $mdDialog.show({
-                optionsOrPresent: {disableParentScroll: false},
-                templateUrl: 'templates/rawData-dialog.html',
+                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
