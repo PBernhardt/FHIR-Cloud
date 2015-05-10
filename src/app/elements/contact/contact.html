@@ -38,7 +38,7 @@
             </md-autocomplete>
 
             <div layout="column" layout-align="start start" style="height: 100px;">
-                <md-select ng-model="vm.contact.purpose">
+                <md-select aria-label="purpose" ng-model="vm.contact.purpose">
                     <md-option ng-selected="coding.code===vm.contact.purpose"
                                ng-value="coding.display"
                                ng-repeat="coding in vm.contactTypes">

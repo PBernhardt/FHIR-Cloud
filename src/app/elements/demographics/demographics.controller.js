@@ -23,7 +23,7 @@
                     if (_.first(vm.demographics.language, coding).length === 0) {
                         vm.demographics.language.push(coding);
                     }
-                  //  updateLanguage();
+                    //  updateLanguage();
                 }
                 vm.selectedLanguage = null;
             }
@@ -111,15 +111,17 @@
         }
 
         function updateMaritalStatus(maritalStatusCoding) {
-            var codeableConcept = {
-                "text": maritalStatusCoding.display,
-                "coding": [{
-                    "system": maritalStatusCoding.system,
-                    "code": maritalStatusCoding.code,
-                    "display": maritalStatusCoding.display
-                }]
-            };
-            demographicsService.setMaritalStatus(codeableConcept);
+            if (maritalStatusCoding !== undefined) {
+                var codeableConcept = {
+                    "text": maritalStatusCoding.display,
+                    "coding": [{
+                        "system": maritalStatusCoding.system,
+                        "code": maritalStatusCoding.code,
+                        "display": maritalStatusCoding.display
+                    }]
+                };
+                demographicsService.setMaritalStatus(codeableConcept);
+            }
         }
 
         function updateMultipleBirth() {
@@ -127,39 +129,45 @@
         }
 
         function updateRace(raceCoding) {
-            var codeableConcept = {
-                "text": raceCoding.display,
-                "coding": [{
-                    "system": vm.races.system,
-                    "code": raceCoding.code,
-                    "display": raceCoding.display
-                }]
-            };
-            demographicsService.setRace(codeableConcept);
+            if (raceCoding !== undefined) {
+                var codeableConcept = {
+                    "text": raceCoding.display,
+                    "coding": [{
+                        "system": vm.races.system,
+                        "code": raceCoding.code,
+                        "display": raceCoding.display
+                    }]
+                };
+                demographicsService.setRace(codeableConcept);
+            }
         }
 
         function updateReligion(religionCoding) {
-            var codeableConcept = {
-                "text": religionCoding.display,
-                "coding": [{
-                    "system": vm.religions.system,
-                    "code": religionCoding.code,
-                    "display": religionCoding.display
-                }]
-            };
-            demographicsService.setReligion(codeableConcept);
+            if (religionCoding !== undefined) {
+                var codeableConcept = {
+                    "text": religionCoding.display,
+                    "coding": [{
+                        "system": vm.religions.system,
+                        "code": religionCoding.code,
+                        "display": religionCoding.display
+                    }]
+                };
+                demographicsService.setReligion(codeableConcept);
+            }
         }
 
         function updateEthnicity(ethnicityCoding) {
-            var codeableConcept = {
-                "text": ethnicityCoding.display,
-                "coding": [{
-                    "system": ethnicityCoding.system,
-                    "code": ethnicityCoding.code,
-                    "display": ethnicityCoding.display
-                }]
-            };
-            demographicsService.setEthnicity(codeableConcept);
+            if (ethnicityCoding !== undefined) {
+                var codeableConcept = {
+                    "text": ethnicityCoding.display,
+                    "coding": [{
+                        "system": ethnicityCoding.system,
+                        "code": ethnicityCoding.code,
+                        "display": ethnicityCoding.display
+                    }]
+                };
+                demographicsService.setEthnicity(codeableConcept);
+            }
         }
 
         vm.addLanguage = addLanguage;

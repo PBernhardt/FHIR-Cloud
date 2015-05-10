@@ -22,7 +22,7 @@
             </md-input-container>
 
             <div layout="column" layout-align="start start">
-                <md-select ng-model="vm.identifier.type">
+                <md-select aria-label="type" ng-model="vm.identifier.type">
                     <md-option ng-value="type" ng-repeat="type in vm.identifierTypes">
                         {{type.display}}
                     </md-option>
