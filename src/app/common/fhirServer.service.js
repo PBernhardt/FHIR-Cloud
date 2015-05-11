@@ -40,7 +40,8 @@
                         "id": 0,
                         "name": "SMART",
                         "baseUrl": "https://fhir-api-dstu2.smarthealthit.org",
-                        "secure": true
+                        "secure": true,
+                        "clientId": "c1be9476-39f4-4bc4-a6ce-85306034571f"
                     },
                     {
                         "id": 1,

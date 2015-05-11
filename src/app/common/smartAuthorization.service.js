@@ -3,19 +3,12 @@
 
     var serviceId = 'smartAuthorizationService';
 
-    function smartAuthorizationService($http, common, store) {
+    function smartAuthorizationService($http, $window, common, store) {
         var $q = common.$q;
 
         function authorize(authorizeUrl, redirectUri) {
-            var deferred = $q.defer();
-            // smart authorization query parametrs
-            /*
-             response_type=code&
-             client_id=app-client-id&
-             redirect_uri=https%3A%2F%2Fapp%2Fafter-auth&
-             scope=launch:xyz123+patient%2FObservation.read+patient%2FPatient.read&
-             state=98wrghuwuogerg97
-             */
+           // var deferred = $q.defer();
+            // smart authorization query parameters
             var state = common.randomHash();
             store.set("state", state);
             var authParams = {
@@ -30,24 +23,13 @@
                 url: authorizeUrl,
                 params: authParams,
                 headers: {
-                    'Access-Control-Allow-Origin': '*'
+                    'Access-Control-Request-Headers': 'Location'
                 }
             };
 
-            $http(req)
-                .success(function (data, status, headers, config) {
-                    var results = {};
-                    results.data = data;
-                    results.headers = headers();
-                    results.status = status;
-                    results.config = config;
-                    deferred.resolve(results);
-                })
-                .error(function (data, status) {
-                    var error = {"status": status, "outcome": data};
-                    deferred.reject(error);
-                });
-            return deferred.promise;
+            var queryParams = "?client_id=c1be9476-39f4-4bc4-a6ce-85306034571f&redirect_uri=" + encodeURIComponent(redirectUri) + "&response_type=code&scope=user%2F*.*&state=" + state;
+
+            $window.open(authorizeUrl + queryParams, "_parent");
         }
 
         function deleteResource(resourceUrl) {
@@ -124,6 +106,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', 'store', smartAuthorizationService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', '$window', 'common', 'store', smartAuthorizationService]);
 
 })();

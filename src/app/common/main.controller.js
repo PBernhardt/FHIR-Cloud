@@ -154,7 +154,7 @@
 
         function authorize() {
             logInfo("Initiating authorization ...", null, noToast);
-            if (angular.isUndefined(vm.activeServer.authorizeUri) ||angular.isUndefined(vm.activeServer.tokenUri)) {
+            if (angular.isUndefined(vm.activeServer.authorizeUri) || angular.isUndefined(vm.activeServer.tokenUri)) {
                 logInfo("Selected server does NOT support OAuth");
             } else {
                 logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
@@ -162,6 +162,7 @@
                 var url = $location.url();
                 var absoluteUrl = $location.absUrl();
                 var redirectUri = absoluteUrl.replace(url, "/auth");
+                redirectUri = redirectUri.replace("#", "");
                 logInfo("RedirectUri: " + redirectUri, null, noToast);
 
                 smartAuthorizationService.authorize(vm.activeServer.authorizeUri, redirectUri);

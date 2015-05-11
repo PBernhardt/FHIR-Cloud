@@ -55,11 +55,9 @@
         }
     }]);
 
-    /*
-     app.config(['$locationProvider', function ($locationProvider) {
-     $locationProvider.html5Mode(true);
-     }]);
-     */
+    app.config(['$locationProvider', function ($locationProvider) {
+        $locationProvider.html5Mode(true);
+    }]);
 
     app.config(['$routeProvider', 'authProvider', function ($routeProvider) {
         $routeProvider.when('/conformance', {
@@ -295,6 +293,7 @@
         $httpProvider.defaults.headers.common = {'Accept': 'application/json+fhir, application/json, text/plain, */*'};
         $httpProvider.defaults.headers.put = {'Content-Type': 'application/json+fhir'};
         $httpProvider.defaults.headers.post = {'Content-Type': 'application/json+fhir'};
+
         $httpProvider.interceptors.push('jwtInterceptor');
     }]);
 
