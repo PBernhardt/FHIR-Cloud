@@ -152,19 +152,24 @@
 
         vm.logout = logout;
 
-        function smartAuth() {
-            logInfo("Initiating SMART on FHIR authorization ...", null, noToast);
+        function authorize() {
+            logInfo("Initiating authorization ...", null, noToast);
             if (angular.isUndefined(vm.activeServer.authorizeUri) ||angular.isUndefined(vm.activeServer.tokenUri)) {
-                logInfo("Selected server does NOT support SMART on FHIR security");
+                logInfo("Selected server does NOT support OAuth");
             } else {
                 logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
                 logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
+                var url = $location.url();
+                var absoluteUrl = $location.absUrl();
+                var redirectUri = absoluteUrl.replace(url, "/auth");
+                logInfo("RedirectUri: " + redirectUri, null, noToast);
 
+                smartAuthorizationService.authorize(vm.activeServer.authorizeUri, redirectUri);
             }
 
         }
 
-        vm.smartAuth = smartAuth;
+        vm.authorize = authorize;
 
         function authenticateController($scope, $mdDialog) {
             function close() {

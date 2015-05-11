@@ -3,13 +3,38 @@
 
     var serviceId = 'smartAuthorizationService';
 
-    function smartAuthorizationService($http, common) {
+    function smartAuthorizationService($http, common, store) {
         var $q = common.$q;
 
-        function addResource(baseUrl, resource) {
-            var fhirResource = common.removeNullProperties(resource);
+        function authorize(authorizeUrl, redirectUri) {
             var deferred = $q.defer();
-            $http.post(baseUrl, fhirResource)
+            // smart authorization query parametrs
+            /*
+             response_type=code&
+             client_id=app-client-id&
+             redirect_uri=https%3A%2F%2Fapp%2Fafter-auth&
+             scope=launch:xyz123+patient%2FObservation.read+patient%2FPatient.read&
+             state=98wrghuwuogerg97
+             */
+            var state = common.randomHash();
+            store.set("state", state);
+            var authParams = {
+                response_type: 'code',
+                client_id: 'fhir-cloud',
+                redirect_uri: redirectUri,
+                scope: 'user/*.*',
+                state: state
+            };
+            var req = {
+                method: 'get',
+                url: authorizeUrl,
+                params: authParams,
+                headers: {
+                    'Access-Control-Allow-Origin': '*'
+                }
+            };
+
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -19,7 +44,7 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
+                    var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
@@ -45,7 +70,7 @@
                         results.headers = headers;
                         deferred.resolve(results);
                     } else {
-                        var error = { "status": status, "outcome": data };
+                        var error = {"status": status, "outcome": data};
                         deferred.reject(error);
                     }
                 });
@@ -64,7 +89,7 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
+                    var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
@@ -83,7 +108,7 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
+                    var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
@@ -92,13 +117,13 @@
         var service = {
             deleteResource: deleteResource,
             getResource: getResource,
-            addResource: addResource,
+            authorize: authorize,
             updateResource: updateResource
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', smartAuthorizationService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', 'store', smartAuthorizationService]);
 
 })();
