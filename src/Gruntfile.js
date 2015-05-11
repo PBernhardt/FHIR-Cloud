@@ -28,13 +28,13 @@ module.exports = function (grunt) {
             },
             webserver: {
                 options: {
-                    port: 8888,
+                    port: 8085,
                     keepalive: true
                 }
             },
             devserver: {
                 options: {
-                    port: 8888
+                    port: 8085
                 }
             },
             testserver: {
@@ -122,6 +122,7 @@ module.exports = function (grunt) {
                     'app/common/logger.service.js',
                     'app/common/main.controller.js',
                     'app/common/session.service.js',
+                    'app/common/smartAuthorization.controller.js',
                     'app/common/smartAuthorization.service.js',
                     'app/condition/condition.detail.controller.js',
                     'app/condition/condition.search.controller.js',
@@ -231,7 +232,7 @@ module.exports = function (grunt) {
 
         open: {
             devserver: {
-                path: 'http://localhost:8888'
+                path: 'http://localhost:8085'
             },
             coverage: {
                 path: 'http://localhost:5555'

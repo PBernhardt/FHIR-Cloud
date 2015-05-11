@@ -208,7 +208,10 @@
                 $location.path('/');
                 $location.replace();
             }
-        }).otherwise({
+        }).when('/auth', {
+            templateUrl: 'templates/smart-auth.html'
+        })
+            .otherwise({
             redirectTo: '/home'
         });
     }]);
