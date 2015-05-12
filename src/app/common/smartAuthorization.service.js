@@ -5,102 +5,68 @@
 
     function smartAuthorizationService($http, $window, common, store) {
         var $q = common.$q;
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var noToast = false;
+        var stateKey = "state";
 
-        function authorize(authorizeUrl, redirectUri) {
-           // var deferred = $q.defer();
-            // smart authorization query parameters
+        function authorize(clientId, authorizeUrl, redirectUri) {
             var state = common.randomHash();
-            store.set("state", state);
-            var authParams = {
-                response_type: 'code',
-                client_id: 'fhir-cloud',
-                redirect_uri: redirectUri,
-                scope: 'user/*.*',
-                state: state
-            };
-            var req = {
-                method: 'get',
-                url: authorizeUrl,
-                params: authParams,
-                headers: {
-                    'Access-Control-Request-Headers': 'Location'
-                }
-            };
-
-            var queryParams = "?client_id=c1be9476-39f4-4bc4-a6ce-85306034571f&redirect_uri=" + encodeURIComponent(redirectUri) + "&response_type=code&scope=user%2F*.*&state=" + state;
-
+            store.set(stateKey, state);
+            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) + "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
             $window.open(authorizeUrl + queryParams, "_parent");
         }
 
-        function deleteResource(resourceUrl) {
+        function getToken(code, state, clientId, tokenUrl, redirectUri) {
+            /*
+             grant_type=authorization_code&
+             client_id=app-client-id&
+             code=123abc&
+             redirect_uri=https%3A%2F%2Fapp%2Fafter-auth
+             */
+            var cachedState = store.get(stateKey);
+            store.remove(stateKey);
+            if (cachedState !== state) {
+                logInfo("'" + cachedState + "' does not equal '" + state + "'", null, noToast);
+            } else {
+                logInfo("Authorization state check passed for " + state);
+            }
+            var authParams = {
+                grant_type: 'authorization_code',
+                client_id: clientId,
+                code: code,
+                redirect_uri: redirectUri
+            };
+            var req = {
+                method: 'post',
+                url: tokenUrl,
+                params: authParams
+            };
             var deferred = $q.defer();
-            $http.delete(resourceUrl)
-                .success(function (data, status, headers, config) {
-                    var results = {};
-                    results.data = data;
-                    results.headers = headers();
-                    results.status = status;
-                    results.config = config;
-                    deferred.resolve(results);
+            $http(req)
+                .success(function (data) {
+                    store.set("authToken", data.access_token);
+                    store.set("smartResponse", data);
+                    if (data.id_token) {
+                        var profile = jwt_decode(data.id_token);
+                    }
+                    deferred.resolve(profile);
                 })
                 .error(function (data, status, headers) {
-                    if (status === 410) {
-                        // already deleted
-                        var results = {};
-                        results.data = data;
-                        results.status = status;
-                        results.headers = headers;
-                        deferred.resolve(results);
-                    } else {
-                        var error = {"status": status, "outcome": data};
-                        deferred.reject(error);
-                    }
-                });
-            return deferred.promise;
-        }
-
-        function getResource(resourceUrl) {
-            var deferred = $q.defer();
-            $http.get(resourceUrl)
-                .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
-                    results.headers = headers();
                     results.status = status;
-                    results.config = config;
+                    results.headers = headers;
                     deferred.resolve(results);
-                })
-                .error(function (data, status) {
                     var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
         }
 
-        function updateResource(resourceUrl, resource) {
-            var fhirResource = common.removeNullProperties(resource);
-            var deferred = $q.defer();
-            $http.put(resourceUrl, fhirResource)
-                .success(function (data, status, headers, config) {
-                    var results = {};
-                    results.data = data;
-                    results.headers = headers();
-                    results.status = status;
-                    results.config = config;
-                    deferred.resolve(results);
-                })
-                .error(function (data, status) {
-                    var error = {"status": status, "outcome": data};
-                    deferred.reject(error);
-                });
-            return deferred.promise;
-        }
 
         var service = {
-            deleteResource: deleteResource,
-            getResource: getResource,
             authorize: authorize,
-            updateResource: updateResource
+            getToken: getToken
         };
 
         return service;

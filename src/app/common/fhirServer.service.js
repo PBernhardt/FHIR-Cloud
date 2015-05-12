@@ -3,18 +3,18 @@
 
     var serviceId = 'fhirServers';
 
-    function fhirServers($cookieStore, $window, common, dataCache) {
+    function fhirServers($cookieStore, common, dataCache, store) {
         var $q = common.$q;
+        var activeServerKey = "activeServer";
+        var serversKey = "servers";
 
         function getActiveServer() {
-            var activeServer = dataCache.readFromCache('activeServer');
+            var activeServer = store.get(activeServerKey);
             if (angular.isUndefined(activeServer)) {
-                activeServer = $cookieStore.get('activeServer');
+                activeServer = $cookieStore.get(activeServerKey);
             }
             if (angular.isUndefined(activeServer)) {
-                if (angular.isDefined($window.localStorage.activeServer) && ($window.localStorage.activeServer !== null)) {
-                    activeServer = JSON.parse($window.localStorage.activeServer);
-                }
+                activeServer = store.get(activeServerKey);
             }
             if (angular.isUndefined(activeServer)) {
                 getAllServers()
@@ -27,9 +27,8 @@
         }
 
         function setActiveServer(server) {
-            dataCache.addToCache('activeServer', server);
-            $cookieStore.put('activeServer', server);
-            $window.localStorage.activeServer = JSON.stringify(server);
+            $cookieStore.put(activeServerKey, server);
+            store.set(activeServerKey, server)
         }
 
         function getAllServers() {
@@ -95,10 +94,10 @@
 
 
                 ];
-                var servers = dataCache.readFromCache('servers');
+                var servers = dataCache.readFromCache(serversKey);
                 if (angular.isUndefined(servers)) {
                     servers = baseList;
-                    dataCache.addToCache('servers', servers);
+                    dataCache.addToCache(serversKey, servers);
                 }
                 deferred.resolve(servers);
             } catch (e) {
@@ -133,6 +132,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', '$window', 'common', 'dataCache', fhirServers]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', 'common', 'dataCache', 'store', fhirServers]);
 
 })();

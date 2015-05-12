@@ -56,7 +56,9 @@
     }]);
 
     app.config(['$locationProvider', function ($locationProvider) {
-        $locationProvider.html5Mode(true);
+        $locationProvider.html5Mode({
+            enabled: true
+        });
     }]);
 
     app.config(['$routeProvider', 'authProvider', function ($routeProvider) {
@@ -127,13 +129,17 @@
         }).when('/operationDefinition/edit/:hashKey', {
             templateUrl: 'operationDefinition/operationDefinition-edit.html'
         }).when('/organization', {
-            templateUrl: 'organization/organization-search.html'
+            templateUrl: 'organization/organization-search.html',
+            reloadOnSearch: false
         }).when('/organization/get/:id', {
-            templateUrl: 'organization/organization-view.html'
+            templateUrl: 'organization/organization-view.html',
+            reloadOnSearch: false
         }).when('/organization/detailed-search', {
-            templateUrl: 'organization/organization-detailed-search.html'
+            templateUrl: 'organization/organization-detailed-search.html',
+            reloadOnSearch: false
         }).when('/organization/view/:hashKey', {
-            templateUrl: 'organization/organization-view.html'
+            templateUrl: 'organization/organization-view.html',
+            reloadOnSearch: false
         }).when('/organization/edit/:hashKey', {
             templateUrl: 'organization/organization-edit.html'
         }).when('/organization/get/:resourceId', {
@@ -141,7 +147,8 @@
         }).when('/patient/org/:orgId', {
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
-            templateUrl: 'patient/patient-search.html'
+            templateUrl: 'patient/patient-search.html',
+            reloadOnSearch: false
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
@@ -149,7 +156,8 @@
         }).when('/patient/edit/:hashKey', {
             templateUrl: 'patient/patient-edit.html'
         }).when('/patient/detailed-search', {
-            templateUrl: 'patient/patient-detailed-search.html'
+            templateUrl: 'patient/patient-detailed-search.html',
+            reloadOnSearch: false
         }).when('/practitioner/org/:orgId', {
             templateUrl: 'practitioner/practitioner-detailed-search.html'
         }).when('/practitioner', {
@@ -200,18 +208,15 @@
             templateUrl: 'valueSet/valueSet-edit.html'
         }).when('/daf/:profile', {
             templateUrl: 'templates/daf.html'
-        }).when('/access_token=:accessToken', {
+/*        }).when('/access_token=:accessToken', {
             template: '',
             controller: function ($location, AccessToken) {
                 var hash = $location.path().substr(1);
                 AccessToken.setTokenFromString(hash);
                 $location.path('/');
                 $location.replace();
-            }
-        }).when('/auth', {
-            templateUrl: 'templates/smart-auth.html'
-        })
-            .otherwise({
+            }*/
+        }).otherwise({
             redirectTo: '/home'
         });
     }]);
@@ -316,6 +321,7 @@
         $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|file|chrome-extension):|data:image\//);
     }]);
 
+    // used for Auth0-based authorization
     app.config(['authProvider', function (authProvider) {
         authProvider.init({
             domain: 'fhir-cloud.auth0.com',

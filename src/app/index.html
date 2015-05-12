@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="assets/app.css"/>
     <link rel="stylesheet" href="assets/lib/angular-csp.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <base href="/">
+    <base href="/index.html">
 </head>
 
 <body ng-app="FHIRCloud" layout="column" ng-controller="mainController as vm" ng-cloak>
@@ -23,7 +23,7 @@
         </md-button>
         <md-button title="Go to Home Page"
                    class="md-icon-button launch"
-                   ng-href="#/home"
+                   ng-href="/home"
                    aria-label="Home"
                    hide-sm>
             <md-icon md-svg-src="home"></md-icon>
@@ -31,28 +31,37 @@
     </div>
 
     <div flex layout="row" layout-align="end center">
-        <h4 hide-sm class="md-subhead" ng-if="vm.user.name">Authorize</h4>
-
-        <div ng-if="vm.user.name">
-            <md-button title="Authorize" class="md-icon-button launch" ng-click="vm.authorize()"
-                       aria-label="authorize">
-                <md-icon md-svg-src="security"></md-icon>
-            </md-button>
+        <h4 hide-sm class="md-subhead">User: {{vm.user.name || "Unauthorized"}}</h4>
+        <!-- For FHIR servers supporting SMART on FHIR security -->
+        <div ng-if="vm.activeServer.clientId">
+            <div ng-if="!vm.user.name">
+                <md-button title="SMART Login" class="md-icon-button launch" ng-click="vm.authorize()"
+                           aria-label="SMART authorization">
+                    <md-icon md-svg-src="account"></md-icon>
+                </md-button>
+            </div>
+            <div ng-if="vm.user.name">
+                <md-button title="SMART Logout" class="md-icon-button launch" ng-click="vm.logout()"
+                           aria-label="SMART authorization">
+                    <md-icon md-svg-src="account"></md-icon>
+                </md-button>
+            </div>
         </div>
 
-        <h4 hide-sm class="md-subhead">User: {{vm.user.name || "Guest"}}</h4>
-
-        <div ng-if="vm.user.name">
-            <md-button title="Logout" class="md-icon-button launch" ng-click="vm.logout()"
-                       aria-label="Account">
-                <md-icon md-svg-src="account"></md-icon>
-            </md-button>
-        </div>
-        <div ng-if="!vm.user.name">
-            <md-button title="Login" class="md-icon-button launch" ng-click="vm.login()"
-                       aria-label="Account">
-                <md-icon md-svg-src="account"></md-icon>
-            </md-button>
+        <!-- For everyone else, vanilla OAuth -->
+        <div ng-if="!vm.activeServer.clientId">
+            <div ng-if="vm.user.name">
+                <md-button title="OAuth Logout" class="md-icon-button launch" ng-click="vm.logout()"
+                           aria-label="OAuth authorization">
+                    <md-icon md-svg-src="account"></md-icon>
+                </md-button>
+            </div>
+            <div ng-if="!vm.user.name">
+                <md-button title="OAuth Login" class="md-icon-button launch" ng-click="vm.login()"
+                           aria-label="OAuth authorization">
+                    <md-icon md-svg-src="account"></md-icon>
+                </md-button>
+            </div>
         </div>
 
         <h4 hide-sm class="md-subhead">Server: {{vm.activeServer.name || "Select a server"}}</h4>
@@ -127,6 +136,7 @@
 <script src="assets/lib/angular-route.min.js"></script>
 <script src="assets/lib/angular-cookies.min.js"></script>
 <script src="assets/lib/angular-sanitize.min.js"></script>
+<script src="assets/lib/jwt-decode.min.js"></script>
 <script src="assets/lib/lodash.min.js"></script>
 <script src="assets/lib/moment.min.js"></script>
 <script src="assets/app.js"></script>

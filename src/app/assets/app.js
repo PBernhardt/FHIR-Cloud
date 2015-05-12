@@ -93,6 +93,7 @@
                 $broadcast(commonConfig.config.authenticatedUserChangeEvent, user);
             }
         }
+
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
         }
@@ -248,6 +249,71 @@
             return array;
         }
 
+        function base64decode(input) {
+            function _utf8Decode(utftext) {
+                var string = "";
+                var i = 0;
+                var c = 0;
+                var c2  = 0;
+
+                while (i < utftext.length) {
+
+                    c = utftext.charCodeAt(i);
+
+                    if (c < 128) {
+                        string += String.fromCharCode(c);
+                        i++;
+                    }
+                    else if ((c > 191) && (c < 224)) {
+                        c2 = utftext.charCodeAt(i + 1);
+                        string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                        i += 2;
+                    }
+                    else {
+                        c2 = utftext.charCodeAt(i + 1);
+                        var c3 = utftext.charCodeAt(i + 2);
+                        string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+                        i += 3;
+                    }
+
+                }
+
+                return string;
+            }
+
+            var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            input = input.replace(/[^A-Za-z0-9\+\/=]/g, "");
+
+            while (i < input.length) {
+
+                enc1 = _keyStr.indexOf(input.charAt(i++));
+                enc2 = _keyStr.indexOf(input.charAt(i++));
+                enc3 = _keyStr.indexOf(input.charAt(i++));
+                enc4 = _keyStr.indexOf(input.charAt(i++));
+
+                chr1 = (enc1 << 2) | (enc2 >> 4);
+                chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                chr3 = ((enc3 & 3) << 6) | enc4;
+
+                output = output + String.fromCharCode(chr1);
+
+                if (enc3 != 64) {
+                    output = output + String.fromCharCode(chr2);
+                }
+                if (enc4 != 64) {
+                    output = output + String.fromCharCode(chr3);
+                }
+            }
+            output = _utf8Decode(output);
+            return output;
+        }
+
         var service = {
             // common angular dependencies
             $broadcast: $broadcast,
@@ -256,6 +322,7 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            base64decode: base64decode,
             changePatientList: changePatientList,
             changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,
@@ -340,7 +407,9 @@
     }]);
 
     app.config(['$locationProvider', function ($locationProvider) {
-        $locationProvider.html5Mode(true);
+        $locationProvider.html5Mode({
+            enabled: true
+        });
     }]);
 
     app.config(['$routeProvider', 'authProvider', function ($routeProvider) {
@@ -411,13 +480,17 @@
         }).when('/operationDefinition/edit/:hashKey', {
             templateUrl: 'operationDefinition/operationDefinition-edit.html'
         }).when('/organization', {
-            templateUrl: 'organization/organization-search.html'
+            templateUrl: 'organization/organization-search.html',
+            reloadOnSearch: false
         }).when('/organization/get/:id', {
-            templateUrl: 'organization/organization-view.html'
+            templateUrl: 'organization/organization-view.html',
+            reloadOnSearch: false
         }).when('/organization/detailed-search', {
-            templateUrl: 'organization/organization-detailed-search.html'
+            templateUrl: 'organization/organization-detailed-search.html',
+            reloadOnSearch: false
         }).when('/organization/view/:hashKey', {
-            templateUrl: 'organization/organization-view.html'
+            templateUrl: 'organization/organization-view.html',
+            reloadOnSearch: false
         }).when('/organization/edit/:hashKey', {
             templateUrl: 'organization/organization-edit.html'
         }).when('/organization/get/:resourceId', {
@@ -425,7 +498,8 @@
         }).when('/patient/org/:orgId', {
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
-            templateUrl: 'patient/patient-search.html'
+            templateUrl: 'patient/patient-search.html',
+            reloadOnSearch: false
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
@@ -433,7 +507,8 @@
         }).when('/patient/edit/:hashKey', {
             templateUrl: 'patient/patient-edit.html'
         }).when('/patient/detailed-search', {
-            templateUrl: 'patient/patient-detailed-search.html'
+            templateUrl: 'patient/patient-detailed-search.html',
+            reloadOnSearch: false
         }).when('/practitioner/org/:orgId', {
             templateUrl: 'practitioner/practitioner-detailed-search.html'
         }).when('/practitioner', {
@@ -484,18 +559,15 @@
             templateUrl: 'valueSet/valueSet-edit.html'
         }).when('/daf/:profile', {
             templateUrl: 'templates/daf.html'
-        }).when('/access_token=:accessToken', {
+/*        }).when('/access_token=:accessToken', {
             template: '',
             controller: function ($location, AccessToken) {
                 var hash = $location.path().substr(1);
                 AccessToken.setTokenFromString(hash);
                 $location.path('/');
                 $location.replace();
-            }
-        }).when('/auth', {
-            templateUrl: 'templates/smart-auth.html'
-        })
-            .otherwise({
+            }*/
+        }).otherwise({
             redirectTo: '/home'
         });
     }]);
@@ -600,6 +672,7 @@
         $compileProvider.imgSrcSanitizationWhitelist(/^\s*(https?|ftp|file|chrome-extension):|data:image\//);
     }]);
 
+    // used for Auth0-based authorization
     app.config(['authProvider', function (authProvider) {
         authProvider.init({
             domain: 'fhir-cloud.auth0.com',
@@ -1015,18 +1088,18 @@
 
     var serviceId = 'fhirServers';
 
-    function fhirServers($cookieStore, $window, common, dataCache) {
+    function fhirServers($cookieStore, common, dataCache, store) {
         var $q = common.$q;
+        var activeServerKey = "activeServer";
+        var serversKey = "servers";
 
         function getActiveServer() {
-            var activeServer = dataCache.readFromCache('activeServer');
+            var activeServer = store.get(activeServerKey);
             if (angular.isUndefined(activeServer)) {
-                activeServer = $cookieStore.get('activeServer');
+                activeServer = $cookieStore.get(activeServerKey);
             }
             if (angular.isUndefined(activeServer)) {
-                if (angular.isDefined($window.localStorage.activeServer) && ($window.localStorage.activeServer !== null)) {
-                    activeServer = JSON.parse($window.localStorage.activeServer);
-                }
+                activeServer = store.get(activeServerKey);
             }
             if (angular.isUndefined(activeServer)) {
                 getAllServers()
@@ -1039,9 +1112,8 @@
         }
 
         function setActiveServer(server) {
-            dataCache.addToCache('activeServer', server);
-            $cookieStore.put('activeServer', server);
-            $window.localStorage.activeServer = JSON.stringify(server);
+            $cookieStore.put(activeServerKey, server);
+            store.set(activeServerKey, server)
         }
 
         function getAllServers() {
@@ -1107,10 +1179,10 @@
 
 
                 ];
-                var servers = dataCache.readFromCache('servers');
+                var servers = dataCache.readFromCache(serversKey);
                 if (angular.isUndefined(servers)) {
                     servers = baseList;
-                    dataCache.addToCache('servers', servers);
+                    dataCache.addToCache(serversKey, servers);
                 }
                 deferred.resolve(servers);
             } catch (e) {
@@ -1145,7 +1217,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', '$window', 'common', 'dataCache', fhirServers]);
+    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', 'common', 'dataCache', 'store', fhirServers]);
 
 })();(function () {
     'use strict';
@@ -2808,6 +2880,12 @@
         function _activate() {
             common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
                 .then(function () {
+                    var authorizeResponse = $location.search();
+                    var code = authorizeResponse.code;
+                    var state = authorizeResponse.state;
+                    if (code && state) {
+                       _getAccessToken(code, state);
+                    }
                 }, function (error) {
                     logError('Error ' + error);
                 });
@@ -2884,6 +2962,8 @@
             auth.signout();
             store.remove('profile');
             store.remove('token');
+            store.remove('authToken');
+            store.remove('smartResponse');
             common.changeUser(null);
         }
 
@@ -2896,18 +2976,38 @@
             } else {
                 logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
                 logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
-                var url = $location.url();
-                var absoluteUrl = $location.absUrl();
-                var redirectUri = absoluteUrl.replace(url, "/auth");
-                redirectUri = redirectUri.replace("#", "");
-                logInfo("RedirectUri: " + redirectUri, null, noToast);
-
-                smartAuthorizationService.authorize(vm.activeServer.authorizeUri, redirectUri);
+                logInfo("Redirect URI: " + vm.activeServer.redirectUri, null, noToast);
+                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri);
             }
-
         }
 
         vm.authorize = authorize;
+
+        function _getAccessToken(code, state) {
+            var _code;
+            var _state;
+            if (angular.isArray(code)) {
+                _code = _.first(code);
+            } else {
+                _code = code;
+            }
+            if (angular.isArray(state)) {
+                _state = _.first(state);
+            } else {
+                _state = state;
+            }
+            smartAuthorizationService.getToken(_code, _state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
+                .then(function (idToken) {
+                    logInfo("Access token acquired from " + vm.activeServer.name);
+                    idToken.name = idToken.sub;
+                    store.set('profile', idToken);
+                    common.changeUser(idToken);
+                },
+                function (error) {
+                    logError(error);
+                }
+            );
+        }
 
         function authenticateController($scope, $mdDialog) {
             function close() {
@@ -2966,7 +3066,6 @@
                 .then(function (conformance) {
                     logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                     vm.activeServer = fhirServer;
-                    fhirServers.setActiveServer(fhirServer);
                     if (angular.isUndefined(conformance.rest[0].security)) {
                         logInfo("Security information missing - this is an OPEN server", null, noToast);
                     } else if (angular.isArray(conformance.rest[0].security.extension)) {
@@ -2981,7 +3080,11 @@
                             }
                         })
                     }
-                    common.changeServer(fhirServer);
+                    var url = $location.url();
+                    var absoluteUrl = $location.absUrl();
+                    vm.activeServer.redirectUri = absoluteUrl.replace(url, "");
+                    fhirServers.setActiveServer(vm.activeServer);
+                    common.changeServer(vm.activeServer);
                 }, function (error) {
                     logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
                 });
@@ -3068,202 +3171,72 @@
 })();(function () {
     'use strict';
 
-    var controllerId = 'smartAuthorization';
-
-    function smartAuthorization($filter, $mdDialog, $mdSidenav, $location, $rootScope, $routeParams, $scope, $window, common, config,
-                            conformanceService, fhirServers, auth, store, jwtHelper, smartAuthorizationService) {
-        /*jshint validthis:true */
-        var vm = this;
-
-        var getLogFn = common.logger.getLogFn;
-        var logError = getLogFn(controllerId, 'error');
-        var logInfo = getLogFn(controllerId, 'info');
-        var noToast = false;
-
-        function _activate() {
-            common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
-                .then(function () {
-                    _getAuthorizationResult();
-                }, function (error) {
-                    logError('Error ' + error);
-                });
-        }
-
-        function _getAuthorizationResult() {
-            logInfo("Current params: " + $route.current.params, null, noToast);
-        }
-
-        function _getActiveServer() {
-            fhirServers.getActiveServer()
-                .then(function (server) {
-                    vm.activeServer = server;
-                });
-        }
-
-        function _getFHIRServers() {
-            fhirServers.getAllServers().then(function (data) {
-                vm.FHIRServers = data;
-            })
-        }
-
-        function authorize() {
-            logInfo("Initiating authorization ...", null, noToast);
-            if (angular.isUndefined(vm.activeServer.authorizeUri) || angular.isUndefined(vm.activeServer.tokenUri)) {
-                logInfo("Selected server does NOT support OAuth");
-            } else {
-                logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
-                logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
-                var url = $location.url();
-                var absoluteUrl = $location.absUrl();
-                var redirectUri = absoluteUrl.replace(url, "/auth");
-                redirectUri = redirectUri.replace("#", "");
-                logInfo("RedirectUri: " + redirectUri, null, noToast);
-
-                smartAuthorizationService.authorize(vm.activeServer.authorizeUri, redirectUri);
-            }
-
-        }
-
-        vm.authorize = authorize;
-
-        $scope.$on(config.events.authenticatedUserChanged,
-            function (event, user) {
-                if (user === null && vm.user !== null) {
-                    logInfo(vm.user.name + " has been logged out");
-                }
-                vm.user = user;
-            }
-        );
-
-        $rootScope.$on('$locationChangeStart', function () {
-            if (!auth.isAuthenticated) {
-                var token = store.get('token');
-                vm.user = store.get('profile');
-                if (token) {
-                    if (!jwtHelper.isTokenExpired(token)) {
-                        auth.authenticate(vm.user, token);
-                    } else {
-                        // Either show Login page or use the refresh token to get a new idToken
-                        logInfo("Authorization token has expired");
-                        $location.path('/');
-                    }
-                }
-            }
-        });
-
-        vm.activeServer = null;
-
-        _activate();
-    }
-
-    angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$mdDialog', '$mdSidenav', '$location', '$rootScope', '$routeParams', '$scope', '$window', 'common', 'config',
-            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', 'smartAuthorizationService', smartAuthorization]);
-})
-();
-(function () {
-    'use strict';
-
     var serviceId = 'smartAuthorizationService';
 
     function smartAuthorizationService($http, $window, common, store) {
         var $q = common.$q;
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var noToast = false;
+        var stateKey = "state";
 
-        function authorize(authorizeUrl, redirectUri) {
-           // var deferred = $q.defer();
-            // smart authorization query parameters
+        function authorize(clientId, authorizeUrl, redirectUri) {
             var state = common.randomHash();
-            store.set("state", state);
-            var authParams = {
-                response_type: 'code',
-                client_id: 'fhir-cloud',
-                redirect_uri: redirectUri,
-                scope: 'user/*.*',
-                state: state
-            };
-            var req = {
-                method: 'get',
-                url: authorizeUrl,
-                params: authParams,
-                headers: {
-                    'Access-Control-Request-Headers': 'Location'
-                }
-            };
-
-            var queryParams = "?client_id=c1be9476-39f4-4bc4-a6ce-85306034571f&redirect_uri=" + encodeURIComponent(redirectUri) + "&response_type=code&scope=user%2F*.*&state=" + state;
-
+            store.set(stateKey, state);
+            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) + "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
             $window.open(authorizeUrl + queryParams, "_parent");
         }
 
-        function deleteResource(resourceUrl) {
+        function getToken(code, state, clientId, tokenUrl, redirectUri) {
+            /*
+             grant_type=authorization_code&
+             client_id=app-client-id&
+             code=123abc&
+             redirect_uri=https%3A%2F%2Fapp%2Fafter-auth
+             */
+            var cachedState = store.get(stateKey);
+            store.remove(stateKey);
+            if (cachedState !== state) {
+                logInfo("'" + cachedState + "' does not equal '" + state + "'", null, noToast);
+            } else {
+                logInfo("Authorization state check passed for " + state);
+            }
+            var authParams = {
+                grant_type: 'authorization_code',
+                client_id: clientId,
+                code: code,
+                redirect_uri: redirectUri
+            };
+            var req = {
+                method: 'post',
+                url: tokenUrl,
+                params: authParams
+            };
             var deferred = $q.defer();
-            $http.delete(resourceUrl)
-                .success(function (data, status, headers, config) {
-                    var results = {};
-                    results.data = data;
-                    results.headers = headers();
-                    results.status = status;
-                    results.config = config;
-                    deferred.resolve(results);
+            $http(req)
+                .success(function (data) {
+                    store.set("authToken", data.access_token);
+                    store.set("smartResponse", data);
+                    if (data.id_token) {
+                        var profile = jwt_decode(data.id_token);
+                    }
+                    deferred.resolve(profile);
                 })
                 .error(function (data, status, headers) {
-                    if (status === 410) {
-                        // already deleted
-                        var results = {};
-                        results.data = data;
-                        results.status = status;
-                        results.headers = headers;
-                        deferred.resolve(results);
-                    } else {
-                        var error = {"status": status, "outcome": data};
-                        deferred.reject(error);
-                    }
-                });
-            return deferred.promise;
-        }
-
-        function getResource(resourceUrl) {
-            var deferred = $q.defer();
-            $http.get(resourceUrl)
-                .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
-                    results.headers = headers();
                     results.status = status;
-                    results.config = config;
+                    results.headers = headers;
                     deferred.resolve(results);
-                })
-                .error(function (data, status) {
                     var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
         }
 
-        function updateResource(resourceUrl, resource) {
-            var fhirResource = common.removeNullProperties(resource);
-            var deferred = $q.defer();
-            $http.put(resourceUrl, fhirResource)
-                .success(function (data, status, headers, config) {
-                    var results = {};
-                    results.data = data;
-                    results.headers = headers();
-                    results.status = status;
-                    results.config = config;
-                    deferred.resolve(results);
-                })
-                .error(function (data, status) {
-                    var error = {"status": status, "outcome": data};
-                    deferred.reject(error);
-                });
-            return deferred.promise;
-        }
 
         var service = {
-            deleteResource: deleteResource,
-            getResource: getResource,
             authorize: authorize,
-            updateResource: updateResource
+            getToken: getToken
         };
 
         return service;

@@ -71,6 +71,12 @@
         function _activate() {
             common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
                 .then(function () {
+                    var authorizeResponse = $location.search();
+                    var code = authorizeResponse.code;
+                    var state = authorizeResponse.state;
+                    if (code && state) {
+                       _getAccessToken(code, state);
+                    }
                 }, function (error) {
                     logError('Error ' + error);
                 });
@@ -147,6 +153,8 @@
             auth.signout();
             store.remove('profile');
             store.remove('token');
+            store.remove('authToken');
+            store.remove('smartResponse');
             common.changeUser(null);
         }
 
@@ -159,18 +167,38 @@
             } else {
                 logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
                 logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
-                var url = $location.url();
-                var absoluteUrl = $location.absUrl();
-                var redirectUri = absoluteUrl.replace(url, "/auth");
-                redirectUri = redirectUri.replace("#", "");
-                logInfo("RedirectUri: " + redirectUri, null, noToast);
-
-                smartAuthorizationService.authorize(vm.activeServer.authorizeUri, redirectUri);
+                logInfo("Redirect URI: " + vm.activeServer.redirectUri, null, noToast);
+                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri);
             }
-
         }
 
         vm.authorize = authorize;
+
+        function _getAccessToken(code, state) {
+            var _code;
+            var _state;
+            if (angular.isArray(code)) {
+                _code = _.first(code);
+            } else {
+                _code = code;
+            }
+            if (angular.isArray(state)) {
+                _state = _.first(state);
+            } else {
+                _state = state;
+            }
+            smartAuthorizationService.getToken(_code, _state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
+                .then(function (idToken) {
+                    logInfo("Access token acquired from " + vm.activeServer.name);
+                    idToken.name = idToken.sub;
+                    store.set('profile', idToken);
+                    common.changeUser(idToken);
+                },
+                function (error) {
+                    logError(error);
+                }
+            );
+        }
 
         function authenticateController($scope, $mdDialog) {
             function close() {
@@ -229,7 +257,6 @@
                 .then(function (conformance) {
                     logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                     vm.activeServer = fhirServer;
-                    fhirServers.setActiveServer(fhirServer);
                     if (angular.isUndefined(conformance.rest[0].security)) {
                         logInfo("Security information missing - this is an OPEN server", null, noToast);
                     } else if (angular.isArray(conformance.rest[0].security.extension)) {
@@ -244,7 +271,11 @@
                             }
                         })
                     }
-                    common.changeServer(fhirServer);
+                    var url = $location.url();
+                    var absoluteUrl = $location.absUrl();
+                    vm.activeServer.redirectUri = absoluteUrl.replace(url, "");
+                    fhirServers.setActiveServer(vm.activeServer);
+                    common.changeServer(vm.activeServer);
                 }, function (error) {
                     logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
                 });
