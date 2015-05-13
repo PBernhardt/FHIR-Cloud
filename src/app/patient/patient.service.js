@@ -291,7 +291,6 @@
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
-                        var birthDate = new Date(parseInt(user.dob));
                         var resource = {
                             "resourceType": "Patient",
                             "name": [{

@@ -267,9 +267,11 @@
                             }
                         })
                     }
-                    var url = $location.url();
-                    var absoluteUrl = $location.absUrl();
-                    vm.activeServer.redirectUri = absoluteUrl.replace(url, "");
+                    var url = $location.protocol() + "://" + $location.host();
+                    if ($location.port() !== 80 && $location.port() !== 443) {
+                        url = url + ":" + $location.port();
+                    }
+                    vm.activeServer.redirectUri = url;
                     fhirServers.setActiveServer(vm.activeServer);
                     common.changeServer(vm.activeServer);
                     if (angular.isDefined(vm.activeServer.clientId)) {
