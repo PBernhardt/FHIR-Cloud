@@ -23,7 +23,7 @@
             {name: 'Conformance Statement', href: 'conformance/view/current'},
             {name: 'Extension Definition', href: 'extensionDefinition'},
             {name: 'Operation Definition', href: 'operationDefinition'},
-            {name: 'Profile', href: 'profile'},
+            {name: 'Structure Definition', href: 'structureDefinition'},
             {name: 'Value Set', href: 'valueSet'}
         ];
         var _documentsPages = [
@@ -71,11 +71,12 @@
         function _activate() {
             common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
                 .then(function () {
+                    //for processing 2nd leg of SMART authorization
                     var authorizeResponse = $location.search();
                     var code = authorizeResponse.code;
                     var state = authorizeResponse.state;
                     if (code && state) {
-                       _getAccessToken(code, state);
+                        _getAccessToken(code, state);
                     }
                 }, function (error) {
                     logError('Error ' + error);
@@ -156,6 +157,7 @@
             store.remove('authToken');
             store.remove('smartResponse');
             common.changeUser(null);
+            $location.path('/');
         }
 
         vm.logout = logout;
@@ -175,19 +177,7 @@
         vm.authorize = authorize;
 
         function _getAccessToken(code, state) {
-            var _code;
-            var _state;
-            if (angular.isArray(code)) {
-                _code = _.first(code);
-            } else {
-                _code = code;
-            }
-            if (angular.isArray(state)) {
-                _state = _.first(state);
-            } else {
-                _state = state;
-            }
-            smartAuthorizationService.getToken(_code, _state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
+            smartAuthorizationService.getToken(code, state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
                 .then(function (idToken) {
                     logInfo("Access token acquired from " + vm.activeServer.name);
                     idToken.name = idToken.sub;
@@ -235,7 +225,13 @@
         );
 
         $rootScope.$on('$locationChangeStart', function () {
-            if (!auth.isAuthenticated) {
+            if (common.isAuthenticated() === false && $location.path().indexOf('home') === -1) {
+                if ($location.path() !== "/") {
+                    logInfo("You must authenticate to access the application");
+                }
+                $location.path('/home');
+            }
+            else if (!auth.isAuthenticated) {
                 var token = store.get('token');
                 vm.user = store.get('profile');
                 if (token) {
@@ -276,6 +272,9 @@
                     vm.activeServer.redirectUri = absoluteUrl.replace(url, "");
                     fhirServers.setActiveServer(vm.activeServer);
                     common.changeServer(vm.activeServer);
+                    if (angular.isDefined(vm.activeServer.clientId)) {
+                        authorize();
+                    }
                 }, function (error) {
                     logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
                 });

@@ -136,10 +136,8 @@
             reloadOnSearch: false
         }).when('/organization/detailed-search', {
             templateUrl: 'organization/organization-detailed-search.html',
-            reloadOnSearch: false
         }).when('/organization/view/:hashKey', {
             templateUrl: 'organization/organization-view.html',
-            reloadOnSearch: false
         }).when('/organization/edit/:hashKey', {
             templateUrl: 'organization/organization-edit.html'
         }).when('/organization/get/:resourceId', {
@@ -148,7 +146,6 @@
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html',
-            reloadOnSearch: false
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
@@ -182,14 +179,6 @@
             templateUrl: 'person/person-edit.html'
         }).when('/person/detailed-search', {
             templateUrl: 'person/person-detailed-search.html'
-        }).when('/profile', {
-            templateUrl: 'profile/profile-search.html'
-        }).when('/profile/view/:hashKey', {
-            templateUrl: 'profile/profile-view.html'
-        }).when('/profile/edit/:hashKey', {
-            templateUrl: 'profile/profile-edit.html'
-        }).when('/healthcareService', {
-            templateUrl: 'templates/home.html'
         }).when('/relatedPerson', {
             templateUrl: 'relatedPerson/relatedPerson-search.html'
         }).when('/relatedPerson/get/:id', {
@@ -200,6 +189,12 @@
             templateUrl: 'relatedPerson/relatedPerson-edit.html'
         }).when('/relatedPerson/detailed-search', {
             templateUrl: 'relatedPerson/relatedPerson-detailed-search.html'
+        }).when('/structureDefinition', {
+            templateUrl: 'structureDefinition/structureDefinition-search.html'
+        }).when('/structureDefinition/view/:hashKey', {
+            templateUrl: 'structureDefinition/structureDefinition-view.html'
+        }).when('/structureDefinition/edit/:hashKey', {
+            templateUrl: 'structureDefinition/structureDefinition-edit.html'
         }).when('/valueSet', {
             templateUrl: 'valueSet/valueSet-search.html'
         }).when('/valueSet/view/:hashKey', {
@@ -208,14 +203,14 @@
             templateUrl: 'valueSet/valueSet-edit.html'
         }).when('/daf/:profile', {
             templateUrl: 'templates/daf.html'
-/*        }).when('/access_token=:accessToken', {
-            template: '',
-            controller: function ($location, AccessToken) {
-                var hash = $location.path().substr(1);
-                AccessToken.setTokenFromString(hash);
-                $location.path('/');
-                $location.replace();
-            }*/
+            /*        }).when('/access_token=:accessToken', {
+             template: '',
+             controller: function ($location, AccessToken) {
+             var hash = $location.path().substr(1);
+             AccessToken.setTokenFromString(hash);
+             $location.path('/');
+             $location.replace();
+             }*/
         }).otherwise({
             redirectTo: '/home'
         });
@@ -298,11 +293,11 @@
             return store.get('authToken');
         }];
 
-        $httpProvider.defaults.headers.common = {'Accept': 'application/json+fhir, application/json, text/plain, */*'};
+        $httpProvider.defaults.headers.common = {
+            'Accept': 'application/json+fhir, application/json, text/plain, */*'
+        };
         $httpProvider.defaults.headers.put = {'Content-Type': 'application/json+fhir'};
         $httpProvider.defaults.headers.post = {'Content-Type': 'application/json+fhir'};
-
-        $httpProvider.interceptors.push('jwtInterceptor');
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {
@@ -331,7 +326,7 @@
     }]);
 
     app.run(function (auth) {
-        // This hooks al auth events to check everything as soon as the app starts
+        // This hooks all auth events to check everything as soon as the app starts
         auth.hookEvents();
     });
 })();

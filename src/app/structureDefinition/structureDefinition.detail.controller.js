@@ -1,9 +1,9 @@
 (function () {
     'use strict';
 
-    var controllerId = 'profileDetail';
+    var controllerId = 'structureDefinitionDetail';
 
-    function profileDetail($location, $routeParams, $window, $mdDialog, common, fhirServers, profileService, contactPointService, valueSetService) {
+    function structureDefinitionDetail($location, $routeParams, $window, $mdDialog, common, fhirServers, structureDefinitionService, contactPointService, valueSetService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -23,13 +23,13 @@
             return !vm.isSaving;
         }
 
-        function deleteProfile(profile) {
+        function deleteStructureDefinition(structureDefinition) {
             function executeDelete() {
-                if (profile && profile.resourceId && profile.hashKey) {
-                    profileService.deleteCachedProfile(profile.hashKey, profile.resourceId)
+                if (structureDefinition && structureDefinition.resourceId && structureDefinition.hashKey) {
+                    structureDefinitionService.deleteCachedStructureDefinition(structureDefinition.hashKey, structureDefinition.resourceId)
                         .then(function () {
-                            logSuccess("Deleted profile " + profile.name);
-                            $location.path('/profiles');
+                            logSuccess("Deleted structureDefinition " + structureDefinition.name);
+                            $location.path('/structureDefinitions');
                         },
                         function (error) {
                             logError(common.unexpectedOutcome(error));
@@ -37,14 +37,14 @@
                     );
                 }
             }
-            var confirm = $mdDialog.confirm().title('Delete ' + profile.name + '?').ok('Yes').cancel('No');
+            var confirm = $mdDialog.confirm().title('Delete ' + structureDefinition.name + '?').ok('Yes').cancel('No');
             $mdDialog.show(confirm).then(executeDelete);
 
         }
 
-        function edit(profile) {
-            if (profile && profile.hashKey) {
-                $location.path('/profile/edit/' + profile.hashKey);
+        function edit(structureDefinition) {
+            if (structureDefinition && structureDefinition.hashKey) {
+                $location.path('/structureDefinition/edit/' + structureDefinition.hashKey);
             }
         }
 
@@ -56,7 +56,7 @@
                 });
         }
 
-        function getRequestedProfile() {
+        function getRequestedStructureDefinition() {
             function intitializeRelatedData(data) {
                 var rawData = angular.copy(data.resource);
                 if (rawData.text) {
@@ -67,29 +67,29 @@
                 vm.json = rawData;
                 vm.json.text = {div: "see narrative tab"};
                 vm.json = angular.toJson(rawData, true);
-                vm.profile = rawData;
-                if (angular.isUndefined(vm.profile.type)) {
-                    vm.profile.type = {"coding": []};
+                vm.structureDefinition = rawData;
+                if (angular.isUndefined(vm.structureDefinition.type)) {
+                    vm.structureDefinition.type = {"coding": []};
                 }
-                vm.title = vm.profile.name;
-                contactPointService.init(vm.profile.telecom, false, false);
+                vm.title = vm.structureDefinition.name;
+                contactPointService.init(vm.structureDefinition.telecom, false, false);
             }
 
             if ($routeParams.hashKey === 'new') {
-                var data = profileService.initializeNewProfile();
+                var data = structureDefinitionService.initializeNewStructureDefinition();
                 intitializeRelatedData(data);
-                vm.title = 'Add New Profile';
+                vm.title = 'Add New StructureDefinition';
                 vm.isEditing = false;
             } else {
                 if ($routeParams.hashKey) {
-                    profileService.getCachedProfile($routeParams.hashKey)
+                    structureDefinitionService.getCachedStructureDefinition($routeParams.hashKey)
                         .then(intitializeRelatedData).then(function () {
                         }, function (error) {
                             logError(error);
                         });
                 } else if ($routeParams.id) {
-                    var resourceId = vm.activeServer.baseUrl + '/Profile/' + $routeParams.id;
-                    profileService.getProfile(resourceId)
+                    var resourceId = vm.activeServer.baseUrl + '/StructureDefinition/' + $routeParams.id;
+                    structureDefinitionService.getStructureDefinition(resourceId)
                         .then(intitializeRelatedData, function (error) {
                             logError(error);
                         });
@@ -99,10 +99,10 @@
 
         function getTitle() {
             var title = '';
-            if (vm.profile) {
-                title = vm.title = 'Edit ' + ((vm.profile && vm.profile.fullName) || '');
+            if (vm.structureDefinition) {
+                title = vm.title = 'Edit ' + ((vm.structureDefinition && vm.structureDefinition.fullName) || '');
             } else {
-                title = vm.title = 'Add New Profile';
+                title = vm.title = 'Add New StructureDefinition';
             }
             vm.title = title;
             return vm.title;
@@ -115,34 +115,34 @@
         function processResult(results) {
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Profile saved, but location is unavailable. CORS not implemented correctly at remote host.");
+                logWarning("StructureDefinition saved, but location is unavailable. CORS not implemented correctly at remote host.");
             } else {
-                vm.profile.resourceId = common.setResourceId(vm.profile.resourceId, resourceVersionId);
-                logSuccess("Profile saved at " + resourceVersionId);
+                vm.structureDefinition.resourceId = common.setResourceId(vm.structureDefinition.resourceId, resourceVersionId);
+                logSuccess("StructureDefinition saved at " + resourceVersionId);
             }
-            // vm.profile.fullName = profile.name;
+            // vm.structureDefinition.fullName = structureDefinition.name;
             vm.isEditing = true;
             getTitle();
         }
 
         function save() {
-            if (vm.profile.name.length < 5) {
-                logError("Profile Name must be at least 5 characters");
+            if (vm.structureDefinition.name.length < 5) {
+                logError("StructureDefinition Name must be at least 5 characters");
                 return;
             }
-            var profile = profileService.initializeNewProfile().resource;
-            profile.name = vm.profile.name;
-            profile.type = vm.profile.type;
-            profile.telecom = contactPointService.mapFromViewModel();
-            profile.active = vm.profile.active;
+            var structureDefinition = structureDefinitionService.initializeNewStructureDefinition().resource;
+            structureDefinition.name = vm.structureDefinition.name;
+            structureDefinition.type = vm.structureDefinition.type;
+            structureDefinition.telecom = contactPointService.mapFromViewModel();
+            structureDefinition.active = vm.structureDefinition.active;
             if (vm.isEditing) {
-                profileService.updateProfile(vm.profile.resourceId, profile)
+                structureDefinitionService.updateStructureDefinition(vm.structureDefinition.resourceId, structureDefinition)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
                     });
             } else {
-                profileService.addProfile(profile)
+                structureDefinitionService.addStructureDefinition(structureDefinition)
                     .then(processResult,
                     function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -161,8 +161,8 @@
             });
         }
 
-        function viewProfileDetail(profile, event) {
-            console.log(profile);
+        function viewStructureDefinitionDetail(structureDefinition, event) {
+            console.log(structureDefinition);
         }
 
         function viewExtensionDefinition(extensionDefinition, event) {
@@ -190,31 +190,31 @@
 
         function activate() {
             common.activateController([getActiveServer()], controllerId).then(function () {
-                getRequestedProfile();
+                getRequestedStructureDefinition();
             });
         }
 
         vm.activeServer = null;
         vm.cancel = cancel;
         vm.activate = activate;
-        vm.delete = deleteProfile;
+        vm.delete = deleteStructureDefinition;
         vm.edit = edit;
         vm.getTitle = getTitle;
         vm.goBack = goBack;
         vm.isSaving = false;
         vm.isEditing = true;
-        vm.profile = undefined;
+        vm.structureDefinition = undefined;
         vm.save = save;
-        vm.title = 'profileDetail';
+        vm.title = 'structureDefinitionDetail';
         vm.showFullDescription = showFullDescription;
         vm.viewExtensionDefinition = viewExtensionDefinition;
         vm.viewBoundValueSet = viewBoundValueSet;
-        vm.viewProfileDetail = viewProfileDetail;
+        vm.viewStructureDefinitionDetail = viewStructureDefinitionDetail;
 
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'fhirServers', 'profileService', 'contactPointService', 'valueSetService', profileDetail]);
+        ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'fhirServers', 'structureDefinitionService', 'contactPointService', 'valueSetService', structureDefinitionDetail]);
 
 })();

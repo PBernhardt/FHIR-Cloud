@@ -1,4 +1,4 @@
-﻿<section data-ng-controller="profileDetail as vm">
+﻿<section data-ng-controller="structureDefinitionDetail as vm">
     <div flex>
         <div layout="row" layout-align="space-around center">
             <md-button class="md-raised md-primary" data-ng-click="vm.save()" data-ng-disabled="!vm.canSave">Save
@@ -11,37 +11,37 @@
         </div>
         <div>
             <md-content class="md-padding">
-                <data-ng-form name="profileEditForm"
-                              data-ng-model="vm.profile">
+                <data-ng-form name="structureDefinitionEditForm"
+                              data-ng-model="vm.structureDefinition">
                     <md-input-container>
-                        <label>Profile Name</label>
-                        <input data-ng-model="vm.profile.name">
+                        <label>StructureDefinition Name</label>
+                        <input data-ng-model="vm.structureDefinition.name">
                     </md-input-container>
                     <label>Type&nbsp;&nbsp;</label>
                     <select
-                            id="profile-type"
-                            data-ng-model="vm.profile.type.coding[0]">
-                        <option data-ng-repeat="coding in vm.profileTypes"
+                            id="structureDefinition-type"
+                            data-ng-model="vm.structureDefinition.type.coding[0]">
+                        <option data-ng-repeat="coding in vm.structureDefinitionTypes"
                                 value="{{coding}}"
-                                data-ng-selected="coding.code===vm.profile.type.coding[0].code">
+                                data-ng-selected="coding.code===vm.structureDefinition.type.coding[0].code">
                             {{coding.display || ''}}
                         </option>
                     </select>
 
                     <md-input-container>
-                        <label>Affiliated Profile</label>
+                        <label>Affiliated StructureDefinition</label>
                         <input type="text"
-                               typeahead="item as item.display for item in vm.getProfileReference($viewValue) | filter:$viewValue"
-                               typeahead-loading="vm.loadingProfiles"
+                               typeahead="item as item.display for item in vm.getStructureDefinitionReference($viewValue) | filter:$viewValue"
+                               typeahead-loading="vm.loadingStructureDefinitions"
                                typeahead-wait-ms="500"
                                typeahead-editable="false"
                                typeahead-min-length="5"
-                               data-ng-model="vm.profile.partOf">
+                               data-ng-model="vm.structureDefinition.partOf">
                     </md-input-container>
-                    <div data-ng-show="vm.profile.partOf.reference">
-                        <a href="{{vm.profile.partOf.reference}}"
-                           target="_blank">Referenced Profile:
-                            {{vm.profile.partOf.display || "Name Not Specified" }}</a>
+                    <div data-ng-show="vm.structureDefinition.partOf.reference">
+                        <a href="{{vm.structureDefinition.partOf.reference}}"
+                           target="_blank">Referenced StructureDefinition:
+                            {{vm.structureDefinition.partOf.display || "Name Not Specified" }}</a>
                     </div>
 
                     <div data-ng-include="'elements/address/address.html'"></div>
@@ -55,11 +55,11 @@
                                                             <div class="col-md-2 control-label">Locations</div>
                                                             <div class="controls col-md-10 col-md-offset-2">
                                                                 <div class="form-group col-md-8">
-                                                                    <select class="form-control" id="profile-location"
-                                                                            data-ng-model="vm.profile.location[0]">
-                                                                        <option data-ng-repeat="org in vm.profiles"
+                                                                    <select class="form-control" id="structureDefinition-location"
+                                                                            data-ng-model="vm.structureDefinition.location[0]">
+                                                                        <option data-ng-repeat="org in vm.structureDefinitions"
                                                                                 value="{{display}}"
-                                                                                data-ng-selected="org.id===vm.profile.location[0].reference">
+                                                                                data-ng-selected="org.id===vm.structureDefinition.location[0].reference">
                                                                             {{org.name}}
                                                                         </option>
                                                                         <option value=""></option>

@@ -32,7 +32,7 @@
                 templateUrl: 'conformance/conformance-resource-dialog.html',
                 controller: 'conformanceResource',
                 clickOutsideToClose: true,
-                    locals: {
+                locals: {
                     data: resource
                 },
                 targetEvent: $event
@@ -52,7 +52,7 @@
                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 clickOutsideToClose: true,
-                    locals: {
+                locals: {
                     data: item
                 },
                 targetEvent: event
@@ -206,19 +206,23 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/conformance/detailed-search');
+                        logWarning("Not implemented... sorry");
+                        //$location.path('/conformance/detailed-search');
                         break;
                     case 1:
                         $location.path('/conformance');
                         break;
                     case 2:
-                        $location.path('/conformance/edit/current');
+                        logWarning("Not implemented... sorry");
+                        //$location.path('/conformance/edit/current');
                         break;
                     case 3:
-                        $location.path('/conformance/edit/new');
+                        logWarning("Not implemented... sorry");
+                        //$location.path('/conformance/edit/new');
                         break;
                     case 4:
-                        deleteConformance(vm.conformance);
+                        logWarning("Not implemented... sorry");
+                        //deleteConformance(vm.conformance);
                         break;
                 }
             });

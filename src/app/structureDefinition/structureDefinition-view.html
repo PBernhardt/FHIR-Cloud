@@ -1,7 +1,7 @@
-﻿<section data-ng-controller="profileDetail as vm">
+﻿<section data-ng-controller="structureDefinitionDetail as vm">
     <div layout="row" layout-wrap>
         <div flex="66">
-            <h3>{{vm.profile.name}}</h3>
+            <h3>{{vm.structureDefinition.name}}</h3>
         </div>
 
         <div flex="100">
@@ -10,47 +10,47 @@
                     <table class="table table-striped table-hover">
                         <tr>
                             <td>Type</td>
-                            <td>{{vm.profile.type}}</td>
+                            <td>{{vm.structureDefinition.type}}</td>
                         </tr>
                         <tr>
                             <td>Base</td>
-                            <td>{{vm.profile.base}}</td>
+                            <td>{{vm.structureDefinition.base}}</td>
                         </tr>
                         <tr>
                             <td>Date</td>
-                            <td>{{vm.profile.date}}</td>
+                            <td>{{vm.structureDefinition.date}}</td>
                         </tr>
                         <tr>
                             <td>Description</td>
-                            <td>{{vm.profile.description}}</td>
+                            <td>{{vm.structureDefinition.description}}</td>
                         </tr>
                         <tr>
                             <td>Id</td>
-                            <td>{{vm.profile.id}}</td>
+                            <td>{{vm.structureDefinition.id}}</td>
                         </tr>
                         <tr>
                             <td>Publisher</td>
-                            <td>{{vm.profile.publisher}}</td>
+                            <td>{{vm.structureDefinition.publisher}}</td>
                         </tr>
                         <tr>
                             <td>Status</td>
-                            <td>{{vm.profile.status}}</td>
+                            <td>{{vm.structureDefinition.status}}</td>
                         </tr>
                         <tr>
                             <td>Telecom</td>
                             <td>
-                                <p data-ng-repeat="t in vm.profile.telecom">
+                                <p data-ng-repeat="t in vm.structureDefinition.telecom">
                                     <strong>{{t.system || "unspecified"}}</strong>:&nbsp;{{t.value}}
                                 </p>
                             </td>
                         </tr>
                         <tr>
                             <td>Url</td>
-                            <td>{{vm.profile.url}}</td>
+                            <td>{{vm.structureDefinition.url}}</td>
                         </tr>
                     </table>
                 </md-tab>
-                <md-tab hide-sm label="Snapshot" ng-if="vm.profile.snapshot">
+                <md-tab hide-sm label="Snapshot" ng-if="vm.structureDefinition.snapshot">
                     <table class="table table-striped table-hover">
                         <thead>
                         <th>Path</th>
@@ -58,7 +58,7 @@
                         <th>Detail</th>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="snap in vm.profile.snapshot.element">
+                        <tr ng-repeat="snap in vm.structureDefinition.snapshot.element">
                             <td>{{snap.path}} <i ng-if="snap.name">({{snap.name}})</i>
                             </td>
                             <td>{{snap.short}}
@@ -75,7 +75,7 @@
                         </tbody>
                     </table>
                 </md-tab>
-                <md-tab hide-sm label="Differential" ng-if="vm.profile.differential">
+                <md-tab hide-sm label="Differential" ng-if="vm.structureDefinition.differential">
                     <table class="table table-striped table-hover">
                         <thead>
                         <th>Path</th>
@@ -83,16 +83,16 @@
                         <th>Binding</th>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="diff in vm.profile.differential.element">
+                        <tr ng-repeat="diff in vm.structureDefinition.differential.element">
                             <td>{{diff.path}} <i ng-if="diff.name">({{diff.name}})</i>
                             </td>
                             <td>
                                 <div ng-repeat="c in diff.type">
                                     <md-button ng-if="c.code==='Extension'" md-no-ink
-                                               ng-click="vm.viewExtensionDefinition(c.profile, $event)">{{ c.profile | lastUrlPart }}
+                                               ng-click="vm.viewExtensionDefinition(c.structureDefinition, $event)">{{ c.structureDefinition | lastUrlPart }}
                                     </md-button>
                                     <md-button ng-if="c.code==='Reference'" md-no-ink
-                                               ng-click="vm.viewProfileDetail(c.profile, $event)">{{ c.profile | lastUrlPart }}
+                                               ng-click="vm.viewStructureDefinitionDetail(c.structureDefinition, $event)">{{ c.structureDefinition | lastUrlPart }}
                                     </md-button>
                                     <p ng-if="c.code!=='Extension' && c.code!=='Reference'">{{c.code}}</p>
                                 </div>

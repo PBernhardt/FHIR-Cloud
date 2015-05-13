@@ -38,7 +38,13 @@
         };
     });
 
-    function common($http, $location, $q, $rootScope, $timeout, $window, commonConfig, logger) {
+    function common($http, $location, $q, $rootScope, $timeout, $window, commonConfig, logger, store) {
+
+        function isAuthenticated() {
+            //a profile is created for SMART and plain OAuth login
+            var profile = store.get('profile');
+            return (isUndefinedOrNull(profile) === false);
+        }
 
         function activateController(promises, controllerId) {
             return $q.all(promises).then(function (eventArgs) {
@@ -314,6 +320,10 @@
             return output;
         }
 
+        function isUndefinedOrNull(val) {
+            return angular.isUndefined(val) || val === null;
+        }
+
         var service = {
             // common angular dependencies
             $broadcast: $broadcast,
@@ -331,7 +341,9 @@
             changeUser: changeUser,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,
+            isAuthenticated: isAuthenticated,
             isNumber: isNumber,
+            isUndefinedOrNull: isUndefinedOrNull,
             logger: logger, // for accessibility
             makeAddress: makeAddress,
             makeHumanName: makeHumanName,
@@ -348,7 +360,7 @@
     }
 
     commonModule.factory('common',
-        ['$http', '$location', '$q', '$rootScope', '$timeout', '$window', 'commonConfig', 'logger', common]);
+        ['$http', '$location', '$q', '$rootScope', '$timeout', '$window', 'commonConfig', 'logger', 'store', common]);
 })();(function () {
     'use strict';
 
@@ -487,10 +499,8 @@
             reloadOnSearch: false
         }).when('/organization/detailed-search', {
             templateUrl: 'organization/organization-detailed-search.html',
-            reloadOnSearch: false
         }).when('/organization/view/:hashKey', {
             templateUrl: 'organization/organization-view.html',
-            reloadOnSearch: false
         }).when('/organization/edit/:hashKey', {
             templateUrl: 'organization/organization-edit.html'
         }).when('/organization/get/:resourceId', {
@@ -499,7 +509,6 @@
             templateUrl: 'patient/patient-detailed-search.html'
         }).when('/patient', {
             templateUrl: 'patient/patient-search.html',
-            reloadOnSearch: false
         }).when('/patient/get/:id', {
             templateUrl: 'patient/patient-view.html'
         }).when('/patient/view/:hashKey', {
@@ -533,14 +542,6 @@
             templateUrl: 'person/person-edit.html'
         }).when('/person/detailed-search', {
             templateUrl: 'person/person-detailed-search.html'
-        }).when('/profile', {
-            templateUrl: 'profile/profile-search.html'
-        }).when('/profile/view/:hashKey', {
-            templateUrl: 'profile/profile-view.html'
-        }).when('/profile/edit/:hashKey', {
-            templateUrl: 'profile/profile-edit.html'
-        }).when('/healthcareService', {
-            templateUrl: 'templates/home.html'
         }).when('/relatedPerson', {
             templateUrl: 'relatedPerson/relatedPerson-search.html'
         }).when('/relatedPerson/get/:id', {
@@ -551,6 +552,12 @@
             templateUrl: 'relatedPerson/relatedPerson-edit.html'
         }).when('/relatedPerson/detailed-search', {
             templateUrl: 'relatedPerson/relatedPerson-detailed-search.html'
+        }).when('/structureDefinition', {
+            templateUrl: 'structureDefinition/structureDefinition-search.html'
+        }).when('/structureDefinition/view/:hashKey', {
+            templateUrl: 'structureDefinition/structureDefinition-view.html'
+        }).when('/structureDefinition/edit/:hashKey', {
+            templateUrl: 'structureDefinition/structureDefinition-edit.html'
         }).when('/valueSet', {
             templateUrl: 'valueSet/valueSet-search.html'
         }).when('/valueSet/view/:hashKey', {
@@ -559,14 +566,14 @@
             templateUrl: 'valueSet/valueSet-edit.html'
         }).when('/daf/:profile', {
             templateUrl: 'templates/daf.html'
-/*        }).when('/access_token=:accessToken', {
-            template: '',
-            controller: function ($location, AccessToken) {
-                var hash = $location.path().substr(1);
-                AccessToken.setTokenFromString(hash);
-                $location.path('/');
-                $location.replace();
-            }*/
+            /*        }).when('/access_token=:accessToken', {
+             template: '',
+             controller: function ($location, AccessToken) {
+             var hash = $location.path().substr(1);
+             AccessToken.setTokenFromString(hash);
+             $location.path('/');
+             $location.replace();
+             }*/
         }).otherwise({
             redirectTo: '/home'
         });
@@ -649,11 +656,11 @@
             return store.get('authToken');
         }];
 
-        $httpProvider.defaults.headers.common = {'Accept': 'application/json+fhir, application/json, text/plain, */*'};
+        $httpProvider.defaults.headers.common = {
+            'Accept': 'application/json+fhir, application/json, text/plain, */*'
+        };
         $httpProvider.defaults.headers.put = {'Content-Type': 'application/json+fhir'};
         $httpProvider.defaults.headers.post = {'Content-Type': 'application/json+fhir'};
-
-        $httpProvider.interceptors.push('jwtInterceptor');
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {
@@ -682,7 +689,7 @@
     }]);
 
     app.run(function (auth) {
-        // This hooks al auth events to check everything as soon as the app starts
+        // This hooks all auth events to check everything as soon as the app starts
         auth.hookEvents();
     });
 })();(function () {
@@ -984,13 +991,22 @@
 
     var serviceId = 'fhirClient';
 
-    function fhirClient($http, common) {
+    function fhirClient($http, common, store) {
         var $q = common.$q;
 
         function addResource(baseUrl, resource) {
             var fhirResource = common.removeNullProperties(resource);
             var deferred = $q.defer();
-            $http.post(baseUrl, fhirResource)
+            var req = {
+                method: 'post',
+                url: baseUrl,
+                data: fhirResource
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -1008,7 +1024,15 @@
 
         function deleteResource(resourceUrl) {
             var deferred = $q.defer();
-            $http.delete(resourceUrl)
+            var req = {
+                method: 'delete',
+                url: resourceUrl
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -1035,7 +1059,15 @@
 
         function getResource(resourceUrl) {
             var deferred = $q.defer();
-            $http.get(resourceUrl)
+            var req = {
+                method: 'get',
+                url: resourceUrl
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token) && resourceUrl.indexOf('metadata') === -1) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -1054,7 +1086,16 @@
         function updateResource(resourceUrl, resource) {
             var fhirResource = common.removeNullProperties(resource);
             var deferred = $q.defer();
-            $http.put(resourceUrl, fhirResource)
+            var req = {
+                method: 'put',
+                url: resourceUrl,
+                data: fhirResource
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -1080,7 +1121,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', fhirClient]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', 'store', fhirClient]);
 
 
 })();(function () {
@@ -2832,7 +2873,7 @@
             {name: 'Conformance Statement', href: 'conformance/view/current'},
             {name: 'Extension Definition', href: 'extensionDefinition'},
             {name: 'Operation Definition', href: 'operationDefinition'},
-            {name: 'Profile', href: 'profile'},
+            {name: 'Structure Definition', href: 'structureDefinition'},
             {name: 'Value Set', href: 'valueSet'}
         ];
         var _documentsPages = [
@@ -2880,11 +2921,12 @@
         function _activate() {
             common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
                 .then(function () {
+                    //for processing 2nd leg of SMART authorization
                     var authorizeResponse = $location.search();
                     var code = authorizeResponse.code;
                     var state = authorizeResponse.state;
                     if (code && state) {
-                       _getAccessToken(code, state);
+                        _getAccessToken(code, state);
                     }
                 }, function (error) {
                     logError('Error ' + error);
@@ -2965,6 +3007,7 @@
             store.remove('authToken');
             store.remove('smartResponse');
             common.changeUser(null);
+            $location.path('/');
         }
 
         vm.logout = logout;
@@ -2984,19 +3027,7 @@
         vm.authorize = authorize;
 
         function _getAccessToken(code, state) {
-            var _code;
-            var _state;
-            if (angular.isArray(code)) {
-                _code = _.first(code);
-            } else {
-                _code = code;
-            }
-            if (angular.isArray(state)) {
-                _state = _.first(state);
-            } else {
-                _state = state;
-            }
-            smartAuthorizationService.getToken(_code, _state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
+            smartAuthorizationService.getToken(code, state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
                 .then(function (idToken) {
                     logInfo("Access token acquired from " + vm.activeServer.name);
                     idToken.name = idToken.sub;
@@ -3044,7 +3075,13 @@
         );
 
         $rootScope.$on('$locationChangeStart', function () {
-            if (!auth.isAuthenticated) {
+            if (common.isAuthenticated() === false && $location.path().indexOf('home') === -1) {
+                if ($location.path() !== "/") {
+                    logInfo("You must authenticate to access the application");
+                }
+                $location.path('/home');
+            }
+            else if (!auth.isAuthenticated) {
                 var token = store.get('token');
                 vm.user = store.get('profile');
                 if (token) {
@@ -3085,6 +3122,9 @@
                     vm.activeServer.redirectUri = absoluteUrl.replace(url, "");
                     fhirServers.setActiveServer(vm.activeServer);
                     common.changeServer(vm.activeServer);
+                    if (angular.isDefined(vm.activeServer.clientId)) {
+                        authorize();
+                    }
                 }, function (error) {
                     logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
                 });
@@ -4560,7 +4600,7 @@
                 templateUrl: 'conformance/conformance-resource-dialog.html',
                 controller: 'conformanceResource',
                 clickOutsideToClose: true,
-                    locals: {
+                locals: {
                     data: resource
                 },
                 targetEvent: $event
@@ -4580,7 +4620,7 @@
                 templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 clickOutsideToClose: true,
-                    locals: {
+                locals: {
                     data: item
                 },
                 targetEvent: event
@@ -4734,19 +4774,23 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/conformance/detailed-search');
+                        logWarning("Not implemented... sorry");
+                        //$location.path('/conformance/detailed-search');
                         break;
                     case 1:
                         $location.path('/conformance');
                         break;
                     case 2:
-                        $location.path('/conformance/edit/current');
+                        logWarning("Not implemented... sorry");
+                        //$location.path('/conformance/edit/current');
                         break;
                     case 3:
-                        $location.path('/conformance/edit/new');
+                        logWarning("Not implemented... sorry");
+                        //$location.path('/conformance/edit/new');
                         break;
                     case 4:
-                        deleteConformance(vm.conformance);
+                        logWarning("Not implemented... sorry");
+                        //deleteConformance(vm.conformance);
                         break;
                 }
             });
@@ -4971,7 +5015,7 @@
 
     var serviceId = 'conformanceService';
 
-    function conformanceService($window, common, dataCache, fhirClient, fhirServers) {
+    function conformanceService($http, $window, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localConformances';
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
@@ -5102,12 +5146,18 @@
 
         function getConformance(resourceId) {
             var deferred = $q.defer();
-            fhirClient.getResource(resourceId)
-                .then(function (results) {
+            var req = {
+                method: 'get',
+                url: resourceId,
+                headers: {'Authorization': undefined}
+            };
+            $http(req)
+                .success(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     $window.localStorage.conformance = JSON.stringify(results.data);
                     deferred.resolve(results.data);
-                }, function (outcome) {
+                })
+                .error(function (outcome) {
                     deferred.reject(outcome);
                 });
             return deferred.promise;
@@ -5224,7 +5274,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$window', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$http', '$window', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         conformanceService]);
 })();(function () {
     'use strict';
@@ -6457,11 +6507,16 @@
 
         function searchGoogle(input) {
             var deferred = $q.defer();
-            $http.get('https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyCtbVf7g-kQmMQjF_kAfGawAZabKcq4rdo', {
+            var req = {
+                method: 'get',
+                url: 'https://maps.googleapis.com/maps/api/geocode/json',
                 params: {
+                    key: 'AIzaSyCtbVf7g-kQmMQjF_kAfGawAZabKcq4rdo',
                     address: input
-                }
-            })
+                },
+                headers: {'Authorization': undefined}
+            }
+            $http(req)
                 .success(function (data) {
                     var addresses = [];
                     if (data.results) {
@@ -19322,7 +19377,6 @@
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
-                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
                         var resource = {
                             "resourceType": "Patient",
                             "name": [{
@@ -22051,613 +22105,6 @@
 ();(function () {
     'use strict';
 
-    var controllerId = 'profileDetail';
-
-    function profileDetail($location, $routeParams, $window, $mdDialog, common, fhirServers, profileService, contactPointService, valueSetService) {
-        /* jshint validthis:true */
-        var vm = this;
-
-        var logError = common.logger.getLogFn(controllerId, 'error');
-        var logSuccess = common.logger.getLogFn(controllerId, 'success');
-        var logWarning = common.logger.getLogFn(controllerId, 'warning');
-
-        function cancel() {
-
-        }
-
-        function canDelete() {
-            return !vm.isEditing;
-        }
-
-        function canSave() {
-            return !vm.isSaving;
-        }
-
-        function deleteProfile(profile) {
-            function executeDelete() {
-                if (profile && profile.resourceId && profile.hashKey) {
-                    profileService.deleteCachedProfile(profile.hashKey, profile.resourceId)
-                        .then(function () {
-                            logSuccess("Deleted profile " + profile.name);
-                            $location.path('/profiles');
-                        },
-                        function (error) {
-                            logError(common.unexpectedOutcome(error));
-                        }
-                    );
-                }
-            }
-            var confirm = $mdDialog.confirm().title('Delete ' + profile.name + '?').ok('Yes').cancel('No');
-            $mdDialog.show(confirm).then(executeDelete);
-
-        }
-
-        function edit(profile) {
-            if (profile && profile.hashKey) {
-                $location.path('/profile/edit/' + profile.hashKey);
-            }
-        }
-
-        function getActiveServer() {
-            fhirServers.getActiveServer()
-                .then(function (server) {
-                    vm.activeServer = server;
-                    return vm.activeServer;
-                });
-        }
-
-        function getRequestedProfile() {
-            function intitializeRelatedData(data) {
-                var rawData = angular.copy(data.resource);
-                if (rawData.text) {
-                    vm.narrative = (rawData.text.div || '<div>Not provided</div>');
-                } else {
-                    vm.narrative =  '<div>Not provided</div>';
-                }
-                vm.json = rawData;
-                vm.json.text = {div: "see narrative tab"};
-                vm.json = angular.toJson(rawData, true);
-                vm.profile = rawData;
-                if (angular.isUndefined(vm.profile.type)) {
-                    vm.profile.type = {"coding": []};
-                }
-                vm.title = vm.profile.name;
-                contactPointService.init(vm.profile.telecom, false, false);
-            }
-
-            if ($routeParams.hashKey === 'new') {
-                var data = profileService.initializeNewProfile();
-                intitializeRelatedData(data);
-                vm.title = 'Add New Profile';
-                vm.isEditing = false;
-            } else {
-                if ($routeParams.hashKey) {
-                    profileService.getCachedProfile($routeParams.hashKey)
-                        .then(intitializeRelatedData).then(function () {
-                        }, function (error) {
-                            logError(error);
-                        });
-                } else if ($routeParams.id) {
-                    var resourceId = vm.activeServer.baseUrl + '/Profile/' + $routeParams.id;
-                    profileService.getProfile(resourceId)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error);
-                        });
-                }
-            }
-        }
-
-        function getTitle() {
-            var title = '';
-            if (vm.profile) {
-                title = vm.title = 'Edit ' + ((vm.profile && vm.profile.fullName) || '');
-            } else {
-                title = vm.title = 'Add New Profile';
-            }
-            vm.title = title;
-            return vm.title;
-        }
-
-        function goBack() {
-            $window.history.back();
-        }
-
-        function processResult(results) {
-            var resourceVersionId = results.headers.location || results.headers["content-location"];
-            if (angular.isUndefined(resourceVersionId)) {
-                logWarning("Profile saved, but location is unavailable. CORS not implemented correctly at remote host.");
-            } else {
-                vm.profile.resourceId = common.setResourceId(vm.profile.resourceId, resourceVersionId);
-                logSuccess("Profile saved at " + resourceVersionId);
-            }
-            // vm.profile.fullName = profile.name;
-            vm.isEditing = true;
-            getTitle();
-        }
-
-        function save() {
-            if (vm.profile.name.length < 5) {
-                logError("Profile Name must be at least 5 characters");
-                return;
-            }
-            var profile = profileService.initializeNewProfile().resource;
-            profile.name = vm.profile.name;
-            profile.type = vm.profile.type;
-            profile.telecom = contactPointService.mapFromViewModel();
-            profile.active = vm.profile.active;
-            if (vm.isEditing) {
-                profileService.updateProfile(vm.profile.resourceId, profile)
-                    .then(processResult,
-                    function (error) {
-                        logError(common.unexpectedOutcome(error));
-                    });
-            } else {
-                profileService.addProfile(profile)
-                    .then(processResult,
-                    function (error) {
-                        logError(common.unexpectedOutcome(error));
-                    });
-            }
-        }
-
-        function showFullDescription(element, event) {
-            $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
-                controller: 'rawDataController',
-                locals: {
-                    data: element
-                },
-                targetEvent: event
-            });
-        }
-
-        function viewProfileDetail(profile, event) {
-            console.log(profile);
-        }
-
-        function viewExtensionDefinition(extensionDefinition, event) {
-            console.log(extensionDefinition);
-        }
-
-        function viewBoundValueSet(reference, event) {
-            $mdDialog.show({
-                 templateUrl: 'templates/valueSet-popup.html',
-                controller: 'valueSetPopupController',
-                locals: {
-                    data: reference
-                },
-                targetEvent: event
-            });
-        }
-
-        Object.defineProperty(vm, 'canSave', {
-            get: canSave
-        });
-
-        Object.defineProperty(vm, 'canDelete', {
-            get: canDelete
-        });
-
-        function activate() {
-            common.activateController([getActiveServer()], controllerId).then(function () {
-                getRequestedProfile();
-            });
-        }
-
-        vm.activeServer = null;
-        vm.cancel = cancel;
-        vm.activate = activate;
-        vm.delete = deleteProfile;
-        vm.edit = edit;
-        vm.getTitle = getTitle;
-        vm.goBack = goBack;
-        vm.isSaving = false;
-        vm.isEditing = true;
-        vm.profile = undefined;
-        vm.save = save;
-        vm.title = 'profileDetail';
-        vm.showFullDescription = showFullDescription;
-        vm.viewExtensionDefinition = viewExtensionDefinition;
-        vm.viewBoundValueSet = viewBoundValueSet;
-        vm.viewProfileDetail = viewProfileDetail;
-
-        activate();
-    }
-
-    angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'fhirServers', 'profileService', 'contactPointService', 'valueSetService', profileDetail]);
-
-})();(function () {
-    'use strict';
-
-    var controllerId = 'profileSearch';
-
-    function profileSearch($location, common, config, fhirServers, profileService) {
-        var keyCodes = config.keyCodes;
-        var getLogFn = common.logger.getLogFn;
-        var logInfo = getLogFn(controllerId, 'info');
-        var logError = getLogFn(controllerId, 'error');
-
-        /* jshint validthis:true */
-        var vm = this;
-
-        function getActiveServer() {
-            fhirServers.getActiveServer()
-                .then(function (server) {
-                    vm.activeServer = server;
-                    return vm.activeServer;
-                });
-        }
-
-        function getCachedSearchResults() {
-            profileService.getCachedSearchResults()
-                .then(processSearchResults);
-        }
-
-        function activate() {
-            common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
-                .then(function () {
-                });
-        }
-
-        function goToDetail(hash) {
-            if (hash) {
-                $location.path('/profile/view/' + hash);
-            }
-        }
-
-        function processSearchResults(searchResults) {
-            if (searchResults) {
-                vm.profiles = (searchResults.entry || []);
-                vm.paging.links = (searchResults.link || []);
-                vm.paging.totalResults = (searchResults.total || 0);
-            }
-        }
-
-        function submit(valid) {
-            if (valid) {
-                toggleSpinner(true);
-                profileService.getProfiles(vm.activeServer.baseUrl, vm.searchText)
-                    .then(function (data) {
-                        logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Profiles from ' + vm.activeServer.name, false);
-                        return data;
-                    }, function (error) {
-                        toggleSpinner(false);
-                        logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
-                    })
-                    .then(processSearchResults)
-                    .then(function () {
-                        toggleSpinner(false);
-                    });
-            }
-        }
-
-        function dereferenceLink(url) {
-            toggleSpinner(true);
-            profileService.getProfilesByLink(url)
-                .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.profiles) ? data.profiles.length : 0) + ' Profiles from ' + vm.activeServer.name, true);
-                    return data;
-                }, function (error) {
-                    toggleSpinner(false);
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
-                })
-                .then(processSearchResults)
-                .then(function () {
-                    toggleSpinner(false);
-                });
-        }
-
-        function keyPress($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.searchText = '';
-            }
-        }
-
-        function toggleSpinner(on) {
-            vm.isBusy = on;
-        }
-
-        vm.activeServer = null;
-        vm.isBusy = false;
-        vm.profiles = [];
-        vm.errorOutcome = null;
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
-        vm.searchResults = null;
-        vm.searchText = '';
-        vm.title = 'Profiles';
-        vm.keyPress = keyPress;
-        vm.dereferenceLink = dereferenceLink;
-        vm.submit = submit;
-        vm.goToDetail = goToDetail;
-
-        activate();
-    }
-
-    angular.module('FHIRCloud').controller(controllerId,
-        ['$location', 'common', 'config', 'fhirServers', 'profileService', profileSearch]);
-})();
-(function () {
-    'use strict';
-
-    var serviceId = 'profileService';
-
-    function profileService(common, dataCache, fhirClient, fhirServers) {
-        var dataCacheKey = 'localProfiles';
-        var getLogFn = common.logger.getLogFn;
-        var logWarning = getLogFn(serviceId, 'warning');
-        var $q = common.$q;
-
-        function addProfile(resource) {
-            _prepArrays(resource)
-                .then(function (resource) {
-                    resource.type.coding = _prepCoding(resource.type.coding);
-                });
-            var deferred = $q.defer();
-            fhirServers.getActiveServer()
-                .then(function (server) {
-                    var url = server.baseUrl + "/Profile";
-                    fhirClient.addResource(url, resource)
-                        .then(function (results) {
-                            deferred.resolve(results);
-                        }, function (outcome) {
-                            deferred.reject(outcome);
-                        });
-                });
-            return deferred.promise;
-        }
-
-        function clearCache() {
-            dataCache.addToCache(dataCacheKey, null);
-        }
-
-        function deleteCachedProfile(hashKey, resourceId) {
-            function removeFromCache(searchResults) {
-                var removed = false;
-                var cachedProfiles = searchResults.entry;
-                for (var i = 0, len = cachedProfiles.length; i < len; i++) {
-                    if (cachedProfiles[i].$$hashKey === hashKey) {
-                        cachedProfiles.splice(i, 1);
-                        searchResults.entry = cachedProfiles;
-                        searchResults.totalResults = (searchResults.totalResults - 1);
-                        dataCache.addToCache(dataCacheKey, searchResults);
-                        removed = true;
-                        break;
-                    }
-                }
-                if (removed) {
-                    deferred.resolve();
-                } else {
-                    logWarning('Profile not found in cache: ' + hashKey);
-                    deferred.resolve();
-                }
-            }
-
-            var deferred = $q.defer();
-            deleteProfile(resourceId)
-                .then(getCachedSearchResults,
-                function (error) {
-                    deferred.reject(error);
-                })
-                .then(removeFromCache)
-                .then(function () {
-                    deferred.resolve();
-                });
-            return deferred.promise;
-        }
-
-        function deleteProfile(resourceId) {
-            var deferred = $q.defer();
-            fhirClient.deleteResource(resourceId)
-                .then(function (results) {
-                    deferred.resolve(results);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
-        function getCachedSearchResults() {
-            var deferred = $q.defer();
-            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
-            if (cachedSearchResults) {
-                deferred.resolve(cachedSearchResults);
-            } else {
-                deferred.reject('Search results not cached.');
-            }
-            return deferred.promise;
-        }
-
-        function getCachedProfile(hashKey) {
-            function getProfile(searchResults) {
-                var cachedProfile;
-                var cachedProfiles = searchResults.entry;
-                cachedProfile = _.find(cachedProfiles, {'$$hashKey': hashKey});
-                if (cachedProfile) {
-                    deferred.resolve(cachedProfile);
-                } else {
-                    deferred.reject('Profile not found in cache: ' + hashKey);
-                }
-            }
-
-            var deferred = $q.defer();
-            getCachedSearchResults()
-                .then(getProfile,
-                function () {
-                    deferred.reject('Profile search results not found in cache.');
-                });
-            return deferred.promise;
-        }
-
-        function getProfile(resourceId) {
-            var deferred = $q.defer();
-            fhirClient.getResource(resourceId)
-                .then(function (results) {
-                    dataCache.addToCache(dataCacheKey, results.data);
-                    deferred.resolve(results.data);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
-        //TODO: add support for summary when DSTU2 server implementers have support
-        function getProfileReference(baseUrl, input) {
-            var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Profile?type=' + input + '&_count=20')
-                .then(function (results) {
-                    var profiles = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                profiles.push({display: item.resource.name, reference: item.resource.id});
-                            });
-                    }
-                    if (profiles.length === 0) {
-                        profiles.push({display: "No matches", reference: ''});
-                    }
-                    deferred.resolve(profiles);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
-        //TODO: waiting for server implementers to add support for _summary
-        function getProfiles(baseUrl, nameFilter) {
-            var deferred = $q.defer();
-
-            fhirClient.getResource(baseUrl + '/Profile?name=' + nameFilter + '&_count=20')
-                .then(function (results) {
-                    dataCache.addToCache(dataCacheKey, results.data);
-                    deferred.resolve(results.data);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
-        function getProfilesByLink(url) {
-            var deferred = $q.defer();
-            fhirClient.getResource(url)
-                .then(function (results) {
-                    var searchResults = {"links": {}, "profiles": []};
-                    var profiles = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                if (item.content && item.content.resourceType === 'Profile') {
-                                    profiles.push({display: item.content.name, reference: item.id});
-                                }
-                            });
-
-                    }
-                    if (profiles.length === 0) {
-                        profiles.push({display: "No matches", reference: ''});
-                    }
-                    searchResults.profiles = profiles;
-                    if (results.data.link) {
-                        searchResults.links = results.data.link;
-                    }
-                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
-                    deferred.resolve(searchResults);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
-        function initializeNewProfile() {
-            var data = {};
-            data.resource = {
-                "resourceType": "Profile",
-                "identifier": [],
-                "type": {"coding": []},
-                "telecom": [],
-                "contact": [],
-                "address": [],
-                "partOf": null,
-                "location": [],
-                "active": true
-            };
-            return data;
-        }
-
-        function updateProfile(resourceVersionId, resource) {
-            _prepArrays(resource)
-                .then(function (resource) {
-                    resource.type.coding = _prepCoding(resource.type.coding);
-                });
-            var deferred = $q.defer();
-            fhirClient.updateResource(resourceVersionId, resource)
-                .then(function (results) {
-                    deferred.resolve(results);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
-        function _prepArrays(resource) {
-            if (resource.address.length === 0) {
-                resource.address = null;
-            }
-            if (resource.identifier.length === 0) {
-                resource.identifier = null;
-            }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
-            if (resource.telecom.length === 0) {
-                resource.telecom = null;
-            }
-            if (resource.location.length === 0) {
-                resource.location = null;
-            }
-            return $q.when(resource);
-        }
-
-        function _prepCoding(coding) {
-            var result = null;
-            if (angular.isArray(coding) && angular.isDefined(coding[0])) {
-                if (angular.isObject(coding[0])) {
-                    result = coding;
-                } else {
-                    var parsedCoding = JSON.parse(coding[0]);
-                    result = [];
-                    result.push(parsedCoding ? parsedCoding : null);
-                }
-            }
-            return result;
-        }
-
-        var service = {
-            addProfile: addProfile,
-            clearCache: clearCache,
-            deleteCachedProfile: deleteCachedProfile,
-            deleteProfile: deleteProfile,
-            getCachedProfile: getCachedProfile,
-            getCachedSearchResults: getCachedSearchResults,
-            getProfile: getProfile,
-            getProfiles: getProfiles,
-            getProfilesByLink: getProfilesByLink,
-            getProfileReference: getProfileReference,
-            initializeNewProfile: initializeNewProfile,
-            updateProfile: updateProfile
-        };
-
-        return service;
-    }
-
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', profileService]);
-
-})();(function () {
-    'use strict';
-
     var controllerId = 'relatedPersonDetail';
 
     function relatedPersonDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
@@ -23900,6 +23347,567 @@
         relatedPersonService]);
 })
 ();(function () {
+    'use strict';
+
+    var controllerId = 'structureDefinitionDetail';
+
+    function structureDefinitionDetail($location, $routeParams, $window, $mdDialog, common, fhirServers, structureDefinitionService, contactPointService, valueSetService) {
+        /* jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+
+        function cancel() {
+
+        }
+
+        function canDelete() {
+            return !vm.isEditing;
+        }
+
+        function canSave() {
+            return !vm.isSaving;
+        }
+
+        function deleteStructureDefinition(structureDefinition) {
+            function executeDelete() {
+                if (structureDefinition && structureDefinition.resourceId && structureDefinition.hashKey) {
+                    structureDefinitionService.deleteCachedStructureDefinition(structureDefinition.hashKey, structureDefinition.resourceId)
+                        .then(function () {
+                            logSuccess("Deleted structureDefinition " + structureDefinition.name);
+                            $location.path('/structureDefinitions');
+                        },
+                        function (error) {
+                            logError(common.unexpectedOutcome(error));
+                        }
+                    );
+                }
+            }
+            var confirm = $mdDialog.confirm().title('Delete ' + structureDefinition.name + '?').ok('Yes').cancel('No');
+            $mdDialog.show(confirm).then(executeDelete);
+
+        }
+
+        function edit(structureDefinition) {
+            if (structureDefinition && structureDefinition.hashKey) {
+                $location.path('/structureDefinition/edit/' + structureDefinition.hashKey);
+            }
+        }
+
+        function getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function getRequestedStructureDefinition() {
+            function intitializeRelatedData(data) {
+                var rawData = angular.copy(data.resource);
+                if (rawData.text) {
+                    vm.narrative = (rawData.text.div || '<div>Not provided</div>');
+                } else {
+                    vm.narrative =  '<div>Not provided</div>';
+                }
+                vm.json = rawData;
+                vm.json.text = {div: "see narrative tab"};
+                vm.json = angular.toJson(rawData, true);
+                vm.structureDefinition = rawData;
+                if (angular.isUndefined(vm.structureDefinition.type)) {
+                    vm.structureDefinition.type = {"coding": []};
+                }
+                vm.title = vm.structureDefinition.name;
+                contactPointService.init(vm.structureDefinition.telecom, false, false);
+            }
+
+            if ($routeParams.hashKey === 'new') {
+                var data = structureDefinitionService.initializeNewStructureDefinition();
+                intitializeRelatedData(data);
+                vm.title = 'Add New StructureDefinition';
+                vm.isEditing = false;
+            } else {
+                if ($routeParams.hashKey) {
+                    structureDefinitionService.getCachedStructureDefinition($routeParams.hashKey)
+                        .then(intitializeRelatedData).then(function () {
+                        }, function (error) {
+                            logError(error);
+                        });
+                } else if ($routeParams.id) {
+                    var resourceId = vm.activeServer.baseUrl + '/StructureDefinition/' + $routeParams.id;
+                    structureDefinitionService.getStructureDefinition(resourceId)
+                        .then(intitializeRelatedData, function (error) {
+                            logError(error);
+                        });
+                }
+            }
+        }
+
+        function getTitle() {
+            var title = '';
+            if (vm.structureDefinition) {
+                title = vm.title = 'Edit ' + ((vm.structureDefinition && vm.structureDefinition.fullName) || '');
+            } else {
+                title = vm.title = 'Add New StructureDefinition';
+            }
+            vm.title = title;
+            return vm.title;
+        }
+
+        function goBack() {
+            $window.history.back();
+        }
+
+        function processResult(results) {
+            var resourceVersionId = results.headers.location || results.headers["content-location"];
+            if (angular.isUndefined(resourceVersionId)) {
+                logWarning("StructureDefinition saved, but location is unavailable. CORS not implemented correctly at remote host.");
+            } else {
+                vm.structureDefinition.resourceId = common.setResourceId(vm.structureDefinition.resourceId, resourceVersionId);
+                logSuccess("StructureDefinition saved at " + resourceVersionId);
+            }
+            // vm.structureDefinition.fullName = structureDefinition.name;
+            vm.isEditing = true;
+            getTitle();
+        }
+
+        function save() {
+            if (vm.structureDefinition.name.length < 5) {
+                logError("StructureDefinition Name must be at least 5 characters");
+                return;
+            }
+            var structureDefinition = structureDefinitionService.initializeNewStructureDefinition().resource;
+            structureDefinition.name = vm.structureDefinition.name;
+            structureDefinition.type = vm.structureDefinition.type;
+            structureDefinition.telecom = contactPointService.mapFromViewModel();
+            structureDefinition.active = vm.structureDefinition.active;
+            if (vm.isEditing) {
+                structureDefinitionService.updateStructureDefinition(vm.structureDefinition.resourceId, structureDefinition)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
+            } else {
+                structureDefinitionService.addStructureDefinition(structureDefinition)
+                    .then(processResult,
+                    function (error) {
+                        logError(common.unexpectedOutcome(error));
+                    });
+            }
+        }
+
+        function showFullDescription(element, event) {
+            $mdDialog.show({
+                 templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: element
+                },
+                targetEvent: event
+            });
+        }
+
+        function viewStructureDefinitionDetail(structureDefinition, event) {
+            console.log(structureDefinition);
+        }
+
+        function viewExtensionDefinition(extensionDefinition, event) {
+            console.log(extensionDefinition);
+        }
+
+        function viewBoundValueSet(reference, event) {
+            $mdDialog.show({
+                 templateUrl: 'templates/valueSet-popup.html',
+                controller: 'valueSetPopupController',
+                locals: {
+                    data: reference
+                },
+                targetEvent: event
+            });
+        }
+
+        Object.defineProperty(vm, 'canSave', {
+            get: canSave
+        });
+
+        Object.defineProperty(vm, 'canDelete', {
+            get: canDelete
+        });
+
+        function activate() {
+            common.activateController([getActiveServer()], controllerId).then(function () {
+                getRequestedStructureDefinition();
+            });
+        }
+
+        vm.activeServer = null;
+        vm.cancel = cancel;
+        vm.activate = activate;
+        vm.delete = deleteStructureDefinition;
+        vm.edit = edit;
+        vm.getTitle = getTitle;
+        vm.goBack = goBack;
+        vm.isSaving = false;
+        vm.isEditing = true;
+        vm.structureDefinition = undefined;
+        vm.save = save;
+        vm.title = 'structureDefinitionDetail';
+        vm.showFullDescription = showFullDescription;
+        vm.viewExtensionDefinition = viewExtensionDefinition;
+        vm.viewBoundValueSet = viewBoundValueSet;
+        vm.viewStructureDefinitionDetail = viewStructureDefinitionDetail;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'fhirServers', 'structureDefinitionService', 'contactPointService', 'valueSetService', structureDefinitionDetail]);
+
+})();(function () {
+    'use strict';
+
+    var controllerId = 'structureDefinitionSearch';
+
+    function structureDefinitionSearch($location, common, config, fhirServers, structureDefinitionService) {
+        var getLogFn = common.logger.getLogFn;
+        var logInfo = getLogFn(controllerId, 'info');
+        var logError = getLogFn(controllerId, 'error');
+        var $q = common.$q;
+        var noToast = false;
+
+        /* jshint validthis:true */
+        var vm = this;
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                    return vm.activeServer;
+                });
+        }
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                });
+        }
+
+        function goToStructureDefinition(hash) {
+            if (hash) {
+                $location.path('/structureDefinition/view/' + hash);
+            }
+        }
+
+        vm.goToStructureDefinition = goToStructureDefinition;
+
+
+        function quickSearch(searchText) {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            structureDefinitionService.getStructureDefinitions(vm.activeServer.baseUrl, searchText)
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' StructureDefinitions from ' + vm.activeServer.name, null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry || []);
+                }, function (error) {
+                    logError("Error returning search results", (angular.isDefined(error.outcome) ? error.outcome : error));
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.quickSearch = quickSearch;
+
+        vm.activeServer = null;
+        vm.structureDefinitions = [];
+        vm.errorOutcome = null;
+        vm.selectedStructureDefinition = undefined;
+        vm.searchText = '';
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', 'common', 'config', 'fhirServers', 'structureDefinitionService', structureDefinitionSearch]);
+})();
+(function () {
+    'use strict';
+
+    var serviceId = 'structureDefinitionService';
+
+    function structureDefinitionService(common, dataCache, fhirClient, fhirServers) {
+        var dataCacheKey = 'localStructureDefinitions';
+        var getLogFn = common.logger.getLogFn;
+        var logWarning = getLogFn(serviceId, 'warning');
+        var $q = common.$q;
+
+        function addStructureDefinition(resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/StructureDefinition";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedStructureDefinition(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                var removed = false;
+                var cachedStructureDefinitions = searchResults.entry;
+                for (var i = 0, len = cachedStructureDefinitions.length; i < len; i++) {
+                    if (cachedStructureDefinitions[i].$$hashKey === hashKey) {
+                        cachedStructureDefinitions.splice(i, 1);
+                        searchResults.entry = cachedStructureDefinitions;
+                        searchResults.totalResults = (searchResults.totalResults - 1);
+                        dataCache.addToCache(dataCacheKey, searchResults);
+                        removed = true;
+                        break;
+                    }
+                }
+                if (removed) {
+                    deferred.resolve();
+                } else {
+                    logWarning('StructureDefinition not found in cache: ' + hashKey);
+                    deferred.resolve();
+                }
+            }
+
+            var deferred = $q.defer();
+            deleteStructureDefinition(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache)
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteStructureDefinition(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getCachedStructureDefinition(hashKey) {
+            function getStructureDefinition(searchResults) {
+                var cachedStructureDefinition;
+                var cachedStructureDefinitions = searchResults.entry;
+                cachedStructureDefinition = _.find(cachedStructureDefinitions, {'$$hashKey': hashKey});
+                if (cachedStructureDefinition) {
+                    deferred.resolve(cachedStructureDefinition);
+                } else {
+                    deferred.reject('StructureDefinition not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            getCachedSearchResults()
+                .then(getStructureDefinition,
+                function () {
+                    deferred.reject('StructureDefinition search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getStructureDefinition(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: add support for summary when DSTU2 server implementers have support
+        function getStructureDefinitionReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/StructureDefinition?type=' + input + '&_count=20')
+                .then(function (results) {
+                    var structureDefinitions = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                structureDefinitions.push({display: item.resource.name, reference: item.resource.id});
+                            });
+                    }
+                    if (structureDefinitions.length === 0) {
+                        structureDefinitions.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(structureDefinitions);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        //TODO: waiting for server implementers to add support for _summary
+        function getStructureDefinitions(baseUrl, nameFilter) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/StructureDefinition?name=' + encodeURIComponent(nameFilter))
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getStructureDefinitionsByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    var searchResults = {"links": {}, "structureDefinitions": []};
+                    var structureDefinitions = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'StructureDefinition') {
+                                    structureDefinitions.push({display: item.content.name, reference: item.id});
+                                }
+                            });
+
+                    }
+                    if (structureDefinitions.length === 0) {
+                        structureDefinitions.push({display: "No matches", reference: ''});
+                    }
+                    searchResults.structureDefinitions = structureDefinitions;
+                    if (results.data.link) {
+                        searchResults.links = results.data.link;
+                    }
+                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
+                    deferred.resolve(searchResults);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewStructureDefinition() {
+            var data = {};
+            data.resource = {
+                "resourceType": "StructureDefinition",
+                "identifier": [],
+                "type": {"coding": []},
+                "telecom": [],
+                "contact": [],
+                "address": [],
+                "partOf": null,
+                "location": [],
+                "active": true
+            };
+            return data;
+        }
+
+        function updateStructureDefinition(resourceVersionId, resource) {
+            _prepArrays(resource)
+                .then(function (resource) {
+                    resource.type.coding = _prepCoding(resource.type.coding);
+                });
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function _prepArrays(resource) {
+            if (resource.address.length === 0) {
+                resource.address = null;
+            }
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            if (resource.contact.length === 0) {
+                resource.contact = null;
+            }
+            if (resource.telecom.length === 0) {
+                resource.telecom = null;
+            }
+            if (resource.location.length === 0) {
+                resource.location = null;
+            }
+            return $q.when(resource);
+        }
+
+        function _prepCoding(coding) {
+            var result = null;
+            if (angular.isArray(coding) && angular.isDefined(coding[0])) {
+                if (angular.isObject(coding[0])) {
+                    result = coding;
+                } else {
+                    var parsedCoding = JSON.parse(coding[0]);
+                    result = [];
+                    result.push(parsedCoding ? parsedCoding : null);
+                }
+            }
+            return result;
+        }
+
+        var service = {
+            addStructureDefinition: addStructureDefinition,
+            clearCache: clearCache,
+            deleteCachedStructureDefinition: deleteCachedStructureDefinition,
+            deleteStructureDefinition: deleteStructureDefinition,
+            getCachedStructureDefinition: getCachedStructureDefinition,
+            getCachedSearchResults: getCachedSearchResults,
+            getStructureDefinition: getStructureDefinition,
+            getStructureDefinitions: getStructureDefinitions,
+            getStructureDefinitionsByLink: getStructureDefinitionsByLink,
+            getStructureDefinitionReference: getStructureDefinitionReference,
+            initializeNewStructureDefinition: initializeNewStructureDefinition,
+            updateStructureDefinition: updateStructureDefinition
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', structureDefinitionService]);
+
+})();(function () {
     'use strict';
 
     var controllerId = 'bottomSheetController';

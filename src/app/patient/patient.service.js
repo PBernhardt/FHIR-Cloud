@@ -292,7 +292,6 @@
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var birthDate = new Date(parseInt(user.dob));
-                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
                         var resource = {
                             "resourceType": "Patient",
                             "name": [{

@@ -21,7 +21,13 @@
         };
     });
 
-    function common($http, $location, $q, $rootScope, $timeout, $window, commonConfig, logger) {
+    function common($http, $location, $q, $rootScope, $timeout, $window, commonConfig, logger, store) {
+
+        function isAuthenticated() {
+            //a profile is created for SMART and plain OAuth login
+            var profile = store.get('profile');
+            return (isUndefinedOrNull(profile) === false);
+        }
 
         function activateController(promises, controllerId) {
             return $q.all(promises).then(function (eventArgs) {
@@ -297,6 +303,10 @@
             return output;
         }
 
+        function isUndefinedOrNull(val) {
+            return angular.isUndefined(val) || val === null;
+        }
+
         var service = {
             // common angular dependencies
             $broadcast: $broadcast,
@@ -314,7 +324,9 @@
             changeUser: changeUser,
             generateUUID: generateUUID,
             isAbsoluteUri: isAbsoluteUri,
+            isAuthenticated: isAuthenticated,
             isNumber: isNumber,
+            isUndefinedOrNull: isUndefinedOrNull,
             logger: logger, // for accessibility
             makeAddress: makeAddress,
             makeHumanName: makeHumanName,
@@ -331,5 +343,5 @@
     }
 
     commonModule.factory('common',
-        ['$http', '$location', '$q', '$rootScope', '$timeout', '$window', 'commonConfig', 'logger', common]);
+        ['$http', '$location', '$q', '$rootScope', '$timeout', '$window', 'commonConfig', 'logger', 'store', common]);
 })();

@@ -1,15 +1,15 @@
-﻿<div ng-controller="profileSearch as vm" layout-wrap layout="row">
+﻿<div ng-controller="structureDefinitionSearch as vm" layout-wrap layout="row">
     <div flex="90">
-        <h3 class="md-title">Profile Quick Find</h3>
+        <h3 class="md-title">Structure Definition Quick Find</h3>
         <md-autocomplete
                 md-no-cache="true"
-                md-selected-item-change="vm.goToProfile(vm.selectedProfile)"
-                md-selected-item="vm.selectedProfile"
+                md-selected-item-change="vm.goToStructureDefinition(vm.selectedStructureDefinition)"
+                md-selected-item="vm.selectedStructureDefinition"
                 md-search-text="vm.searchText"
                 md-items="pr in vm.quickSearch(vm.searchText)"
                 md-delay="500"
                 md-min-length="4"
-                placeholder="What profile are you looking for?">
+                placeholder="What structure definition are you looking for?">
             <span md-highlight-text="vm.searchText">{{pr.resource.name}}</span>
         </md-autocomplete>
     </div>

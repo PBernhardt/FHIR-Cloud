@@ -1,15 +1,15 @@
 ﻿(function () {
     'use strict';
 
-    var serviceId = 'profileService';
+    var serviceId = 'structureDefinitionService';
 
-    function profileService(common, dataCache, fhirClient, fhirServers) {
-        var dataCacheKey = 'localProfiles';
+    function structureDefinitionService(common, dataCache, fhirClient, fhirServers) {
+        var dataCacheKey = 'localStructureDefinitions';
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
         var $q = common.$q;
 
-        function addProfile(resource) {
+        function addStructureDefinition(resource) {
             _prepArrays(resource)
                 .then(function (resource) {
                     resource.type.coding = _prepCoding(resource.type.coding);
@@ -17,7 +17,7 @@
             var deferred = $q.defer();
             fhirServers.getActiveServer()
                 .then(function (server) {
-                    var url = server.baseUrl + "/Profile";
+                    var url = server.baseUrl + "/StructureDefinition";
                     fhirClient.addResource(url, resource)
                         .then(function (results) {
                             deferred.resolve(results);
@@ -32,14 +32,14 @@
             dataCache.addToCache(dataCacheKey, null);
         }
 
-        function deleteCachedProfile(hashKey, resourceId) {
+        function deleteCachedStructureDefinition(hashKey, resourceId) {
             function removeFromCache(searchResults) {
                 var removed = false;
-                var cachedProfiles = searchResults.entry;
-                for (var i = 0, len = cachedProfiles.length; i < len; i++) {
-                    if (cachedProfiles[i].$$hashKey === hashKey) {
-                        cachedProfiles.splice(i, 1);
-                        searchResults.entry = cachedProfiles;
+                var cachedStructureDefinitions = searchResults.entry;
+                for (var i = 0, len = cachedStructureDefinitions.length; i < len; i++) {
+                    if (cachedStructureDefinitions[i].$$hashKey === hashKey) {
+                        cachedStructureDefinitions.splice(i, 1);
+                        searchResults.entry = cachedStructureDefinitions;
                         searchResults.totalResults = (searchResults.totalResults - 1);
                         dataCache.addToCache(dataCacheKey, searchResults);
                         removed = true;
@@ -49,13 +49,13 @@
                 if (removed) {
                     deferred.resolve();
                 } else {
-                    logWarning('Profile not found in cache: ' + hashKey);
+                    logWarning('StructureDefinition not found in cache: ' + hashKey);
                     deferred.resolve();
                 }
             }
 
             var deferred = $q.defer();
-            deleteProfile(resourceId)
+            deleteStructureDefinition(resourceId)
                 .then(getCachedSearchResults,
                 function (error) {
                     deferred.reject(error);
@@ -67,7 +67,7 @@
             return deferred.promise;
         }
 
-        function deleteProfile(resourceId) {
+        function deleteStructureDefinition(resourceId) {
             var deferred = $q.defer();
             fhirClient.deleteResource(resourceId)
                 .then(function (results) {
@@ -89,28 +89,28 @@
             return deferred.promise;
         }
 
-        function getCachedProfile(hashKey) {
-            function getProfile(searchResults) {
-                var cachedProfile;
-                var cachedProfiles = searchResults.entry;
-                cachedProfile = _.find(cachedProfiles, {'$$hashKey': hashKey});
-                if (cachedProfile) {
-                    deferred.resolve(cachedProfile);
+        function getCachedStructureDefinition(hashKey) {
+            function getStructureDefinition(searchResults) {
+                var cachedStructureDefinition;
+                var cachedStructureDefinitions = searchResults.entry;
+                cachedStructureDefinition = _.find(cachedStructureDefinitions, {'$$hashKey': hashKey});
+                if (cachedStructureDefinition) {
+                    deferred.resolve(cachedStructureDefinition);
                 } else {
-                    deferred.reject('Profile not found in cache: ' + hashKey);
+                    deferred.reject('StructureDefinition not found in cache: ' + hashKey);
                 }
             }
 
             var deferred = $q.defer();
             getCachedSearchResults()
-                .then(getProfile,
+                .then(getStructureDefinition,
                 function () {
-                    deferred.reject('Profile search results not found in cache.');
+                    deferred.reject('StructureDefinition search results not found in cache.');
                 });
             return deferred.promise;
         }
 
-        function getProfile(resourceId) {
+        function getStructureDefinition(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId)
                 .then(function (results) {
@@ -123,21 +123,21 @@
         }
 
         //TODO: add support for summary when DSTU2 server implementers have support
-        function getProfileReference(baseUrl, input) {
+        function getStructureDefinitionReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Profile?type=' + input + '&_count=20')
+            fhirClient.getResource(baseUrl + '/StructureDefinition?type=' + input + '&_count=20')
                 .then(function (results) {
-                    var profiles = [];
+                    var structureDefinitions = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
-                                profiles.push({display: item.resource.name, reference: item.resource.id});
+                                structureDefinitions.push({display: item.resource.name, reference: item.resource.id});
                             });
                     }
-                    if (profiles.length === 0) {
-                        profiles.push({display: "No matches", reference: ''});
+                    if (structureDefinitions.length === 0) {
+                        structureDefinitions.push({display: "No matches", reference: ''});
                     }
-                    deferred.resolve(profiles);
+                    deferred.resolve(structureDefinitions);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
@@ -145,10 +145,10 @@
         }
 
         //TODO: waiting for server implementers to add support for _summary
-        function getProfiles(baseUrl, nameFilter) {
+        function getStructureDefinitions(baseUrl, nameFilter) {
             var deferred = $q.defer();
 
-            fhirClient.getResource(baseUrl + '/Profile?name=' + nameFilter + '&_count=20')
+            fhirClient.getResource(baseUrl + '/StructureDefinition?name=' + encodeURIComponent(nameFilter))
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -158,25 +158,25 @@
             return deferred.promise;
         }
 
-        function getProfilesByLink(url) {
+        function getStructureDefinitionsByLink(url) {
             var deferred = $q.defer();
             fhirClient.getResource(url)
                 .then(function (results) {
-                    var searchResults = {"links": {}, "profiles": []};
-                    var profiles = [];
+                    var searchResults = {"links": {}, "structureDefinitions": []};
+                    var structureDefinitions = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
-                                if (item.content && item.content.resourceType === 'Profile') {
-                                    profiles.push({display: item.content.name, reference: item.id});
+                                if (item.content && item.content.resourceType === 'StructureDefinition') {
+                                    structureDefinitions.push({display: item.content.name, reference: item.id});
                                 }
                             });
 
                     }
-                    if (profiles.length === 0) {
-                        profiles.push({display: "No matches", reference: ''});
+                    if (structureDefinitions.length === 0) {
+                        structureDefinitions.push({display: "No matches", reference: ''});
                     }
-                    searchResults.profiles = profiles;
+                    searchResults.structureDefinitions = structureDefinitions;
                     if (results.data.link) {
                         searchResults.links = results.data.link;
                     }
@@ -188,10 +188,10 @@
             return deferred.promise;
         }
 
-        function initializeNewProfile() {
+        function initializeNewStructureDefinition() {
             var data = {};
             data.resource = {
-                "resourceType": "Profile",
+                "resourceType": "StructureDefinition",
                 "identifier": [],
                 "type": {"coding": []},
                 "telecom": [],
@@ -204,7 +204,7 @@
             return data;
         }
 
-        function updateProfile(resourceVersionId, resource) {
+        function updateStructureDefinition(resourceVersionId, resource) {
             _prepArrays(resource)
                 .then(function (resource) {
                     resource.type.coding = _prepCoding(resource.type.coding);
@@ -253,23 +253,23 @@
         }
 
         var service = {
-            addProfile: addProfile,
+            addStructureDefinition: addStructureDefinition,
             clearCache: clearCache,
-            deleteCachedProfile: deleteCachedProfile,
-            deleteProfile: deleteProfile,
-            getCachedProfile: getCachedProfile,
+            deleteCachedStructureDefinition: deleteCachedStructureDefinition,
+            deleteStructureDefinition: deleteStructureDefinition,
+            getCachedStructureDefinition: getCachedStructureDefinition,
             getCachedSearchResults: getCachedSearchResults,
-            getProfile: getProfile,
-            getProfiles: getProfiles,
-            getProfilesByLink: getProfilesByLink,
-            getProfileReference: getProfileReference,
-            initializeNewProfile: initializeNewProfile,
-            updateProfile: updateProfile
+            getStructureDefinition: getStructureDefinition,
+            getStructureDefinitions: getStructureDefinitions,
+            getStructureDefinitionsByLink: getStructureDefinitionsByLink,
+            getStructureDefinitionReference: getStructureDefinitionReference,
+            initializeNewStructureDefinition: initializeNewStructureDefinition,
+            updateStructureDefinition: updateStructureDefinition
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', profileService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', structureDefinitionService]);
 
 })();

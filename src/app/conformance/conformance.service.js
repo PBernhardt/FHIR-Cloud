@@ -3,7 +3,7 @@
 
     var serviceId = 'conformanceService';
 
-    function conformanceService($window, common, dataCache, fhirClient, fhirServers) {
+    function conformanceService($http, $window, common, dataCache, fhirClient, fhirServers) {
         var dataCacheKey = 'localConformances';
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
@@ -134,12 +134,18 @@
 
         function getConformance(resourceId) {
             var deferred = $q.defer();
-            fhirClient.getResource(resourceId)
-                .then(function (results) {
+            var req = {
+                method: 'get',
+                url: resourceId,
+                headers: {'Authorization': undefined}
+            };
+            $http(req)
+                .success(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     $window.localStorage.conformance = JSON.stringify(results.data);
                     deferred.resolve(results.data);
-                }, function (outcome) {
+                })
+                .error(function (outcome) {
                     deferred.reject(outcome);
                 });
             return deferred.promise;
@@ -256,6 +262,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$window', 'common', 'dataCache', 'fhirClient', 'fhirServers',
+    angular.module('FHIRCloud').factory(serviceId, ['$http', '$window', 'common', 'dataCache', 'fhirClient', 'fhirServers',
         conformanceService]);
 })();

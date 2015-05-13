@@ -108,11 +108,16 @@
 
         function searchGoogle(input) {
             var deferred = $q.defer();
-            $http.get('https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyCtbVf7g-kQmMQjF_kAfGawAZabKcq4rdo', {
+            var req = {
+                method: 'get',
+                url: 'https://maps.googleapis.com/maps/api/geocode/json',
                 params: {
+                    key: 'AIzaSyCtbVf7g-kQmMQjF_kAfGawAZabKcq4rdo',
                     address: input
-                }
-            })
+                },
+                headers: {'Authorization': undefined}
+            }
+            $http(req)
                 .success(function (data) {
                     var addresses = [];
                     if (data.results) {

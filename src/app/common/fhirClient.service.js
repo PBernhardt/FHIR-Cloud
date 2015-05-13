@@ -3,13 +3,22 @@
 
     var serviceId = 'fhirClient';
 
-    function fhirClient($http, common) {
+    function fhirClient($http, common, store) {
         var $q = common.$q;
 
         function addResource(baseUrl, resource) {
             var fhirResource = common.removeNullProperties(resource);
             var deferred = $q.defer();
-            $http.post(baseUrl, fhirResource)
+            var req = {
+                method: 'post',
+                url: baseUrl,
+                data: fhirResource
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -27,7 +36,15 @@
 
         function deleteResource(resourceUrl) {
             var deferred = $q.defer();
-            $http.delete(resourceUrl)
+            var req = {
+                method: 'delete',
+                url: resourceUrl
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -54,7 +71,15 @@
 
         function getResource(resourceUrl) {
             var deferred = $q.defer();
-            $http.get(resourceUrl)
+            var req = {
+                method: 'get',
+                url: resourceUrl
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token) && resourceUrl.indexOf('metadata') === -1) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -73,7 +98,16 @@
         function updateResource(resourceUrl, resource) {
             var fhirResource = common.removeNullProperties(resource);
             var deferred = $q.defer();
-            $http.put(resourceUrl, fhirResource)
+            var req = {
+                method: 'put',
+                url: resourceUrl,
+                data: fhirResource
+            };
+            var token = store.get('authToken');
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
                     results.data = data;
@@ -99,7 +133,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', fhirClient]);
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', 'store', fhirClient]);
 
 
 })();
