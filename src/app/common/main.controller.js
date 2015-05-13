@@ -276,6 +276,8 @@
                     common.changeServer(vm.activeServer);
                     if (angular.isDefined(vm.activeServer.clientId)) {
                         authorize();
+                    } else {
+                        store.remove('authToken');
                     }
                 }, function (error) {
                     logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
