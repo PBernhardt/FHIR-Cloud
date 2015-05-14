@@ -112,7 +112,7 @@
                         $location.path('/consultation');
                         break;
                     case 2:
-                        $location.path('/smart');
+                        $location.path('/lab');
                         break;
                     case 2:
                         $location.path('/patient');
