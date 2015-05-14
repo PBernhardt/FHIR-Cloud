@@ -1,37 +1,70 @@
 <md-content layout-padding style="height: 600px;padding: 24px;">
 
     <div layout="row" layout-align="space-between start">
-        <h3 class="md-title">Welcome to the RelayHealth FHIR Client</h3>
-        <img src="./assets/png/relayhealth.png" alt="RelayHealth">
+        <h3 class="md-title">Welcome to FHIR Cloud</h3>
+        <img src="./assets/png/cloud.png" alt="FHIR Cloud">
     </div>
 
-    <p>Lorem ipsum dolor sit amet, ne quod novum mei. Sea omnium invenire mediocrem at, in lobortis conclusionemque nam.
-        Ne deleniti appetere reprimique pro, inani labitur disputationi te sed. At vix sale omnesque, id pro labitur
-        reformidans accommodare, cum labores honestatis eu. Nec quem lucilius in, eam praesent reformidans no. Sed
-        laudem aliquam ne.</p>
+    <p class="md-body-1">This is an open-source client for Fast Interoperability Healthcare Resources (FHIR)<small>&#174;</small> services.
+        It is based on the
+        current DSTU2 ballot draft, and while the client can target any DSTU2-compliant FHIR server, the particular
+        focus is for testing interoperability of servers implementing the FHIR DAF Profiles.</p>
+    <md-list>
+        <md-list-item class="md-2-line">
+            <img src="assets/svg/fire.svg" height="18px" width="18px" class="md-avatar" alt="FHIR server"/>
 
-    <p>
-        Facete delenit argumentum cum at. Pro rebum nostrum contentiones ad. Mel exerci tritani maiorum at, mea te
-        audire phaedrum, mel et nibh aliquam. Malis causae equidem vel eu. Noster melius vis ea, duis alterum oporteat
-        ea sea. Per cu vide munere fierent.
-    </p>
+            <div class="md-list-item-text">
+                <h3>Choose a FHIR Server</h3>
 
-    <p>
-        Ad sea dolor accusata consequuntur. Sit facete convenire reprehendunt et. Usu cu nonumy dissentiet, mei choro
-        omnes fuisset ad. Te qui docendi accusam efficiantur, doming noster prodesset eam ei. In vel posse movet, ut
-        convenire referrentur eum, ceteros singulis intellegam eu sit.
-    </p>
+                <p>This navigation opens a list of available FHIR servers. If you have a FHIR server you would like
+                    added to the
+                    list, send me an issue or pull request.</p>
+            </div>
+        </md-list-item>
 
-    <p>
-        Sit saepe quaestio reprimique id, duo no congue nominati, cum id nobis facilisi. No est laoreet dissentias,
-        idque consectetuer eam id. Clita possim assueverit cu his, solum virtute recteque et cum. Vel cu luptatum
-        signiferumque, mel eu brute nostro senserit. Blandit euripidis consequat ex mei, atqui torquatos id cum, meliore
-        luptatum ut usu. Cu zril perpetua gubergren pri. Accusamus rationibus instructior ei pro, eu nullam principes
-        qui, reque justo omnes et quo.
-    </p>
+        <md-list-item class="md-2-line">
+            <img src="assets/svg/account.svg" height="18px" width="18px" class="md-avatar" alt="login"/>
+
+            <div class="md-list-item-text">
+                <h3>Login</h3>
+
+                <p>You will need to log in to access this application. If a server implements SMART on FHIR security,
+                    you will authenticate against their associated OpenID identity provider. Otherwise, you'll
+                    authenticate using your Google or LinkedIn account to log in.</p>
+            </div>
+        </md-list-item>
+
+        <md-list-item class="md-2-line">
+            <img src="assets/svg/visibility.svg" height="18px" width="18px" class="md-avatar" alt="explore"/>
+
+            <div class="md-list-item-text">
+                <h3>Explore the Specification</h3>
+
+                <p>Use the left menu to explore the specification and try out different work flows. The visibility icon
+                    provides an <i>under-the-cover</i> look at the the JSON data returned in particular request. And of
+                    course, you can always use the developer tools of your browser-choice to take an even deeper look at
+                    the interactions between this client and a FHIR server.</p>
+            </div>
+        </md-list-item>
+
+        <md-list-item class="md-2-line">
+            <img src="assets/svg/github.svg" height="18px" width="18px" class="md-avatar" alt="issues"/>
+
+            <div class="md-list-item-text">
+                <h3>Source Code</h3>
+
+                <p>Report issues or any other feedback on the <a
+                        href="https://github.com/PBernhardt/FHIR-Cloud/issues" target="_blank">github repository</a>
+                    site for this project.</p>
+            </div>
+        </md-list-item>
+    </md-list>
+
     <footer>
-        <div>Icons made by <a href="http://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a
-                href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
-                href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a></div>
+        <small class="md-caption">Icons made by <a href="http://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a>
+            from <a
+                    href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
+                    href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a>
+        </small>
     </footer>
 </md-content>

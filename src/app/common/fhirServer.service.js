@@ -50,7 +50,7 @@
                     },
                     {
                         "id": 2,
-                        "name": "RelayHealth",
+                        "name": "McKesson",
                         "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         "secure": true
                     },
