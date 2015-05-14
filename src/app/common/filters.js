@@ -92,9 +92,9 @@
 
         return function (humanName) {
             if (humanName && angular.isArray(humanName)) {
-                return buildName(humanName[0].given) + ' ' + buildName(humanName[0].family);
+                return buildName(humanName[0].given) + ' ' + buildName(humanName[0].family).replace(",", " ");
             } else if (humanName && humanName.given) {
-                return buildName(humanName.given) + ' ' + buildName(humanName.family);
+                return buildName(humanName.given) + ' ' + buildName(humanName.family).replace (",", " ");
             } else {
                 return 'Name Unknown';
             }

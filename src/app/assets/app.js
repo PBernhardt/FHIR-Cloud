@@ -18,6 +18,104 @@
 (function () {
     'use strict';
 
+    var controllerId = 'appGallery';
+
+    function appGallery($location,$routeParams, common, fhirServers, patientService) {
+
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var $q = common.$q;
+        var noToast = false;
+
+        function activate() {
+            common.activateController([_getActiveServer(), _getPatientContext()],
+                controllerId).then(function () {
+                    _launchApp();
+                });
+        }
+
+        function _getPatientContext() {
+            var patient = patientService.getPatientContext();
+            if (angular.isDefined(patient)) {
+                vm.gallery.patient = patient;
+            } else {
+                logError("You must first select a patient before launching a SMART application");
+                $location.path('/patient');
+            }
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function _launchApp() {
+            if (!angular.isDefined($routeParams.smartApp)) {
+                return;
+            }
+            var appUrl = '';
+            switch ($routeParams.smartApp) {
+                case 'cardiac-risk':
+                    appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
+                    break;
+                case 'growth-chart':
+                    appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
+                    break;
+                case 'bp-centiles':
+                    appUrl = "https://fhir-dstu2.smarthealthit.org/apps/bp-centiles/launch.html?";
+                    break;
+                case 'diabetes-monograph':
+                    appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
+                    break;
+                case 'disease-monograph':
+                    appUrl = "https://fhir-dstu2.smarthealthit.org/apps/disease-monograph/launch.html?";
+                    break;
+                default:
+                    logInfo("SMART App not available...");
+                    return;
+            }
+            var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
+            if (angular.isDefined(vm.activeServer.clientId)) {
+                vm.smartLaunchUrl = appUrl + 'iss=' + fhirServer + '&patientId=' +  vm.gallery.patient.id;
+            } else {
+                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + vm.gallery.patient.id;
+            }
+            logInfo("Launching SMART on FHIR application, please wait ...");
+        }
+
+        function launch(app) {
+            $location.path('/launch/' + app);
+        }
+
+        vm.launch = launch;
+
+        function actions($event) {
+            $location.path('patient/view/current');
+        }
+
+        vm.actions = actions;
+        vm.activeServer = null;
+        vm.activate = activate;
+        vm.isBusy = false;
+        vm.smartLaunchUrl = '';
+        vm.gallery = {patient: undefined};
+        vm.smartLaunchUrl = '';
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$routeParams', 'common', 'fhirServers', 'patientService', appGallery]);
+})
+();(function () {
+    'use strict';
+
     // Define the common module
     // Contains services:
     //  - common
@@ -433,8 +531,6 @@
             templateUrl: 'conformance/conformance-detailed-search.html'
         }).when('/consultation', {
             templateUrl: 'consultation/consultation-edit.html'
-        }).when('/consultation/smart/:smartApp/:patientId', {
-            templateUrl: 'consultation/consultation-smart.html'
         }).when('/diagnosticOrder', {
             templateUrl: 'diagnosticOrder/diagnosticOrder-search.html'
         }).when('/diagnosticOrder/get/:id', {
@@ -574,6 +670,10 @@
              $location.path('/');
              $location.replace();
              }*/
+        }).when('/smart', {
+            templateUrl: 'appGallery/app-gallery.html'
+        }).when('/launch/:smartApp', {
+            templateUrl: 'appGallery/app-launch.html'
         }).otherwise({
             redirectTo: '/home'
         });
@@ -1412,9 +1512,9 @@
 
         return function (humanName) {
             if (humanName && angular.isArray(humanName)) {
-                return buildName(humanName[0].given) + ' ' + buildName(humanName[0].family);
+                return buildName(humanName[0].given) + ' ' + buildName(humanName[0].family).replace(",", " ");
             } else if (humanName && humanName.given) {
-                return buildName(humanName.given) + ' ' + buildName(humanName.family);
+                return buildName(humanName.given) + ' ' + buildName(humanName.family).replace (",", " ");
             } else {
                 return 'Name Unknown';
             }
@@ -13255,37 +13355,8 @@
         }
 
         function _getPatientContext() {
-            if (angular.isDefined($routeParams.smartApp)) {
-                var appUrl = '';
-                switch ($routeParams.smartApp) {
-                    case 'cardiac-risk':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
-                        break;
-                    case 'bp-centiles':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/bp-centiles/launch.html?";
-                        break;
-                    case 'growth-chart':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
-                        break;
-                    case 'disease-monograph':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/disease-monograph/launch.html?";
-                        break;
-                    case 'diabetes-monograph':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
-                        break;
-                    default:
-                        appUrl = "https://fhir.meducation.com/launch.html?";
-                }
-                var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
-
-                // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
-                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + $routeParams.patientId;
-                logInfo("Launching SMART on FHIR application, please wait ...");
-
-            } else if (angular.isDefined($window.localStorage.patient)) {
-                vm.consultation.patient = JSON.parse($window.localStorage.patient);
-                vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
-            } else {
+            vm.consultation.patient = patientService.getPatientContext();
+            if (common.isUndefinedOrNull(vm.consultation.patient)) {
                 logError("You must first select a patient before initiating a consultation");
                 $location.path('/patient');
             }
@@ -13326,7 +13397,10 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
+                        $location.path('/lab');
+                        break;
+                    case 2:
+                        $location.path('/smart');
                         break;
                     case 2:
                         $location.path('/patient');
@@ -13336,8 +13410,9 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Find another patient', icon: 'quickFind', index: 2}
+                    {name: 'Lab', icon: 'lab', index: 1},
+                    {name: 'SMART App', icon: 'smart', index: 2},
+                    {name: 'Find another patient', icon: 'quickFind', index: 3}
                 ];
                 this.title = 'Observation options';
                 this.performAction = function (action) {
@@ -14795,9 +14870,12 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation/smart/cardiac-risk/' + vm.lab.patient.id);
+                        $location.path('/consultation');
                         break;
                     case 2:
+                        $location.path('/smart');
+                        break;
+                    case 3:
                         $location.path('/patient');
                         break;
                 }
@@ -14805,8 +14883,9 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk report', icon: 'cardio', index: 1},
-                    {name: 'Find another patient', icon: 'quickFind', index: 2}
+                    {name: 'Vitals', icon: 'vitals', index: 1},
+                    {name: 'SMART App', icon: 'smart', index: 3},
+                    {name: 'Find another patient', icon: 'quickFind', index: 3}
                 ];
                 this.title = 'Lab options';
                 this.performAction = function (action) {
@@ -18492,7 +18571,7 @@
 
             if (vm.lookupKey === "current") {
                 vm.patient = patientService.getPatientContext();
-                if (angular.isUndefined(vm.patient) && angular.isUndefined($routeParams.id)) {
+                if (common.isUndefinedOrNull(vm.patient) && angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
                 } else {
                     vm.patient.hashKey = "current";
@@ -18683,6 +18762,9 @@
                     case 6:
                         deletePatient(vm.patient);
                         break;
+                    case 7:
+                        $location.path('/smart');
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -18692,7 +18774,8 @@
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Find another patient', icon: 'quickFind', index: 2},
                         {name: 'Edit patient', icon: 'edit', index: 3},
-                        {name: 'Add new patient', icon: 'personAdd', index: 4}
+                        {name: 'Add new patient', icon: 'personAdd', index: 4},
+                        {name: 'SMART App', icon: 'smart', index: 7}
                     ];
                 } else {
                     this.items = [
@@ -19092,7 +19175,7 @@
 
     var serviceId = 'patientService';
 
-    function patientService($filter, $http, $timeout, $window, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets, store) {
         var dataCacheKey = 'localPatients';
         var _patientContext = undefined;
         var logError = common.logger.getLogFn(serviceId, 'error');
@@ -19349,14 +19432,11 @@
         }
 
         function setPatientContext(data) {
-            $window.localStorage.patient = JSON.stringify(data);
+            store.set('patient', data);
         }
 
         function getPatientContext() {
-            _patientContext = undefined;
-            if ($window.localStorage.patient && ($window.localStorage.patient !== null)) {
-                _patientContext = JSON.parse($window.localStorage.patient);
-            }
+            _patientContext = store.get('patient');
             return _patientContext;
         }
 
@@ -19639,8 +19719,8 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', '$window', 'common', 'dataCache',
-        'fhirClient', 'fhirServers', 'localValueSets', patientService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache',
+        'fhirClient', 'fhirServers', 'localValueSets', 'store', patientService]);
 })
 ();(function () {
     'use strict';
@@ -24028,13 +24108,14 @@
 
     var controllerId = 'rawDataController';
 
-    function rawData($scope, $mdDialog, common, data) {
+    function rawData($anchorScroll, $location, $scope, $mdDialog, common, data) {
         function closeDialog() {
             $mdDialog.hide();
         }
 
         function activate() {
             common.activateController(controllerId).then(function () {
+                $anchorScroll('top');
             });
         }
 
@@ -24046,7 +24127,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$scope', '$mdDialog', 'common', 'data', rawData]);
+        ['$anchorScroll', '$location', '$scope', '$mdDialog', 'common', 'data', rawData]);
 })();(function () {
     'use strict';
 

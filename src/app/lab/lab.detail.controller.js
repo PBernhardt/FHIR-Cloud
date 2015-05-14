@@ -88,9 +88,12 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation/smart/cardiac-risk/' + vm.lab.patient.id);
+                        $location.path('/consultation');
                         break;
                     case 2:
+                        $location.path('/smart');
+                        break;
+                    case 3:
                         $location.path('/patient');
                         break;
                 }
@@ -98,8 +101,9 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk report', icon: 'cardio', index: 1},
-                    {name: 'Find another patient', icon: 'quickFind', index: 2}
+                    {name: 'Vitals', icon: 'vitals', index: 1},
+                    {name: 'SMART App', icon: 'smart', index: 3},
+                    {name: 'Find another patient', icon: 'quickFind', index: 3}
                 ];
                 this.title = 'Lab options';
                 this.performAction = function (action) {

@@ -1,3 +1,12 @@
+img.smart {
+    height: 75px;
+    width: 100px;
+    margin-right: 18px;
+    margin-bottom: 12px;
+    padding: 1px;
+    border: 1px solid #021a40;
+}
+
 p.result {
     font-size: 0.8em;
     color: #777;

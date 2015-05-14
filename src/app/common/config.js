@@ -70,8 +70,6 @@
             templateUrl: 'conformance/conformance-detailed-search.html'
         }).when('/consultation', {
             templateUrl: 'consultation/consultation-edit.html'
-        }).when('/consultation/smart/:smartApp/:patientId', {
-            templateUrl: 'consultation/consultation-smart.html'
         }).when('/diagnosticOrder', {
             templateUrl: 'diagnosticOrder/diagnosticOrder-search.html'
         }).when('/diagnosticOrder/get/:id', {
@@ -211,6 +209,10 @@
              $location.path('/');
              $location.replace();
              }*/
+        }).when('/smart', {
+            templateUrl: 'appGallery/app-gallery.html'
+        }).when('/launch/:smartApp', {
+            templateUrl: 'appGallery/app-launch.html'
         }).otherwise({
             redirectTo: '/home'
         });

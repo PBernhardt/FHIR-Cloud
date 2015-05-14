@@ -3,7 +3,7 @@
 
     var serviceId = 'patientService';
 
-    function patientService($filter, $http, $timeout, $window, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function patientService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets, store) {
         var dataCacheKey = 'localPatients';
         var _patientContext = undefined;
         var logError = common.logger.getLogFn(serviceId, 'error');
@@ -260,14 +260,11 @@
         }
 
         function setPatientContext(data) {
-            $window.localStorage.patient = JSON.stringify(data);
+            store.set('patient', data);
         }
 
         function getPatientContext() {
-            _patientContext = undefined;
-            if ($window.localStorage.patient && ($window.localStorage.patient !== null)) {
-                _patientContext = JSON.parse($window.localStorage.patient);
-            }
+            _patientContext = store.get('patient');
             return _patientContext;
         }
 
@@ -550,7 +547,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', '$window', 'common', 'dataCache',
-        'fhirClient', 'fhirServers', 'localValueSets', patientService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache',
+        'fhirClient', 'fhirServers', 'localValueSets', 'store', patientService]);
 })
 ();

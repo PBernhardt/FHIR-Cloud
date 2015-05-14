@@ -1,0 +1,71 @@
+<div ng-controller="appGallery as vm" layout="row" layout-wrap>
+    <div flex="95">
+        <h3 class="md-title">Select a SMART App for {{vm.gallery.patient.name | fullName}} ({{vm.gallery.patient.gender}},
+            {{vm.gallery.patient.birthDate |
+            displayAge }})</h3>
+    </div>
+    <div flex="5">
+        <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
+            <md-icon md-svg-icon="actions"></md-icon>
+        </md-button>
+    </div>
+    <div flex="100" style="margin-top: 20px" layout-fill>
+        <md-list layout="column">
+            <md-list-item class="md-3-line" ng-click="vm.launch('cardiac-risk')">
+                <img src="assets/png/cardio.png" alt="cardiac risk" class="smart"/>
+
+                <div class="md-list-item-text">
+                    <h3>Cardiac Risk</h3>
+
+                    <p>Estimate a patient's 10-year risk of heart attack or stroke (Reynolds Risk Score) with an
+                        intuitive
+                        interactive display.</p>
+                </div>
+            </md-list-item>
+
+            <md-list-item class="md-3-line" ng-click="vm.launch('growth-chart')">
+                <img src="assets/png/pgc.png" alt="growth chart" class="smart"/>
+
+                <div class="md-list-item-text">
+                    <h3>Growth Chart</h3>
+
+                    <p>Concise, interactive view of a child’s growth over time, including traditional growth curve
+                        charts,
+                        data tables, and a novel parent-facing summary view.</p>
+                </div>
+            </md-list-item>
+
+            <md-list-item class="md-3-line" ng-click="vm.launch('bp-centiles')">
+                <img src="assets/png/bpc.png" alt="growth chart" class="smart"/>
+
+                <div class="md-list-item-text">
+                    <h3>BP Centiles</h3>
+
+                    <p>Calculate a child's blood pressure percentiles, normalized by age, sex, and height. Enables
+                        screening for hypertension with short-term and long-term views.</p>
+                </div>
+            </md-list-item>
+
+            <md-list-item class="md-3-line" ng-click="vm.launch('diabetes-monograph')">
+                <img src="assets/png/dm.png" alt="growth chart" class="smart"/>
+
+                <div class="md-list-item-text">
+                    <h3>Diabetes Monograph</h3>
+
+                    <p>Displays information about the patient in a diabetes-specific monograph.</p>
+                </div>
+            </md-list-item>
+
+            <md-list-item class="md-3-line" ng-click="vm.launch('disease-monograph')">
+                <img src="assets/png/monograph.png" alt="growth chart" class="smart"/>
+
+                <div class="md-list-item-text">
+                    <h3>Disease Monograph</h3>
+
+                    <p>Displays information about the patient in a configurable disease-specific monograph.</p>
+                </div>
+            </md-list-item>
+        </md-list>
+    </div>
+</div>
+

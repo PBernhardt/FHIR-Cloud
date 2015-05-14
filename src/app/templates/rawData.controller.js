@@ -3,13 +3,14 @@
 
     var controllerId = 'rawDataController';
 
-    function rawData($scope, $mdDialog, common, data) {
+    function rawData($anchorScroll, $location, $scope, $mdDialog, common, data) {
         function closeDialog() {
             $mdDialog.hide();
         }
 
         function activate() {
             common.activateController(controllerId).then(function () {
+                $anchorScroll('top');
             });
         }
 
@@ -21,5 +22,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$scope', '$mdDialog', 'common', 'data', rawData]);
+        ['$anchorScroll', '$location', '$scope', '$mdDialog', 'common', 'data', rawData]);
 })();

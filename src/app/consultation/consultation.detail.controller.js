@@ -100,37 +100,8 @@
         }
 
         function _getPatientContext() {
-            if (angular.isDefined($routeParams.smartApp)) {
-                var appUrl = '';
-                switch ($routeParams.smartApp) {
-                    case 'cardiac-risk':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?";
-                        break;
-                    case 'bp-centiles':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/bp-centiles/launch.html?";
-                        break;
-                    case 'growth-chart':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/growth-chart/launch.html?";
-                        break;
-                    case 'disease-monograph':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/disease-monograph/launch.html?";
-                        break;
-                    case 'diabetes-monograph':
-                        appUrl = "https://fhir-dstu2.smarthealthit.org/apps/diabetes-monograph/launch.html?";
-                        break;
-                    default:
-                        appUrl = "https://fhir.meducation.com/launch.html?";
-                }
-                var fhirServer = encodeURIComponent(vm.activeServer.baseUrl);
-
-                // "https://fhir-dstu2.smarthealthit.org/apps/cardiac-risk/launch.html?fhirServiceUrl=https%3A%2F%2Ffhir-open-api-dstu2.smarthealthit.org&patientId=1551992";
-                vm.smartLaunchUrl = appUrl + 'fhirServiceUrl=' + fhirServer + '&patientId=' + $routeParams.patientId;
-                logInfo("Launching SMART on FHIR application, please wait ...");
-
-            } else if (angular.isDefined($window.localStorage.patient)) {
-                vm.consultation.patient = JSON.parse($window.localStorage.patient);
-                vm.consultation.patient.fullName = $filter('fullName')(vm.consultation.patient.name);
-            } else {
+            vm.consultation.patient = patientService.getPatientContext();
+            if (common.isUndefinedOrNull(vm.consultation.patient)) {
                 logError("You must first select a patient before initiating a consultation");
                 $location.path('/patient');
             }
@@ -171,7 +142,10 @@
                         $location.path('patient/view/current');
                         break;
                     case 1:
-                        $location.path('consultation/smart/cardiac-risk/' + vm.consultation.patient.id);
+                        $location.path('/lab');
+                        break;
+                    case 2:
+                        $location.path('/smart');
                         break;
                     case 2:
                         $location.path('/patient');
@@ -181,8 +155,9 @@
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
                     {name: 'Back to face sheet', icon: 'person', index: 0},
-                    {name: 'Cardiac Risk', icon: 'cardio', index: 1},
-                    {name: 'Find another patient', icon: 'quickFind', index: 2}
+                    {name: 'Lab', icon: 'lab', index: 1},
+                    {name: 'SMART App', icon: 'smart', index: 2},
+                    {name: 'Find another patient', icon: 'quickFind', index: 3}
                 ];
                 this.title = 'Observation options';
                 this.performAction = function (action) {

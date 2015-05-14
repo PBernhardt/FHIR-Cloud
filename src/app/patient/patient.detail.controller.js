@@ -157,7 +157,7 @@
 
             if (vm.lookupKey === "current") {
                 vm.patient = patientService.getPatientContext();
-                if (angular.isUndefined(vm.patient) && angular.isUndefined($routeParams.id)) {
+                if (common.isUndefinedOrNull(vm.patient) && angular.isUndefined($routeParams.id)) {
                         $location.path('/patient');
                 } else {
                     vm.patient.hashKey = "current";
@@ -348,6 +348,9 @@
                     case 6:
                         deletePatient(vm.patient);
                         break;
+                    case 7:
+                        $location.path('/smart');
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -357,7 +360,8 @@
                         {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Find another patient', icon: 'quickFind', index: 2},
                         {name: 'Edit patient', icon: 'edit', index: 3},
-                        {name: 'Add new patient', icon: 'personAdd', index: 4}
+                        {name: 'Add new patient', icon: 'personAdd', index: 4},
+                        {name: 'SMART App', icon: 'smart', index: 7}
                     ];
                 } else {
                     this.items = [

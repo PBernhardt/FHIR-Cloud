@@ -110,6 +110,7 @@ module.exports = function (grunt) {
 
                 src: [
                     'app/app.module.js',
+                    'app/appGallery/appGallery.controller.js',
                     'app/common/common.module.js',
                     'app/common/config.js',
                     'app/common/dataCache.service.js',
