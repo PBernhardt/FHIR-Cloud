@@ -334,23 +334,24 @@
                         $location.path('/lab');
                         break;
                     case 2:
-                        $location.path('/patient');
-                        break;
-                    case 3:
-                        $location.path('/patient/edit/current');
-                        break;
-                    case 4:
-                        $location.path('/patient/edit/new');
-                        break;
-                    case 5:
-                        $location.path('/patient/detailed-search');
-                        break;
-                    case 6:
-                        deletePatient(vm.patient);
-                        break;
-                    case 7:
                         $location.path('/smart');
                         break;
+                    case 3:
+                        $location.path('/patient');
+                        break;
+                    case 4:
+                        $location.path('/patient/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/patient/edit/new');
+                        break;
+                    case 6:
+                        $location.path('/patient/detailed-search');
+                        break;
+                    case 7:
+                        deletePatient(vm.patient);
+                        break;
+
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -358,15 +359,15 @@
                     this.items = [
                         {name: 'Vitals', icon: 'vitals', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
-                        {name: 'Find another patient', icon: 'quickFind', index: 2},
-                        {name: 'Edit patient', icon: 'edit', index: 3},
-                        {name: 'Add new patient', icon: 'personAdd', index: 4},
-                        {name: 'SMART App', icon: 'smart', index: 7}
+                        {name: 'SMART App', icon: 'smart', index: 2},
+                        {name: 'Find another patient', icon: 'quickFind', index: 3},
+                        {name: 'Edit patient', icon: 'edit', index: 4},
+                        {name: 'Add new patient', icon: 'personAdd', index: 5},
                     ];
                 } else {
                     this.items = [
-                        {name: 'Detailed search', icon: 'search', index: 5},
-                        {name: 'Quick find', icon: 'quickFind', index: 2}
+                        {name: 'Detailed search', icon: 'search', index: 6},
+                        {name: 'Quick find', icon: 'quickFind', index: 3}
                     ];
                 }
                 this.title = 'Patient options';

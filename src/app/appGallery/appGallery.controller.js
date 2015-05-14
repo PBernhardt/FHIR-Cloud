@@ -3,7 +3,7 @@
 
     var controllerId = 'appGallery';
 
-    function appGallery($location,$routeParams, common, fhirServers, patientService) {
+    function appGallery($location, $mdBottomSheet, $routeParams, common, fhirServers, patientService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -79,7 +79,41 @@
         vm.launch = launch;
 
         function actions($event) {
-            $location.path('patient/view/current');
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('patient/view/current');
+                        break;
+                    case 1:
+                        $location.path('/consultation');
+                        break;
+                    case 2:
+                        $location.path('/smart');
+                        break;
+                    case 2:
+                        $location.path('/patient');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Back to face sheet', icon: 'person', index: 0},
+                    {name: 'Vitals', icon: 'vitals', index: 1},
+                    {name: 'Lab', icon: 'lab', index: 2},
+                    {name: 'Find another patient', icon: 'quickFind', index: 3}
+                ];
+                this.title = 'Observation options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
         }
 
         vm.actions = actions;
@@ -94,6 +128,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$routeParams', 'common', 'fhirServers', 'patientService', appGallery]);
+        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'fhirServers', 'patientService', appGallery]);
 })
 ();

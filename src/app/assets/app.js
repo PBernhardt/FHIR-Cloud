@@ -20,7 +20,7 @@
 
     var controllerId = 'appGallery';
 
-    function appGallery($location,$routeParams, common, fhirServers, patientService) {
+    function appGallery($location, $mdBottomSheet, $routeParams, common, fhirServers, patientService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -96,7 +96,41 @@
         vm.launch = launch;
 
         function actions($event) {
-            $location.path('patient/view/current');
+            $mdBottomSheet.show({
+                parent: angular.element(document.getElementById('content')),
+                templateUrl: './templates/resourceSheet.html',
+                controller: ['$mdBottomSheet', ResourceSheetController],
+                controllerAs: "vm",
+                bindToController: true,
+                targetEvent: $event
+            }).then(function (clickedItem) {
+                switch (clickedItem.index) {
+                    case 0:
+                        $location.path('patient/view/current');
+                        break;
+                    case 1:
+                        $location.path('/consultation');
+                        break;
+                    case 2:
+                        $location.path('/smart');
+                        break;
+                    case 2:
+                        $location.path('/patient');
+                        break;
+                }
+            });
+            function ResourceSheetController($mdBottomSheet) {
+                this.items = [
+                    {name: 'Back to face sheet', icon: 'person', index: 0},
+                    {name: 'Vitals', icon: 'vitals', index: 1},
+                    {name: 'Lab', icon: 'lab', index: 2},
+                    {name: 'Find another patient', icon: 'quickFind', index: 3}
+                ];
+                this.title = 'Observation options';
+                this.performAction = function (action) {
+                    $mdBottomSheet.hide(action);
+                };
+            }
         }
 
         vm.actions = actions;
@@ -111,7 +145,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$routeParams', 'common', 'fhirServers', 'patientService', appGallery]);
+        ['$location', '$mdBottomSheet', '$routeParams', 'common', 'fhirServers', 'patientService', appGallery]);
 })
 ();(function () {
     'use strict';
@@ -18748,23 +18782,24 @@
                         $location.path('/lab');
                         break;
                     case 2:
-                        $location.path('/patient');
-                        break;
-                    case 3:
-                        $location.path('/patient/edit/current');
-                        break;
-                    case 4:
-                        $location.path('/patient/edit/new');
-                        break;
-                    case 5:
-                        $location.path('/patient/detailed-search');
-                        break;
-                    case 6:
-                        deletePatient(vm.patient);
-                        break;
-                    case 7:
                         $location.path('/smart');
                         break;
+                    case 3:
+                        $location.path('/patient');
+                        break;
+                    case 4:
+                        $location.path('/patient/edit/current');
+                        break;
+                    case 5:
+                        $location.path('/patient/edit/new');
+                        break;
+                    case 6:
+                        $location.path('/patient/detailed-search');
+                        break;
+                    case 7:
+                        deletePatient(vm.patient);
+                        break;
+
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
@@ -18772,15 +18807,15 @@
                     this.items = [
                         {name: 'Vitals', icon: 'vitals', index: 0},
                         {name: 'Lab', icon: 'lab', index: 1},
-                        {name: 'Find another patient', icon: 'quickFind', index: 2},
-                        {name: 'Edit patient', icon: 'edit', index: 3},
-                        {name: 'Add new patient', icon: 'personAdd', index: 4},
-                        {name: 'SMART App', icon: 'smart', index: 7}
+                        {name: 'SMART App', icon: 'smart', index: 2},
+                        {name: 'Find another patient', icon: 'quickFind', index: 3},
+                        {name: 'Edit patient', icon: 'edit', index: 4},
+                        {name: 'Add new patient', icon: 'personAdd', index: 5},
                     ];
                 } else {
                     this.items = [
-                        {name: 'Detailed search', icon: 'search', index: 5},
-                        {name: 'Quick find', icon: 'quickFind', index: 2}
+                        {name: 'Detailed search', icon: 'search', index: 6},
+                        {name: 'Quick find', icon: 'quickFind', index: 3}
                     ];
                 }
                 this.title = 'Patient options';
