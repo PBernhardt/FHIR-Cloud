@@ -55,7 +55,9 @@
 
                     <div layout-sm="column" layout="row" layout-align="space-between center">
                         <div layout="column" layout-align="center center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.bp.interpretationCode" name="interpretationCode">
+                            <md-select aria-label="bp interpretation"
+                                       ng-model="vm.vitals.bp.interpretationCode"
+                                       name="interpretationCode">
                                 <md-option ng-repeat="interpretation in vm.bpInterpretations.concept"
                                            value="{{interpretation}}">
                                     {{interpretation.display}}
@@ -106,7 +108,8 @@
 
                     <div layout="row" layout-align="start start">
                         <div layout="column" layout-align="start center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.hr.interpretationCode" name="interpretationCode">
+                            <md-select aria-label="hr interpretation" ng-model="vm.vitals.hr.interpretationCode"
+                                       name="interpretationCode">
                                 <md-option ng-repeat="interpretation in vm.interpretations.concept"
                                            value="{{interpretation}}">
                                     {{interpretation.display}}
@@ -143,7 +146,8 @@
 
                     <div layout="row" layout-align="start start">
                         <div layout="column" layout-align="end center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.respiration.interpretationCode" name="interpretationCode">
+                            <md-select aria-label="resp interpretation"
+                                       ng-model="vm.vitals.respiration.interpretationCode" name="interpretationCode">
                                 <md-option ng-repeat="interpretation in vm.interpretations.concept"
                                            value="{{interpretation}}">
                                     {{interpretation.display}}
@@ -236,7 +240,9 @@
 
                     <div layout-sm="column" layout="row" layout-align="space-between start">
                         <div layout="column" layout-align="start center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.bmi.interpretationCode" name="interpretationCode">
+                            <md-select aria-label="bmi interpretation"
+                                       ng-model="vm.vitals.bmi.interpretationCode"
+                                       name="interpretationCode">
                                 <md-option ng-repeat="interpretation in vm.bmiInterpretations.concept"
                                            value="{{interpretation}}">
                                     {{interpretation.display}}
@@ -304,7 +310,9 @@
                         </md-radio-group>
 
                         <div flex layout="column" layout-align="end center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.temperature.interpretationCode" name="interpretationCode">
+                            <md-select aria-label="temp interpretation"
+                                       ng-model="vm.vitals.temperature.interpretationCode"
+                                       name="interpretationCode">
                                 <md-option ng-repeat="f in vm.bodyTempFinding.concept"
                                            value="{{f}}">
                                     {{f.display}}
@@ -356,7 +364,8 @@
                       ng-model="vm.vitals.smokingStatus">
                     <div layout-sm="column" layout="row" layout-align="space-between center" layout-wrap>
                         <div layout="column" layout-align="center center" style="height: 100px;">
-                            <md-select ng-model="vm.vitals.smokingStatus">
+                            <md-select aria-label="smaking status interpretation"
+                                       ng-model="vm.vitals.smokingStatus">
                                 <md-option ng-repeat="status in vm.smokingStatuses.concept"
                                            ng-value="status">
                                     {{status.display}}
