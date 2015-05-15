@@ -1,0 +1,22 @@
+<md-dialog style="padding: 5px">
+    <md-content>
+        <md-subheader class="md-sticky-no-effect"><h4 class="md-title">{{title}}</h4>
+        </md-subheader>
+        <md-list>
+            <md-list-item class="md-2-line" ng-repeat="server in FHIRServers">
+                <md-checkbox ng-model="server.selected" ng-click="serverChanged(server)">
+                </md-checkbox>
+                <div class="md-list-item-text">
+                    <h4> {{ server.name }}</h4>
+
+                    <p>{{server.baseUrl}}</p>
+                </div>
+            </md-list-item>
+        </md-list>
+        <div class="md-actions" layout="row">
+            <md-button ng-click="close()">
+                Close
+            </md-button>
+        </div>
+    </md-content>
+</md-dialog>

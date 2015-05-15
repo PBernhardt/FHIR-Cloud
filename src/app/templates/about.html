@@ -1,42 +1,54 @@
-<md-dialog>
-    <md-content class="sticky-container">
-        <md-subheader class="md-sticky-no-effect"><h4 class="md-title">FHIR Cloud</h4></md-subheader>
-        <div class="dialog-content">
-            <md-input-container ng-if="patient">
-                <label>Active Patient</label>
-                <input ng-model="patient.fullName" readonly>
-            </md-input-container>
-            <md-input-container>
-                <label>Active Server</label>
-                <input ng-model="activeServer.name" readonly>
-            </md-input-container>
-            <md-input-container>
-                <label>Base Url</label>
-                <input ng-model="activeServer.baseUrl" readonly>
-            </md-input-container>
-            <md-input-container ng-if="activeServer.authorizeUri">
-                <label>Authorization Url</label>
-                <input ng-model="activeServer.authorizeUri" readonly>
-            </md-input-container>
-            <md-input-container ng-if="activeServer.tokenUri">
-                <label>Access Token Url</label>
-                <input ng-model="activeServer.tokenUri" readonly>
-            </md-input-container>
+<md-dialog style="padding: 5px">
+    <form>
+        <md-dialog-content class="sticky-container">
+            <md-subheader class="md-sticky-no-effect"><h4 class="md-title">FHIR Cloud</h4></md-subheader>
+            <div class="dialog-content">
+                <md-input-container ng-if="patient">
+                    <label>Active Patient</label>
+                    <input ng-model="patient.fullName" readonly>
+                </md-input-container>
+                <md-input-container>
+                    <label>Active Server</label>
+                    <input ng-model="activeServer.name" readonly>
+                </md-input-container>
+                <md-input-container>
+                    <label>{{activeServer.name}} Base Url</label>
+                    <input ng-model="activeServer.baseUrl" readonly>
+                </md-input-container>
+                <md-input-container ng-if="activeServer.authorizeUri">
+                    <label>{{activeServer.name}} Authorization Url</label>
+                    <input ng-model="activeServer.authorizeUri" readonly>
+                </md-input-container>
+                <md-input-container ng-if="activeServer.tokenUri">
+                    <label>{{activeServer.name}} Access Token Url</label>
+                    <input ng-model="activeServer.tokenUri" readonly>
+                </md-input-container>
 
-            <blockquote>
-                <p style="font-size: x-small">FHIR Cloud is a RelayHealth reference client for Fast Healthcare Interoperability Resources (FHIR).
-                    Icons made by <a href="http://www.flaticon.com/authors/freepik"
-                                     title="Freepik">Freepik</a> from <a
-                            href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
-                            href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY
-                        3.0</a>
-                </p>
-            </blockquote>
+                <md-input-container ng-if="terminologyServer">
+                    <label>Terminology Server</label>
+                    <input ng-model="terminologyServer.name" readonly>
+                </md-input-container>
+
+                <md-input-container ng-if="terminologyServer">
+                    <label>{{activeServer.name}} Base Url</label>
+                    <input ng-model="terminologyServer.name" readonly>
+                </md-input-container>
+                <blockquote>
+                    <p style="font-size: x-small">FHIR Cloud is a RelayHealth reference client for Fast Healthcare
+                        Interoperability Resources (FHIR).
+                        Icons made by <a href="http://www.flaticon.com/authors/freepik"
+                                         title="Freepik">Freepik</a> from <a
+                                href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
+                                href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY
+                            3.0</a>
+                    </p>
+                </blockquote>
+            </div>
+        </md-dialog-content>
+        <div class="md-actions" layout="row">
+            <md-button ng-click="close()">
+                Close
+            </md-button>
         </div>
-    </md-content>
-    <div class="md-actions" layout="row">
-        <md-button ng-click="close()">
-            Close
-        </md-button>
-    </div>
+    </form>
 </md-dialog>

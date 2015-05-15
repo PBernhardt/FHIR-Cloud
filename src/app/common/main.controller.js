@@ -61,9 +61,9 @@
         ];
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
-     //       {name: 'Clinical', id: 2, pages: _clinicalPages},
+            //       {name: 'Clinical', id: 2, pages: _clinicalPages},
             {name: 'Conformance', id: 3, pages: _conformancePages},
-    //        {name: 'Documents', id: 4, pages: _documentsPages},
+            //        {name: 'Documents', id: 4, pages: _documentsPages},
             {name: 'DAF Profiles', id: 5, pages: _dafResources}
         ];
         var noToast = false;
@@ -104,6 +104,96 @@
             $mdSidenav('right').toggle();
         }
 
+        function chooseTerminology(ev) {
+            $mdDialog.show({
+                controller: terminologyController,
+                templateUrl: 'templates/server-dialog.html',
+                targetEvent: ev,
+                clickOutsideToClose: false
+            });
+        }
+
+        vm.chooseTerminology = chooseTerminology;
+
+        function terminologyController($scope, $mdDialog, fhirServers) {
+            function close() {
+                $mdDialog.hide();
+                if ($scope.selectedServer.id !== vm.activeServer.id) {
+                    selectServer($scope.selectedServer);
+                }
+            }
+
+            $scope.close = close;
+
+            function serverChanged(server) {
+                _.each($scope.FHIRServers, function (item) {
+                    if (server.id !== item.id) {
+                        item.selected = false;
+                    }
+                });
+                $scope.selectedServer = server;
+            }
+
+            $scope.serverChanged = serverChanged;
+
+            fhirServers.getAllServers().then(function (data) {
+                _.each(data, function (item) {
+                    if (vm.activeServer.id === item.id) {
+                        item.selected = true;
+                    }
+                });
+                $scope.FHIRServers = data;
+            });
+            $scope.server = store.get('terminologyServer');
+            $scope.selectedServer = vm.activeServer;
+            $scope.title = "Choose a Terminology Server";
+        }
+
+        function chooseFHIRServer(ev) {
+            $mdDialog.show({
+                controller: fhirServerController,
+                templateUrl: 'templates/server-dialog.html',
+                targetEvent: ev,
+                clickOutsideToClose: false
+            });
+        }
+
+        vm.chooseFHIRServer = chooseFHIRServer;
+
+        function fhirServerController($scope, $mdDialog, fhirServers) {
+            function close() {
+                $mdDialog.hide();
+                if ($scope.selectedServer.id !== vm.activeServer.id) {
+                    selectServer($scope.selectedServer);
+                }
+            }
+
+            $scope.close = close;
+
+            function serverChanged(server) {
+                _.each($scope.FHIRServers, function (item) {
+                    if (server.id !== item.id) {
+                        item.selected = false;
+                    }
+                });
+                $scope.selectedServer = server;
+            }
+
+            $scope.serverChanged = serverChanged;
+
+            fhirServers.getAllServers().then(function (data) {
+                _.each(data, function (item) {
+                    if (vm.activeServer.id === item.id) {
+                        item.selected = true;
+                    }
+                });
+                $scope.FHIRServers = data;
+            });
+            $scope.server = store.get('terminologyServer');
+            $scope.selectedServer = vm.activeServer;
+            $scope.title = "Choose a FHIR Server";
+        }
+
         function showAbout(ev) {
             $mdDialog.show({
                 controller: aboutController,
@@ -120,8 +210,9 @@
 
             $scope.close = close;
             $scope.activeServer = vm.activeServer;
-            if (angular.isDefined($window.localStorage.patient) && ($window.localStorage.patient !== null)) {
-                $scope.patient = JSON.parse($window.localStorage.patient);
+            $scope.terminologyServer = store.get('terminologyServer');
+            $scope.patient = store.get('patient');
+            if (common.isUndefinedOrNull($scope.patient) === false) {
                 $scope.patient.fullName = $filter('fullName')($scope.patient.name);
             }
         }
@@ -304,7 +395,6 @@
             vm.menu.selectedPage = undefined;
             vm.menu.selectedSubPage = undefined;
         }
-
 
         vm.FHIRServers = [];
         vm.isSectionSelected = isSectionSelected;

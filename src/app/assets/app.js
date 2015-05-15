@@ -780,6 +780,7 @@
             .icon("settings", "./assets/svg/settings.svg", 24)
             .icon("smart", "./assets/svg/SMART.svg", 24)
             .icon("telecom", "./assets/svg/telecom.svg", 24)
+            .icon("terminology", "./assets/svg/terminology.svg", 24)
             .icon("view", "./assets/svg/visibility.svg", 12)
             .icon("vitals", "./assets/svg/pulse1.svg", 24)
             .icon("web", "./assets/svg/www.svg", 16);
@@ -3045,9 +3046,9 @@
         ];
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
-     //       {name: 'Clinical', id: 2, pages: _clinicalPages},
+            //       {name: 'Clinical', id: 2, pages: _clinicalPages},
             {name: 'Conformance', id: 3, pages: _conformancePages},
-    //        {name: 'Documents', id: 4, pages: _documentsPages},
+            //        {name: 'Documents', id: 4, pages: _documentsPages},
             {name: 'DAF Profiles', id: 5, pages: _dafResources}
         ];
         var noToast = false;
@@ -3088,6 +3089,96 @@
             $mdSidenav('right').toggle();
         }
 
+        function chooseTerminology(ev) {
+            $mdDialog.show({
+                controller: terminologyController,
+                templateUrl: 'templates/server-dialog.html',
+                targetEvent: ev,
+                clickOutsideToClose: false
+            });
+        }
+
+        vm.chooseTerminology = chooseTerminology;
+
+        function terminologyController($scope, $mdDialog, fhirServers) {
+            function close() {
+                $mdDialog.hide();
+                if ($scope.selectedServer.id !== vm.activeServer.id) {
+                    selectServer($scope.selectedServer);
+                }
+            }
+
+            $scope.close = close;
+
+            function serverChanged(server) {
+                _.each($scope.FHIRServers, function (item) {
+                    if (server.id !== item.id) {
+                        item.selected = false;
+                    }
+                });
+                $scope.selectedServer = server;
+            }
+
+            $scope.serverChanged = serverChanged;
+
+            fhirServers.getAllServers().then(function (data) {
+                _.each(data, function (item) {
+                    if (vm.activeServer.id === item.id) {
+                        item.selected = true;
+                    }
+                });
+                $scope.FHIRServers = data;
+            });
+            $scope.server = store.get('terminologyServer');
+            $scope.selectedServer = vm.activeServer;
+            $scope.title = "Choose a Terminology Server";
+        }
+
+        function chooseFHIRServer(ev) {
+            $mdDialog.show({
+                controller: fhirServerController,
+                templateUrl: 'templates/server-dialog.html',
+                targetEvent: ev,
+                clickOutsideToClose: false
+            });
+        }
+
+        vm.chooseFHIRServer = chooseFHIRServer;
+
+        function fhirServerController($scope, $mdDialog, fhirServers) {
+            function close() {
+                $mdDialog.hide();
+                if ($scope.selectedServer.id !== vm.activeServer.id) {
+                    selectServer($scope.selectedServer);
+                }
+            }
+
+            $scope.close = close;
+
+            function serverChanged(server) {
+                _.each($scope.FHIRServers, function (item) {
+                    if (server.id !== item.id) {
+                        item.selected = false;
+                    }
+                });
+                $scope.selectedServer = server;
+            }
+
+            $scope.serverChanged = serverChanged;
+
+            fhirServers.getAllServers().then(function (data) {
+                _.each(data, function (item) {
+                    if (vm.activeServer.id === item.id) {
+                        item.selected = true;
+                    }
+                });
+                $scope.FHIRServers = data;
+            });
+            $scope.server = store.get('terminologyServer');
+            $scope.selectedServer = vm.activeServer;
+            $scope.title = "Choose a FHIR Server";
+        }
+
         function showAbout(ev) {
             $mdDialog.show({
                 controller: aboutController,
@@ -3104,8 +3195,9 @@
 
             $scope.close = close;
             $scope.activeServer = vm.activeServer;
-            if (angular.isDefined($window.localStorage.patient) && ($window.localStorage.patient !== null)) {
-                $scope.patient = JSON.parse($window.localStorage.patient);
+            $scope.terminologyServer = store.get('terminologyServer');
+            $scope.patient = store.get('patient');
+            if (common.isUndefinedOrNull($scope.patient) === false) {
                 $scope.patient.fullName = $filter('fullName')($scope.patient.name);
             }
         }
@@ -3289,7 +3381,6 @@
             vm.menu.selectedSubPage = undefined;
         }
 
-
         vm.FHIRServers = [];
         vm.isSectionSelected = isSectionSelected;
         vm.menu = {
@@ -3421,6 +3512,90 @@
     }
 
     angular.module('FHIRCloud').factory(serviceId, ['$http', '$window', 'common', 'store', smartAuthorizationService]);
+
+})();(function () {
+    'use strict';
+
+    var serviceId = 'terminologyServers';
+
+    function terminologyServers($cookieStore, common, dataCache, store) {
+        var $q = common.$q;
+        var activeServerKey = "terminologyServer";
+        var serversKey = "terminologyServers";
+
+        function getActiveServer() {
+            var activeServer = store.get(activeServerKey);
+            if (angular.isUndefined(activeServer)) {
+                activeServer = $cookieStore.get(activeServerKey);
+            }
+            if (angular.isUndefined(activeServer)) {
+                activeServer = store.get(activeServerKey);
+            }
+            if (angular.isUndefined(activeServer)) {
+                getAllServers()
+                    .then(function (servers) {
+                        activeServer = servers[0];
+                        setActiveServer(activeServer);
+                    });
+            }
+            return $q.when(activeServer);
+        }
+
+        function setActiveServer(server) {
+            $cookieStore.put(activeServerKey, server);
+            store.set(activeServerKey, server)
+        }
+
+        function getAllServers() {
+            var deferred = $q.defer();
+            try {
+                var baseList = [
+                    {
+                        "id": 1,
+                        "name": "Health Directions",
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
+                        "secure": false
+                    }
+                ];
+                var servers = dataCache.readFromCache(serversKey);
+                if (angular.isUndefined(servers)) {
+                    servers = baseList;
+                    dataCache.addToCache(serversKey, servers);
+                }
+                deferred.resolve(servers);
+            } catch (e) {
+                deferred.reject(e);
+            }
+            return deferred.promise;
+        }
+
+        function getServerById(id) {
+            var deferred = $q.defer();
+            var server = null;
+            getAllServers()
+                .then(function (servers) {
+                    for (var i = 0, len = servers.length; i < len; i++) {
+                        if (servers[i].id === id) {
+                            server = servers[i];
+                            break;
+                        }
+                    }
+                    return deferred.resolve(server);
+                });
+            return deferred.promise;
+        }
+
+        var service = {
+            getAllServers: getAllServers,
+            getServerById: getServerById,
+            getActiveServer: getActiveServer,
+            setActiveServer: setActiveServer
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$cookieStore', 'common', 'dataCache', 'store', terminologyServers]);
 
 })();(function () {
     'use strict';

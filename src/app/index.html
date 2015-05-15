@@ -65,9 +65,16 @@
         </div>
 
         <h4 hide-sm class="md-subhead">Server: {{vm.activeServer.name || "Select a server"}}</h4>
-        <md-button title="Change remote FHIR Server" class="md-icon-button launch" ng-click="vm.toggleServers()"
+        <md-button title="Change remote FHIR Server" class="md-icon-button launch" ng-click="vm.chooseFHIRServer($event)"
                    aria-label="FHIR Servers">
             <md-icon md-svg-src="fire"></md-icon>
+        </md-button>
+        <md-button title="Terminology"
+                   class="md-icon-button launch"
+                   ng-click="vm.chooseTerminology($event)"
+                   hide-sm
+                   aria-label="Terminology">
+            <md-icon md-svg-src="terminology"></md-icon>
         </md-button>
         <md-button title="About FHIR Cloud"
                    class="md-icon-button launch"

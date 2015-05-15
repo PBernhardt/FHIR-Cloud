@@ -285,6 +285,7 @@
             .icon("settings", "./assets/svg/settings.svg", 24)
             .icon("smart", "./assets/svg/SMART.svg", 24)
             .icon("telecom", "./assets/svg/telecom.svg", 24)
+            .icon("terminology", "./assets/svg/terminology.svg", 24)
             .icon("view", "./assets/svg/visibility.svg", 12)
             .icon("vitals", "./assets/svg/pulse1.svg", 24)
             .icon("web", "./assets/svg/www.svg", 16);

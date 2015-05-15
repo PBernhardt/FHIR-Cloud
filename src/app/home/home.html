@@ -1,5 +1,4 @@
 <md-content layout-padding style="height: 600px;padding: 24px;">
-
     <div layout="row" layout-align="space-between start">
         <h3 class="md-title">Welcome to FHIR Cloud</h3>
         <img src="./assets/png/cloud.png" alt="FHIR Cloud">
@@ -7,10 +6,8 @@
 
     <p class="md-body-1">This is an open-source client for Fast Interoperability Healthcare Resources (FHIR)
         <small>&#174;</small>
-        services.
-        It is based on the
-        current DSTU2 ballot draft, and while the client can target any DSTU2-compliant FHIR server, the particular
-        focus is for testing interoperability of servers implementing the FHIR DAF Profiles.
+        services. It is based on the current DSTU2 ballot draft, and while the client can target any DSTU2-compliant
+        FHIR server, the particular focus is for testing interoperability of servers implementing the FHIR DAF Profiles.
     </p>
     <md-list>
         <md-list-item class="md-2-line">
@@ -19,9 +16,22 @@
             <div class="md-list-item-text">
                 <h3>Choose a FHIR Server</h3>
 
-                <p>To get started, choose a FHIR server. There are plenty to choose from, and given the rapid pace of
-                    evolution of both the FHIR specification and its related implementations, there's a chance certain
-                    functionality may not be available in a given implementation.</p>
+                <p>To get started, choose a FHIR server. One of the design goals of this application is to provide a
+                    common interface for trying out different servers. With the rapid pace of evolution of both
+                    the FHIR specification and its related implementations, there's a chance certain functionality may
+                    not be available in a given implementation.</p>
+            </div>
+        </md-list-item>
+
+        <md-list-item class="md-2-line">
+            <img src="assets/svg/terminology.svg" height="18px" width="18px" class="md-avatar" alt="terminology"/>
+
+            <div class="md-list-item-text">
+                <h3>Choose a Terminology Service</h3>
+
+                <p>This application uses expandable value sets provided by a FHIR-based terminology service. Most FHIR
+                    servers don't currently provide terminology services. Choose from a list of publicly available
+                    terminology services to support data entry and concept detail lookup.</p>
             </div>
         </md-list-item>
 
@@ -54,7 +64,7 @@
             <img src="assets/svg/github.svg" height="18px" width="18px" class="md-avatar" alt="issues"/>
 
             <div class="md-list-item-text">
-                <h3>Source Code</h3>
+                <h3>Give Feedback</h3>
 
                 <p>Report issues or any other feedback on the <a
                         href="https://github.com/PBernhardt/FHIR-Cloud/issues" target="_blank">github repository</a>
@@ -63,7 +73,7 @@
         </md-list-item>
     </md-list>
 
-    <footer style="position: absolute; bottom:0">
+    <footer style="padding-top: 20px">
         <small class="md-caption">Icons made by <a href="http://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a>
             from <a
                     href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
