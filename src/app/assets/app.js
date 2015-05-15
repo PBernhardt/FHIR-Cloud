@@ -1271,13 +1271,10 @@
 
         function getActiveServer() {
             var activeServer = store.get(activeServerKey);
-            if (angular.isUndefined(activeServer)) {
+            if (common.isUndefinedOrNull(activeServer)) {
                 activeServer = $cookieStore.get(activeServerKey);
             }
-            if (angular.isUndefined(activeServer)) {
-                activeServer = store.get(activeServerKey);
-            }
-            if (angular.isUndefined(activeServer)) {
+            if (common.isUndefinedOrNull(activeServer)) {
                 getAllServers()
                     .then(function (servers) {
                         activeServer = servers[0];
@@ -2989,7 +2986,7 @@
     var controllerId = 'mainController';
 
     function mainController($filter, $mdDialog, $mdSidenav, $location, $rootScope, $scope, $window, common, config,
-                            conformanceService, fhirServers, auth, store, jwtHelper, smartAuthorizationService) {
+                            conformanceService, fhirServers, terminologyServers, auth, store, jwtHelper, smartAuthorizationService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -3054,7 +3051,7 @@
         var noToast = false;
 
         function _activate() {
-            common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
+            common.activateController([_getActiveServers()], controllerId)
                 .then(function () {
                     //for processing 2nd leg of SMART authorization
                     var authorizeResponse = $location.search();
@@ -3068,25 +3065,19 @@
                 });
         }
 
-        function _getActiveServer() {
+        function _getActiveServers() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
-        }
-
-        function _getFHIRServers() {
-            fhirServers.getAllServers().then(function (data) {
-                vm.FHIRServers = data;
-            })
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    vm.terminologyServer = server;
+                });
         }
 
         function toggleMenu() {
             $mdSidenav('left').toggle();
-        }
-
-        function toggleServers() {
-            $mdSidenav('right').toggle();
         }
 
         function chooseTerminology(ev) {
@@ -3100,14 +3091,30 @@
 
         vm.chooseTerminology = chooseTerminology;
 
-        function terminologyController($scope, $mdDialog, fhirServers) {
-            function close() {
-                $mdDialog.hide();
-                if ($scope.selectedServer.id !== vm.activeServer.id) {
-                    selectServer($scope.selectedServer);
-                }
+        function terminologyController($scope, $mdDialog, terminologyServers) {
+            function _setActiveServer(fhirServer) {
+                conformanceService.getConformanceMetadata(fhirServer.baseUrl)
+                    .then(function (conformance) {
+                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        vm.terminologyServer = fhirServer;
+                        terminologyServers.setActiveServer(vm.terminologyServer);
+                        if (angular.isDefined(vm.terminologyServer.clientId)) {
+                            authorize();
+                        } else {
+                            store.remove('authToken');
+                        }
+                    }, function (error) {
+                        logError('Error returning conformance statement for terminology server ' + fhirServer.name + '. Server ' + vm.terminologyServer.name + ' abides.', error);
+                    });
+                logInfo('Requesting access to terminology server ' + fhirServer.name + ' ...');
             }
 
+            function close() {
+                $mdDialog.hide();
+                if ($scope.selectedServer.id !== vm.terminologyServer.id) {
+                    _setActiveServer($scope.selectedServer);
+                }
+            }
             $scope.close = close;
 
             function serverChanged(server) {
@@ -3121,16 +3128,16 @@
 
             $scope.serverChanged = serverChanged;
 
-            fhirServers.getAllServers().then(function (data) {
+            terminologyServers.getAllServers().then(function (data) {
                 _.each(data, function (item) {
-                    if (vm.activeServer.id === item.id) {
+                    if (vm.terminologyServer.id === item.id) {
                         item.selected = true;
                     }
                 });
                 $scope.FHIRServers = data;
             });
             $scope.server = store.get('terminologyServer');
-            $scope.selectedServer = vm.activeServer;
+            $scope.selectedServer = vm.terminologyServer;
             $scope.title = "Choose a Terminology Server";
         }
 
@@ -3149,11 +3156,49 @@
             function close() {
                 $mdDialog.hide();
                 if ($scope.selectedServer.id !== vm.activeServer.id) {
-                    selectServer($scope.selectedServer);
+                    _updateActiveServer($scope.selectedServer);
                 }
             }
 
             $scope.close = close;
+
+            function _updateActiveServer(fhirServer) {
+                conformanceService.clearCache();
+                conformanceService.getConformanceMetadata(fhirServer.baseUrl)
+                    .then(function (conformance) {
+                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        vm.activeServer = fhirServer;
+                        if (angular.isUndefined(conformance.rest[0].security)) {
+                            logInfo("Security information missing - this is an OPEN server", null, noToast);
+                        } else if (angular.isArray(conformance.rest[0].security.extension)) {
+                            _.forEach(conformance.rest[0].security.extension, function (ex) {
+                                if (_.endsWith(ex.url, "#authorize")) {
+                                    vm.activeServer.authorizeUri = ex.valueUri;
+                                    logInfo("Authorize URI found: " + vm.activeServer.authorizeUri, null, noToast);
+                                }
+                                if (_.endsWith(ex.url, "#token")) {
+                                    vm.activeServer.tokenUri = ex.valueUri;
+                                    logInfo("Token URI found: " + vm.activeServer.tokenUri, null, noToast);
+                                }
+                            })
+                        }
+                        var url = $location.protocol() + "://" + $location.host();
+                        if ($location.port() !== 80 && $location.port() !== 443) {
+                            url = url + ":" + $location.port();
+                        }
+                        vm.activeServer.redirectUri = url;
+                        fhirServers.setActiveServer(vm.activeServer);
+                        common.changeServer(vm.activeServer);
+                        if (angular.isDefined(vm.activeServer.clientId)) {
+                            authorize();
+                        } else {
+                            store.remove('authToken');
+                        }
+                    }, function (error) {
+                        logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
+                    });
+                logInfo('Requesting access to server ' + fhirServer.name + ' ...');
+            }
 
             function serverChanged(server) {
                 _.each($scope.FHIRServers, function (item) {
@@ -3187,6 +3232,7 @@
                 clickOutsideToClose: true
             });
         }
+        vm.showAbout = showAbout;
 
         function aboutController($scope, $mdDialog) {
             function close() {
@@ -3322,45 +3368,6 @@
             }
         });
 
-        function selectServer(fhirServer) {
-            $mdSidenav('right').close();
-            conformanceService.clearCache();
-            conformanceService.getConformanceMetadata(fhirServer.baseUrl)
-                .then(function (conformance) {
-                    logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
-                    vm.activeServer = fhirServer;
-                    if (angular.isUndefined(conformance.rest[0].security)) {
-                        logInfo("Security information missing - this is an OPEN server", null, noToast);
-                    } else if (angular.isArray(conformance.rest[0].security.extension)) {
-                        _.forEach(conformance.rest[0].security.extension, function (ex) {
-                            if (_.endsWith(ex.url, "#authorize")) {
-                                vm.activeServer.authorizeUri = ex.valueUri;
-                                logInfo("Authorize URI found: " + vm.activeServer.authorizeUri, null, noToast);
-                            }
-                            if (_.endsWith(ex.url, "#token")) {
-                                vm.activeServer.tokenUri = ex.valueUri;
-                                logInfo("Token URI found: " + vm.activeServer.tokenUri, null, noToast);
-                            }
-                        })
-                    }
-                    var url = $location.protocol() + "://" + $location.host();
-                    if ($location.port() !== 80 && $location.port() !== 443) {
-                        url = url + ":" + $location.port();
-                    }
-                    vm.activeServer.redirectUri = url;
-                    fhirServers.setActiveServer(vm.activeServer);
-                    common.changeServer(vm.activeServer);
-                    if (angular.isDefined(vm.activeServer.clientId)) {
-                        authorize();
-                    } else {
-                        store.remove('authToken');
-                    }
-                }, function (error) {
-                    logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
-                });
-            logInfo('Requesting access to server ' + fhirServer.name + ' ...');
-        }
-
         function isSectionSelected(section) {
             return section === vm.menu.selectedSection;
         }
@@ -3380,6 +3387,7 @@
             vm.menu.selectedPage = undefined;
             vm.menu.selectedSubPage = undefined;
         }
+        vm.toggleSelectSection = toggleSelectSection;
 
         vm.FHIRServers = [];
         vm.isSectionSelected = isSectionSelected;
@@ -3390,19 +3398,16 @@
             selectedSubPage: undefined
         };
         vm.pageSelected = pageSelected;
-        vm.selectServer = selectServer;
-        vm.showAbout = showAbout;
         vm.toggleMenu = toggleMenu;
-        vm.toggleSelectSection = toggleSelectSection;
-        vm.toggleServers = toggleServers;
         vm.activeServer = null;
+        vm.terminologyServer = null;
 
         _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$mdDialog', '$mdSidenav', '$location', '$rootScope', '$scope', '$window', 'common', 'config',
-            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', 'smartAuthorizationService', mainController]);
+            'conformanceService', 'fhirServers', 'terminologyServers', 'auth', 'store', 'jwtHelper', 'smartAuthorizationService', mainController]);
 })
 ();
 (function () {
@@ -3516,6 +3521,145 @@
 })();(function () {
     'use strict';
 
+    var serviceId = 'terminologyClient';
+
+    function terminologyClient($http, common, store) {
+        var $q = common.$q;
+        var tokenKey = 'terminologyAuthToken';
+
+        function addResource(baseUrl, resource) {
+            var fhirResource = common.removeNullProperties(resource);
+            var deferred = $q.defer();
+            var req = {
+                method: 'post',
+                url: baseUrl,
+                data: fhirResource
+            };
+            var token = store.get(tokenKey);
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status) {
+                    var error = { "status": status, "outcome": data };
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function deleteResource(resourceUrl) {
+            var deferred = $q.defer();
+            var req = {
+                method: 'delete',
+                url: resourceUrl
+            };
+            var token = store.get(tokenKey);
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status, headers) {
+                    if (status === 410) {
+                        // already deleted
+                        var results = {};
+                        results.data = data;
+                        results.status = status;
+                        results.headers = headers;
+                        deferred.resolve(results);
+                    } else {
+                        var error = { "status": status, "outcome": data };
+                        deferred.reject(error);
+                    }
+                });
+            return deferred.promise;
+        }
+
+        function getResource(resourceUrl) {
+            var deferred = $q.defer();
+            var req = {
+                method: 'get',
+                url: resourceUrl
+            };
+            var token = store.get(tokenKey);
+            if (!common.isUndefinedOrNull(token) && resourceUrl.indexOf('metadata') === -1) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status) {
+                    var error = { "status": status, "outcome": data };
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        function updateResource(resourceUrl, resource) {
+            var fhirResource = common.removeNullProperties(resource);
+            var deferred = $q.defer();
+            var req = {
+                method: 'put',
+                url: resourceUrl,
+                data: fhirResource
+            };
+            var token = store.get(tokenKey);
+            if (!common.isUndefinedOrNull(token)) {
+                req.headers = { Authorization: 'Bearer ' + token };
+            }
+            $http(req)
+                .success(function (data, status, headers, config) {
+                    var results = {};
+                    results.data = data;
+                    results.headers = headers();
+                    results.status = status;
+                    results.config = config;
+                    deferred.resolve(results);
+                })
+                .error(function (data, status) {
+                    var error = { "status": status, "outcome": data };
+                    deferred.reject(error);
+                });
+            return deferred.promise;
+        }
+
+        var service = {
+            deleteResource: deleteResource,
+            getResource: getResource,
+            addResource: addResource,
+            updateResource: updateResource
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', 'store', terminologyClient]);
+
+
+})();(function () {
+    'use strict';
+
     var serviceId = 'terminologyServers';
 
     function terminologyServers($cookieStore, common, dataCache, store) {
@@ -3525,13 +3669,10 @@
 
         function getActiveServer() {
             var activeServer = store.get(activeServerKey);
-            if (angular.isUndefined(activeServer)) {
+            if (common.isUndefinedOrNull(activeServer)) {
                 activeServer = $cookieStore.get(activeServerKey);
             }
-            if (angular.isUndefined(activeServer)) {
-                activeServer = store.get(activeServerKey);
-            }
-            if (angular.isUndefined(activeServer)) {
+            if (common.isUndefinedOrNull(activeServer)) {
                 getAllServers()
                     .then(function (servers) {
                         activeServer = servers[0];
@@ -24394,7 +24535,7 @@
         function expandValueSet(searchText) {
             var deferred = $q.defer();
             $scope.fetchingExpansion = true;
-            valueSetService.getFilteredExpansion($scope.activeServer.baseUrl, $scope.valueSet.id, searchText)
+            valueSetService.getFilteredExpansion($scope.valueSet.id, searchText)
                 .then(function (data) {
                     $scope.fetchingExpansion = false;
                     deferred.resolve(data);
@@ -24643,31 +24784,23 @@
 
     var controllerId = 'valueSetExpandController';
 
-    function valueSetExpandController(common, fhirServers, valueSetService) {
+    function valueSetExpandController(common, valueSetService) {
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logError = common.logger.getLogFn(controllerId, 'error');
         var $q = common.$q;
         var noToast = false;
         /* jshint validthis:true */
         var vm = this;
-        
-        function _getActiveServer() {
-            fhirServers.getActiveServer()
-                .then(function (server) {
-                    vm.activeServer = server;
-                    return vm.activeServer;
-                });
-        }
 
         function _activate() {
-            common.activateController([_getActiveServer()], controllerId).then(function () {
+            common.activateController([], controllerId).then(function () {
             });
         }
 
         function expandValueSet(searchText) {
             var deferred = $q.defer();
             var vs = valueSetService.getActiveValueSet();
-            valueSetService.getFilteredExpansion(vm.activeServer.baseUrl, vs.id, searchText)
+            valueSetService.getFilteredExpansion(vs.id, searchText)
                 .then(function (data) {
                     deferred.resolve(data);
                 }, function (error) {
@@ -24676,11 +24809,13 @@
                 });
             return deferred.promise;
         }
+
         vm.expandValueSet = expandValueSet;
 
         function setConcept(concept) {
             vm.concept = concept;
         }
+
         vm.setConcept = setConcept;
 
         vm.concept = undefined;
@@ -24691,7 +24826,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['common', 'fhirServers', 'valueSetService', valueSetExpandController]);
+        ['common', 'valueSetService', valueSetExpandController]);
 })();(function () {
     'use strict';
 
@@ -24721,7 +24856,7 @@
 
     var controllerId = 'valueSetSearch';
 
-    function valueSetSearch($location, common, config, fhirServers, valueSetService) {
+    function valueSetSearch($location, common, valueSetService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -24731,23 +24866,9 @@
         /* jshint validthis:true */
         var vm = this;
 
-        function getActiveServer() {
-            fhirServers.getActiveServer()
-                .then(function (server) {
-                    vm.activeServer = server;
-                    return vm.activeServer;
-                });
-        }
-
-        function getCachedSearchResults() {
-            valueSetService.getCachedSearchResults()
-                .then(processSearchResults);
-        }
-
-        function activate() {
-            common.activateController([getActiveServer(), getCachedSearchResults()], controllerId)
+        function _activate() {
+            common.activateController([], controllerId)
                 .then(function () {
-
                 });
         }
 
@@ -24756,6 +24877,7 @@
                 $location.path('/valueSet/view/' + valueSet.$$hashKey);
             }
         }
+
         vm.goToDetail = goToDetail;
 
         function processSearchResults(searchResults) {
@@ -24769,10 +24891,9 @@
         function quickSearch(searchText) {
             var deferred = $q.defer();
             vm.noresults = false;
-            valueSetService.getValueSets(vm.activeServer.baseUrl, searchText)
+            valueSetService.getValueSets(searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets from ' +
-                        vm.activeServer.name, null, noToast);
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets', null, noToast);
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
@@ -24788,7 +24909,7 @@
             toggleSpinner(true);
             valueSetService.getValueSetsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.valueSets) ? data.valueSets.length : 0) + ' ValueSets from ' + vm.activeServer.name, true);
+                    logInfo('Returned ' + (angular.isArray(data.valueSets) ? data.valueSets.length : 0) + ' ValueSets', null, noToast);
                     return data;
                 }, function (error) {
                     toggleSpinner(false);
@@ -24799,11 +24920,14 @@
                     toggleSpinner(false);
                 });
         }
+
         vm.dereferenceLink = dereferenceLink;
 
         function toggleSpinner(on) {
             vm.isBusy = on;
-        }        function actions($event) {
+        }
+
+        function actions($event) {
             $mdBottomSheet.show({
                 parent: angular.element(document.getElementById('content')),
                 templateUrl: './templates/resourceSheet.html',
@@ -24814,13 +24938,13 @@
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
                     case 0:
-                        $location.path('/patient/edit/new');
+                        $location.path('/valueSet/edit/new');
                         break;
                     case 1:
-                        $location.path('/patient/detailed-search');
+                        $location.path('/valueSet/detailed-search');
                         break;
                     case 2:
-                        $location.path('/patient');
+                        $location.path('/valueSet');
                         break;
                 }
             });
@@ -24830,11 +24954,11 @@
              */
             function ResourceSheetController($mdBottomSheet) {
                 this.items = [
-                    {name: 'Add new patient', icon: 'personAdd', index: 0},
+                    {name: 'Add new value set', icon: 'terminology', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
                     {name: 'Quick find', icon: 'quickFind', index: 2}
                 ];
-                this.title = 'Patient search options';
+                this.title = 'Value Set search options';
                 this.performAction = function (action) {
                     $mdBottomSheet.hide(action);
                 };
@@ -24843,9 +24967,6 @@
 
         vm.actions = actions;
 
-
-
-        vm.activeServer = null;
         vm.isBusy = false;
         vm.valueSets = [];
         vm.errorOutcome = null;
@@ -24860,18 +24981,18 @@
         vm.selectedValueSet = null;
         vm.noresults = undefined;
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', 'common', 'config', 'fhirServers', 'valueSetService', valueSetSearch]);
+        ['$location', 'common', 'valueSetService', valueSetSearch]);
 })();
 (function () {
     'use strict';
 
     var serviceId = 'valueSetService';
 
-    function valueSetService(common, dataCache, fhirClient, fhirServers) {
+    function valueSetService(common, dataCache, terminologyClient, terminologyServers) {
         var dataCacheKey = 'localValueSets';
         var activeValueSetKey = 'activeValueSet';
         var getLogFn = common.logger.getLogFn;
@@ -24884,10 +25005,10 @@
                     resource.type.coding = _prepCoding(resource.type.coding);
                 });
             var deferred = $q.defer();
-            fhirServers.getActiveServer()
+            terminologyServers.getActiveServer()
                 .then(function (server) {
                     var url = server.baseUrl + "/ValueSet";
-                    fhirClient.addResource(url, resource)
+                    terminologyClient.addResource(url, resource)
                         .then(function (results) {
                             deferred.resolve(results);
                         }, function (outcome) {
@@ -24938,7 +25059,7 @@
 
         function deleteValueSet(resourceId) {
             var deferred = $q.defer();
-            fhirClient.deleteResource(resourceId)
+            terminologyClient.deleteResource(resourceId)
                 .then(function (results) {
                     deferred.resolve(results);
                 }, function (outcome) {
@@ -24950,6 +25071,7 @@
         function setActiveValueSet(item) {
             dataCache.addToCache(activeValueSetKey, item);
         }
+
         function getActiveValueSet() {
             return dataCache.readFromCache(activeValueSetKey);
         }
@@ -24988,7 +25110,7 @@
 
         function getValueSet(resourceId) {
             var deferred = $q.defer();
-            fhirClient.getResource(resourceId)
+            terminologyClient.getResource(resourceId)
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -24998,30 +25120,32 @@
             return deferred.promise;
         }
 
-        //TODO: add support for summary when DSTU2 server implementers have support
-        function getValueSetReference(baseUrl, input) {
+        function getValueSetReference(input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/ValueSet?name=' + input + '&_count=20')
-                .then(function (results) {
-                    var valueSets = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                valueSets.push({display: item.resource.name, reference: item.resource.id});
-                            });
-                    }
-                    if (valueSets.length === 0) {
-                        valueSets.push({display: "No matches", reference: ''});
-                    }
-                    deferred.resolve(valueSets);
-                }, function (outcome) {
-                    deferred.reject(outcome);
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet?name=' + input + '&_count=20')
+                        .then(function (results) {
+                            var valueSets = [];
+                            if (results.data.entry) {
+                                angular.forEach(results.data.entry,
+                                    function (item) {
+                                        valueSets.push({display: item.resource.name, reference: item.resource.id});
+                                    });
+                            }
+                            if (valueSets.length === 0) {
+                                valueSets.push({display: "No matches", reference: ''});
+                            }
+                            deferred.resolve(valueSets);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
                 });
+
             return deferred.promise;
         }
 
-        //TODO: waiting for server implementers to add support for _summary
-        function getValueSets(baseUrl, nameFilter, identifier) {
+        function getValueSets(nameFilter, identifier) {
             var deferred = $q.defer();
             var params = '';
 
@@ -25039,19 +25163,23 @@
                     params = identifierParam;
                 }
             }
-            fhirClient.getResource(baseUrl + '/ValueSet?' + params + '&_count=20')
-                .then(function (results) {
-                    dataCache.addToCache(dataCacheKey, results.data);
-                    deferred.resolve(results.data);
-                }, function (outcome) {
-                    deferred.reject(outcome);
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet?' + params + '&_count=20')
+                        .then(function (results) {
+                            dataCache.addToCache(dataCacheKey, results.data);
+                            deferred.resolve(results.data);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
                 });
+
             return deferred.promise;
         }
 
         function getValueSetsByLink(url) {
             var deferred = $q.defer();
-            fhirClient.getResource(url)
+            terminologyClient.getResource(url)
                 .then(function (results) {
                     var searchResults = {"links": {}, "valueSets": []};
                     var valueSets = [];
@@ -25088,16 +25216,21 @@
             return data;
         }
 
-        // http://fhir-dev.healthintersections.com.au/open/ValueSet/$expand?identifier=http://hl7.org/fhir/vs/condition-code&filter=xxx
-        function getFilteredExpansion(baseUrl, id, filter) {
+        /*
+         Example usage: http://fhir-dev.healthintersections.com.au/open/ValueSet/$expand?identifier=http://hl7.org/fhir/vs/condition-code&filter=xxx
+         */
+        function getFilteredExpansion(id, filter) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/ValueSet/' + id + '/$expand?filter=' + filter + '&_count=10')
-                .then(function (results) {
-                    if (results.data && results.data.expansion && angular.isArray(results.data.expansion.contains)) {
-                        deferred.resolve(results.data.expansion.contains);
-                    } else {
-                        deferred.reject("Response did not include expected expansion");
-                    }
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet/' + id + '/$expand?filter=' + filter + '&_count=10')
+                        .then(function (results) {
+                            if (results.data && results.data.expansion && angular.isArray(results.data.expansion.contains)) {
+                                deferred.resolve(results.data.expansion.contains);
+                            } else {
+                                deferred.reject("Response did not include expected expansion");
+                            }
+                        });
                 });
             return deferred.promise;
         }
@@ -25108,7 +25241,7 @@
                     resource.type.coding = _prepCoding(resource.type.coding);
                 });
             var deferred = $q.defer();
-            fhirClient.updateResource(resourceVersionId, resource)
+            terminologyClient.updateResource(resourceVersionId, resource)
                 .then(function (results) {
                     deferred.resolve(results);
                 }, function (outcome) {
@@ -25156,6 +25289,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', valueSetService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'terminologyClient', 'terminologyServers', valueSetService]);
 
 })();

@@ -4,7 +4,7 @@
     var controllerId = 'mainController';
 
     function mainController($filter, $mdDialog, $mdSidenav, $location, $rootScope, $scope, $window, common, config,
-                            conformanceService, fhirServers, auth, store, jwtHelper, smartAuthorizationService) {
+                            conformanceService, fhirServers, terminologyServers, auth, store, jwtHelper, smartAuthorizationService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -69,7 +69,7 @@
         var noToast = false;
 
         function _activate() {
-            common.activateController([_getFHIRServers(), _getActiveServer()], controllerId)
+            common.activateController([_getActiveServers()], controllerId)
                 .then(function () {
                     //for processing 2nd leg of SMART authorization
                     var authorizeResponse = $location.search();
@@ -83,25 +83,19 @@
                 });
         }
 
-        function _getActiveServer() {
+        function _getActiveServers() {
             fhirServers.getActiveServer()
                 .then(function (server) {
                     vm.activeServer = server;
                 });
-        }
-
-        function _getFHIRServers() {
-            fhirServers.getAllServers().then(function (data) {
-                vm.FHIRServers = data;
-            })
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    vm.terminologyServer = server;
+                });
         }
 
         function toggleMenu() {
             $mdSidenav('left').toggle();
-        }
-
-        function toggleServers() {
-            $mdSidenav('right').toggle();
         }
 
         function chooseTerminology(ev) {
@@ -115,14 +109,30 @@
 
         vm.chooseTerminology = chooseTerminology;
 
-        function terminologyController($scope, $mdDialog, fhirServers) {
-            function close() {
-                $mdDialog.hide();
-                if ($scope.selectedServer.id !== vm.activeServer.id) {
-                    selectServer($scope.selectedServer);
-                }
+        function terminologyController($scope, $mdDialog, terminologyServers) {
+            function _setActiveServer(fhirServer) {
+                conformanceService.getConformanceMetadata(fhirServer.baseUrl)
+                    .then(function (conformance) {
+                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        vm.terminologyServer = fhirServer;
+                        terminologyServers.setActiveServer(vm.terminologyServer);
+                        if (angular.isDefined(vm.terminologyServer.clientId)) {
+                            authorize();
+                        } else {
+                            store.remove('authToken');
+                        }
+                    }, function (error) {
+                        logError('Error returning conformance statement for terminology server ' + fhirServer.name + '. Server ' + vm.terminologyServer.name + ' abides.', error);
+                    });
+                logInfo('Requesting access to terminology server ' + fhirServer.name + ' ...');
             }
 
+            function close() {
+                $mdDialog.hide();
+                if ($scope.selectedServer.id !== vm.terminologyServer.id) {
+                    _setActiveServer($scope.selectedServer);
+                }
+            }
             $scope.close = close;
 
             function serverChanged(server) {
@@ -136,16 +146,16 @@
 
             $scope.serverChanged = serverChanged;
 
-            fhirServers.getAllServers().then(function (data) {
+            terminologyServers.getAllServers().then(function (data) {
                 _.each(data, function (item) {
-                    if (vm.activeServer.id === item.id) {
+                    if (vm.terminologyServer.id === item.id) {
                         item.selected = true;
                     }
                 });
                 $scope.FHIRServers = data;
             });
             $scope.server = store.get('terminologyServer');
-            $scope.selectedServer = vm.activeServer;
+            $scope.selectedServer = vm.terminologyServer;
             $scope.title = "Choose a Terminology Server";
         }
 
@@ -164,11 +174,49 @@
             function close() {
                 $mdDialog.hide();
                 if ($scope.selectedServer.id !== vm.activeServer.id) {
-                    selectServer($scope.selectedServer);
+                    _updateActiveServer($scope.selectedServer);
                 }
             }
 
             $scope.close = close;
+
+            function _updateActiveServer(fhirServer) {
+                conformanceService.clearCache();
+                conformanceService.getConformanceMetadata(fhirServer.baseUrl)
+                    .then(function (conformance) {
+                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        vm.activeServer = fhirServer;
+                        if (angular.isUndefined(conformance.rest[0].security)) {
+                            logInfo("Security information missing - this is an OPEN server", null, noToast);
+                        } else if (angular.isArray(conformance.rest[0].security.extension)) {
+                            _.forEach(conformance.rest[0].security.extension, function (ex) {
+                                if (_.endsWith(ex.url, "#authorize")) {
+                                    vm.activeServer.authorizeUri = ex.valueUri;
+                                    logInfo("Authorize URI found: " + vm.activeServer.authorizeUri, null, noToast);
+                                }
+                                if (_.endsWith(ex.url, "#token")) {
+                                    vm.activeServer.tokenUri = ex.valueUri;
+                                    logInfo("Token URI found: " + vm.activeServer.tokenUri, null, noToast);
+                                }
+                            })
+                        }
+                        var url = $location.protocol() + "://" + $location.host();
+                        if ($location.port() !== 80 && $location.port() !== 443) {
+                            url = url + ":" + $location.port();
+                        }
+                        vm.activeServer.redirectUri = url;
+                        fhirServers.setActiveServer(vm.activeServer);
+                        common.changeServer(vm.activeServer);
+                        if (angular.isDefined(vm.activeServer.clientId)) {
+                            authorize();
+                        } else {
+                            store.remove('authToken');
+                        }
+                    }, function (error) {
+                        logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
+                    });
+                logInfo('Requesting access to server ' + fhirServer.name + ' ...');
+            }
 
             function serverChanged(server) {
                 _.each($scope.FHIRServers, function (item) {
@@ -202,6 +250,7 @@
                 clickOutsideToClose: true
             });
         }
+        vm.showAbout = showAbout;
 
         function aboutController($scope, $mdDialog) {
             function close() {
@@ -337,45 +386,6 @@
             }
         });
 
-        function selectServer(fhirServer) {
-            $mdSidenav('right').close();
-            conformanceService.clearCache();
-            conformanceService.getConformanceMetadata(fhirServer.baseUrl)
-                .then(function (conformance) {
-                    logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
-                    vm.activeServer = fhirServer;
-                    if (angular.isUndefined(conformance.rest[0].security)) {
-                        logInfo("Security information missing - this is an OPEN server", null, noToast);
-                    } else if (angular.isArray(conformance.rest[0].security.extension)) {
-                        _.forEach(conformance.rest[0].security.extension, function (ex) {
-                            if (_.endsWith(ex.url, "#authorize")) {
-                                vm.activeServer.authorizeUri = ex.valueUri;
-                                logInfo("Authorize URI found: " + vm.activeServer.authorizeUri, null, noToast);
-                            }
-                            if (_.endsWith(ex.url, "#token")) {
-                                vm.activeServer.tokenUri = ex.valueUri;
-                                logInfo("Token URI found: " + vm.activeServer.tokenUri, null, noToast);
-                            }
-                        })
-                    }
-                    var url = $location.protocol() + "://" + $location.host();
-                    if ($location.port() !== 80 && $location.port() !== 443) {
-                        url = url + ":" + $location.port();
-                    }
-                    vm.activeServer.redirectUri = url;
-                    fhirServers.setActiveServer(vm.activeServer);
-                    common.changeServer(vm.activeServer);
-                    if (angular.isDefined(vm.activeServer.clientId)) {
-                        authorize();
-                    } else {
-                        store.remove('authToken');
-                    }
-                }, function (error) {
-                    logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
-                });
-            logInfo('Requesting access to server ' + fhirServer.name + ' ...');
-        }
-
         function isSectionSelected(section) {
             return section === vm.menu.selectedSection;
         }
@@ -395,6 +405,7 @@
             vm.menu.selectedPage = undefined;
             vm.menu.selectedSubPage = undefined;
         }
+        vm.toggleSelectSection = toggleSelectSection;
 
         vm.FHIRServers = [];
         vm.isSectionSelected = isSectionSelected;
@@ -405,18 +416,15 @@
             selectedSubPage: undefined
         };
         vm.pageSelected = pageSelected;
-        vm.selectServer = selectServer;
-        vm.showAbout = showAbout;
         vm.toggleMenu = toggleMenu;
-        vm.toggleSelectSection = toggleSelectSection;
-        vm.toggleServers = toggleServers;
         vm.activeServer = null;
+        vm.terminologyServer = null;
 
         _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$mdDialog', '$mdSidenav', '$location', '$rootScope', '$scope', '$window', 'common', 'config',
-            'conformanceService', 'fhirServers', 'auth', 'store', 'jwtHelper', 'smartAuthorizationService', mainController]);
+            'conformanceService', 'fhirServers', 'terminologyServers', 'auth', 'store', 'jwtHelper', 'smartAuthorizationService', mainController]);
 })
 ();

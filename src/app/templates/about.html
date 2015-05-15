@@ -1,5 +1,5 @@
 <md-dialog style="padding: 5px">
-    <form>
+    <md-content>
         <md-dialog-content class="sticky-container">
             <md-subheader class="md-sticky-no-effect"><h4 class="md-title">FHIR Cloud</h4></md-subheader>
             <div class="dialog-content">
@@ -30,16 +30,18 @@
                 </md-input-container>
 
                 <md-input-container ng-if="terminologyServer">
-                    <label>{{activeServer.name}} Base Url</label>
-                    <input ng-model="terminologyServer.name" readonly>
+                    <label>{{terminologyServer.name}} Base Url</label>
+                    <input ng-model="terminologyServer.baseUrl" readonly>
                 </md-input-container>
                 <blockquote>
                     <p style="font-size: x-small">FHIR Cloud is a RelayHealth reference client for Fast Healthcare
                         Interoperability Resources (FHIR).
                         Icons made by <a href="http://www.flaticon.com/authors/freepik"
                                          title="Freepik">Freepik</a> from <a
-                                href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a
-                                href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY
+                                href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by
+                        <a
+                                href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC
+                            BY
                             3.0</a>
                     </p>
                 </blockquote>
@@ -50,5 +52,5 @@
                 Close
             </md-button>
         </div>
-    </form>
+    </md-content>
 </md-dialog>

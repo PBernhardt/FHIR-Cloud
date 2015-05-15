@@ -3,7 +3,7 @@
 
     var serviceId = 'valueSetService';
 
-    function valueSetService(common, dataCache, fhirClient, fhirServers) {
+    function valueSetService(common, dataCache, terminologyClient, terminologyServers) {
         var dataCacheKey = 'localValueSets';
         var activeValueSetKey = 'activeValueSet';
         var getLogFn = common.logger.getLogFn;
@@ -16,10 +16,10 @@
                     resource.type.coding = _prepCoding(resource.type.coding);
                 });
             var deferred = $q.defer();
-            fhirServers.getActiveServer()
+            terminologyServers.getActiveServer()
                 .then(function (server) {
                     var url = server.baseUrl + "/ValueSet";
-                    fhirClient.addResource(url, resource)
+                    terminologyClient.addResource(url, resource)
                         .then(function (results) {
                             deferred.resolve(results);
                         }, function (outcome) {
@@ -70,7 +70,7 @@
 
         function deleteValueSet(resourceId) {
             var deferred = $q.defer();
-            fhirClient.deleteResource(resourceId)
+            terminologyClient.deleteResource(resourceId)
                 .then(function (results) {
                     deferred.resolve(results);
                 }, function (outcome) {
@@ -82,6 +82,7 @@
         function setActiveValueSet(item) {
             dataCache.addToCache(activeValueSetKey, item);
         }
+
         function getActiveValueSet() {
             return dataCache.readFromCache(activeValueSetKey);
         }
@@ -120,7 +121,7 @@
 
         function getValueSet(resourceId) {
             var deferred = $q.defer();
-            fhirClient.getResource(resourceId)
+            terminologyClient.getResource(resourceId)
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -130,30 +131,32 @@
             return deferred.promise;
         }
 
-        //TODO: add support for summary when DSTU2 server implementers have support
-        function getValueSetReference(baseUrl, input) {
+        function getValueSetReference(input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/ValueSet?name=' + input + '&_count=20')
-                .then(function (results) {
-                    var valueSets = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                valueSets.push({display: item.resource.name, reference: item.resource.id});
-                            });
-                    }
-                    if (valueSets.length === 0) {
-                        valueSets.push({display: "No matches", reference: ''});
-                    }
-                    deferred.resolve(valueSets);
-                }, function (outcome) {
-                    deferred.reject(outcome);
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet?name=' + input + '&_count=20')
+                        .then(function (results) {
+                            var valueSets = [];
+                            if (results.data.entry) {
+                                angular.forEach(results.data.entry,
+                                    function (item) {
+                                        valueSets.push({display: item.resource.name, reference: item.resource.id});
+                                    });
+                            }
+                            if (valueSets.length === 0) {
+                                valueSets.push({display: "No matches", reference: ''});
+                            }
+                            deferred.resolve(valueSets);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
                 });
+
             return deferred.promise;
         }
 
-        //TODO: waiting for server implementers to add support for _summary
-        function getValueSets(baseUrl, nameFilter, identifier) {
+        function getValueSets(nameFilter, identifier) {
             var deferred = $q.defer();
             var params = '';
 
@@ -171,19 +174,23 @@
                     params = identifierParam;
                 }
             }
-            fhirClient.getResource(baseUrl + '/ValueSet?' + params + '&_count=20')
-                .then(function (results) {
-                    dataCache.addToCache(dataCacheKey, results.data);
-                    deferred.resolve(results.data);
-                }, function (outcome) {
-                    deferred.reject(outcome);
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet?' + params + '&_count=20')
+                        .then(function (results) {
+                            dataCache.addToCache(dataCacheKey, results.data);
+                            deferred.resolve(results.data);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
                 });
+
             return deferred.promise;
         }
 
         function getValueSetsByLink(url) {
             var deferred = $q.defer();
-            fhirClient.getResource(url)
+            terminologyClient.getResource(url)
                 .then(function (results) {
                     var searchResults = {"links": {}, "valueSets": []};
                     var valueSets = [];
@@ -220,16 +227,21 @@
             return data;
         }
 
-        // http://fhir-dev.healthintersections.com.au/open/ValueSet/$expand?identifier=http://hl7.org/fhir/vs/condition-code&filter=xxx
-        function getFilteredExpansion(baseUrl, id, filter) {
+        /*
+         Example usage: http://fhir-dev.healthintersections.com.au/open/ValueSet/$expand?identifier=http://hl7.org/fhir/vs/condition-code&filter=xxx
+         */
+        function getFilteredExpansion(id, filter) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/ValueSet/' + id + '/$expand?filter=' + filter + '&_count=10')
-                .then(function (results) {
-                    if (results.data && results.data.expansion && angular.isArray(results.data.expansion.contains)) {
-                        deferred.resolve(results.data.expansion.contains);
-                    } else {
-                        deferred.reject("Response did not include expected expansion");
-                    }
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet/' + id + '/$expand?filter=' + filter + '&_count=10')
+                        .then(function (results) {
+                            if (results.data && results.data.expansion && angular.isArray(results.data.expansion.contains)) {
+                                deferred.resolve(results.data.expansion.contains);
+                            } else {
+                                deferred.reject("Response did not include expected expansion");
+                            }
+                        });
                 });
             return deferred.promise;
         }
@@ -240,7 +252,7 @@
                     resource.type.coding = _prepCoding(resource.type.coding);
                 });
             var deferred = $q.defer();
-            fhirClient.updateResource(resourceVersionId, resource)
+            terminologyClient.updateResource(resourceVersionId, resource)
                 .then(function (results) {
                     deferred.resolve(results);
                 }, function (outcome) {
@@ -288,6 +300,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', valueSetService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'terminologyClient', 'terminologyServers', valueSetService]);
 
 })();

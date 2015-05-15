@@ -65,7 +65,8 @@
         </div>
 
         <h4 hide-sm class="md-subhead">Server: {{vm.activeServer.name || "Select a server"}}</h4>
-        <md-button title="Change remote FHIR Server" class="md-icon-button launch" ng-click="vm.chooseFHIRServer($event)"
+        <md-button title="Change remote FHIR Server" class="md-icon-button launch"
+                   ng-click="vm.chooseFHIRServer($event)"
                    aria-label="FHIR Servers">
             <md-icon md-svg-src="fire"></md-icon>
         </md-button>
@@ -113,24 +114,6 @@
 
     <md-content flex id="content">
         <div ng-view ng-cloak></div>
-
-        <md-sidenav class="md-sidenav-right md-whiteframe-z2" style="width: 100px" md-component-id="right"
-                    tabindex="-1">
-            <md-toolbar class="md-theme-light">
-                <h1 class="md-toolbar-tools">FHIR Servers</h1>
-            </md-toolbar>
-            <md-content>
-                <md-list>
-                    <md-item ng-repeat="server in vm.FHIRServers">
-                        <md-button ng-click="vm.selectServer(server)"
-                                   ng-class="{'selected' : server === server.selected }">
-                            <span class="md-inline-list-icon-label">{{ server.name }}</span>
-                            <md-icon ng-if="server.secure" md-svg-src="https"
-                                     style="width: 12px; height: 12px;"></md-icon>
-                        </md-button>
-                    </md-item>
-                </md-list>
-        </md-sidenav>
     </md-content>
 </div>
 
@@ -146,13 +129,10 @@
 <script src="assets/lib/jwt-decode.min.js"></script>
 <script src="assets/lib/lodash.min.js"></script>
 <script src="assets/lib/moment.min.js"></script>
+<script src="assets/lib/lock-7.1.min.js"></script>
+<script src="assets/lib/angular-storage.js"></script>
+<script src="assets/lib/angular-jwt.js"></script>
+<script src="assets/lib/auth0-angular-4.js"></script>
 <script src="assets/app.js"></script>
-<!-- Auth0 Lock script and AngularJS module -->
-<script src="//cdn.auth0.com/js/lock-7.1.min.js"></script>
-<!-- angular-jwt and angular-storage -->
-<script type="text/javascript" src="//cdn.rawgit.com/auth0/angular-storage/master/dist/angular-storage.js"></script>
-<script type="text/javascript" src="//cdn.rawgit.com/auth0/angular-jwt/master/dist/angular-jwt.js"></script>
-
-<script src="//cdn.auth0.com/w2/auth0-angular-4.js"></script>
 </body>
 </html>

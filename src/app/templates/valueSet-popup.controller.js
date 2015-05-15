@@ -54,7 +54,7 @@
         function expandValueSet(searchText) {
             var deferred = $q.defer();
             $scope.fetchingExpansion = true;
-            valueSetService.getFilteredExpansion($scope.activeServer.baseUrl, $scope.valueSet.id, searchText)
+            valueSetService.getFilteredExpansion($scope.valueSet.id, searchText)
                 .then(function (data) {
                     $scope.fetchingExpansion = false;
                     deferred.resolve(data);

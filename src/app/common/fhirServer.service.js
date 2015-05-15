@@ -10,13 +10,10 @@
 
         function getActiveServer() {
             var activeServer = store.get(activeServerKey);
-            if (angular.isUndefined(activeServer)) {
+            if (common.isUndefinedOrNull(activeServer)) {
                 activeServer = $cookieStore.get(activeServerKey);
             }
-            if (angular.isUndefined(activeServer)) {
-                activeServer = store.get(activeServerKey);
-            }
-            if (angular.isUndefined(activeServer)) {
+            if (common.isUndefinedOrNull(activeServer)) {
                 getAllServers()
                     .then(function (servers) {
                         activeServer = servers[0];
