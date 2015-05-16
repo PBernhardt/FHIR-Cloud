@@ -65,12 +65,12 @@
         </div>
 
         <h4 hide-sm class="md-subhead">Server: {{vm.activeServer.name || "Select a server"}}</h4>
-        <md-button title="Change remote FHIR Server" class="md-icon-button launch"
+        <md-button title="Change remote FHIR server" class="md-icon-button launch"
                    ng-click="vm.chooseFHIRServer($event)"
                    aria-label="FHIR Servers">
             <md-icon md-svg-src="fire"></md-icon>
         </md-button>
-        <md-button title="Terminology"
+        <md-button title="Change remote terminology server"
                    class="md-icon-button launch"
                    ng-click="vm.chooseTerminology($event)"
                    hide-sm
@@ -121,6 +121,7 @@
 <script src="assets/lib/angular.min.js"></script>
 <script src="assets/lib/angular-animate.min.js"></script>
 <script src="assets/lib/angular-aria.min.js"></script>
+<script src="assets/lib/angular-base64.min.js"></script>
 <script src="assets/lib/angular-material.min.js"></script>
 <script src="assets/lib/angular-messages.min.js"></script>
 <script src="assets/lib/angular-route.min.js"></script>
