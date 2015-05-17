@@ -47,14 +47,19 @@
                                 <p class="result">Type</p>
                             </div>
 
-                            <div layout="column" layout-align="center center" style="height: 100px;" flex="20">
-                                <md-select aria-label="reason" ng-model="vm.encounterSearch.reason"
-                                           style="min-width: 100px;">
+                            <md-autocomplete flex="30"
+                                             md-no-cache="true"
+                                             md-selected-item="vm.encounterSearch.reason"
+                                             md-item-text="term.display"
+                                             md-search-text="vm.reasonSearchText"
+                                             md-items="term in vm.expandReason(vm.reasonSearchText)"
+                                             md-delay="300"
+                                             md-min-length="3"
+                                             md-floating-label="Reason for encounter"
+                                             placeholder="What reason are you looking for?">
+                                <span md-highlight-text="vm.reasonSearchText">{{term.display}}</span>
+                            </md-autocomplete>
 
-                                    <md-option></md-option>
-                                </md-select>
-                                <p class="result">Reason</p>
-                            </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;" flex="25">
                                 <md-select aria-label="special arrangement"

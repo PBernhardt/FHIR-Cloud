@@ -9550,7 +9550,7 @@
     var controllerId = 'encounterSearch';
 
     function encounterSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, encounterValueSets,
-                             encounterService) {
+                             encounterService, valueSetService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -9591,6 +9591,19 @@
             vm.participantTypes = encounterValueSets.encounterParticipantType();
         }
 
+        function expandReason(searchText) {
+            var deferred = $q.defer();
+            valueSetService.getFilteredExpansion('valueset-encounter-reason', searchText)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function (error) {
+                    logError("Error fetching expansion", error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+        vm.expandReason = expandReason;
+
         function detailSearch() {
             // build query string from inputs
             var queryString = '';
@@ -9598,12 +9611,12 @@
             var queryParams = [];
             if (vm.encounterSearch.status) {
                 queryParam.param = "status";
-                queryParam.value =  vm.encounterSearch.status.code;
+                queryParam.value = vm.encounterSearch.status.code;
                 queryParams.push(_.clone(queryParam));
             }
             if (vm.encounterSearch.type) {
                 queryParam.param = "type";
-                queryParam.value =  vm.types.system.concat("|", vm.encounterSearch.type.code);
+                queryParam.value = vm.types.system.concat("|", vm.encounterSearch.type.code);
                 queryParams.push(_.clone(queryParam));
             }
 
@@ -9743,13 +9756,14 @@
             links: null
         };
         vm.selectedTab = 0;
+        vm.reasonSearchText = undefined;
 
         _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'encounterValueSets',
-            'encounterService', encounterSearch]);
+            'encounterService', 'valueSetService', encounterSearch]);
 })();
 (function () {
     'use strict';
