@@ -3045,10 +3045,12 @@
 
             function close() {
                 $mdDialog.hide();
-                if ($scope.selectedServer.id !== vm.terminologyServer.id) {
+                if (common.isUndefinedOrNull(vm.terminologyServer) ||
+                    $scope.selectedServer.id !== vm.terminologyServer.id) {
                     _setActiveServer($scope.selectedServer);
                 }
             }
+
             $scope.close = close;
 
             function serverChanged(server) {
@@ -3064,7 +3066,7 @@
 
             terminologyServers.getAllServers().then(function (data) {
                 _.each(data, function (item) {
-                    if (vm.terminologyServer.id === item.id) {
+                    if (common.isUndefinedOrNull(vm.terminologyServer) === false && vm.terminologyServer.id === item.id) {
                         item.selected = true;
                     }
                 });
@@ -3089,7 +3091,8 @@
         function fhirServerController($scope, $mdDialog, fhirServers) {
             function close() {
                 $mdDialog.hide();
-                if ($scope.selectedServer.id !== vm.activeServer.id) {
+                if (common.isUndefinedOrNull(vm.activeServer) ||
+                    $scope.selectedServer.id !== vm.activeServer.id) {
                     _updateActiveServer($scope.selectedServer);
                 }
             }
@@ -3147,7 +3150,7 @@
 
             fhirServers.getAllServers().then(function (data) {
                 _.each(data, function (item) {
-                    if (vm.activeServer.id === item.id) {
+                    if (common.isUndefinedOrNull(vm.activeServer) === false && vm.activeServer.id === item.id) {
                         item.selected = true;
                     }
                 });
@@ -3166,6 +3169,7 @@
                 clickOutsideToClose: true
             });
         }
+
         vm.showAbout = showAbout;
 
         function aboutController($scope, $mdDialog) {
@@ -3321,6 +3325,7 @@
             vm.menu.selectedPage = undefined;
             vm.menu.selectedSubPage = undefined;
         }
+
         vm.toggleSelectSection = toggleSelectSection;
 
         vm.FHIRServers = [];
@@ -3333,8 +3338,8 @@
         };
         vm.pageSelected = pageSelected;
         vm.toggleMenu = toggleMenu;
-        vm.activeServer = null;
-        vm.terminologyServer = null;
+        vm.activeServer = {id: -1};
+        vm.terminologyServer = {id: -1};
 
         _activate();
     }
