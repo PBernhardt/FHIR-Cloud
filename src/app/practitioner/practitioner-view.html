@@ -1,11 +1,11 @@
 <div ng-controller="practitionerDetail as vm" layout="row" layout-wrap ng-cloak>
-    <div flex="25" hide-sm>
+    <div flex="15" hide-sm>
         <img data-fs-img-person="vm.practitioner.photo[0]" class="largeFace" ng-if="vm.isBusy === false"/>
     </div>
-    <div flex="65" layout="row" layout-align="start center">
+    <div flex="75" layout="row" layout-align="start center">
         <h3 ng-if="vm.isBusy === false">{{ vm.practitioner.name | fullName }}</h3>
     </div>
-    <div flex="10">
+    <div flex="5">
         <md-button class="actions" md-no-ink ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
@@ -13,35 +13,23 @@
     <div flex="100" ng-if="vm.isBusy === true" layout="row" layout-align="center center">
         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
     </div>
-    <md-list ng-if="vm.practitioner.telecom" layout="column">
-        <md-subheader class="md-no-sticky">Telecommunication</md-subheader>
-        <md-item ng-repeat="tel in vm.practitioner.telecom">
-            <md-item-content>
-                <div class="md-tile-left">
-                    <md-icon md-svg-icon="doctor" ng-if="$index === 0"></md-icon>
-                </div>
-                <div class="md-tile-content">
-                    <h3>{{tel.value}}</h3>
-
-                    <p>{{tel.use}}</p>
-                </div>
-            </md-item-content>
-            <md-divider data-ng-if="!$last"></md-divider>
-        </md-item>
-    </md-list>
 
     <div flex="100" ng-if="vm.isBusy === false">
-        <md-tabs md-selected="selectedIndex">
+        <md-tabs md-selected="selectedIndex" md-dynamic-height>
             <md-tab label="Administration Detail">
-                <div layout="row" layout-sm="column" layout-align="space-between center" layout-wrap>
-                    <md-input-container flex="100">
+                <div layout="row" layout-sm="column"
+                     layout-align="space-between center"
+                     layout-wrap
+                     style="position: relative; top:15px">
+                    <md-input-container flex="100" class="md-icon-float" ng-if="vm.practitioner.resourceId">
                         <label>Resource Id</label>
-                        <input ng-model="vm.practitioner.resourceId" readonly/>
+                        <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
+                        <input ng-model="vm.practitioner.resourceId" ng-readonly/>
                     </md-input-container>
 
-                    <md-input-container flex="40">
+                    <md-input-container flex="40" ng-if="vm.practitioner.name">
                         <label>Name</label>
-                        <input ng-model="vm.practitioner.name | fullName" readonly/>
+                        <input ng-model="vm.practitioner.$$fullName" readonly/>
                     </md-input-container>
 
                     <md-input-container flex="10" ng-if="vm.practitioner.gender">
@@ -51,245 +39,83 @@
 
                     <md-input-container flex="15" ng-if="vm.practitioner.birthDate">
                         <label>Birth Date</label>
-                        <input ng-model="vm.practitioner.birthDate | date: longDate" readonly/>
+                        <input ng-model="vm.practitioner.birthDate" readonly/>
                     </md-input-container>
 
-                    <md-list flex="60" ng-if="vm.practitioner.address">
-                        <md-subheader class="md-no-sticky">Addresses</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="addr in vm.practitioner.address">
-                            <img ng-src="./assets/svg/situation.svg" class="md-avatar" alt=""
-                                 style="height: 12px;width: 12px"/>
-
+                    <md-list flex="100" ng-if="vm.practitioner.practitionerRole">
+                        <md-subheader class="md-no-sticky">Roles</md-subheader>
+                        <md-list-item class="md-2-line" ng-repeat="r in vm.practitioner.practitionerRole"
+                                      ng-click="vm.showRole($event, r)">
+                            <md-icon md-svg-icon="more"></md-icon>
                             <div class="md-list-item-text">
-                                {{addr | singleLineAddress}}
+                                <h3> {{ r.role.text || r.role.coding[0].display || "Not Provided" }} </h3>
+
+                                <p ng-if="r.managingOrganization">{{r.managingOrganization.display ||
+                                    r.managingOrganization.reference }}</p>
                             </div>
+                            <md-divider ng-if="$last"></md-divider>
                         </md-list-item>
                     </md-list>
 
-                    <md-list ng-if="vm.practitioner.telecom">
-                        <md-subheader class="md-no-sticky">Telecommunication</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="tel in vm.practitioner.telecom">
-                            <md-icon md-svg-icon="doctor" ng-if="$index === 0"></md-icon>
-                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
-                                <h3>{{tel.value}}</h3>
+                    <md-list flex="100" ng-if="vm.practitioner.communication">
+                        <md-subheader class="md-no-sticky">Languages</md-subheader>
+                        <md-list-item class="md-2-line" ng-repeat="lang in vm.practitioner.communication">
+                            <md-icon md-svg-icon="language" ng-if="$index === 0"></md-icon>
+                            <div class="md-list-item-text" ng-class="{'md-offset': $index !== 0 }">
+                                <h3>{{lang | codeableConcept}}</h3>
 
-                                <p>{{tel.use}}</p>
+                                <p>{{lang.coding[0].system}} | {{lang.coding[0].code}}</p>
                             </div>
+                            <md-divider ng-if="$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
+
+                    <md-list flex="100" ng-if="vm.practitioner.address">
+                        <md-subheader class="md-no-sticky">Addresses</md-subheader>
+                        <md-list-item class="md-2-line" ng-repeat="a in vm.practitioner.address">
+                            <md-icon md-svg-icon="address" ng-if="$index === 0"></md-icon>
+                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                                <h3> {{ a | singleLineAddress }} </h3>
+
+                                <p>{{a.use}}</p>
+                            </div>
+                            <md-divider ng-if="$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
+
+                    <md-list flex="100" ng-if="vm.practitioner.telecom">
+                        <md-subheader class="md-no-sticky">Telecommunications</md-subheader>
+                        <md-list-item class="md-2-line" ng-repeat="t in vm.practitioner.telecom">
+                            <md-icon md-svg-icon="telecom" ng-if="$index === 0"></md-icon>
+                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                                <h3>{{ t.value }} </h3>
+
+                                <p>{{t.use}} {{t.system || "unspecified"}}</p>
+                            </div>
+                            <md-divider ng-if="$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
+
+                    <md-list flex="100" ng-if="vm.practitioner.identifier">
+                        <md-subheader class="md-no-sticky">Identifiers</md-subheader>
+                        <md-list-item class="md-3-line" ng-repeat="id in vm.practitioner.identifier">
+                            <md-icon md-svg-icon="identifier" ng-if="$index === 0"></md-icon>
+                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                                <h3>{{id.system}} | {{id.value }} </h3>
+                                <h4>{{id.type | codeableConcept}}</h4>
+
+                                <p>{{id.use}}</p>
+                            </div>
+                            <md-divider ng-if="$last"></md-divider>
                         </md-list-item>
                     </md-list>
                 </div>
-                <!--
-                <div flex="100" class="table-responsive-vertical shadow-z-1">
-                    <table id="practitionerView" class="table table-hover table-mc-blue">
-                        <tr ng-if="vm.practitioner.resourceId">
-                            <td>Resource Id</td>
-                            <td>
-                                {{vm.practitioner.resourceId}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.name">
-                            <td>Name</td>
-                            <td>{{vm.practitioner.name | fullName }}</td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.birthDate">
-                            <td>Date of Birth</td>
-                            <td>
-                                {{vm.practitioner.birthDate | date: longDate}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.birthPlace">
-                            <td>Birth Place</td>
-                            <td>
-                                {{vm.practitioner.birthPlace | singleLineAddress}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.gender">
-                            <td>Gender</td>
-                            <td>
-                                {{vm.practitioner.gender}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.address">
-                            <td>Address</td>
-                            <td>
-                                <p class="small" ng-repeat="a in vm.practitioner.address">
-                                    <strong>{{a.use}}</strong>: {{a | singleLineAddress}}
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.telecom">
-                            <td>Telecommunication</td>
-                            <td>
-                                <p class="small" ng-repeat="t in vm.practitioner.telecom">
-                                    <strong>{{t.use}} {{t.system}}</strong>: {{t.value}}
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.contact">
-                            <td>Contact</td>
-                            <td>
-                                <p class="small" ng-repeat="c in vm.practitioner.contact">
-                                    {{c.name.given.join(' ')}} {{c.name.family.join(' ')}}
-                                    ({{c.relationship.text || "relationship unspecified"}})
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.link">
-                            <td>Links</td>
-                            <td>
-                                <div ng-repeat="l in vm.practitioner.link">
-                                    <a href="{{l.other.reference}}">{{l.other.type || "Link Type Unspecified"}}</a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.communication">
-                            <td>Languages</td>
-                            <td>
-                                <div ng-if="vm.practitioner.communication">
-                                    <p class="small" ng-repeat="l in vm.practitioner.communication">
-                                        {{l.language | codeableConcept}}<br/>
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.ethnicity">
-                            <td>Ethnicity</td>
-                            <td>
-                                {{vm.practitioner.ethnicity | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.race">
-                            <td>Race</td>
-                            <td>
-                                {{vm.practitioner.race | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.religion">
-                            <td>Religion</td>
-                            <td>
-                                {{vm.practitioner.religion | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.maritalStatus">
-                            <td>Marital Status</td>
-                            <td>
-                                {{vm.practitioner.maritalStatus | codeableConcept}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.mothersMaidenName">
-                            <td>Mother's Maiden Name</td>
-                            <td>
-                                {{vm.practitioner.mothersMaidenName}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.multipleBirthInteger || vm.practitioner.multipleBirthBoolean">
-                            <td>Multiple Birth</td>
-                            <td>
-                                {{vm.practitioner.multipleBirthInteger || vm.practitioner.multipleBirthBoolean}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.deceasedDateTime || vm.practitioner.deceasedBoolean">
-                            <td>Deceased</td>
-                            <td>
-                                {{vm.practitioner.deceasedDateTime || vm.practitioner.deceasedBoolean}}
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.managingOrganization">
-                            <td>Managing Organization</td>
-                            <td>
-                                <a ng-href="#/organization/get/{{vm.practitioner.managingOrganization.reference | idFromURL }}">{{vm.practitioner.managingOrganization.display}}</a>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.careProvider">
-                            <td>Care Provider</td>
-                            <td>
-                                <p ng-repeat="cp in vm.practitioner.careProvider">
-                                    <a ng-href="#/practitioner/get/{{cp.reference | idFromURL }}">{{cp.display}}</a>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr ng-show="vm.practitioner.identifier">
-                            <td>Identifiers</td>
-                            <td>
-                                <table class="table table-hover">
-                                    <thead>
-                                    <tr>
-                                        <th>System</th>
-                                        <th>Value</th>
-                                        <th>Use</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr ng-repeat="id in vm.practitioner.identifier">
-                                        <td>{{id.system}}</td>
-                                        <td>{{id.value}}</td>
-                                        <td>{{id.use}}</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                        <tr ng-if="vm.practitioner.active">
-                            <td>Active</td>
-                            <td>
-                                {{vm.practitioner.active}}
-                            </td>
-                        </tr>
-                    </table>-->
             </md-tab>
             <md-tab label="Patients">
-                <md-list>
-                    <md-item ng-repeat="item in vm.summary">
-                        <md-item-content md-is-locked-open="true">
-                            <div class="md-tile-left">
-                                <md-button layout-align="start start"
-                                           ng-click="vm.showClinicalData($index, $event)"
-                                           aria-label="{{item.resource.id}}">
-                                    <md-icon md-svg-src="view"></md-icon>
-                                </md-button>
-                            </div>
-                            <div class="md-tile-content">
-                                <div ng-hide="item.resource.code && item.resource.code.text">
-                                    <h4>{{ item.resource.resourceType }}</h4>
-                                </div>
-                                <div ng-show="item.resource.code && item.resource.code.text">
-                                    <h4>{{ item.resource.code.text }}</h4>
-                                </div>
-                                <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
-                                </div>
-                                <div ng-show="item.resource.emptyReason.text">
-                                    <p> {{ item.resource.emptyReason.text }}</p>
-                                </div>
-                                <div ng-show="item.resource.appliesDateTime">
-                                    <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
-                                </div>
-                            </div>
-                        </md-item-content>
-                        <md-divider ng-if="!$last"></md-divider>
-                    </md-item>
-                </md-list>
+
             </md-tab>
             <md-tab label="Schedule">
-                <md-list>
-                    <md-item ng-repeat="ev in vm.history">
-                        <md-item-content>
-                            <div class="md-tile-left">
-                                <md-button
-                                        ng-click="vm.showAuditData($index, $event)"
-                                        aria-label="{{ev.resource.id}}">
-                                    <md-icon md-svg-src="view"></md-icon>
-                                </md-button>
-                            </div>
-                            <div class="md-tile-content">
-                                <h3>{{ev.resource.event.dateTime | date: 'medium'}}</h3>
-                                <h4>{{ev.resource.event.subtype[0].coding[0].display}}</h4>
-
-                                <p ng-repeat="p in ev.resource.participant">{{p.name}}
-                            </div>
-                        </md-item-content>
-                        <md-divider ng-if="!$last"></md-divider>
-                    </md-item>
-                </md-list>
+                <h4 class="md-subtitle">To come</h4>
             </md-tab>
         </md-tabs>
     </div>

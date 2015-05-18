@@ -291,7 +291,8 @@
                 locals: {
                     data: item
                 },
-                targetEvent: event
+                targetEvent: event,
+                clickOutsideToClose: true
             });
         }
 

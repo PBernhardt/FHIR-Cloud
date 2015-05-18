@@ -1,0 +1,32 @@
+<md-dialog>
+    <md-content>
+        <md-input-container flex="45" ng-if="data.role">
+            <label>Role</label>
+            <input ng-model="data.role.text" ng-readonly="true"/>
+        </md-input-container>
+
+        <md-input-container flex="60" class="md-icon-float" ng-if="data.managingOrganization">
+            <label>Managing Organization</label>
+            <md-icon md-svg-icon="hospital"
+                     ng-click="goToManagingOrganization(data.managingOrganization)"></md-icon>
+            <input ng-model="data.managingOrganization.display" ng-readonly="true"/>
+        </md-input-container>
+
+        <md-list flex="30" ng-if="data.specialty" layout-fill>
+            <md-subheader>Specialties</md-subheader>
+            <md-list-item class="md-2-line" ng-repeat="sp in data.specialty">
+                <md-icon md-svg-icon="diagnosis" ng-if="$index === 0"></md-icon>
+                <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                    <h3> {{ sp.text }} </h3>
+                    <p> {{ sp.coding[0].system }} | {{ sp.coding[0].code}}</p>
+                </div>
+            </md-list-item>
+        </md-list>
+
+        <div class="md-actions">
+            <md-button ng-click="closeDialog()">
+                Close
+            </md-button>
+        </div>
+    </md-content>
+</md-dialog>

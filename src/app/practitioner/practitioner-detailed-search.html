@@ -8,7 +8,7 @@
         </md-button>
     </div>
     <div flex="100">
-        <md-tabs md-selected="vm.selectedTab" ng-cloak  md-dynamic-height>
+        <md-tabs md-selected="vm.selectedTab" ng-cloak md-dynamic-height>
             <md-tab label="Search Options">
                 <md-content class="md-padding">
                     <form name="practitionerSearch">
@@ -26,8 +26,7 @@
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Identifier system</label>
-                                <input ng-model="vm.practitionerSearch.identifier.system"
-                                       placeholder="Should be a valid URI">
+                                <input ng-model="vm.practitionerSearch.identifier.system">
                             </md-input-container>
                             <md-input-container flex>
                                 <label>Identifier value</label>
@@ -38,13 +37,7 @@
                         <div layout layout-sm="column">
                             <md-input-container flex>
                                 <label>Managing Organization</label>
-                                <input ng-model="vm.practitionerSearch.organization"
-                                       placeholder="Id of organization">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>Care Provider</label>
-                                <input ng-model="vm.practitionerSearch.careProvider"
-                                        placeholder="Id of practitioner">
+                                <input ng-model="vm.practitionerSearch.organization">
                             </md-input-container>
                         </div>
 
@@ -68,17 +61,6 @@
                         </div>
 
                         <div layout layout-sm="column">
-                            <md-input-container flex>
-                                <label>Mother's maiden name</label>
-                                <input ng-model="vm.practitionerSearch.mothersMaidenName">
-                            </md-input-container>
-                            <md-input-container flex>
-                                <label>Telephone or Email Address</label>
-                                <input ng-model="vm.practitionerSearch.telecom">
-                            </md-input-container>
-                        </div>
-
-                        <div layout layout-sm="column">
                             <div>
                                 <md-input-container flex>
                                     <label>Birth date</label>
@@ -86,44 +68,13 @@
                                            data-ng-change="vm.dobChange()">
                                 </md-input-container>
                             </div>
-                            <div flex>
-                                <div layout="row" layout-align="space-around center">
-                                    <md-input-container>
-                                        <label>Starting Age</label>
-                                        <input type="number" min="0" max="99" ng-model="vm.practitionerSearch.age.start"
-                                               min="0"
-                                               aria-controls="age-start"
-                                               style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.practitionerSearch.dob">
-
-                                    </md-input-container>
-                                    <md-slider flex class="md-primary" min="0" max="99"
-                                               ng-model="vm.practitionerSearch.age.start" aria-label="Starting age"
-                                               id="age-start" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.practitionerSearch.dob">
-                                    </md-slider>
-                                </div>
-                                <div layout="row" layout-align="space-around center">
-                                    <md-input-container>
-                                        <label>Ending Age</label>
-                                        <input type="number" min="0" max="99" ng-model="vm.practitionerSearch.age.end"
-                                               min="1"
-                                               aria-controls="age-end"
-                                               style="width:40px" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.practitionerSearch.dob">
-                                    </md-input-container>
-                                    <md-slider flex min="0" max="99" ng-model="vm.practitionerSearch.age.end"
-                                               aria-label="Ending age"
-                                               id="age-end" data-ng-change="vm.ageRangeChange()"
-                                               ng-disabled="vm.practitionerSearch.dob">
-                                    </md-slider>
-                                </div>
-                            </div>
                         </div>
 
                         <div layout-gt-md="row" layout-align="space-between center">
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.practitionerSearch.gender" style="min-width: 100px;">
+                                <md-select placeholder="Gender" aria-label="gender"
+                                           ng-model="vm.practitionerSearch.gender"
+                                           style="min-width: 100px;">
                                     <md-option value="female">Female</md-option>
                                     <md-option value="male">Male</md-option>
                                     <md-option value="other">Other</md-option>
@@ -133,7 +84,8 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.practitionerSearch.language">
+                                <md-select placeholder="Practioner language" aria-label="language"
+                                           ng-model="vm.practitionerSearch.language">
                                     <md-option ng-value="language" ng-repeat="language in vm.languages">
                                         {{language.display}}
                                     </md-option>
@@ -142,26 +94,49 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.practitionerSearch.race">
-                                    <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
+                                <md-select placeholder="Practitioner role"
+                                           aria-label="role" ng-model="vm.practitionerSearch.role">
+                                    <md-option ng-value="role" ng-repeat="role in vm.practitionerRoles.concept">
+                                        {{role.display}}
+                                    </md-option>
                                 </md-select>
-                                <p class="result">Race</p>
+                                <p class="result">Role</p>
                             </div>
+
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.practitionerSearch.ethnicity"
+                                <md-select aria-label="specialty"
+                                           placeholder="Practitioner Specialty"
+                                           ng-model="vm.practitionerSearch.specialty"
                                            style="min-width: 200px;">
-                                    <md-optgroup ng-value="main" ng-repeat="main in vm.ethnicities">{{main.display}}
-                                        <md-option ng-value="main">{{main.display}}</md-option>
-                                        <md-optgroup ng-value="group" ng-repeat="group in main.concept">
-                                            {{group.display}}
-                                            <md-option ng-value="group">{{group.display}}</md-option>
-                                            <md-option ng-value="class" ng-repeat="class in group.concept">
-                                                {{class.display}}
+                                    <md-option></md-option>
+                                    <md-optgroup label="General Specialties">
+                                        <md-option ng-value="main"
+                                                   ng-if="main.concept === undefined"
+                                                   ng-repeat="main in vm.practitionerSpecialties.concept | orderBy: 'display'">
+                                            {{main.display}}
+                                        </md-option>
+                                    </md-optgroup>
+                                    <md-optgroup label="{{main.display}}"
+                                                 ng-if="main.concept"
+                                                 ng-repeat="main in vm.practitionerSpecialties.concept | orderBy: 'display'">
+                                        <md-option ng-value="main"><i>{{main.display}}</i></md-option>
+                                        <md-option ng-value="sub"
+                                                   ng-if="sub.concept === undefined"
+                                                   ng-repeat="sub in main.concept | orderBy: 'display'">
+                                            {{sub.display}}
+                                        </md-option>
+                                        <md-optgroup label="{{sub1.display}}"
+                                                     ng-if="sub1.concept"
+                                                     ng-repeat="sub1 in main.concept | orderBy: 'display'">
+                                            <md-option ng-value="sub1"><i>{{sub1.display}}</i></md-option>
+                                            <md-option ng-repeat="final in sub1.concept | orderBy: 'display'"
+                                                       ng-value="final">
+                                                {{final.display}}
                                             </md-option>
                                         </md-optgroup>
                                     </md-optgroup>
                                 </md-select>
-                                <p class="result">Ethnicity</p>
+                                <p class="result">Specialty</p>
                             </div>
                         </div>
                     </form>
@@ -183,7 +158,9 @@
                                 <div class="md-tile-content">
                                     <md-button data-ng-click="vm.goToPractitioner(p)">{{p.resource.name | fullName}}
                                     </md-button>
-                                    <p>{{p.resource.birthDate | displayAge }} <fc-gender-icon gender="p.resource.gender"></fc-gender-icon></p>
+                                    <p>{{p.resource.birthDate | displayAge }}
+                                        <fc-gender-icon gender="p.resource.gender"></fc-gender-icon>
+                                    </p>
                                     <p>{{p.resource.managingOrganization.display ||
                                         p.resource.managingOrganization.reference || "No Organization"}}</p>
                                 </div>

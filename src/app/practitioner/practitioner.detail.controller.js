@@ -23,6 +23,40 @@
             });
         }
 
+        function showRole($event, role) {
+            $mdDialog.show({
+                templateUrl: 'practitioner/practitioner-role-dialog.html',
+                controller: 'practitionerRole',
+                controllerAs: 'vm',
+                clickOutsideToClose: true,
+                locals: {
+                    data: role
+                },
+                targetEvent: $event
+            });
+        }
+
+        vm.showRole = showRole;
+
+        function showSource($event) {
+            _showRawData(vm.practitioner, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event,
+                clickOutsideToClose: true
+
+            });
+        }
+
         function deletePractitioner(practitioner, event) {
             function executeDelete() {
                 if (practitioner && practitioner.resourceId && practitioner.hashKey) {
@@ -78,37 +112,19 @@
         function _getRequestedPractitioner() {
             function initializeAdministrationData(data) {
                 vm.practitioner = data;
-                humanNameService.init(vm.practitioner.name);
-                demographicsService.init(vm.practitioner.gender, vm.practitioner.maritalStatus, vm.practitioner.communication);
-                demographicsService.initBirth(vm.practitioner.multipleBirthBoolean, vm.practitioner.multipleBirthInteger);
-                demographicsService.initDeath(vm.practitioner.deceasedBoolean, vm.practitioner.deceasedDateTime);
+                humanNameService.init([vm.practitioner.name], 'single');
+                demographicsService.init(vm.practitioner.gender, null, vm.practitioner.communication);
                 demographicsService.setBirthDate(vm.practitioner.birthDate);
-                demographicsService.initializeKnownExtensions(vm.practitioner.extension);
-                vm.practitioner.race = demographicsService.getRace();
-                vm.practitioner.religion = demographicsService.getReligion();
-                vm.practitioner.ethnicity = demographicsService.getEthnicity();
-                vm.practitioner.mothersMaidenName = demographicsService.getMothersMaidenName();
-                vm.practitioner.birthPlace = demographicsService.getBirthPlace();
                 attachmentService.init(vm.practitioner.photo, "Photos");
                 identifierService.init(vm.practitioner.identifier, "multi", "practitioner");
                 addressService.init(vm.practitioner.address, true);
                 contactPointService.init(vm.practitioner.telecom, true, true);
-                careProviderService.init(vm.practitioner.careProvider);
                 if (vm.practitioner.communication) {
                     communicationService.init(vm.practitioner.communication, "multi");
                 }
-                vm.practitioner.fullName = humanNameService.getFullName();
+                vm.practitioner.$$fullName = humanNameService.getFullName();
                 if (angular.isDefined(vm.practitioner.id)) {
                     vm.practitioner.resourceId = (vm.activeServer.baseUrl + '/Practitioner/' + vm.practitioner.id);
-                }
-                if (vm.practitioner.managingOrganization && vm.practitioner.managingOrganization.reference) {
-                    var reference = vm.practitioner.managingOrganization.reference;
-                    if (common.isAbsoluteUri(reference) === false) {
-                        vm.practitioner.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
-                    }
-                    if (angular.isUndefined(vm.practitioner.managingOrganization.display)) {
-                        vm.practitioner.managingOrganization.display = reference;
-                    }
                 }
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.practitioner = JSON.stringify(vm.practitioner);
@@ -190,23 +206,9 @@
 
             practitioner.birthDate = $filter('dateString')(demographicsService.getBirthDate());
             practitioner.gender = demographicsService.getGender();
-            practitioner.maritalStatus = demographicsService.getMaritalStatus();
-            practitioner.multipleBirthBoolean = demographicsService.getMultipleBirth();
-            practitioner.multipleBirthInteger = demographicsService.getBirthOrder();
-            practitioner.deceasedBoolean = demographicsService.getDeceased();
-            practitioner.deceasedDateTime = demographicsService.getDeceasedDate();
-            practitioner.race = demographicsService.getRace();
-            practitioner.religion = demographicsService.getReligion();
-            practitioner.ethnicity = demographicsService.getEthnicity();
-            practitioner.mothersMaidenName = demographicsService.getMothersMaidenName();
-            practitioner.birthPlace = demographicsService.getBirthPlace();
-
             practitioner.address = addressService.mapFromViewModel();
             practitioner.telecom = contactPointService.mapFromViewModel();
             practitioner.identifier = identifierService.getAll();
-            practitioner.managingOrganization = vm.practitioner.managingOrganization;
-            practitioner.communication = communicationService.getAll();
-            practitioner.careProvider = careProviderService.getAll();
 
             practitioner.active = vm.practitioner.active;
             vm.isBusy = true;
@@ -226,25 +228,6 @@
                         vm.isBusy = false;
                     });
             }
-        }
-
-        function showAuditData($index, $event) {
-            _showRawData(vm.history[$index], $event);
-        }
-
-        function showClinicalData($index, $event) {
-            _showRawData(vm.summary[$index], $event);
-        }
-
-        function _showRawData(item, event) {
-            $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
-                controller: 'rawDataController',
-                locals: {
-                    data: item
-                },
-                targetEvent: event
-            });
         }
 
         function canDelete() {
@@ -335,8 +318,6 @@
         vm.save = save;
         vm.selectedPractitioner = null;
         vm.title = 'Practitioner Detail';
-        vm.showAuditData = showAuditData;
-        vm.showClinicalData = showClinicalData;
 
         _activate();
     }

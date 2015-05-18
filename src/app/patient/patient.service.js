@@ -105,7 +105,7 @@
                 if (cachedPatient) {
                     deferred.resolve(cachedPatient);
                 } else if (getPatientContext()) {
-                     deferred.resolve(_patientContext);
+                    deferred.resolve(_patientContext);
                 } else {
                     deferred.reject('Patient not found in cache: ' + hashKey);
                 }
@@ -216,7 +216,7 @@
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Patient?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Patient?' + params + '&_count=20&_sort:asc=family')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -284,6 +284,7 @@
             var deferred = $q.defer();
             var birthPlace = [];
             var mothersMaiden = [];
+            var index = 1;
             $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
@@ -299,7 +300,7 @@
                             "gender": user.gender,
                             "birthDate": _randomBirthDate(),
                             "contact": [],
-                            "communication": _randomCommunication(),
+                            "communication": _randomCommunication(index),
                             "maritalStatus": _randomMaritalStatus(),
                             "telecom": [
                                 {"system": "email", "value": user.email, "use": "home"},
@@ -332,10 +333,14 @@
                                     "system": "urn:oid:2.16.840.1.113883.15.18",
                                     "value": user.registered,
                                     "use": "official",
-                                    "type": {
-                                        "text": organizationName + " identifier"
-                                    },
-                                    "assigner": {"display": organizationName}
+                                    type: {
+                                        text: organizationName + " patient number",
+                                        coding: [{
+                                            system: "http://hl7.org/fhir/v2/0203",
+                                            code: "MR",
+                                            display: "Medical record number"
+                                        }]
+                                    }
                                 },
                                 {
                                     "system": "urn:fhir-cloud:patient",
@@ -352,12 +357,12 @@
                             "active": true,
                             "extension": []
                         };
-                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomRace(index));
                         resource.extension.push(_randomEthnicity());
                         resource.extension.push(_randomReligion());
                         resource.extension.push(_randomMothersMaiden(mothersMaiden));
                         resource.extension.push(_randomBirthPlace(birthPlace));
-
+                        index = index + 1;
                         mothersMaiden.push($filter('titleCase')(user.name.last));
                         birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
 
@@ -415,20 +420,25 @@
             return extension;
         }
 
-        function _randomRace() {
+        function _randomRace(index) {
             var races = localValueSets.race();
             common.shuffle(races.concept);
-            var race = races.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
-                "valueCodeableConcept": {"coding": [], "text": race.display}
+            var white = {text: "White", coding: [{code: "2106-3", display: "White"}]};
+            var aa = {text: "Black or African American", coding: [{code: "2054-5", display: "Black or African American"}]};
+            var random = { text: races.concept[1].display, coding: [races.concept[1]]};
+
+            var race = undefined;
+            if (index % 5 === 0) {
+                race = aa;
+            } else if (index % 3 === 0) {
+                race = random;
+            } else {
+                race = white;
+            }
+            return {
+                url: "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                valueCodeableConcept: race
             };
-            extension.valueCodeableConcept.coding.push({
-                "system": races.system,
-                "code": race.code,
-                "display": race.display
-            });
-            return extension;
         }
 
         function _randomEthnicity() {
@@ -464,18 +474,33 @@
             return extension;
         }
 
-        function _randomCommunication() {
+        function _randomCommunication(index) {
             var languages = localValueSets.iso6391Languages();
             common.shuffle(languages);
-
+            var english = {text: "English", coding: [{code: "en", display: "English", system: "urn:std:iso:639-1"}]};
+            var spanish = {text: "Spanish", coding: [{code: "es", display: "Spanish", system: "urn:std:iso:639-1"}]};
+            var randomLanguage = {text: languages[1].display, coding: [languages[1]]};
+            var primaryLanguage;
+            var secondLanguage = undefined;
             var communication = [];
-            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
-            primaryLanguage.language.coding.push({
-                "system": languages[1].system,
-                "code": languages[1].code,
-                "display": languages[1].display
-            });
-            communication.push(primaryLanguage);
+
+            if (index % 5 === 0) {
+                primaryLanguage = randomLanguage;
+            } else if (index % 3 === 0) {
+                primaryLanguage = spanish;
+            } else {
+                primaryLanguage = english;
+            }
+
+            if (index % 6 === 0 && primaryLanguage.text !== randomLanguage.text) {
+                secondLanguage = randomLanguage;
+            }
+
+            communication.push({language: primaryLanguage, preferred: true});
+
+            if (angular.isDefined(secondLanguage)) {
+                communication.push({language: secondLanguage, preferred: false});
+            }
             return communication;
         }
 

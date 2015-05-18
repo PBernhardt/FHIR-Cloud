@@ -287,8 +287,19 @@
 
         function createRandomPatients(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logSuccess("Creating random patients for " + vm.organization.name);
+            logInfo("Creating random patients for " + vm.organization.name);
             patientService.seedRandomPatients(vm.organization.id, vm.organization.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });
+        }
+
+        function createRandomPractitioners(event) {
+            vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
+            logInfo("Creating random practitioners for " + vm.organization.name);
+            practitionerService.seedRandomPractitioners(vm.organization.id, vm.organization.name).then(
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
@@ -298,13 +309,24 @@
 
         function createRandomPersons(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logSuccess("Creating random patients for " + vm.organization.resourceId);
+            logInfo("Creating random persons for " + vm.organization.resourceId);
             personService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
                     logError($filter('unexpectedOutcome')(error));
                 });
+        }
+
+        function createRandomRelatedPersons(event) {
+            vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
+            logInfo("Creating random related persons for " + vm.organization.resourceId);
+/*            replatedPersonService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });*/
         }
 
         function actions($event) {
@@ -335,12 +357,16 @@
                     case 5:
                         deleteOrganization(vm.organization);
                         break;
+                    case 6:
+                        createRandomPractitioners();
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
                         {name: 'Add random patients', icon: 'groupAdd', index: 0},
+                        {name: 'Add random practitioners', icon: 'doctor', index: 6},
                         {name: 'Quick find', icon: 'quickFind', index: 2},
                         {name: 'Edit organization', icon: 'edit', index: 3},
                         {name: 'Add new organization', icon: 'hospital', index: 4}

@@ -11,8 +11,9 @@
                     <h4>{{p.resource.birthDate | displayAge }}
                         <fc-gender-icon gender="p.resource.gender"></fc-gender-icon>
                     </h4>
-                    <p>{{p.resource.managingOrganization.display ||
-                        p.resource.managingOrganization.reference || "No Organization"}}</p>
+                    <p ng-if="p.resource.practitionerRole && p.resource.practitionerRole[0].role">
+                        {{p.resource.practitionerRole[0].role.text ||
+                        "Unspecified role" }}</p>
                 </div>
                 <md-divider ng-if="!$last"></md-divider>
             </md-list-item>

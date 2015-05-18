@@ -18056,8 +18056,19 @@
 
         function createRandomPatients(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logSuccess("Creating random patients for " + vm.organization.name);
+            logInfo("Creating random patients for " + vm.organization.name);
             patientService.seedRandomPatients(vm.organization.id, vm.organization.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });
+        }
+
+        function createRandomPractitioners(event) {
+            vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
+            logInfo("Creating random practitioners for " + vm.organization.name);
+            practitionerService.seedRandomPractitioners(vm.organization.id, vm.organization.name).then(
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
@@ -18067,13 +18078,24 @@
 
         function createRandomPersons(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logSuccess("Creating random patients for " + vm.organization.resourceId);
+            logInfo("Creating random persons for " + vm.organization.resourceId);
             personService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
                     logError($filter('unexpectedOutcome')(error));
                 });
+        }
+
+        function createRandomRelatedPersons(event) {
+            vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
+            logInfo("Creating random related persons for " + vm.organization.resourceId);
+/*            replatedPersonService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
+                function (result) {
+                    logSuccess(result, null, noToast);
+                }, function (error) {
+                    logError($filter('unexpectedOutcome')(error));
+                });*/
         }
 
         function actions($event) {
@@ -18104,12 +18126,16 @@
                     case 5:
                         deleteOrganization(vm.organization);
                         break;
+                    case 6:
+                        createRandomPractitioners();
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
                         {name: 'Add random patients', icon: 'groupAdd', index: 0},
+                        {name: 'Add random practitioners', icon: 'doctor', index: 6},
                         {name: 'Quick find', icon: 'quickFind', index: 2},
                         {name: 'Edit organization', icon: 'edit', index: 3},
                         {name: 'Add new organization', icon: 'hospital', index: 4}
@@ -19003,7 +19029,8 @@
                 locals: {
                     data: item
                 },
-                targetEvent: event
+                targetEvent: event,
+                clickOutsideToClose: true
             });
         }
 
@@ -19576,7 +19603,7 @@
                 if (cachedPatient) {
                     deferred.resolve(cachedPatient);
                 } else if (getPatientContext()) {
-                     deferred.resolve(_patientContext);
+                    deferred.resolve(_patientContext);
                 } else {
                     deferred.reject('Patient not found in cache: ' + hashKey);
                 }
@@ -19687,7 +19714,7 @@
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Patient?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Patient?' + params + '&_count=20&_sort:asc=family')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -19755,6 +19782,7 @@
             var deferred = $q.defer();
             var birthPlace = [];
             var mothersMaiden = [];
+            var index = 1;
             $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
@@ -19770,7 +19798,7 @@
                             "gender": user.gender,
                             "birthDate": _randomBirthDate(),
                             "contact": [],
-                            "communication": _randomCommunication(),
+                            "communication": _randomCommunication(index),
                             "maritalStatus": _randomMaritalStatus(),
                             "telecom": [
                                 {"system": "email", "value": user.email, "use": "home"},
@@ -19803,10 +19831,14 @@
                                     "system": "urn:oid:2.16.840.1.113883.15.18",
                                     "value": user.registered,
                                     "use": "official",
-                                    "type": {
-                                        "text": organizationName + " identifier"
-                                    },
-                                    "assigner": {"display": organizationName}
+                                    type: {
+                                        text: organizationName + " patient number",
+                                        coding: [{
+                                            system: "http://hl7.org/fhir/v2/0203",
+                                            code: "MR",
+                                            display: "Medical record number"
+                                        }]
+                                    }
                                 },
                                 {
                                     "system": "urn:fhir-cloud:patient",
@@ -19823,12 +19855,12 @@
                             "active": true,
                             "extension": []
                         };
-                        resource.extension.push(_randomRace());
+                        resource.extension.push(_randomRace(index));
                         resource.extension.push(_randomEthnicity());
                         resource.extension.push(_randomReligion());
                         resource.extension.push(_randomMothersMaiden(mothersMaiden));
                         resource.extension.push(_randomBirthPlace(birthPlace));
-
+                        index = index + 1;
                         mothersMaiden.push($filter('titleCase')(user.name.last));
                         birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
 
@@ -19886,20 +19918,25 @@
             return extension;
         }
 
-        function _randomRace() {
+        function _randomRace(index) {
             var races = localValueSets.race();
             common.shuffle(races.concept);
-            var race = races.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
-                "valueCodeableConcept": {"coding": [], "text": race.display}
+            var white = {text: "White", coding: [{code: "2106-3", display: "White"}]};
+            var aa = {text: "Black or African American", coding: [{code: "2054-5", display: "Black or African American"}]};
+            var random = { text: races.concept[1].display, coding: [races.concept[1]]};
+
+            var race = undefined;
+            if (index % 5 === 0) {
+                race = aa;
+            } else if (index % 3 === 0) {
+                race = random;
+            } else {
+                race = white;
+            }
+            return {
+                url: "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                valueCodeableConcept: race
             };
-            extension.valueCodeableConcept.coding.push({
-                "system": races.system,
-                "code": race.code,
-                "display": race.display
-            });
-            return extension;
         }
 
         function _randomEthnicity() {
@@ -19935,18 +19972,33 @@
             return extension;
         }
 
-        function _randomCommunication() {
+        function _randomCommunication(index) {
             var languages = localValueSets.iso6391Languages();
             common.shuffle(languages);
-
+            var english = {text: "English", coding: [{code: "en", display: "English", system: "urn:std:iso:639-1"}]};
+            var spanish = {text: "Spanish", coding: [{code: "es", display: "Spanish", system: "urn:std:iso:639-1"}]};
+            var randomLanguage = {text: languages[1].display, coding: [languages[1]]};
+            var primaryLanguage;
+            var secondLanguage = undefined;
             var communication = [];
-            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
-            primaryLanguage.language.coding.push({
-                "system": languages[1].system,
-                "code": languages[1].code,
-                "display": languages[1].display
-            });
-            communication.push(primaryLanguage);
+
+            if (index % 5 === 0) {
+                primaryLanguage = randomLanguage;
+            } else if (index % 3 === 0) {
+                primaryLanguage = spanish;
+            } else {
+                primaryLanguage = english;
+            }
+
+            if (index % 6 === 0 && primaryLanguage.text !== randomLanguage.text) {
+                secondLanguage = randomLanguage;
+            }
+
+            communication.push({language: primaryLanguage, preferred: true});
+
+            if (angular.isDefined(secondLanguage)) {
+                communication.push({language: secondLanguage, preferred: false});
+            }
             return communication;
         }
 
@@ -21302,6 +21354,40 @@
             });
         }
 
+        function showRole($event, role) {
+            $mdDialog.show({
+                templateUrl: 'practitioner/practitioner-role-dialog.html',
+                controller: 'practitionerRole',
+                controllerAs: 'vm',
+                clickOutsideToClose: true,
+                locals: {
+                    data: role
+                },
+                targetEvent: $event
+            });
+        }
+
+        vm.showRole = showRole;
+
+        function showSource($event) {
+            _showRawData(vm.practitioner, $event);
+        }
+
+        vm.showSource = showSource;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event,
+                clickOutsideToClose: true
+
+            });
+        }
+
         function deletePractitioner(practitioner, event) {
             function executeDelete() {
                 if (practitioner && practitioner.resourceId && practitioner.hashKey) {
@@ -21357,37 +21443,19 @@
         function _getRequestedPractitioner() {
             function initializeAdministrationData(data) {
                 vm.practitioner = data;
-                humanNameService.init(vm.practitioner.name);
-                demographicsService.init(vm.practitioner.gender, vm.practitioner.maritalStatus, vm.practitioner.communication);
-                demographicsService.initBirth(vm.practitioner.multipleBirthBoolean, vm.practitioner.multipleBirthInteger);
-                demographicsService.initDeath(vm.practitioner.deceasedBoolean, vm.practitioner.deceasedDateTime);
+                humanNameService.init([vm.practitioner.name], 'single');
+                demographicsService.init(vm.practitioner.gender, null, vm.practitioner.communication);
                 demographicsService.setBirthDate(vm.practitioner.birthDate);
-                demographicsService.initializeKnownExtensions(vm.practitioner.extension);
-                vm.practitioner.race = demographicsService.getRace();
-                vm.practitioner.religion = demographicsService.getReligion();
-                vm.practitioner.ethnicity = demographicsService.getEthnicity();
-                vm.practitioner.mothersMaidenName = demographicsService.getMothersMaidenName();
-                vm.practitioner.birthPlace = demographicsService.getBirthPlace();
                 attachmentService.init(vm.practitioner.photo, "Photos");
                 identifierService.init(vm.practitioner.identifier, "multi", "practitioner");
                 addressService.init(vm.practitioner.address, true);
                 contactPointService.init(vm.practitioner.telecom, true, true);
-                careProviderService.init(vm.practitioner.careProvider);
                 if (vm.practitioner.communication) {
                     communicationService.init(vm.practitioner.communication, "multi");
                 }
-                vm.practitioner.fullName = humanNameService.getFullName();
+                vm.practitioner.$$fullName = humanNameService.getFullName();
                 if (angular.isDefined(vm.practitioner.id)) {
                     vm.practitioner.resourceId = (vm.activeServer.baseUrl + '/Practitioner/' + vm.practitioner.id);
-                }
-                if (vm.practitioner.managingOrganization && vm.practitioner.managingOrganization.reference) {
-                    var reference = vm.practitioner.managingOrganization.reference;
-                    if (common.isAbsoluteUri(reference) === false) {
-                        vm.practitioner.managingOrganization.reference = vm.activeServer.baseUrl + '/' + reference;
-                    }
-                    if (angular.isUndefined(vm.practitioner.managingOrganization.display)) {
-                        vm.practitioner.managingOrganization.display = reference;
-                    }
                 }
                 if (vm.lookupKey !== "new") {
                     $window.localStorage.practitioner = JSON.stringify(vm.practitioner);
@@ -21469,23 +21537,9 @@
 
             practitioner.birthDate = $filter('dateString')(demographicsService.getBirthDate());
             practitioner.gender = demographicsService.getGender();
-            practitioner.maritalStatus = demographicsService.getMaritalStatus();
-            practitioner.multipleBirthBoolean = demographicsService.getMultipleBirth();
-            practitioner.multipleBirthInteger = demographicsService.getBirthOrder();
-            practitioner.deceasedBoolean = demographicsService.getDeceased();
-            practitioner.deceasedDateTime = demographicsService.getDeceasedDate();
-            practitioner.race = demographicsService.getRace();
-            practitioner.religion = demographicsService.getReligion();
-            practitioner.ethnicity = demographicsService.getEthnicity();
-            practitioner.mothersMaidenName = demographicsService.getMothersMaidenName();
-            practitioner.birthPlace = demographicsService.getBirthPlace();
-
             practitioner.address = addressService.mapFromViewModel();
             practitioner.telecom = contactPointService.mapFromViewModel();
             practitioner.identifier = identifierService.getAll();
-            practitioner.managingOrganization = vm.practitioner.managingOrganization;
-            practitioner.communication = communicationService.getAll();
-            practitioner.careProvider = careProviderService.getAll();
 
             practitioner.active = vm.practitioner.active;
             vm.isBusy = true;
@@ -21505,25 +21559,6 @@
                         vm.isBusy = false;
                     });
             }
-        }
-
-        function showAuditData($index, $event) {
-            _showRawData(vm.history[$index], $event);
-        }
-
-        function showClinicalData($index, $event) {
-            _showRawData(vm.summary[$index], $event);
-        }
-
-        function _showRawData(item, event) {
-            $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
-                controller: 'rawDataController',
-                locals: {
-                    data: item
-                },
-                targetEvent: event
-            });
         }
 
         function canDelete() {
@@ -21614,8 +21649,6 @@
         vm.save = save;
         vm.selectedPractitioner = null;
         vm.title = 'Practitioner Detail';
-        vm.showAuditData = showAuditData;
-        vm.showClinicalData = showClinicalData;
 
         _activate();
     }
@@ -21628,9 +21661,42 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'practitionerRole';
+
+    function practitionerRole($filter, $location, $scope, $mdDialog, common, data) {
+        function closeDialog() {
+            $mdDialog.hide();
+        }
+
+        function activate() {
+            common.activateController(controllerId).then(function () {
+            });
+        }
+
+        function goToManagingOrganization(resourceReference) {
+            $mdDialog.hide();
+            var id = ($filter)('idFromURL')(resourceReference.reference);
+            $location.path('/organization/get/' + id);
+        }
+
+        $scope.goToManagingOrganization = goToManagingOrganization;
+
+        $scope.data = data;
+        $scope.closeDialog = closeDialog;
+        $scope.activate = activate;
+
+        activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$filter', '$location', '$scope', '$mdDialog', 'common', 'data', practitionerRole]);
+})();(function () {
+    'use strict';
+
     var controllerId = 'practitionerSearch';
 
-    function practitionerSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, practitionerService) {
+    function practitionerSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets,
+                                practitionerService, practitionerValueSets) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -21667,9 +21733,9 @@
         }
 
         function _loadLocalLookups() {
-            vm.ethnicities = localValueSets.ethnicity().concept;
-            vm.races = localValueSets.race().concept;
             vm.languages = localValueSets.iso6391Languages();
+            vm.practitionerRoles = practitionerValueSets.practitionerRole();
+            vm.practitionerSpecialties = practitionerValueSets.practitionerSpecialty();
         }
 
         function detailSearch() {
@@ -21690,11 +21756,6 @@
             if (vm.practitionerSearch.name.family) {
                 queryParam.param = "family";
                 queryParam.value = vm.practitionerSearch.name.family;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.practitionerSearch.mothersMaidenName) {
-                queryParam.param = "mothersMaidenName";
-                queryParam.value = vm.practitionerSearch.mothersMaidenName;
                 queryParams.push(_.clone(queryParam));
             }
             if (vm.practitionerSearch.address.street) {
@@ -21722,20 +21783,6 @@
                 queryParam.value = formatString(vm.practitionerSearch.dob);
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.practitionerSearch.age.start || vm.practitionerSearch.age.end) {
-                if (vm.practitionerSearch.age.start === vm.practitionerSearch.age.end) {
-                    queryParam.param = "age";
-                    queryParam.value = vm.practitionerSearch.age.start;
-                    queryParams.push(_.clone(queryParam));
-                }
-                else {
-                    queryParam.param = "age";
-                    queryParam.value = ">".concat(vm.practitionerSearch.age.start === 0 ? vm.practitionerSearch.age.start : (vm.practitionerSearch.age.start - 1));
-                    queryParams.push(_.clone(queryParam));
-                    queryParam.value = "<".concat(vm.practitionerSearch.age.end === 1 ? vm.practitionerSearch.age.end : (vm.practitionerSearch.age.end + 1));
-                    queryParams.push(_.clone(queryParam));
-                }
-            }
             if (vm.practitionerSearch.identifier.system && vm.practitionerSearch.identifier.value) {
                 queryParam.param = "identifier";
                 queryParam.value = vm.practitionerSearch.identifier.system.concat("|", vm.practitionerSearch.identifier.value);
@@ -21751,19 +21798,9 @@
                 queryParam.value = vm.practitionerSearch.gender;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.practitionerSearch.race) {
-                queryParam.param = "race";
-                queryParam.value = localValueSets.race().system.concat("|", vm.practitionerSearch.race.code);
-                queryParams.push(_.clone(queryParam));
-            }
             if (vm.practitionerSearch.language) {
                 queryParam.param = "language";
                 queryParam.value = vm.practitionerSearch.language.system.concat("|", vm.practitionerSearch.language.code);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.practitionerSearch.ethnicity) {
-                queryParam.param = "ethnicity";
-                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.practitionerSearch.ethnicity.code);
                 queryParams.push(_.clone(queryParam));
             }
 
@@ -21842,24 +21879,6 @@
             }
         }
 
-        function ageRangeChange() {
-            if (vm.practitionerSearch.age.end === undefined) {
-                vm.practitionerSearch.age.end = vm.practitionerSearch.age.start;
-            }
-            if (vm.practitionerSearch.age.start === undefined) {
-                vm.practitionerSearch.age.start = vm.practitionerSearch.age.end;
-            }
-            if (vm.practitionerSearch.age.start > vm.practitionerSearch.age.end) {
-                vm.practitionerSearch.age.end = vm.practitionerSearch.age.start;
-            }
-        }
-
-        function dobChange() {
-            if (vm.practitionerSearch.dob !== undefined) {
-                vm.practitionerSearch.age.end = vm.practitionerSearch.age.start = undefined;
-            }
-        }
-
         function actions($event) {
             $mdBottomSheet.show({
                 parent: angular.element(document.getElementById('content')),
@@ -21908,14 +21927,14 @@
         vm.title = 'Practitioners';
         vm.managingOrganization = undefined;
         vm.practitioner = undefined;
+        vm.practitionerSpecialties = [];
+        vm.practitionerRoles =[];
         vm.actions = actions;
         vm.races = [];
         vm.ethnicities = [];
         vm.languages = [];
         vm.detailSearch = detailSearch;
         vm.isBusy = false;
-        vm.ageRangeChange = ageRangeChange;
-        vm.dobChange = dobChange;
         vm.practitionerSearch = {
             name: {first: undefined, last: undefined},
             mothersMaidenName: undefined,
@@ -21931,24 +21950,21 @@
             organization: undefined,
             careProvider: undefined
         };
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
         vm.selectedTab = 0;
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'practitionerService', practitionerSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets',
+            'practitionerService', 'practitionerValueSets', practitionerSearch]);
 })();
 (function () {
     'use strict';
 
     var serviceId = 'practitionerService';
 
-    function practitionerService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function practitionerService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets,
+                                 practitionerValueSets) {
         var dataCacheKey = 'localPractitioners';
         var itemCacheKey = 'contextPractitioner';
         var logError = common.logger.getLogFn(serviceId, 'error');
@@ -22135,7 +22151,7 @@
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Practitioner?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Practitioner?' + params + '&_count=20&_sort:asc=family')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -22159,52 +22175,52 @@
 
         function initializeNewPractitioner() {
             return {
-                "resourceType": "Practitioner",
-                "identifier": [],
-                "name": null,
-                "telecom": [],
-                "address": [],
-                "gender": null,
-                "birthDate": null,
-                "photo": [],
-                "practitionerRole": [{
-                    "managingOrganization": null,
-                    "role": null,
-                    "specialty": [],
-                    "period": null,
-                    "location": [],
-                    "healthcareService": []
+                resourceType: "Practitioner",
+                identifier: [],
+                name: null,
+                telecom: [],
+                address: [],
+                gender: null,
+                birthDate: null,
+                photo: [],
+                practitionerRole: [{
+                    managingOrganization: null,
+                    role: null,
+                    specialty: [],
+                    period: null,
+                    location: [],
+                    healthcareService: []
                 }],
-                "qualification": [{
-                    "identifier": [],
-                    "code": null,
-                    "period": null,
-                    "issuer": null
+                qualification: [{
+                    identifier: [],
+                    code: null,
+                    period: null,
+                    issuer: null
                 }],
-                "communication": []
+                communication: []
             };
         }
 
         function _prepArrays(resource) {
-            if (resource.address.length === 0) {
+            if (common.isUndefinedOrNull(resource.address) || resource.address.length === 0) {
                 resource.address = null;
             }
-            if (resource.identifier.length === 0) {
+            if (common.isUndefinedOrNull(resource.identifier) || resource.identifier.length === 0) {
                 resource.identifier = null;
             }
-            if (resource.telecom.length === 0) {
+            if (common.isUndefinedOrNull(resource.telecom) || resource.telecom.length === 0) {
                 resource.telecom = null;
             }
-            if (resource.photo.length === 0) {
+            if (common.isUndefinedOrNull(resource.photo) || resource.photo.length === 0) {
                 resource.photo = null;
             }
-            if (resource.communication.length === 0) {
+            if (common.isUndefinedOrNull(resource.communication) || resource.communication.length === 0) {
                 resource.communication = null;
             }
-            if (resource.qualification.length === 0) {
+            if (common.isUndefinedOrNull(resource.qualification) || resource.qualification.length === 0) {
                 resource.qualification = null;
             }
-            if (resource.practitionerRole.length === 0) {
+            if (common.isUndefinedOrNull(resource.practitionerRole) || resource.practitionerRole.length === 0) {
                 resource.practitionerRole = null;
             }
             return $q.when(resource);
@@ -22228,76 +22244,78 @@
 
         function seedRandomPractitioners(organizationId, organizationName) {
             var deferred = $q.defer();
-            var birthPlace = [];
-            var mothersMaiden = [];
+            var index = 1;
             $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
-                        var birthDate = new Date(parseInt(user.dob));
-                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
                         var resource = {
-                            "resourceType": "Practitioner",
-                            "name": [{
-                                "family": [$filter('titleCase')(user.name.last)],
-                                "given": [$filter('titleCase')(user.name.first)],
-                                "prefix": [$filter('titleCase')(user.name.title)],
-                                "use": "usual"
+                            resourceType: "Practitioner",
+                            name: {
+                                family: [$filter('titleCase')(user.name.last)],
+                                given: [$filter('titleCase')(user.name.first)],
+                                prefix: [$filter('titleCase')(user.name.title)],
+                                use: "official"
+                            },
+                            gender: user.gender,
+                            birthDate: _randomBirthDate(),
+                            communication: _randomCommunication(index),
+                            telecom: [
+                                {system: "email", value: user.email, use: "work"},
+                                {system: "phone", value: user.cell, use: "mobile"},
+                                {system: "phone", value: user.phone, use: "work"}],
+                            address: [{
+                                line: [$filter('titleCase')(user.location.street)],
+                                city: $filter('titleCase')(user.location.city),
+                                state: $filter('abbreviateState')(user.location.state),
+                                postalCode: user.location.zip,
+                                use: "work"
                             }],
-                            "gender": user.gender,
-                            "birthDate": _randomBirthDate(),
-                            "contact": [],
-                            "communication": _randomCommunication(),
-                            "maritalStatus": _randomMaritalStatus(),
-                            "telecom": [
-                                {"system": "email", "value": user.email, "use": "home"},
-                                {"system": "phone", "value": user.cell, "use": "mobile"},
-                                {"system": "phone", "value": user.phone, "use": "home"}],
-                            "address": [{
-                                "line": [$filter('titleCase')(user.location.street)],
-                                "city": $filter('titleCase')(user.location.city),
-                                "state": $filter('abbreviateState')(user.location.state),
-                                "postalCode": user.location.zip,
-                                "use": "home"
-                            }],
-                            "photo": [{"url": user.picture.large}],
-                            "identifier": [
+                            photo: [{url: user.picture.large}],
+                            identifier: [
                                 {
-                                    "system": "urn:oid:2.16.840.1.113883.4.1",
-                                    "value": user.SSN,
-                                    "use": "secondary",
-                                    "assigner": {"display": "Social Security Administration"}
+                                    system: "urn:oid:2.16.840.1.113883.4.1",
+                                    value: user.SSN,
+                                    type: {
+                                        text: "Social Security number",
+                                        coding: [{
+                                            code: "SS",
+                                            display: "Social Security number",
+                                            system: "http://hl7.org/fhir/v2/0203"
+                                        }]
+                                    },
+                                    assigner: {display: "Social Security Administration"}
                                 },
                                 {
-                                    "system": "urn:oid:2.16.840.1.113883.15.18",
-                                    "value": user.registered,
-                                    "use": "official",
-                                    "assigner": {"display": organizationName}
+                                    system: "urn:oid:2.16.840.1.113883.15.18",
+                                    value: user.registered,
+                                    type: {
+                                        text: organizationName + " provider number",
+                                        coding: [{
+                                            system: "http://hl7.org/fhir/v2/0203",
+                                            code: "PRN",
+                                            display: "Provider number"
+                                        }]
+                                    },
+                                    assigner: {display: organizationName}
                                 },
                                 {
-                                    "system": "urn:fhir-cloud:practitioner",
-                                    "value": common.randomHash(),
-                                    "use": "secondary",
-                                    "assigner": {"display": "FHIR Cloud"}
+                                    system: "urn:fhir-cloud:practitioner",
+                                    value: common.randomHash(),
+                                    type: {
+                                        text: organizationName + " identifier"
+                                    },
+                                    assigner: {display: "FHIR Cloud"}
                                 }
                             ],
-                            "managingOrganization": {
-                                "reference": "Organization/" + organizationId,
-                                "display": organizationName
+                            managingOrganization: {
+                                reference: "Organization/" + organizationId,
+                                display: organizationName
                             },
-                            "link": [],
-                            "active": true,
-                            "extension": []
+                            active: true,
+                            practitionerRole: _randomRole(organizationName, organizationId, index)
                         };
-                        resource.extension.push(_randomRace());
-                        resource.extension.push(_randomEthnicity());
-                        resource.extension.push(_randomReligion());
-                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
-                        resource.extension.push(_randomBirthPlace(birthPlace));
-
-                        mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
-
+                        index = index + 1;
                         var timer = $timeout(function () {
                         }, 3000);
                         timer.then(function () {
@@ -22316,148 +22334,123 @@
             return deferred.promise;
         }
 
-        function _randomMothersMaiden(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/practitioner-mothersMaidenName",
-                "valueString": ''
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                extension.valueString = array[0];
+
+        function _randomRole(organizationName, organizationId, index) {
+            var practitionerRoles = practitionerValueSets.practitionerRole();
+            var practitionerSpecialties = practitionerValueSets.practitionerSpecialty();
+            var doctorRole = _.find(practitionerRoles.concept, function (item) {
+                return item.code === "doctor"
+            });
+            var role = undefined;
+            if (index % 2 === 0) {
+                common.shuffle(practitionerRoles.concept);
+                role = {
+                    text: practitionerRoles.concept[0].display, coding: [{
+                        system: practitionerRoles.system,
+                        code: practitionerRoles.concept[0].code,
+                        display: practitionerRoles.concept[0].display
+                    }]
+                };
             } else {
-                extension.valueString = "Gibson";
+                role = {
+                    text: doctorRole.display, coding: [{
+                        system: practitionerRoles.system,
+                        code: doctorRole.code,
+                        display: doctorRole.display
+                    }]
+                }
             }
-            return extension;
+
+            var specialties = [];
+
+            if (role.coding[0].code === "doctor") {
+                common.shuffle(practitionerSpecialties.concept);
+                var specialty = {
+                    text: practitionerSpecialties.concept[0].display,
+                    coding: [{
+                        system: practitionerSpecialties.system,
+                        code: practitionerSpecialties.concept[0].code,
+                        display: practitionerSpecialties.concept[0].display
+                    }]
+                };
+                specialties.push(specialty);
+
+                if (angular.isDefined(practitionerSpecialties.concept[0].concept)) {
+                    var subSpecialties = practitionerSpecialties.concept[0].concept;
+                    common.shuffle(subSpecialties);
+                    var subSpecialty = {
+                        text: subSpecialties[0].display,
+                        coding: [{
+                            system: practitionerSpecialties.system,
+                            code: subSpecialties[0].code,
+                            display: subSpecialties[0].display
+                        }]
+                    };
+                    specialties.push(subSpecialty);
+
+                    if (angular.isDefined(subSpecialties[0].concept)) {
+                        var finalSpecialties = subSpecialties[0].concept;
+                        common.shuffle(finalSpecialties);
+                        var finalSpecialty = {
+                            text: finalSpecialties[0].display,
+                            coding: [{
+                                system: practitionerSpecialties.system,
+                                code: finalSpecialties[0].code,
+                                display: finalSpecialties[0].display
+                            }]
+                        };
+                        specialties.push(finalSpecialty);
+                    }
+                }
+            }
+
+            return [{
+                managingOrganization: {
+                    reference: "Organization/" + organizationId,
+                    display: organizationName
+                },
+                role: role,
+                specialty: specialties
+                //todo Add random location
+                // period: null,
+                // location: [],
+                // healthcareService: []
+            }];
+        }
+
+        function _randomQualification() {
+
         }
 
         function _randomBirthDate() {
-            var start = new Date(1945, 1, 1);
-            var end = new Date(1995, 12, 31);
+            var start = new Date(1940, 1, 1);
+            var end = new Date(1987, 1, 1);
             var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
             return $filter('date')(randomDob, 'yyyy-MM-dd');
         }
 
-        function _randomBirthPlace(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                "valueAddress": null
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                var parts = array[0].split(",");
-                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
-            } else {
-                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
-            }
-            return extension;
-        }
-
-        function _randomRace() {
-            var races = localValueSets.race();
-            common.shuffle(races.concept);
-            var race = races.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
-                "valueCodeableConcept": {"coding": [], "text": race.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": races.system,
-                "code": race.code,
-                "display": race.display
-            });
-            return extension;
-        }
-
-        var allEthnicities = [];
-        var ethnicitySystem = '';
-
-        function _randomEthnicity() {
-            function prepEthnicities() {
-                var ethnicities = localValueSets.ethnicity();
-                ethnicitySystem = ethnicities.system;
-                for (var i = 0, main = ethnicities.concept.length; i < main; i++) {
-                    var mainConcept = ethnicities.concept[i];
-                    allEthnicities.push(mainConcept);
-                    if (angular.isDefined(mainConcept.concept) && angular.isArray(mainConcept.concept)) {
-                        for (var j = 0, group = mainConcept.concept.length; j < group; j++) {
-                            var groupConcept = mainConcept.concept[j];
-                            allEthnicities.push(groupConcept);
-                            if (angular.isDefined(groupConcept.concept) && angular.isArray(groupConcept.concept)) {
-                                for (var k = 0, leaf = groupConcept.concept.length; k < leaf; k++) {
-                                    var leafConcept = groupConcept.concept[k];
-                                    allEthnicities.push(leafConcept);
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            if (allEthnicities.length === 0) {
-                prepEthnicities();
-            }
-            common.shuffle(allEthnicities);
-            var ethnicity = allEthnicities[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
-                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": ethnicitySystem,
-                "code": ethnicity.code,
-                "display": ethnicity.display
-            });
-            return extension;
-        }
-
-        function _randomReligion() {
-            var religions = localValueSets.religion();
-            common.shuffle(religions.concept);
-            var religion = religions.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
-                "valueCodeableConcept": {"coding": [], "text": religion.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": religions.system,
-                "code": religion.code,
-                "display": religion.display
-            });
-            return extension;
-        }
-
-        function _randomCommunication() {
+        function _randomCommunication(index) {
             var languages = localValueSets.iso6391Languages();
             common.shuffle(languages);
-
+            var english = {text: "English", coding: [{code: "en", display: "English", system: "urn:std:iso:639-1"}]};
+            var spanish = {text: "Spanish", coding: [{code: "es", display: "Spanish", system: "urn:std:iso:639-1"}]};
             var communication = [];
-            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
-            primaryLanguage.language.coding.push({
-                "system": languages[1].system,
-                "code": languages[1].code,
-                "display": languages[1].display
-            });
-            communication.push(primaryLanguage);
+            communication.push(english);
+            var randomLanguage = {
+                text: languages[1].display, coding: [{
+                    system: languages[1].system,
+                    code: languages[1].code,
+                    display: languages[1].display
+                }]
+            };
+            if (randomLanguage.coding[0].code !== "en" && (index % 5 === 0)) {
+                communication.push(randomLanguage);
+            }
+            if (randomLanguage.coding[0].code !== "es" && (index % 3 === 0)) {
+                communication.push(spanish);
+            }
             return communication;
         }
-
-        function _randomMaritalStatus() {
-            var maritalStatuses = localValueSets.maritalStatus();
-            common.shuffle(maritalStatuses);
-            var maritalStatus = maritalStatuses[1];
-            var concept = {
-                "coding": [], "text": maritalStatus.display
-            };
-            concept.coding.push({
-                "system": maritalStatus.system,
-                "code": maritalStatus.code,
-                "display": maritalStatus.display
-            });
-            return concept;
-        }
-
-
 
         var service = {
             addPractitioner: addPractitioner,
@@ -22481,10 +22474,241 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
-        practitionerService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient',
+        'fhirServers', 'localValueSets', 'practitionerValueSets', practitionerService]);
 })
 ();(function () {
+    'use strict';
+
+    var serviceId = 'practitionerValueSets';
+
+    function practitionerValueSets() {
+
+        function practitionerRole() {
+            return {
+                system: "http://hl7.org/fhir/practitioner-role",
+                caseSensitive: true,
+                concept: [
+                    {
+                        code: "doctor",
+                        display: "Doctor"
+                    },
+                    {
+                        code: "nurse",
+                        display: "Nurse"
+                    },
+                    {
+                        code: "pharmacist",
+                        display: "Pharmacist"
+                    },
+                    {
+                        code: "researcher",
+                        display: "Researcher"
+                    },
+                    {
+                        code: "teacher",
+                        display: "Teacher/educator"
+                    },
+                    {
+                        code: "ict",
+                        display: "ICT professional"
+                    }
+                ]
+            };
+        }
+
+        function practitionerSpeciality() {
+            return {
+                system: "http://snomed.info/sct",
+                caseSensitive: true,
+                concept: [
+                    {code: "394592004", display: "Clinical oncology"},
+                    {code: "394581000", display: "Community medicine"},
+                    {
+                        code: "394814009", display: "General practice",
+                        concept: [
+                            {code: "408444009", display: "General dental practice"},
+                            {code: "408443003", display: "General medical practice"}]
+                    },
+                    {code: "408446006", display: "Gynecological oncology"},
+                    {
+                        code: "394733009", display: "Medical Specialty",
+                        concept: [
+                            {code: "394578005", display: "Audiological medicine"},
+                            {code: "394579002", display: "Cardiology"},
+                            {code: "394804000", display: "Clinical cytogenetics and molecular genetics"},
+                            {code: "394580004", display: "Clinical genetics "},
+                            {code: "394803006", display: "Clinical hematology "},
+                            {code: "408480009", display: "Clinical immunology"},
+                            {code: "394805004", display: "Clinical immunology/allergy"},
+                            {code: "394600006", display: "Clinical pharmacology"},
+                            {code: "394601005", display: "Clinical physiology"},
+                            {code: "408478003", display: "Critical care medicine"},
+                            {code: "394812008", display: "Dental medicine specialties"},
+                            {code: "394582007", display: "Dermatology"},
+                            {code: "410005002", display: "Dive medicine"},
+                            {code: "394583002", display: "Endocrinology"},
+                            {code: "419772000", display: "Family practice"},
+                            {code: "394584008", display: "Gastroenterology"},
+                            {code: "394802001", display: "General medicine"},
+                            {code: "394808002", display: "Genito-urinary medicine "},
+                            {code: "394811001", display: "Geriatric medicine"},
+                            {code: "394807007", display: "Infectious diseases"},
+                            {code: "419192003", display: "Internal medicine "},
+                            {code: "394593009", display: "Medical oncology"},
+                            {code: "394813003", display: "Medical ophthalmology"},
+                            {code: "410001006", display: "Military medicine"},
+                            {code: "394589003", display: "Nephrology"},
+                            {code: "394591006", display: "Neurology"},
+                            {code: "394649004", display: "Nuclear medicine"},
+                            {code: "416304004", display: "Osteopathic manipulative medicine"},
+                            {
+                                code: "394537008", display: "Pediatric specialty",
+                                concept: [
+                                    {code: "408445005", display: "Neonatology"},
+                                    {code: "408459003", display: "Pediatric cardiology"},
+                                    {code: "419917007", display: "Pediatric emergency medicine"},
+                                    {code: "419610006", display: "Pediatric endocrinology"},
+                                    {code: "418058008", display: "Pediatric gastroenterology"},
+                                    {code: "420208008", display: "Pediatric genetics "},
+                                    {code: "418652005", display: "Pediatric hematology"},
+                                    {code: "418535003", display: "Pediatric immunology"},
+                                    {code: "418862001", display: "Pediatric infectious diseases"},
+                                    {code: "419215006", display: "Pediatric intensive care"},
+                                    {code: "419365004", display: "Pediatric nephrology"},
+                                    {code: "394538003", display: "Pediatric neurology"},
+                                    {code: "418002000", display: "Pediatric oncology"},
+                                    {code: "419983000", display: "Pediatric ophthalmology"},
+                                    {code: "417887005", display: "Pediatric otolaryngology"},
+                                    {code: "419170002", display: "Pediatric pulmonology"},
+                                    {code: "419472004", display: "Pediatric rheumatology"}]
+                            },
+                            {code: "409968004", display: "Preventive medicine"},
+                            {code: "408440000", display: "Public health medicine"},
+                            {code: "418112009", display: "Pulmonary medicine"},
+                            {code: "394602003", display: "Rehabilitation"},
+                            {code: "408447002", display: "Respite care"},
+                            {code: "394810000", display: "Rheumatology"},
+                            {code: "408450004", display: "Sleep studies"},
+                            {code: "394590007", display: "Thoracic medicine"},
+                            {code: "409967009", display: "Toxicology"}]
+                    },
+                    {
+                        code: "394585009", display: "Obstetrics and gynecology",
+                        concept: [
+                            {code: "394586005", display: "Gynecology"},
+                            {code: "408470005", display: "Obstetrics"}]
+                    },
+                    {code: "394821009", display: "Occupational medicine"},
+                    {
+                        code: "418960008", display: "Otolaryngology",
+                        concept: [
+                            {code: "417887005", display: "Pediatric otolaryngology"}]
+                    },
+                    {
+                        code: "394595002", display: "Pathology",
+                        concept: [
+                            {code: "421661004", display: "Blood banking and transfusion medicine"},
+                            {code: "394819004", display: "Blood transfusion"},
+                            {code: "394596001", display: "Chemical pathology"},
+                            {code: "394915009", display: "General pathology"},
+                            {code: "394916005", display: "Hematopathology"},
+                            {code: "394597005", display: "Histopathology"},
+                            {code: "394598000", display: "Immunopathology"},
+                            {code: "394820005", display: "Medical microbiology"},
+                            {code: "394599008", display: "Neuropathology"}]
+                    },
+                    {
+                        code: "394587001", display: "Psychiatry",
+                        concept: [
+                            {code: "408467006", display: "Adult mental illness"},
+                            {code: "394588006", display: "Child and adolescent psychiatry "},
+                            {code: "394817002", display: "Forensic psychiatry"},
+                            {code: "408468001", display: "Learning disability "},
+                            {code: "394815005", display: "Mental handicap"},
+                            {code: "394816006", display: "Mental illness"},
+                            {code: "394818007", display: "Old age psychiatry"},
+                            {code: "394913002", display: "Psychotherapy"}]
+                    },
+                    {code: "394806003", display: "Palliative medicine"},
+                    {
+                        code: "394732004", display: "Surgical Specialty",
+                        concept: [
+                            {code: "394576009", display: "Accident & emergency"},
+                            {code: "394577000", display: "Anesthetics"},
+                            {code: "408469009", display: "Breast surgery"},
+                            {
+                                code: "394603008", display: "Cardiothoracic surgery", concept: [
+                                {code: "408466002", display: "Cardiac surgery"},
+                                {code: "408471009", display: "Cardiothoracic transplantation"},
+                                {code: "408456005", display: "Thoracic surgery"}]
+                            },
+                            {code: "408464004", display: "Colorectal surgery"},
+                            {code: "418018006", display: "Dermatologic surgery "},
+                            {code: "394604002", display: "Ear, nose and throat surgery"},
+                            {code: "408441001", display: "Endodontics surgery"},
+                            {code: "394609007", display: "General surgery"},
+                            {code: "408474001", display: "Hepatobiliary and pancreatic surgery"},
+                            {code: "394610002", display: "Neurosurgery"},
+                            {
+                                code: "394594003", display: "Ophthalmology surgery", concept: [
+                                {code: "422191005", display: "Ophthalmic surgery"},
+                                {code: "419983000", display: "Pediatric ophthalmology"}
+                            ]
+                            },
+                            {
+                                code: "408465003", display: "Oral and maxillofacial surgery", concept: [
+                                {code: "408457001", display: "Maxillofacial surgery"},
+                                {code: "408473007", display: "Public health dentistry"},
+                                {code: "408449004", display: "Surgical dentistry"}
+                            ]
+                            },
+                            {code: "394605001", display: "Oral surgery"},
+                            {code: "394608004", display: "Orthodontics"},
+                            {code: "394882004", display: "Pain management"},
+                            {code: "394607009", display: "Pediatric dentistry"},
+                            {code: "394539006", display: "Pediatric surgery"},
+                            {code: "408461007", display: "Periodontics"},
+                            {
+                                code: "394611003",
+                                display: "Plastic surgery",
+                                concept: [{code: "408462000", display: "Burns care"}]
+                            },
+                            {code: "408460008", display: "Prosthodontics"},
+                            {code: "394606000", display: "Restorative dentistry"},
+                            {code: "419321007", display: "Surgical oncology"},
+                            {code: "408477008", display: "Transplantation surgery"},
+                            {code: "394801008", display: "Trauma and orthopedics"},
+                            {code: "408479006", display: "Upper gastrointestinal surgery"},
+                            {
+                                code: "394612005", display: "Urology", concept: [
+                                {code: "419043006", display: "Urological oncology"}]
+                            },
+                            {code: "408463005", display: "Vascular surgery"}]
+                    },
+                    {
+                        code: "394734003", display: "Radiological specialties", concept: [
+                        {code: "408455009", display: "Interventional radiology"},
+                        {code: "419815003", display: "Radiation oncology"},
+                        {code: "394914008", display: "Radiology"}
+                    ]
+                    }
+                ]
+            };
+        }
+
+        var service = {
+            practitionerRole: practitionerRole,
+            practitionerSpecialty: practitionerSpeciality
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, [practitionerValueSets]);
+
+})();
+(function () {
     'use strict';
 
     var controllerId = 'relatedPersonDetail';

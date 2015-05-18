@@ -3,7 +3,8 @@
 
     var controllerId = 'practitionerSearch';
 
-    function practitionerSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets, practitionerService) {
+    function practitionerSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets,
+                                practitionerService, practitionerValueSets) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -40,9 +41,9 @@
         }
 
         function _loadLocalLookups() {
-            vm.ethnicities = localValueSets.ethnicity().concept;
-            vm.races = localValueSets.race().concept;
             vm.languages = localValueSets.iso6391Languages();
+            vm.practitionerRoles = practitionerValueSets.practitionerRole();
+            vm.practitionerSpecialties = practitionerValueSets.practitionerSpecialty();
         }
 
         function detailSearch() {
@@ -63,11 +64,6 @@
             if (vm.practitionerSearch.name.family) {
                 queryParam.param = "family";
                 queryParam.value = vm.practitionerSearch.name.family;
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.practitionerSearch.mothersMaidenName) {
-                queryParam.param = "mothersMaidenName";
-                queryParam.value = vm.practitionerSearch.mothersMaidenName;
                 queryParams.push(_.clone(queryParam));
             }
             if (vm.practitionerSearch.address.street) {
@@ -95,20 +91,6 @@
                 queryParam.value = formatString(vm.practitionerSearch.dob);
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.practitionerSearch.age.start || vm.practitionerSearch.age.end) {
-                if (vm.practitionerSearch.age.start === vm.practitionerSearch.age.end) {
-                    queryParam.param = "age";
-                    queryParam.value = vm.practitionerSearch.age.start;
-                    queryParams.push(_.clone(queryParam));
-                }
-                else {
-                    queryParam.param = "age";
-                    queryParam.value = ">".concat(vm.practitionerSearch.age.start === 0 ? vm.practitionerSearch.age.start : (vm.practitionerSearch.age.start - 1));
-                    queryParams.push(_.clone(queryParam));
-                    queryParam.value = "<".concat(vm.practitionerSearch.age.end === 1 ? vm.practitionerSearch.age.end : (vm.practitionerSearch.age.end + 1));
-                    queryParams.push(_.clone(queryParam));
-                }
-            }
             if (vm.practitionerSearch.identifier.system && vm.practitionerSearch.identifier.value) {
                 queryParam.param = "identifier";
                 queryParam.value = vm.practitionerSearch.identifier.system.concat("|", vm.practitionerSearch.identifier.value);
@@ -124,19 +106,9 @@
                 queryParam.value = vm.practitionerSearch.gender;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.practitionerSearch.race) {
-                queryParam.param = "race";
-                queryParam.value = localValueSets.race().system.concat("|", vm.practitionerSearch.race.code);
-                queryParams.push(_.clone(queryParam));
-            }
             if (vm.practitionerSearch.language) {
                 queryParam.param = "language";
                 queryParam.value = vm.practitionerSearch.language.system.concat("|", vm.practitionerSearch.language.code);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.practitionerSearch.ethnicity) {
-                queryParam.param = "ethnicity";
-                queryParam.value = localValueSets.ethnicity().system.concat("|", vm.practitionerSearch.ethnicity.code);
                 queryParams.push(_.clone(queryParam));
             }
 
@@ -215,24 +187,6 @@
             }
         }
 
-        function ageRangeChange() {
-            if (vm.practitionerSearch.age.end === undefined) {
-                vm.practitionerSearch.age.end = vm.practitionerSearch.age.start;
-            }
-            if (vm.practitionerSearch.age.start === undefined) {
-                vm.practitionerSearch.age.start = vm.practitionerSearch.age.end;
-            }
-            if (vm.practitionerSearch.age.start > vm.practitionerSearch.age.end) {
-                vm.practitionerSearch.age.end = vm.practitionerSearch.age.start;
-            }
-        }
-
-        function dobChange() {
-            if (vm.practitionerSearch.dob !== undefined) {
-                vm.practitionerSearch.age.end = vm.practitionerSearch.age.start = undefined;
-            }
-        }
-
         function actions($event) {
             $mdBottomSheet.show({
                 parent: angular.element(document.getElementById('content')),
@@ -281,14 +235,14 @@
         vm.title = 'Practitioners';
         vm.managingOrganization = undefined;
         vm.practitioner = undefined;
+        vm.practitionerSpecialties = [];
+        vm.practitionerRoles =[];
         vm.actions = actions;
         vm.races = [];
         vm.ethnicities = [];
         vm.languages = [];
         vm.detailSearch = detailSearch;
         vm.isBusy = false;
-        vm.ageRangeChange = ageRangeChange;
-        vm.dobChange = dobChange;
         vm.practitionerSearch = {
             name: {first: undefined, last: undefined},
             mothersMaidenName: undefined,
@@ -304,15 +258,11 @@
             organization: undefined,
             careProvider: undefined
         };
-        vm.paging = {
-            currentPage: 1,
-            totalResults: 0,
-            links: null
-        };
         vm.selectedTab = 0;
         activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets', 'practitionerService', practitionerSearch]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets',
+            'practitionerService', 'practitionerValueSets', practitionerSearch]);
 })();
