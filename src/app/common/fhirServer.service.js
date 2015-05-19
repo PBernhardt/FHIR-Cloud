@@ -85,7 +85,7 @@
                     {
                         "id": 9,
                         "name": "Cerner",
-                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/dstu2/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
                         "secure": true
                     },
                     {

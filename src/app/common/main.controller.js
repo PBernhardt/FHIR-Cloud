@@ -314,7 +314,7 @@
                 logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
                 logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
                 logInfo("Redirect URI: " + vm.activeServer.redirectUri, null, noToast);
-                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri);
+                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri, vm.activeServer.baseUrl);
             }
         }
 

@@ -9,10 +9,12 @@
         var noToast = false;
         var stateKey = "state";
 
-        function authorize(clientId, authorizeUrl, redirectUri) {
+        function authorize(clientId, authorizeUrl, redirectUri, resourceOwnerUrl) {
             var state = common.randomHash();
             store.set(stateKey, state);
-            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) + "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
+            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) +
+                "&aud=" + encodeURIComponent(resourceOwnerUrl) +
+                "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
             $window.open(authorizeUrl + queryParams, "_parent");
         }
 

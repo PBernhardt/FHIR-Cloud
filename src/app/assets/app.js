@@ -1280,7 +1280,7 @@
                     {
                         "id": 9,
                         "name": "Cerner",
-                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/dstu2/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
                         "secure": true
                     },
                     {
@@ -3236,7 +3236,7 @@
                 logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
                 logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
                 logInfo("Redirect URI: " + vm.activeServer.redirectUri, null, noToast);
-                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri);
+                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri, vm.activeServer.baseUrl);
             }
         }
 
@@ -3398,10 +3398,12 @@
         var noToast = false;
         var stateKey = "state";
 
-        function authorize(clientId, authorizeUrl, redirectUri) {
+        function authorize(clientId, authorizeUrl, redirectUri, resourceOwnerUrl) {
             var state = common.randomHash();
             store.set(stateKey, state);
-            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) + "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
+            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) +
+                "&aud=" + encodeURIComponent(resourceOwnerUrl) +
+                "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
             $window.open(authorizeUrl + queryParams, "_parent");
         }
 
