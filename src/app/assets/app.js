@@ -1280,10 +1280,16 @@
                     {
                         "id": 9,
                         "name": "Cerner",
-                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/dstu2/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
                         "secure": true
+                    },
+                    {
+                        "id": 10,
+                        "name": "Argonaut Reference",
+                        "baseUrl": "https://argonaut.healthintersections.com.au/closed",
+                        "secure": true,
+                        "clientId": "c1be9476-39f4-4bc4-a6ce-85306034571f"
                     }
-
 
                 ];
                 var servers = dataCache.readFromCache(serversKey);

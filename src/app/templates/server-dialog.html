@@ -3,7 +3,7 @@
         <md-subheader class="md-sticky-no-effect"><h4 class="md-title">{{title}}</h4>
         </md-subheader>
         <md-list>
-            <md-list-item class="md-2-line" ng-repeat="server in FHIRServers">
+            <md-list-item class="md-2-line" ng-repeat="server in FHIRServers | orderBy: 'name'">
                 <md-checkbox ng-model="server.selected" ng-click="serverChanged(server)">
                 </md-checkbox>
                 <div class="md-list-item-text">
