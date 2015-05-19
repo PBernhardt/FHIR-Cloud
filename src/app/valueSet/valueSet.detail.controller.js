@@ -3,7 +3,8 @@
 
     var controllerId = 'valueSetDetail';
 
-    function valueSetDetail($location, $routeParams, $window, $mdDialog, common, fhirServers, valueSetService, contactPointService) {
+    function valueSetDetail($location, $routeParams, $window, $mdDialog, common, terminologyServers, valueSetService,
+                            contactPointService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -50,11 +51,11 @@
             }
         }
 
-        function getActiveServer() {
-            fhirServers.getActiveServer()
+        function getTerminologyServer() {
+            terminologyServers.getActiveServer()
                 .then(function (server) {
-                    vm.activeServer = server;
-                    return vm.activeServer;
+                    vm.terminologyServer = server;
+                    return vm.terminologyServer;
                 });
         }
 
@@ -66,7 +67,7 @@
 
         function showInclude($event, resource) {
             $mdDialog.show({
-                 templateUrl: 'valueSet/include-dialog.html',
+                templateUrl: 'valueSet/include-dialog.html',
                 controller: 'valueSetInclude',
                 locals: {
                     data: resource
@@ -79,7 +80,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
+                templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -99,7 +100,7 @@
                 contactPointService.init(vm.valueSet.telecom, false, false);
                 vm.title = vm.valueSet.name;
                 if (angular.isDefined(vm.valueSet.id)) {
-                    vm.valueSet.resourceId = (vm.activeServer.baseUrl + '/ValueSet/' + vm.valueSet.id);
+                    vm.valueSet.resourceId = (vm.terminologyServer.baseUrl + '/ValueSet/' + vm.valueSet.id);
                 }
                 valueSetService.setActiveValueSet(vm.valueSet);
             }
@@ -117,7 +118,7 @@
                             logError(error, null, noToast);
                         });
                 } else if ($routeParams.id) {
-                    var resourceId = vm.activeServer.baseUrl + '/ValueSet/' + $routeParams.id;
+                    var resourceId = vm.terminologyServer.baseUrl + '/ValueSet/' + $routeParams.id;
                     valueSetService.getValueSet(resourceId)
                         .then(intitializeRelatedData, function (error) {
                             logError(error, null, noToast);
@@ -189,12 +190,12 @@
         });
 
         function activate() {
-            common.activateController([getActiveServer()], controllerId).then(function () {
+            common.activateController([getTerminologyServer()], controllerId).then(function () {
                 getRequestedValueSet();
             });
         }
 
-        vm.activeServer = null;
+        vm.terminologyServer = null;
         vm.cancel = cancel;
         vm.activate = activate;
         vm.delete = deleteValueSet;
@@ -211,6 +212,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'fhirServers', 'valueSetService', 'contactPointService', valueSetDetail]);
+        ['$location', '$routeParams', '$window', '$mdDialog', 'common', 'terminologyServers', 'valueSetService', 'contactPointService', valueSetDetail]);
 
 })();

@@ -35,8 +35,12 @@
                     {
                         "id": 1,
                         "name": "Health Directions",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
-                        "secure": false
+                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
+                    },
+                    {
+                        "id": 2,
+                        "name": "Argonaut Reference",
+                        "baseUrl": "http://argonaut.healthintersections.com.au/open"
                     }
                 ];
                 var servers = dataCache.readFromCache(serversKey);
