@@ -12,11 +12,12 @@
             var req = {
                 method: 'post',
                 url: baseUrl,
-                data: fhirResource
+                data: fhirResource,
+                timeout: 7000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
             $http(req)
                 .success(function (data, status, headers, config) {
@@ -28,7 +29,7 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
+                    var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
@@ -38,11 +39,12 @@
             var deferred = $q.defer();
             var req = {
                 method: 'delete',
-                url: resourceUrl
+                url: resourceUrl,
+                timeout: 7000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
             $http(req)
                 .success(function (data, status, headers, config) {
@@ -62,7 +64,7 @@
                         results.headers = headers;
                         deferred.resolve(results);
                     } else {
-                        var error = { "status": status, "outcome": data };
+                        var error = {"status": status, "outcome": data};
                         deferred.reject(error);
                     }
                 });
@@ -71,14 +73,25 @@
 
         function getResource(resourceUrl) {
             var deferred = $q.defer();
+            var timeout = $q.defer();
+            var timedOut = false;
+
+            setTimeout(function () {
+                timedOut = true;
+                timeout.resolve();
+            }, (7000));
+
             var req = {
                 method: 'get',
-                url: resourceUrl
+                url: resourceUrl,
+                timeout: timeout.promise
             };
+
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token) && resourceUrl.indexOf('metadata') === -1) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
+
             $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
@@ -89,9 +102,21 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
-                    deferred.reject(error);
+                    if (timedOut) {
+                        deferred.reject({
+                            status: "Unknown",
+                            outcome: {
+                                issue: [{
+                                    severity: 'fatal',
+                                    details: 'Request cancelled - server did not respond within 7 seconds.'
+                                }]
+                            }
+                        });
+                    } else {
+                        deferred.reject({status: status, outcome: data});
+                    }
                 });
+
             return deferred.promise;
         }
 
@@ -101,11 +126,12 @@
             var req = {
                 method: 'put',
                 url: resourceUrl,
-                data: fhirResource
+                data: fhirResource,
+                timeout: 7000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
             $http(req)
                 .success(function (data, status, headers, config) {
@@ -117,7 +143,7 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
+                    var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;

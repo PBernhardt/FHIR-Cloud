@@ -730,6 +730,7 @@
         };
         $httpProvider.defaults.headers.put = {'Content-Type': 'application/json+fhir'};
         $httpProvider.defaults.headers.post = {'Content-Type': 'application/json+fhir'};
+
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {
@@ -1069,11 +1070,12 @@
             var req = {
                 method: 'post',
                 url: baseUrl,
-                data: fhirResource
+                data: fhirResource,
+                timeout: 7000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
             $http(req)
                 .success(function (data, status, headers, config) {
@@ -1085,7 +1087,7 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
+                    var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
@@ -1095,11 +1097,12 @@
             var deferred = $q.defer();
             var req = {
                 method: 'delete',
-                url: resourceUrl
+                url: resourceUrl,
+                timeout: 7000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
             $http(req)
                 .success(function (data, status, headers, config) {
@@ -1119,7 +1122,7 @@
                         results.headers = headers;
                         deferred.resolve(results);
                     } else {
-                        var error = { "status": status, "outcome": data };
+                        var error = {"status": status, "outcome": data};
                         deferred.reject(error);
                     }
                 });
@@ -1128,14 +1131,25 @@
 
         function getResource(resourceUrl) {
             var deferred = $q.defer();
+            var timeout = $q.defer();
+            var timedOut = false;
+
+            setTimeout(function () {
+                timedOut = true;
+                timeout.resolve();
+            }, (7000));
+
             var req = {
                 method: 'get',
-                url: resourceUrl
+                url: resourceUrl,
+                timeout: timeout.promise
             };
+
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token) && resourceUrl.indexOf('metadata') === -1) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
+
             $http(req)
                 .success(function (data, status, headers, config) {
                     var results = {};
@@ -1146,9 +1160,21 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
-                    deferred.reject(error);
+                    if (timedOut) {
+                        deferred.reject({
+                            status: "Unknown",
+                            outcome: {
+                                issue: [{
+                                    severity: 'fatal',
+                                    details: 'Request cancelled - server did not respond within 7 seconds.'
+                                }]
+                            }
+                        });
+                    } else {
+                        deferred.reject({status: status, outcome: data});
+                    }
                 });
+
             return deferred.promise;
         }
 
@@ -1158,11 +1184,12 @@
             var req = {
                 method: 'put',
                 url: resourceUrl,
-                data: fhirResource
+                data: fhirResource,
+                timeout: 7000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
-                req.headers = { Authorization: 'Bearer ' + token };
+                req.headers = {Authorization: 'Bearer ' + token};
             }
             $http(req)
                 .success(function (data, status, headers, config) {
@@ -1174,7 +1201,7 @@
                     deferred.resolve(results);
                 })
                 .error(function (data, status) {
-                    var error = { "status": status, "outcome": data };
+                    var error = {"status": status, "outcome": data};
                     deferred.reject(error);
                 });
             return deferred.promise;
@@ -2831,7 +2858,7 @@
 (function () {
     'use strict';
 
-    function logger($log, $window, $mdToast) {
+    function logger($filter, $log, $mdToast) {
 
         function getLogFn(moduleId, fnName) {
             fnName = fnName || 'log';
@@ -2899,8 +2926,9 @@
             source = source ? '[' + source + '] ' : '';
             write(source, message);
             if (showToast) {
+                var truncatedMessage = $filter('truncate')(message, 200);
                 $mdToast.show($mdToast.simple()
-                    .content(message)
+                    .content(truncatedMessage)
                     .position('right bottom')
                     .hideDelay(write === $log.error ? 4000 : 2000));
             }
@@ -2918,7 +2946,7 @@
     }
 
     angular.module('common')
-        .factory('logger', ['$log', '$window', '$mdToast', logger]);
+        .factory('logger', ['$filter', '$log', '$mdToast', logger]);
 
 })();(function () {
     'use strict';
@@ -3049,12 +3077,18 @@
                 logInfo('Requesting access to terminology server ' + fhirServer.name + ' ...');
             }
 
-            function close() {
+            function change() {
                 $mdDialog.hide();
                 if (common.isUndefinedOrNull(vm.terminologyServer) ||
                     $scope.selectedServer.id !== vm.terminologyServer.id) {
                     _setActiveServer($scope.selectedServer);
                 }
+            }
+
+            $scope.change = change;
+
+            function close() {
+                $mdDialog.hide();
             }
 
             $scope.close = close;
@@ -3095,12 +3129,18 @@
         vm.chooseFHIRServer = chooseFHIRServer;
 
         function fhirServerController($scope, $mdDialog, fhirServers) {
-            function close() {
+            function change() {
                 $mdDialog.hide();
                 if (common.isUndefinedOrNull(vm.activeServer) ||
                     $scope.selectedServer.id !== vm.activeServer.id) {
                     _updateActiveServer($scope.selectedServer);
                 }
+            }
+
+            $scope.change = change;
+
+            function close() {
+                $mdDialog.hide();
             }
 
             $scope.close = close;
@@ -3246,7 +3286,11 @@
             smartAuthorizationService.getToken(code, state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
                 .then(function (idToken) {
                     logInfo("Access token acquired from " + vm.activeServer.name);
-                    idToken.name = idToken.sub;
+                    if (angular.isDefined(idToken.sub)) {
+                        idToken.name = idToken.sub;
+                    } else {
+                        idToken.name = "No Profile";
+                    }
                     store.set('profile', idToken);
                     common.changeUser(idToken);
                 },
@@ -18268,8 +18312,14 @@
                     deferred.resolve(data.entry || []);
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
-                    logError('Error getting organizations', error, noToast);
-                    deferred.reject();
+                    var errorMessage;
+                    if (angular.isDefined(error.outcome.issue)) {
+                          errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
+                    } else {
+                        errorMessage = "Status " + error.status + ": " + error.outcome;
+                    }
+                    logError(errorMessage, error);
+                    deferred.resolve([]);
                 });
             return deferred.promise;
         }
@@ -19387,8 +19437,14 @@
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
-                    logError('Error getting patients', error, noToast);
-                    deferred.reject();
+                    var errorMessage;
+                    if (angular.isDefined(error.outcome.issue)) {
+                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
+                    } else {
+                        errorMessage = "Status " + error.status + ": " + error.outcome;
+                    }
+                    logError(errorMessage, error);
+                    deferred.resolve([]);
                 });
             return deferred.promise;
         }
@@ -20665,8 +20721,14 @@
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
-                    logError('Error getting persons', error, noToast);
-                    deferred.reject();
+                    var errorMessage;
+                    if (angular.isDefined(error.outcome.issue)) {
+                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
+                    } else {
+                        errorMessage = "Status " + error.status + ": " + error.outcome;
+                    }
+                    logError(errorMessage, error);
+                    deferred.resolve([]);
                 });
             return deferred.promise;
         }
@@ -21861,8 +21923,14 @@
                     vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
-                    logError('Error getting practitioners', error, noToast);
-                    deferred.reject();
+                    var errorMessage;
+                    if (angular.isDefined(error.outcome.issue)) {
+                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
+                    } else {
+                        errorMessage = "Status " + error.status + ": " + error.outcome;
+                    }
+                    logError(errorMessage, error);
+                    deferred.resolve([]);
                 });
             return deferred.promise;
         }
@@ -23292,8 +23360,14 @@
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
-                    logError('Error getting relatedPersons', error, noToast);
-                    deferred.reject();
+                    var errorMessage;
+                    if (angular.isDefined(error.outcome.issue)) {
+                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
+                    } else {
+                        errorMessage = "Status " + error.status + ": " + error.outcome;
+                    }
+                    logError(errorMessage, error);
+                    deferred.resolve([]);
                 });
             return deferred.promise;
         }

@@ -127,12 +127,18 @@
                 logInfo('Requesting access to terminology server ' + fhirServer.name + ' ...');
             }
 
-            function close() {
+            function change() {
                 $mdDialog.hide();
                 if (common.isUndefinedOrNull(vm.terminologyServer) ||
                     $scope.selectedServer.id !== vm.terminologyServer.id) {
                     _setActiveServer($scope.selectedServer);
                 }
+            }
+
+            $scope.change = change;
+
+            function close() {
+                $mdDialog.hide();
             }
 
             $scope.close = close;
@@ -173,12 +179,18 @@
         vm.chooseFHIRServer = chooseFHIRServer;
 
         function fhirServerController($scope, $mdDialog, fhirServers) {
-            function close() {
+            function change() {
                 $mdDialog.hide();
                 if (common.isUndefinedOrNull(vm.activeServer) ||
                     $scope.selectedServer.id !== vm.activeServer.id) {
                     _updateActiveServer($scope.selectedServer);
                 }
+            }
+
+            $scope.change = change;
+
+            function close() {
+                $mdDialog.hide();
             }
 
             $scope.close = close;
@@ -324,7 +336,11 @@
             smartAuthorizationService.getToken(code, state, vm.activeServer.clientId, vm.activeServer.tokenUri, vm.activeServer.redirectUri)
                 .then(function (idToken) {
                     logInfo("Access token acquired from " + vm.activeServer.name);
-                    idToken.name = idToken.sub;
+                    if (angular.isDefined(idToken.sub)) {
+                        idToken.name = idToken.sub;
+                    } else {
+                        idToken.name = "No Profile";
+                    }
                     store.set('profile', idToken);
                     common.changeUser(idToken);
                 },

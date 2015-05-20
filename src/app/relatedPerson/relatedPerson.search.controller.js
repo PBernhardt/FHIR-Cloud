@@ -171,8 +171,14 @@
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
-                    logError('Error getting relatedPersons', error, noToast);
-                    deferred.reject();
+                    var errorMessage;
+                    if (angular.isDefined(error.outcome.issue)) {
+                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
+                    } else {
+                        errorMessage = "Status " + error.status + ": " + error.outcome;
+                    }
+                    logError(errorMessage, error);
+                    deferred.resolve([]);
                 });
             return deferred.promise;
         }

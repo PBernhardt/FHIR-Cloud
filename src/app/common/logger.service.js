@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    function logger($log, $window, $mdToast) {
+    function logger($filter, $log, $mdToast) {
 
         function getLogFn(moduleId, fnName) {
             fnName = fnName || 'log';
@@ -69,8 +69,9 @@
             source = source ? '[' + source + '] ' : '';
             write(source, message);
             if (showToast) {
+                var truncatedMessage = $filter('truncate')(message, 200);
                 $mdToast.show($mdToast.simple()
-                    .content(message)
+                    .content(truncatedMessage)
                     .position('right bottom')
                     .hideDelay(write === $log.error ? 4000 : 2000));
             }
@@ -88,6 +89,6 @@
     }
 
     angular.module('common')
-        .factory('logger', ['$log', '$window', '$mdToast', logger]);
+        .factory('logger', ['$filter', '$log', '$mdToast', logger]);
 
 })();

@@ -301,6 +301,7 @@
         };
         $httpProvider.defaults.headers.put = {'Content-Type': 'application/json+fhir'};
         $httpProvider.defaults.headers.post = {'Content-Type': 'application/json+fhir'};
+
     }]);
 
     app.config(['commonConfigProvider', function (cfg) {

@@ -64,8 +64,14 @@
                     deferred.resolve(data.entry || []);
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
-                    logError('Error getting organizations', error, noToast);
-                    deferred.reject();
+                    var errorMessage;
+                    if (angular.isDefined(error.outcome.issue)) {
+                          errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
+                    } else {
+                        errorMessage = "Status " + error.status + ": " + error.outcome;
+                    }
+                    logError(errorMessage, error);
+                    deferred.resolve([]);
                 });
             return deferred.promise;
         }
