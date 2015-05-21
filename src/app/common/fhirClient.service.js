@@ -79,7 +79,7 @@
             setTimeout(function () {
                 timedOut = true;
                 timeout.resolve();
-            }, (7000));
+            }, (10000));
 
             var req = {
                 method: 'get',
@@ -108,7 +108,7 @@
                             outcome: {
                                 issue: [{
                                     severity: 'fatal',
-                                    details: 'Request cancelled - server did not respond within 7 seconds.'
+                                    details: 'Request cancelled - server did not respond within 10 seconds.'
                                 }]
                             }
                         });
