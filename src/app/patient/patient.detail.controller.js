@@ -14,6 +14,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var $q = common.$q;
         var noToast = false;
 
@@ -74,7 +75,7 @@
                     deferred.resolve(data);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), null, noToast);
-                    deferred.reject();
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -93,9 +94,9 @@
                 .then(function (data) {
                     vm.summary = data.summary;
                     vm.history = data.history;
-                    logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
+                    logSuccess("Retrieved everything for patient at " + vm.patient.resourceId + ".");
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
+                    logWarning(common.unexpectedOutcome(error), null, noToast);
                     _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
                 });
         }
@@ -104,10 +105,10 @@
             observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
                 .then(function (data) {
                     vm.summary = data.entry;
-                    logInfo("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
+                    logSuccess("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
                 }, function (error) {
                     vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), null, noToast);
+                    logWarning(common.unexpectedOutcome(error), null, noToast);
                 });
         }
 
@@ -158,7 +159,7 @@
             if (vm.lookupKey === "current") {
                 vm.patient = patientService.getPatientContext();
                 if (common.isUndefinedOrNull(vm.patient) && angular.isUndefined($routeParams.id)) {
-                        $location.path('/patient');
+                    $location.path('/patient');
                 } else {
                     vm.patient.hashKey = "current";
                     initializeAdministrationData(vm.patient);
@@ -173,7 +174,7 @@
                             _getEverything(resourceId);
                         }
                     }, function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                     }).then(function () {
                         vm.isBusy = false;
                     });
@@ -191,7 +192,7 @@
                             _getEverything(vm.patient.resourceId);
                         }
                     }, function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                     })
                     .then(function () {
                         vm.isBusy = false;
@@ -252,18 +253,19 @@
                 patientService.updatePatient(vm.patient.resourceId, patient)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                         vm.isBusy = false;
                     });
             } else {
                 patientService.addPatient(patient)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                         vm.isBusy = false;
                     });
             }
         }
+
         vm.save = save;
 
         function showSource($event) {
@@ -286,7 +288,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
+                templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item

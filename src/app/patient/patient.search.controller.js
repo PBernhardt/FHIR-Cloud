@@ -194,14 +194,12 @@
                         vm.activeServer.name, null, noToast);
                     common.changePatientList(data);
                     deferred.resolve();
-                    vm.isBusy = false;
                     vm.selectedTab = 1;
                 }, function (error) {
-                    vm.isBusy = false;
-                    logError('Error getting patients', error);
-                    deferred.reject();
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    deferred.resolve();
                 })
-                .then(deferred.resolve());
+                .then(vm.isBusy = false);
             return deferred.promise;
         }
 

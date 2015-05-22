@@ -113,10 +113,22 @@
                             }
                         });
                     } else {
-                        deferred.reject({status: status, outcome: data});
+                        if (angular.isDefined(data.outcome)) {
+                            deferred.reject({status: status, outcome: data});
+                        } else {
+                            deferred.reject({
+                                status: "Unknown",
+                                outcome: {
+                                    issue: [{
+                                        severity: 'fatal',
+                                        details: data ? data : "Server gave no reason."
+                                    }]
+                                }
+                            });
+
+                        }
                     }
                 });
-
             return deferred.promise;
         }
 

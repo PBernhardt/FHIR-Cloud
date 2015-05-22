@@ -6,18 +6,17 @@
         function getLogFn(moduleId, fnName) {
             fnName = fnName || 'log';
             switch (fnName.toLowerCase()) { // convert aliases
-                case 'success':
-                    fnName = 'logSuccess';
-                    break;
                 case 'error':
                     fnName = 'logError';
                     break;
-                case 'warn':
+                case 'warning':
                     fnName = 'logWarning';
                     break;
                 case 'info':
-                    fnName = 'log';
+                    fnName = 'logInfo';
                     break;
+                default:
+                    fnName = 'logDebug';
             }
 
             var logFn = service[fnName] || service.log;
@@ -26,7 +25,7 @@
             };
         }
 
-        function log(message, data, source, showToast) {
+        function logInfo(message, data, source, showToast) {
             logIt(message, data, source, showToast, 'info');
         }
 
@@ -36,6 +35,10 @@
 
         function logSuccess(message, data, source, showToast) {
             logIt(message, data, source, showToast, 'success');
+        }
+
+        function logDebug(message, data, source) {
+            logIt(message, data, source, false, 'debug');
         }
 
         function logError(message, data, source, showToast) {
@@ -65,9 +68,25 @@
         }
 
         function logIt(message, data, source, showToast, toastType) {
-            var write = (toastType === 'error') ? $log.error : $log.log;
+            var write;
+            switch(toastType) {
+                case 'error':
+                    write = $log.error;
+                    break;
+                case 'warning':
+                    write = $log.warn;
+                    break;
+                case 'info':
+                    write = $log.info;
+                    break;
+                default:
+                    write = $log.log;
+            }
             source = source ? '[' + source + '] ' : '';
             write(source, message);
+            if (angular.isDefined(data) && data !== null && toastType === 'error') {
+                write(source, data);
+            }
             if (showToast) {
                 var truncatedMessage = $filter('truncate')(message, 200);
                 $mdToast.show($mdToast.simple()
@@ -79,10 +98,11 @@
 
         var service = {
             getLogFn: getLogFn,
-            log: log,
+            logInfo: logInfo,
             logError: logError,
             logSuccess: logSuccess,
-            logWarning: logWarning
+            logWarning: logWarning,
+            logDebug: logDebug
         };
 
         return service;

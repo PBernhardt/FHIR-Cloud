@@ -84,14 +84,12 @@
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     processSearchResults(data);
-                    vm.isBusy = false;
                     vm.selectedTab = 1;
                 }, function (error) {
-                    vm.isBusy = false;
-                    logError('Error finding organizations: ', error);
-                    deferred.reject();
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    deferred.resolve();
                 })
-                .then(deferred.resolve());
+                .then(vm.isBusy = false);
             return deferred.promise;
         }
 

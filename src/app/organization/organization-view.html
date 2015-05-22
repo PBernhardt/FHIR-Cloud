@@ -88,6 +88,16 @@
                         </md-list-item>
                     </md-list>
 
+                    <md-list flex="100" ng-if="vm.organization.extension">
+                        <md-subheader class="md-no-sticky">Extensions</md-subheader>
+                        <md-list-item class="md-2-line" ng-repeat="ext in vm.organization.extension">
+                            <md-icon md-svg-icon="extension" ng-if="$index === 0"></md-icon>
+                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+                                <h4>{{ext.url}}</h4>
+                                <p>{{ext | extensionValue }}</p>
+                            </div>
+                        </md-list-item>
+                    </md-list>
                 </div>
             </md-tab>
             <md-tab label="Practitioners">

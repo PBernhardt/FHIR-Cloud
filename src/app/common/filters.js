@@ -61,17 +61,32 @@
                     }
                 }
             } else {
-                return "Bad input";
+                return '';
             }
         };
     });
 
-    app.filter('smartUrl', function ($sce) {
+    app.filter('extensionValue', ['$filter', function ($filter) {
+        return function (extension) {
+            if (angular.isDefined(extension.valueString)) {
+                return extension.valueString;
+            } else if (angular.isDefined(extension.valueAddress)) {
+                return ($filter)('singleLineAddress')(extension.valueAddress);
+            } else if (angular.isDefined(extension.valueCodeableConcept)) {
+                return ($filter)('codeableConcept')(extension.valueCodeableConcept);
+            }
+            else {
+                return extension;
+            }
+        };
+    }]);
+
+    app.filter('smartUrl', ['$sce', function ($sce) {
         return function (appUrl, fhirServer, patientId) {
             var launchUrl = appUrl + '?fhirServiceUrl=' + fhirServer + '&patient=' + patientId;
             return $sce.trustAsResourceUrl(launchUrl);
         }
-    });
+    }]);
 
     app.filter('dateString', function () {
         return function (dateTime) {
@@ -94,7 +109,7 @@
             if (humanName && angular.isArray(humanName)) {
                 return buildName(humanName[0].given) + ' ' + buildName(humanName[0].family).replace(",", " ");
             } else if (humanName && humanName.given) {
-                return buildName(humanName.given) + ' ' + buildName(humanName.family).replace (",", " ");
+                return buildName(humanName.given) + ' ' + buildName(humanName.family).replace(",", " ");
             } else {
                 return 'Name Unknown';
             }

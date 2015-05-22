@@ -6,16 +6,31 @@
     function addressService($http, common) {
         var $q = common.$q;
         var _mode = 'multi';
+        var _filter = 'country:US';
         var addresses = [];
         var home = true;
+        var _county = undefined;
+        var _countyURL = "http://hl7.org/fhir/StructureDefinition/us-core-county";
 
         function add(item) {
             // Optimized for complete US addresses
-            function updateFromFormattedAddress(item) {
+            function _parseAddress(components, formattedAddress) {
                 var address = {};
                 address.line = [];
-                if (item.text) {
-                    var parts = item.text.split(", ");
+                var county;
+                for (var i = 0; i < components.length; i++) {
+                    var types = components[i].types;
+                    if (angular.isDefined(types)) {
+                        if (_.indexOf(types, 'administrative_area_level_2') !== -1) {
+                            county = components[i].long_name;
+                            _county = county;
+                            break;
+                        }
+                    }
+                }
+
+                if (formattedAddress) {
+                    var parts = formattedAddress.split(", ");
                     address.line.push(parts[0]);
                     address.city = parts[1];
                     var stateAndZip = parts[2].split(" ");
@@ -23,17 +38,18 @@
                     address.postalCode = stateAndZip[1];
                     address.country = parts[3];
                 }
-                item.$$hashKey = common.randomHash();
-                item.address = address;
-                return item;
+                address.$$hashKey = common.randomHash();
+                address.address = address;
+                address.county = county;
+                return address;
             }
 
             var index = _.indexOf(addresses, item);
 
             if (index > -1) {
-                addresses[index] = updateFromFormattedAddress(item);
+                addresses[index] = _parseAddress(item.address_components, item.formatted_address);
             } else {
-                addresses.push(updateFromFormattedAddress(item));
+                addresses.push(_parseAddress(item.address_components, item.formatted_address));
             }
         }
 
@@ -45,9 +61,12 @@
             return _mode;
         }
 
-        function init(items, supportHome, mode) {
+        function init(items, supportHome, mode, filter) {
             _mode = mode ? mode : 'multi';
             home = supportHome;
+            if (filter !== undefined) {
+                _filter = filter;
+            }
             addresses = [];
             if (items && angular.isArray(items)) {
                 for (var i = 0, len = items.length; i < len; i++) {
@@ -60,6 +79,35 @@
                     }
                 }
             }
+        }
+
+        function initializeKnownExtensions(extensions) {
+            if (common.isUndefinedOrNull(extensions) === false) {
+                for (var i = 0, len = extensions.length; i < len; i++) {
+                    var ext = extensions[i];
+                    if (ext.url) {
+                        switch (ext.url) {
+                            case _countyURL:
+                                _county = ext.valueString;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        function writeKnownExtensions() {
+            var extension = [];
+            if (common.isUndefinedOrNull(_county) === false) {
+                extension.push(
+                    {
+                        url: _countyURL,
+                        valueString: _county
+                    });
+            }
+            return extension;
         }
 
         function mapFromViewModel() {
@@ -113,20 +161,21 @@
                 url: 'https://maps.googleapis.com/maps/api/geocode/json',
                 params: {
                     key: 'AIzaSyCtbVf7g-kQmMQjF_kAfGawAZabKcq4rdo',
-                    address: input
+                    address: input,
+                    components: _filter
                 },
                 headers: {'Authorization': undefined}
-            }
+            };
             $http(req)
                 .success(function (data) {
-                    var addresses = [];
-                    if (data.results) {
-                        angular.forEach(data.results,
-                            function (item) {
-                                addresses.push(item.formatted_address);
-                            });
-                    }
-                    deferred.resolve(addresses);
+                    /*                  var addresses = [];
+                     if (data.results) {
+                     angular.forEach(data.results,
+                     function (item) {
+                     addresses.push(item);
+                     });
+                     }*/
+                    deferred.resolve(data.results);
                 })
                 .error(function (error) {
                     deferred.reject(error);
@@ -149,11 +198,13 @@
             getAll: getAll,
             getMode: getMode,
             init: init,
+            initializeKnownExtensions: initializeKnownExtensions,
             mapFromViewModel: mapFromViewModel,
             reset: reset,
             searchGoogle: searchGoogle,
             setSingle: setSingle,
-            supportHome: supportHome
+            supportHome: supportHome,
+            writeKnownExtensions: writeKnownExtensions
         };
 
         return service;

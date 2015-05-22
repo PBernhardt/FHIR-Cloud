@@ -4,14 +4,14 @@
             <md-autocomplete
                     id="addressSearch"
                     md-no-cache="false"
-                    md-selected-item="vm.address.text"
+                    md-selected-item="vm.address"
                     md-search-text="vm.searchText"
                     md-items="address in vm.getLocation(vm.searchText)"
                     md-delay="300"
                     md-min-length="3"
-                    md-item-text="address"
+                    md-item-text="address.formatted_address"
                     md-floating-label="Address Search">
-                <span md-highlight-text="vm.searchText">{{address}}</span>
+                <span md-highlight-text="vm.searchText">{{address.formatted_address}}</span>
             </md-autocomplete>
 
             <md-radio-group ng-model="vm.address.use" layout-gt-md="row" ng-if="vm.mode==='multi'">
@@ -51,9 +51,14 @@
                 <div ng-if="vm.addresses.length > 0 && vm.mode==='multi'">
                     <md-subheader>Address List</md-subheader>
                     <md-list>
-                        <md-list-item ng-click="vm.removeListItem(addr)" ng-repeat="addr in vm.addresses">
+                        <md-list-item class="md-2-line" ng-click="vm.removeListItem(addr)"
+                                      ng-repeat="addr in vm.addresses">
                             <md-icon md-svg-icon="delete"></md-icon>
-                            <p>{{addr.address | singleLineAddress}} </p>
+                            <div class="md-list-item-text">
+                                <h4>{{addr.address | singleLineAddress}}</h4>
+                                <p>{{addr.county}}</p>
+                            </div>
+                            <md-divider ng-if="!$last"></md-divider>
                         </md-list-item>
                     </md-list>
                 </div>

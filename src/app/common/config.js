@@ -240,6 +240,7 @@
             .icon("email", "./assets/svg/email.svg", 16)
             .icon("encounter", "./assets/svg/man412.svg", 24)
             .icon("error", "./assets/svg/error.svg", 48)
+            .icon("extension", "./assets/svg/extension.svg", 24)
             .icon("family", "./assets/svg/group41.svg", 24)
             .icon("fax", "./assets/svg/fax.svg", 16)
             .icon("female", "./assets/svg/female.svg", 24)

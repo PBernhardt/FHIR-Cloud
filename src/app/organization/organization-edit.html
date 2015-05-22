@@ -42,7 +42,7 @@
 
 
                         <div layout="column" layout-align="start start" style="height: 100px;">
-                            <md-select ng-model="vm.organization.type.coding[0]">
+                            <md-select ng-model="vm.organization.type.coding[0]" aria-label="org type">
                                 <md-option ng-selected="coding.code===vm.organization.type.coding[0].code"
                                            ng-value="coding"
                                            ng-repeat="coding in vm.organizationTypes">

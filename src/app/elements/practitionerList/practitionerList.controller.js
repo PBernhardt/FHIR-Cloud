@@ -7,11 +7,9 @@
         /*jshint validthis:true */
         var vm = this;
 
-        var getLogFn = common.logger.getLogFn;
-        var logError = getLogFn(controllerId, 'error');
-        var logInfo = getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var noToast = false;
-        var $q = common.$q;
 
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
@@ -39,12 +37,12 @@
             vm.isBusy = true;
             practitionerService.getPractitionersByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' +
-                        vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' +
+                        vm.activeServer.name + '.');
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    logError(common.unexpectedOutcome(error), null, noToast);
                 })
                 .then(_processSearchResults)
                 .then(function () {
@@ -56,7 +54,7 @@
         $scope.$on(config.events.practitionerListChanged,
             function (event, data) {
                 _processSearchResults(data);
-                logInfo("Practitioner list updated", null, noToast);
+                logDebug("Practitioner list updated.");
             }
         );
 

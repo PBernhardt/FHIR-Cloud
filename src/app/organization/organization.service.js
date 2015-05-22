@@ -217,15 +217,16 @@
         function initializeNewOrganization() {
             var data = {};
             data.resource = {
-                "resourceType": "Organization",
-                "identifier": [],
-                "type": {"coding": []},
-                "telecom": [],
-                "contact": [],
-                "address": [],
-                "partOf": null,
-                "location": [],
-                "active": true
+                resourceType: "Organization",
+                identifier: [],
+                type: {coding: []},
+                telecom: [],
+                contact: [],
+                address: [],
+                partOf: null,
+                location: [],
+                active: true,
+                extension: [],
             };
             return data;
         }
@@ -260,6 +261,9 @@
             }
             if (resource.location.length === 0) {
                 resource.location = null;
+            }
+            if (resource.extension.length === 0) {
+                resource.extension = null;
             }
             return $q.when(resource);
         }

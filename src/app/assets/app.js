@@ -669,6 +669,7 @@
             .icon("email", "./assets/svg/email.svg", 16)
             .icon("encounter", "./assets/svg/man412.svg", 24)
             .icon("error", "./assets/svg/error.svg", 48)
+            .icon("extension", "./assets/svg/extension.svg", 24)
             .icon("family", "./assets/svg/group41.svg", 24)
             .icon("fax", "./assets/svg/fax.svg", 16)
             .icon("female", "./assets/svg/female.svg", 24)
@@ -1171,10 +1172,22 @@
                             }
                         });
                     } else {
-                        deferred.reject({status: status, outcome: data});
+                        if (angular.isDefined(data.outcome)) {
+                            deferred.reject({status: status, outcome: data});
+                        } else {
+                            deferred.reject({
+                                status: "Unknown",
+                                outcome: {
+                                    issue: [{
+                                        severity: 'fatal',
+                                        details: data ? data : "Server gave no reason."
+                                    }]
+                                }
+                            });
+
+                        }
                     }
                 });
-
             return deferred.promise;
         }
 
@@ -1480,17 +1493,32 @@
                     }
                 }
             } else {
-                return "Bad input";
+                return '';
             }
         };
     });
 
-    app.filter('smartUrl', function ($sce) {
+    app.filter('extensionValue', ['$filter', function ($filter) {
+        return function (extension) {
+            if (angular.isDefined(extension.valueString)) {
+                return extension.valueString;
+            } else if (angular.isDefined(extension.valueAddress)) {
+                return ($filter)('singleLineAddress')(extension.valueAddress);
+            } else if (angular.isDefined(extension.valueCodeableConcept)) {
+                return ($filter)('codeableConcept')(extension.valueCodeableConcept);
+            }
+            else {
+                return extension;
+            }
+        };
+    }]);
+
+    app.filter('smartUrl', ['$sce', function ($sce) {
         return function (appUrl, fhirServer, patientId) {
             var launchUrl = appUrl + '?fhirServiceUrl=' + fhirServer + '&patient=' + patientId;
             return $sce.trustAsResourceUrl(launchUrl);
         }
-    });
+    }]);
 
     app.filter('dateString', function () {
         return function (dateTime) {
@@ -1513,7 +1541,7 @@
             if (humanName && angular.isArray(humanName)) {
                 return buildName(humanName[0].given) + ' ' + buildName(humanName[0].family).replace(",", " ");
             } else if (humanName && humanName.given) {
-                return buildName(humanName.given) + ' ' + buildName(humanName.family).replace (",", " ");
+                return buildName(humanName.given) + ' ' + buildName(humanName.family).replace(",", " ");
             } else {
                 return 'Name Unknown';
             }
@@ -2863,18 +2891,17 @@
         function getLogFn(moduleId, fnName) {
             fnName = fnName || 'log';
             switch (fnName.toLowerCase()) { // convert aliases
-                case 'success':
-                    fnName = 'logSuccess';
-                    break;
                 case 'error':
                     fnName = 'logError';
                     break;
-                case 'warn':
+                case 'warning':
                     fnName = 'logWarning';
                     break;
                 case 'info':
-                    fnName = 'log';
+                    fnName = 'logInfo';
                     break;
+                default:
+                    fnName = 'logDebug';
             }
 
             var logFn = service[fnName] || service.log;
@@ -2883,7 +2910,7 @@
             };
         }
 
-        function log(message, data, source, showToast) {
+        function logInfo(message, data, source, showToast) {
             logIt(message, data, source, showToast, 'info');
         }
 
@@ -2893,6 +2920,10 @@
 
         function logSuccess(message, data, source, showToast) {
             logIt(message, data, source, showToast, 'success');
+        }
+
+        function logDebug(message, data, source) {
+            logIt(message, data, source, false, 'debug');
         }
 
         function logError(message, data, source, showToast) {
@@ -2922,9 +2953,25 @@
         }
 
         function logIt(message, data, source, showToast, toastType) {
-            var write = (toastType === 'error') ? $log.error : $log.log;
+            var write;
+            switch(toastType) {
+                case 'error':
+                    write = $log.error;
+                    break;
+                case 'warning':
+                    write = $log.warn;
+                    break;
+                case 'info':
+                    write = $log.info;
+                    break;
+                default:
+                    write = $log.log;
+            }
             source = source ? '[' + source + '] ' : '';
             write(source, message);
+            if (angular.isDefined(data) && data !== null && toastType === 'error') {
+                write(source, data);
+            }
             if (showToast) {
                 var truncatedMessage = $filter('truncate')(message, 200);
                 $mdToast.show($mdToast.simple()
@@ -2936,10 +2983,11 @@
 
         var service = {
             getLogFn: getLogFn,
-            log: log,
+            logInfo: logInfo,
             logError: logError,
             logSuccess: logSuccess,
-            logWarning: logWarning
+            logWarning: logWarning,
+            logDebug: logDebug
         };
 
         return service;
@@ -2958,9 +3006,11 @@
         /*jshint validthis:true */
         var vm = this;
 
-        var getLogFn = common.logger.getLogFn;
-        var logError = getLogFn(controllerId, 'error');
-        var logInfo = getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+
         var _adminPages = [
             {name: 'Encounter', href: 'encounter/view/current'},
             {name: 'Organization', href: 'organization/view/current'},
@@ -3063,7 +3113,7 @@
             function _setActiveServer(fhirServer) {
                 conformanceService.getConformanceMetadata(fhirServer.baseUrl)
                     .then(function (conformance) {
-                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.terminologyServer = fhirServer;
                         terminologyServers.setActiveServer(vm.terminologyServer);
                         if (angular.isDefined(vm.terminologyServer.clientId)) {
@@ -3074,7 +3124,7 @@
                     }, function (error) {
                         logError('Error returning conformance statement for terminology server ' + fhirServer.name + '. Server ' + vm.terminologyServer.name + ' abides.', error);
                     });
-                logInfo('Requesting access to terminology server ' + fhirServer.name + ' ...');
+                logDebug('Requesting access to terminology server ' + fhirServer.name + ' ...');
             }
 
             function change() {
@@ -3149,10 +3199,10 @@
                 conformanceService.clearCache();
                 conformanceService.getConformanceMetadata(fhirServer.baseUrl)
                     .then(function (conformance) {
-                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.activeServer = fhirServer;
                         if (angular.isUndefined(conformance.rest[0].security)) {
-                            logInfo("Security information missing - this is an OPEN server", null, noToast);
+                            logWarning("Security information missing - this is an OPEN server.", null, noToast);
                         } else if (angular.isArray(conformance.rest[0].security.extension)) {
                             _.forEach(conformance.rest[0].security.extension, function (ex) {
                                 if (_.endsWith(ex.url, "#authorize")) {
@@ -3180,7 +3230,7 @@
                     }, function (error) {
                         logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
                     });
-                logInfo('Requesting access to server ' + fhirServer.name + ' ...');
+                logDebug('Requesting access to server ' + fhirServer.name + ' ...');
             }
 
             function serverChanged(server) {
@@ -3269,13 +3319,10 @@
         vm.logout = logout;
 
         function authorize() {
-            logInfo("Initiating authorization ...", null, noToast);
+            logDebug("Initiating authorization ...", null, noToast);
             if (angular.isUndefined(vm.activeServer.authorizeUri) || angular.isUndefined(vm.activeServer.tokenUri)) {
-                logInfo("Selected server does NOT support OAuth");
+                logWarning("Selected server does NOT support OAuth");
             } else {
-                logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
-                logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
-                logInfo("Redirect URI: " + vm.activeServer.redirectUri, null, noToast);
                 smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri, vm.activeServer.baseUrl);
             }
         }
@@ -3328,7 +3375,7 @@
         $scope.$on(config.events.authenticatedUserChanged,
             function (event, user) {
                 if (user === null && vm.user !== null) {
-                    logInfo(vm.user.name + " has been logged out");
+                    logDebug(vm.user.name + " has been logged out");
                 }
                 vm.user = user;
             }
@@ -3337,7 +3384,7 @@
         $rootScope.$on('$locationChangeStart', function () {
             if (common.isAuthenticated() === false && $location.path().indexOf('home') === -1) {
                 if ($location.path() !== "/") {
-                    logInfo("You must authenticate to access the application");
+                    logWarning("You must authenticate to access the application");
                 }
                 $location.path('/home');
             }
@@ -3349,7 +3396,7 @@
                         auth.authenticate(vm.user, token);
                     } else {
                         // Either show Login page or use the refresh token to get a new idToken
-                        logInfo("Authorization token has expired");
+                        logWarning("Authorization token has expired");
                         $location.path('/');
                     }
                 }
@@ -6784,7 +6831,7 @@
                     deferred.resolve(data);
                 }, function (error) {
                     logError(error);
-                    deferred.reject();
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -6854,16 +6901,31 @@
     function addressService($http, common) {
         var $q = common.$q;
         var _mode = 'multi';
+        var _filter = 'country:US';
         var addresses = [];
         var home = true;
+        var _county = undefined;
+        var _countyURL = "http://hl7.org/fhir/StructureDefinition/us-core-county";
 
         function add(item) {
             // Optimized for complete US addresses
-            function updateFromFormattedAddress(item) {
+            function _parseAddress(components, formattedAddress) {
                 var address = {};
                 address.line = [];
-                if (item.text) {
-                    var parts = item.text.split(", ");
+                var county;
+                for (var i = 0; i < components.length; i++) {
+                    var types = components[i].types;
+                    if (angular.isDefined(types)) {
+                        if (_.indexOf(types, 'administrative_area_level_2') !== -1) {
+                            county = components[i].long_name;
+                            _county = county;
+                            break;
+                        }
+                    }
+                }
+
+                if (formattedAddress) {
+                    var parts = formattedAddress.split(", ");
                     address.line.push(parts[0]);
                     address.city = parts[1];
                     var stateAndZip = parts[2].split(" ");
@@ -6871,17 +6933,18 @@
                     address.postalCode = stateAndZip[1];
                     address.country = parts[3];
                 }
-                item.$$hashKey = common.randomHash();
-                item.address = address;
-                return item;
+                address.$$hashKey = common.randomHash();
+                address.address = address;
+                address.county = county;
+                return address;
             }
 
             var index = _.indexOf(addresses, item);
 
             if (index > -1) {
-                addresses[index] = updateFromFormattedAddress(item);
+                addresses[index] = _parseAddress(item.address_components, item.formatted_address);
             } else {
-                addresses.push(updateFromFormattedAddress(item));
+                addresses.push(_parseAddress(item.address_components, item.formatted_address));
             }
         }
 
@@ -6893,9 +6956,12 @@
             return _mode;
         }
 
-        function init(items, supportHome, mode) {
+        function init(items, supportHome, mode, filter) {
             _mode = mode ? mode : 'multi';
             home = supportHome;
+            if (filter !== undefined) {
+                _filter = filter;
+            }
             addresses = [];
             if (items && angular.isArray(items)) {
                 for (var i = 0, len = items.length; i < len; i++) {
@@ -6908,6 +6974,35 @@
                     }
                 }
             }
+        }
+
+        function initializeKnownExtensions(extensions) {
+            if (common.isUndefinedOrNull(extensions) === false) {
+                for (var i = 0, len = extensions.length; i < len; i++) {
+                    var ext = extensions[i];
+                    if (ext.url) {
+                        switch (ext.url) {
+                            case _countyURL:
+                                _county = ext.valueString;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        function writeKnownExtensions() {
+            var extension = [];
+            if (common.isUndefinedOrNull(_county) === false) {
+                extension.push(
+                    {
+                        url: _countyURL,
+                        valueString: _county
+                    });
+            }
+            return extension;
         }
 
         function mapFromViewModel() {
@@ -6961,20 +7056,21 @@
                 url: 'https://maps.googleapis.com/maps/api/geocode/json',
                 params: {
                     key: 'AIzaSyCtbVf7g-kQmMQjF_kAfGawAZabKcq4rdo',
-                    address: input
+                    address: input,
+                    components: _filter
                 },
                 headers: {'Authorization': undefined}
-            }
+            };
             $http(req)
                 .success(function (data) {
-                    var addresses = [];
-                    if (data.results) {
-                        angular.forEach(data.results,
-                            function (item) {
-                                addresses.push(item.formatted_address);
-                            });
-                    }
-                    deferred.resolve(addresses);
+                    /*                  var addresses = [];
+                     if (data.results) {
+                     angular.forEach(data.results,
+                     function (item) {
+                     addresses.push(item);
+                     });
+                     }*/
+                    deferred.resolve(data.results);
                 })
                 .error(function (error) {
                     deferred.reject(error);
@@ -6997,11 +7093,13 @@
             getAll: getAll,
             getMode: getMode,
             init: init,
+            initializeKnownExtensions: initializeKnownExtensions,
             mapFromViewModel: mapFromViewModel,
             reset: reset,
             searchGoogle: searchGoogle,
             setSingle: setSingle,
-            supportHome: supportHome
+            supportHome: supportHome,
+            writeKnownExtensions: writeKnownExtensions
         };
 
         return service;
@@ -8812,17 +8910,15 @@
         /*jshint validthis:true */
         var vm = this;
 
-        var getLogFn = common.logger.getLogFn;
-        var logError = getLogFn(controllerId, 'error');
-        var logInfo = getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var noToast = false;
-        var $q = common.$q;
 
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
                 }, function (error) {
-                    logError('Error initializing patient search', error);
+                    logError('Error initializing patient search.', error);
                 });
         }
 
@@ -8844,12 +8940,12 @@
             vm.isBusy = true;
             patientService.getPatientsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
-                        vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
+                        vm.activeServer.name + '.');
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    logError(common.unexpectedOutcome(error), null, noToast);
                 })
                 .then(_processSearchResults)
                 .then(function () {
@@ -8861,7 +8957,7 @@
         $scope.$on(config.events.patientListChanged,
             function (event, data) {
                 _processSearchResults(data);
-                logInfo("Patient list updated", null, noToast);
+                logDebug("Patient list updated.");
             }
         );
 
@@ -8897,11 +8993,9 @@
         /*jshint validthis:true */
         var vm = this;
 
-        var getLogFn = common.logger.getLogFn;
-        var logError = getLogFn(controllerId, 'error');
-        var logInfo = getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var noToast = false;
-        var $q = common.$q;
 
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
@@ -8929,12 +9023,12 @@
             vm.isBusy = true;
             practitionerService.getPractitionersByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' +
-                        vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' +
+                        vm.activeServer.name + '.');
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    logError(common.unexpectedOutcome(error), null, noToast);
                 })
                 .then(_processSearchResults)
                 .then(function () {
@@ -8946,7 +9040,7 @@
         $scope.$on(config.events.practitionerListChanged,
             function (event, data) {
                 _processSearchResults(data);
-                logInfo("Practitioner list updated", null, noToast);
+                logDebug("Practitioner list updated.");
             }
         );
 
@@ -17841,8 +17935,9 @@
         var vm = this;
 
         var logError = common.logger.getLogFn(controllerId, 'error');
-        var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var $q = common.$q;
         var noToast = false;
 
@@ -17873,7 +17968,7 @@
                             $location.path('/organization');
                         },
                         function (error) {
-                            logError(common.unexpectedOutcome(error));
+                            logError(common.unexpectedOutcome(error), error);
                         }
                     );
                 }
@@ -17883,7 +17978,7 @@
                 var confirm = $mdDialog.confirm().title('Delete ' + organization.name + '?').ok('Yes').cancel('No');
                 $mdDialog.show(confirm).then(executeDelete);
             } else {
-                logInfo("You must first select an organization to delete.")
+                logWarning("You must first select an organization to delete.")
             }
         }
 
@@ -17908,7 +18003,7 @@
                     logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     deferred.resolve(data || []);
                 }, function (error) {
-                    logError('Error getting organizations', error, noToast);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.reject();
                 });
             return deferred.promise;
@@ -17928,6 +18023,7 @@
                 vm.title = vm.organization.name;
                 identifierService.init(vm.organization.identifier, "multi", "organization");
                 addressService.init(vm.organization.address, false);
+                addressService.initializeKnownExtensions(vm.extension);
                 contactService.init(vm.organization.contact);
                 contactPointService.init(vm.organization.telecom, false, false);
                 vm.isBusy = false;
@@ -17959,14 +18055,14 @@
                 vm.isEditing = false;
             } else if (angular.isDefined($routeParams.resourceId)) {
                 var fullPath = vm.activeServer.baseUrl + '/Organization/' + $routeParams.resourceId;
-                logInfo("Fetching " + fullPath, null, noToast);
+                logSuccess("Fetching " + fullPath, null, noToast);
                 organizationService.getOrganization(fullPath)
                     .then(initializeRelatedData).then(function () {
                         var session = sessionService.getSession();
                         session.organization = vm.organization;
                         sessionService.updateSession(session);
                     }, function (error) {
-                        logError($filter('unexpectedOutcome')(error));
+                        logError(common.unexpectedOutcome(error), error);
                         vm.isBusy = false;
                     });
             } else {
@@ -17977,14 +18073,14 @@
                             session.organization = vm.organization;
                             sessionService.updateSession(session);
                         }, function (error) {
-                            logError($filter('unexpectedOutcome')(error));
+                            logError(common.unexpectedOutcome(error), error);
                             vm.isBusy = false;
                         });
                 } else if ($routeParams.id) {
                     var resourceId = vm.activeServer.baseUrl + '/Organization/' + $routeParams.id;
                     organizationService.getOrganization(resourceId)
                         .then(initializeRelatedData, function (error) {
-                            logError($filter('unexpectedOutcome')(error));
+                            logError(common.unexpectedOutcome(error), error);
                             vm.isBusy = false;
                         });
                 }
@@ -18009,7 +18105,7 @@
         function processResult(results) {
             var resourceVersionId = results.headers.location || results.headers["content-location"];
             if (angular.isUndefined(resourceVersionId)) {
-                logInfo("Organization saved, but location is unavailable. CORS is not implemented correctly at " + vm.activeServer.name);
+                logWarning("Organization saved, but location is unavailable. CORS is not implemented correctly at " + vm.activeServer.name);
             } else {
                 logInfo("Organization saved at " + resourceVersionId);
                 vm.organization.resourceVersionId = resourceVersionId;
@@ -18021,13 +18117,14 @@
 
         function save() {
             if (vm.organization.name.length < 5) {
-                logError("Organization Name must be at least 5 characters");
+                logWarning("Organization Name must be at least 5 characters");
                 return;
             }
             var organization = organizationService.initializeNewOrganization().resource;
             organization.name = vm.organization.name;
             organization.type = vm.organization.type;
             organization.address = addressService.mapFromViewModel();
+            organization.extension = addressService.writeKnownExtensions();
             organization.telecom = contactPointService.mapFromViewModel();
             organization.contact = contactService.getAll();
             organization.partOf = vm.organization.partOf;
@@ -18038,13 +18135,13 @@
                 organizationService.updateOrganization(vm.organization.resourceId, organization)
                     .then(processResult,
                     function (error) {
-                        logError($filter('unexpectedOutcome')(error));
+                        logError(common.unexpectedOutcome(error), error);
                     });
             } else {
                 organizationService.addOrganization(organization)
                     .then(processResult,
                     function (error) {
-                        logError($filter('unexpectedOutcome')(error));
+                        logError(common.unexpectedOutcome(error), error);
                     });
             }
         }
@@ -18053,12 +18150,12 @@
             var deferred = $q.defer();
             practitionerService.getPractitioners(vm.activeServer.baseUrl, undefined, vm.organization.id)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' + vm.activeServer.name, null, noToast);
+                    logSuccess('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' + vm.activeServer.name, null, noToast);
                     common.changePractitionerList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError('Error getting Practitioners', error, noToast);
-                    deferred.reject();
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -18067,12 +18164,12 @@
             var deferred = $q.defer();
             patientService.getPatients(vm.activeServer.baseUrl, undefined, vm.organization.id)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logSuccess('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
                     common.changePatientList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError('Error getting Patients', error, noToast);
-                    deferred.reject();
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -18085,7 +18182,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
+                templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -18122,7 +18219,7 @@
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
-                    logError($filter('unexpectedOutcome')(error));
+                    logError(common.unexpectedOutcome(error), error);
                 });
         }
 
@@ -18133,7 +18230,7 @@
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
-                    logError($filter('unexpectedOutcome')(error));
+                    logError(common.unexpectedOutcome(error), error);
                 });
         }
 
@@ -18144,19 +18241,19 @@
                 function (result) {
                     logSuccess(result, null, noToast);
                 }, function (error) {
-                    logError($filter('unexpectedOutcome')(error));
+                    logError(common.unexpectedOutcome(error), error);
                 });
         }
 
         function createRandomRelatedPersons(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
             logInfo("Creating random related persons for " + vm.organization.resourceId);
-/*            replatedPersonService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
-                function (result) {
-                    logSuccess(result, null, noToast);
-                }, function (error) {
-                    logError($filter('unexpectedOutcome')(error));
-                });*/
+            /*            replatedPersonService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
+             function (result) {
+             logSuccess(result, null, noToast);
+             }, function (error) {
+             logError(common.unexpectedOutcome(error), error);
+             });*/
         }
 
         function actions($event) {
@@ -18332,14 +18429,12 @@
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
                     processSearchResults(data);
-                    vm.isBusy = false;
                     vm.selectedTab = 1;
                 }, function (error) {
-                    vm.isBusy = false;
-                    logError('Error finding organizations: ', error);
-                    deferred.reject();
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    deferred.resolve();
                 })
-                .then(deferred.resolve());
+                .then(vm.isBusy = false);
             return deferred.promise;
         }
 
@@ -18721,15 +18816,16 @@
         function initializeNewOrganization() {
             var data = {};
             data.resource = {
-                "resourceType": "Organization",
-                "identifier": [],
-                "type": {"coding": []},
-                "telecom": [],
-                "contact": [],
-                "address": [],
-                "partOf": null,
-                "location": [],
-                "active": true
+                resourceType: "Organization",
+                identifier: [],
+                type: {coding: []},
+                telecom: [],
+                contact: [],
+                address: [],
+                partOf: null,
+                location: [],
+                active: true,
+                extension: [],
             };
             return data;
         }
@@ -18764,6 +18860,9 @@
             }
             if (resource.location.length === 0) {
                 resource.location = null;
+            }
+            if (resource.extension.length === 0) {
+                resource.extension = null;
             }
             return $q.when(resource);
         }
@@ -18819,6 +18918,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var $q = common.$q;
         var noToast = false;
 
@@ -18879,7 +18979,7 @@
                     deferred.resolve(data);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), null, noToast);
-                    deferred.reject();
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -18898,9 +18998,9 @@
                 .then(function (data) {
                     vm.summary = data.summary;
                     vm.history = data.history;
-                    logInfo("Retrieved everything for patient at " + vm.patient.resourceId, null, noToast);
+                    logSuccess("Retrieved everything for patient at " + vm.patient.resourceId + ".");
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
+                    logWarning(common.unexpectedOutcome(error), null, noToast);
                     _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
                 });
         }
@@ -18909,10 +19009,10 @@
             observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
                 .then(function (data) {
                     vm.summary = data.entry;
-                    logInfo("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
+                    logSuccess("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
                 }, function (error) {
                     vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), null, noToast);
+                    logWarning(common.unexpectedOutcome(error), null, noToast);
                 });
         }
 
@@ -18963,7 +19063,7 @@
             if (vm.lookupKey === "current") {
                 vm.patient = patientService.getPatientContext();
                 if (common.isUndefinedOrNull(vm.patient) && angular.isUndefined($routeParams.id)) {
-                        $location.path('/patient');
+                    $location.path('/patient');
                 } else {
                     vm.patient.hashKey = "current";
                     initializeAdministrationData(vm.patient);
@@ -18978,7 +19078,7 @@
                             _getEverything(resourceId);
                         }
                     }, function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                     }).then(function () {
                         vm.isBusy = false;
                     });
@@ -18996,7 +19096,7 @@
                             _getEverything(vm.patient.resourceId);
                         }
                     }, function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                     })
                     .then(function () {
                         vm.isBusy = false;
@@ -19057,18 +19157,19 @@
                 patientService.updatePatient(vm.patient.resourceId, patient)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                         vm.isBusy = false;
                     });
             } else {
                 patientService.addPatient(patient)
                     .then(processResult,
                     function (error) {
-                        logError(common.unexpectedOutcome(error));
+                        logError(common.unexpectedOutcome(error), error);
                         vm.isBusy = false;
                     });
             }
         }
+
         vm.save = save;
 
         function showSource($event) {
@@ -19091,7 +19192,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
+                templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -19460,14 +19561,12 @@
                         vm.activeServer.name, null, noToast);
                     common.changePatientList(data);
                     deferred.resolve();
-                    vm.isBusy = false;
                     vm.selectedTab = 1;
                 }, function (error) {
-                    vm.isBusy = false;
-                    logError('Error getting patients', error);
-                    deferred.reject();
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    deferred.resolve();
                 })
-                .then(deferred.resolve());
+                .then(vm.isBusy = false);
             return deferred.promise;
         }
 

@@ -31,7 +31,7 @@
                     deferred.resolve(data);
                 }, function (error) {
                     logError(error);
-                    deferred.reject();
+                    deferred.resolve();
                 });
             return deferred.promise;
         }

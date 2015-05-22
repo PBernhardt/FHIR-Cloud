@@ -8,9 +8,11 @@
         /*jshint validthis:true */
         var vm = this;
 
-        var getLogFn = common.logger.getLogFn;
-        var logError = getLogFn(controllerId, 'error');
-        var logInfo = getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+
         var _adminPages = [
             {name: 'Encounter', href: 'encounter/view/current'},
             {name: 'Organization', href: 'organization/view/current'},
@@ -113,7 +115,7 @@
             function _setActiveServer(fhirServer) {
                 conformanceService.getConformanceMetadata(fhirServer.baseUrl)
                     .then(function (conformance) {
-                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.terminologyServer = fhirServer;
                         terminologyServers.setActiveServer(vm.terminologyServer);
                         if (angular.isDefined(vm.terminologyServer.clientId)) {
@@ -124,7 +126,7 @@
                     }, function (error) {
                         logError('Error returning conformance statement for terminology server ' + fhirServer.name + '. Server ' + vm.terminologyServer.name + ' abides.', error);
                     });
-                logInfo('Requesting access to terminology server ' + fhirServer.name + ' ...');
+                logDebug('Requesting access to terminology server ' + fhirServer.name + ' ...');
             }
 
             function change() {
@@ -199,10 +201,10 @@
                 conformanceService.clearCache();
                 conformanceService.getConformanceMetadata(fhirServer.baseUrl)
                     .then(function (conformance) {
-                        logInfo('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
+                        logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.activeServer = fhirServer;
                         if (angular.isUndefined(conformance.rest[0].security)) {
-                            logInfo("Security information missing - this is an OPEN server", null, noToast);
+                            logWarning("Security information missing - this is an OPEN server.", null, noToast);
                         } else if (angular.isArray(conformance.rest[0].security.extension)) {
                             _.forEach(conformance.rest[0].security.extension, function (ex) {
                                 if (_.endsWith(ex.url, "#authorize")) {
@@ -230,7 +232,7 @@
                     }, function (error) {
                         logError('Error returning conformance statement for ' + fhirServer.name + '. Server ' + vm.activeServer.name + ' abides.', error);
                     });
-                logInfo('Requesting access to server ' + fhirServer.name + ' ...');
+                logDebug('Requesting access to server ' + fhirServer.name + ' ...');
             }
 
             function serverChanged(server) {
@@ -319,13 +321,10 @@
         vm.logout = logout;
 
         function authorize() {
-            logInfo("Initiating authorization ...", null, noToast);
+            logDebug("Initiating authorization ...", null, noToast);
             if (angular.isUndefined(vm.activeServer.authorizeUri) || angular.isUndefined(vm.activeServer.tokenUri)) {
-                logInfo("Selected server does NOT support OAuth");
+                logWarning("Selected server does NOT support OAuth");
             } else {
-                logInfo("Auth URI: " + vm.activeServer.authorizeUri, null, noToast);
-                logInfo("Token URI: " + vm.activeServer.tokenUri, null, noToast);
-                logInfo("Redirect URI: " + vm.activeServer.redirectUri, null, noToast);
                 smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri, vm.activeServer.baseUrl);
             }
         }
@@ -378,7 +377,7 @@
         $scope.$on(config.events.authenticatedUserChanged,
             function (event, user) {
                 if (user === null && vm.user !== null) {
-                    logInfo(vm.user.name + " has been logged out");
+                    logDebug(vm.user.name + " has been logged out");
                 }
                 vm.user = user;
             }
@@ -387,7 +386,7 @@
         $rootScope.$on('$locationChangeStart', function () {
             if (common.isAuthenticated() === false && $location.path().indexOf('home') === -1) {
                 if ($location.path() !== "/") {
-                    logInfo("You must authenticate to access the application");
+                    logWarning("You must authenticate to access the application");
                 }
                 $location.path('/home');
             }
@@ -399,7 +398,7 @@
                         auth.authenticate(vm.user, token);
                     } else {
                         // Either show Login page or use the refresh token to get a new idToken
-                        logInfo("Authorization token has expired");
+                        logWarning("Authorization token has expired");
                         $location.path('/');
                     }
                 }
