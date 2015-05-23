@@ -36,8 +36,8 @@
                 <md-radio-button value="old" aria-label="old">Former</md-radio-button>
             </md-radio-group>
 
-            <div ng-if="vm.humanName.use === 'old'">
-                <h4>Period of former name</h4>
+            <div ng-if="vm.humanName.use === 'old' || vm.humanName.use === 'maiden' || vm.humanName.use === 'temp'">
+                <h4 class="md-subhead">Period of former name</h4>
                 <div layout="row" layout-sm="column" layout-align="space-around center">
                     <md-input-container>
                         <label>Start</label>
@@ -64,9 +64,15 @@
 
                 <md-subheader>Name List</md-subheader>
                 <md-list>
-                    <md-list-item ng-click="vm.removeListItem(name)" ng-repeat="name in vm.humanNames">
-                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
-                        <p>{{name | fullName}}</p>
+                    <md-list-item class="md-3-line" ng-click="vm.removeListItem(hn)"
+                                  ng-repeat="hn in vm.humanNames">
+                        <md-icon md-svg-icon="delete"></md-icon>
+                        <div class="md-list-item-text">
+                            <h3>{{ hn | fullName }}</h3>
+                            <h4>{{hn.use}}</h4>
+                            <p ng-if="hn.period">{{hn.period | displayPeriod }}</p>
+                        </div>
+                        <md-divider ng-if="!$last"></md-divider>
                     </md-list-item>
                 </md-list>
             </div>

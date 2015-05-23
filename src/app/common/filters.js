@@ -96,6 +96,27 @@
         }
     });
 
+    app.filter('displayPeriod', ['$filter', function ($filter) {
+        return function (period) {
+            if (angular.isDefined(period)) {
+                var result = "{0} to {1}";
+                var start = " -- ";
+                var end = " -- ";
+                if (angular.isDefined(period.start)) {
+                    start = $filter('date')(period.start, 'mediumDate');
+                }
+                if (angular.isDefined(period.end)) {
+                    end = $filter('date')(period.end, 'mediumDate');
+                }
+                result = result.replace("{0}", start);
+                result = result.replace("{1}", end);
+                return result;
+            } else {
+                return "period unspecified";
+            }
+        }
+    }]);
+
     app.filter('fullName', function () {
         function buildName(input) {
             if (input && angular.isArray(input)) {
@@ -280,7 +301,9 @@
 
     app.filter('singleLineAddress', function () {
         return function (address) {
-            if (address) {
+            if (address && address.text && address.text.length > 10) {
+                return address.text;
+            } else if (address) {
                 return (address.line ? address.line.join(' ') + ', ' : '') + (address.city ? address.city + ', ' : '') + (address.state ? address.state : '') + (address.postalCode ? ' ' + address.postalCode : '') + (address.country ? ', ' + address.country : '');
             } else {
                 return '';

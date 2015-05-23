@@ -120,12 +120,12 @@
 
                     <md-list flex="100" ng-if="vm.patient.name">
                         <md-subheader class="md-no-sticky">Names</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="n in vm.patient.name">
+                        <md-list-item class="md-3-line" ng-repeat="n in vm.patient.name">
                             <md-icon md-svg-icon="person" ng-if="$index === 0"></md-icon>
                             <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
                                 <h3> {{ n | fullName }} </h3>
-
-                                <p>{{n.use}}</p>
+                                <h4>{{n.use}}</h4>
+                                <p ng-if="n.period">{{n.period | displayPeriod }}</p>
                             </div>
                             <md-divider ng-if="$last"></md-divider>
                         </md-list-item>
@@ -133,12 +133,12 @@
 
                     <md-list flex="100" ng-if="vm.patient.address">
                         <md-subheader class="md-no-sticky">Addresses</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="a in vm.patient.address">
+                        <md-list-item class="md-2-line" ng-repeat="addr in vm.patient.address">
                             <md-icon md-svg-icon="address" ng-if="$index === 0"></md-icon>
                             <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
-                                <h3> {{ a | singleLineAddress }} </h3>
-
-                                <p>{{a.use}}</p>
+                                <h3> {{ addr | singleLineAddress }} </h3>
+                                <p ng-if="addr.use !== 'old'">{{addr.use}}</p>
+                                <p ng-if="addr.use === 'old'">Former address ({{addr.period | displayPeriod }})</p>
                             </div>
                             <md-divider ng-if="$last"></md-divider>
                         </md-list-item>

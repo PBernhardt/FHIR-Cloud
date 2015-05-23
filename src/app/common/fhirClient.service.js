@@ -104,7 +104,7 @@
                 .error(function (data, status) {
                     if (timedOut) {
                         deferred.reject({
-                            status: "Unknown",
+                            status: "500",
                             outcome: {
                                 issue: [{
                                     severity: 'fatal',
@@ -117,7 +117,7 @@
                             deferred.reject({status: status, outcome: data});
                         } else {
                             deferred.reject({
-                                status: "Unknown",
+                                status: status ? status : "Unknown",
                                 outcome: {
                                     issue: [{
                                         severity: 'fatal',

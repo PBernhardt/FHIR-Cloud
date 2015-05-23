@@ -51,12 +51,14 @@
                 <div ng-if="vm.addresses.length > 0 && vm.mode==='multi'">
                     <md-subheader>Address List</md-subheader>
                     <md-list>
-                        <md-list-item class="md-2-line" ng-click="vm.removeListItem(addr)"
+                        <md-list-item class="md-3-line" ng-click="vm.removeListItem(addr)"
                                       ng-repeat="addr in vm.addresses">
                             <md-icon md-svg-icon="delete"></md-icon>
                             <div class="md-list-item-text">
-                                <h4>{{addr.address | singleLineAddress}}</h4>
-                                <p>{{addr.county}}</p>
+                                <h3>{{addr.address | singleLineAddress}}</h3>
+                                <h4>{{addr.county}}</h4>
+                                <p ng-if="addr.use !== 'old'">{{addr.use}}</p>
+                                <p ng-if="addr.use === 'old'">Former address ({{addr.period | displayPeriod }})</p>
                             </div>
                             <md-divider ng-if="!$last"></md-divider>
                         </md-list-item>

@@ -136,7 +136,7 @@
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    logError(common.unexpectedOutcome(error), error);
                 })
                 .then(processSearchResults)
                 .then(function () {
@@ -152,13 +152,7 @@
                     vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
-                    var errorMessage;
-                    if (angular.isDefined(error.outcome.issue)) {
-                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
-                    } else {
-                        errorMessage = "Status " + error.status + ": " + error.outcome;
-                    }
-                    logError(errorMessage, error);
+                    logError(common.unexpectedOutcome(error), error);
                     deferred.resolve([]);
                 });
             return deferred.promise;
@@ -178,8 +172,7 @@
                     vm.selectedTab = 1;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError('Error getting practitioners', error);
-                    deferred.reject();
+                    logError(common.unexpectedOutcome(error), error);
                 })
                 .then(deferred.resolve());
             return deferred.promise;

@@ -350,14 +350,17 @@
         }
 
         function unexpectedOutcome(error) {
-            var message = 'Unexpected response from server - ';
+            var message = '';
             if (error.status) {
-                message = message + 'HTTP Status: ' + error.status;
+                message = 'HTTP Status - ' + error.status;
             }
             if (error.outcome && error.outcome.issue) {
                 _.forEach(error.outcome.issue, function (item) {
                     message = message + ': ' + item.severity + ' - ' + item.details;
                 });
+            }
+            if (message === '') {
+                message = 'Unexpected error returned from remote server.'
             }
             return message;
         }
@@ -1163,7 +1166,7 @@
                 .error(function (data, status) {
                     if (timedOut) {
                         deferred.reject({
-                            status: "Unknown",
+                            status: "500",
                             outcome: {
                                 issue: [{
                                     severity: 'fatal',
@@ -1176,7 +1179,7 @@
                             deferred.reject({status: status, outcome: data});
                         } else {
                             deferred.reject({
-                                status: "Unknown",
+                                status: status ? status : "Unknown",
                                 outcome: {
                                     issue: [{
                                         severity: 'fatal',
@@ -1528,6 +1531,27 @@
         }
     });
 
+    app.filter('displayPeriod', ['$filter', function ($filter) {
+        return function (period) {
+            if (angular.isDefined(period)) {
+                var result = "{0} to {1}";
+                var start = " -- ";
+                var end = " -- ";
+                if (angular.isDefined(period.start)) {
+                    start = $filter('date')(period.start, 'mediumDate');
+                }
+                if (angular.isDefined(period.end)) {
+                    end = $filter('date')(period.end, 'mediumDate');
+                }
+                result = result.replace("{0}", start);
+                result = result.replace("{1}", end);
+                return result;
+            } else {
+                return "period unspecified";
+            }
+        }
+    }]);
+
     app.filter('fullName', function () {
         function buildName(input) {
             if (input && angular.isArray(input)) {
@@ -1712,7 +1736,9 @@
 
     app.filter('singleLineAddress', function () {
         return function (address) {
-            if (address) {
+            if (address && address.text && address.text.length > 10) {
+                return address.text;
+            } else if (address) {
                 return (address.line ? address.line.join(' ') + ', ' : '') + (address.city ? address.city + ', ' : '') + (address.state ? address.state : '') + (address.postalCode ? ' ' + address.postalCode : '') + (address.country ? ', ' + address.country : '');
             } else {
                 return '';
@@ -6898,7 +6924,7 @@
 
     var serviceId = 'addressService';
 
-    function addressService($http, common) {
+    function addressService($filter, $http, common) {
         var $q = common.$q;
         var _mode = 'multi';
         var _filter = 'country:US';
@@ -6907,44 +6933,94 @@
         var _county = undefined;
         var _countyURL = "http://hl7.org/fhir/StructureDefinition/us-core-county";
 
-        function add(item) {
-            // Optimized for complete US addresses
-            function _parseAddress(components, formattedAddress) {
+        function add(googleAddress) {
+            function _parseAddress(item) {
                 var address = {};
-                address.line = [];
+                var streetNumber;
+                var route;
+                var streetAddress;
                 var county;
-                for (var i = 0; i < components.length; i++) {
-                    var types = components[i].types;
+                for (var i = 0; i < item.address_components.length; i++) {
+                    var types = item.address_components[i].types;
                     if (angular.isDefined(types)) {
                         if (_.indexOf(types, 'administrative_area_level_2') !== -1) {
-                            county = components[i].long_name;
+                            county = item.address_components[i].long_name;
                             _county = county;
-                            break;
+                            continue;
+                        }
+                        if (_.indexOf(types, 'country') !== -1) {
+                            address.country = item.address_components[i].short_name;
+                            continue;
+                        }
+                        if (_.indexOf(types, 'administrative_area_level_1') !== -1) {
+                            address.state = item.address_components[i].short_name;
+                            continue;
+                        }
+
+                        if (_.indexOf(types, 'locality') !== -1) {
+                            address.city = item.address_components[i].long_name;
+                            continue;
+                        }
+                        if (_.indexOf(types, 'postal_code') !== -1) {
+                            address.postalCode = item.address_components[i].long_name;
+                            continue;
+                        }
+                        if (_.indexOf(types, 'street_number') !== -1) {
+                            streetNumber = item.address_components[i].long_name;
+                            continue;
+                        }
+                        if (_.indexOf(types, 'route') !== -1) {
+                            route = item.address_components[i].long_name;
+                            continue;
+                        }
+                        if (_.indexOf(types, 'street_address') !== -1) {
+                            streetAddress = item.address_components[i].long_name;
                         }
                     }
                 }
 
-                if (formattedAddress) {
-                    var parts = formattedAddress.split(", ");
-                    address.line.push(parts[0]);
-                    address.city = parts[1];
-                    var stateAndZip = parts[2].split(" ");
-                    address.state = stateAndZip[0];
-                    address.postalCode = stateAndZip[1];
-                    address.country = parts[3];
+                address.line = [];
+                /*
+                The street address will either be concat of street_number and route
+                or just street_address (Google is fickle this way)
+                 */
+                if (angular.isDefined(streetAddress)) {
+                    address.line.push(streetAddress);
+                } else if(angular.isDefined(route)) {
+                    streetAddress = route;
+                    if (angular.isDefined(streetNumber)) {
+                        streetAddress = streetNumber + ' ' + route;
+                    }
+                    address.line.push(streetAddress);
                 }
-                address.$$hashKey = common.randomHash();
-                address.address = address;
-                address.county = county;
-                return address;
+                var result = {};
+                result.$$hashKey = common.randomHash();
+                result.address = address;
+                result.text = item.formatted_address;
+                result.county = county;
+                result.use = item.use ? item.use : null;
+
+                var period = undefined;
+                if (angular.isDefined(item.period)) {
+                    period = {};
+                    if (angular.isDefined(item.period.start)) {
+                        period.start = $filter('date')(item.period.start, 'yyyy-MM-dd');
+                    }
+                    if (angular.isDefined(item.period.end)) {
+                        period.end = $filter('date')(item.period.end, 'yyyy-MM-dd');
+                    }
+                }
+                result.period = period;
+
+                return result;
             }
 
-            var index = _.indexOf(addresses, item);
+            var index = _.indexOf(addresses, googleAddress);
 
             if (index > -1) {
-                addresses[index] = _parseAddress(item.address_components, item.formatted_address);
+                addresses[index] = _parseAddress(googleAddress);
             } else {
-                addresses.push(_parseAddress(item.address_components, item.formatted_address));
+                addresses.push(_parseAddress(googleAddress));
             }
         }
 
@@ -6965,8 +7041,9 @@
             addresses = [];
             if (items && angular.isArray(items)) {
                 for (var i = 0, len = items.length; i < len; i++) {
-                    var item = {"address": items[i]};
+                    var item = {address: items[i]};
                     if (angular.isObject(item.address)) {
+                        item.period = item.address.period;
                         item.use = item.address.use;
                         item.text =
                             (angular.isArray(item.address.line) ? item.address.line.join(' ') + ', ' : '') + (item.address.city ? (item.address.city + ', ') : '') + (item.address.state ? (item.address.state + ' ') : '') + (item.address.postalCode ? (item.address.postalCode + ', ') : '') + (item.address.country ? (item.address.country) : '');
@@ -7007,13 +7084,18 @@
 
         function mapFromViewModel() {
             function mapItem(item) {
-                var mappedItem = {"line": []};
+                var mappedItem = {line: []};
                 if (item) {
                     if (item.use) {
                         mappedItem.use = item.use;
                     }
                     if (item.text) {
                         mappedItem.text = item.text;
+                    } else {
+                        mappedItem.text = ($filter)('singleLineAddress')(item.address);
+                    }
+                    if (item.period) {
+                        mappedItem.period = item.period;
                     }
                     if (item.address) {
                         mappedItem.line = item.address.line;
@@ -7049,6 +7131,10 @@
             }
         }
 
+        /*
+        Uses v3 of the Google geocode API
+        documentation: https://developers.google.com/maps/documentation/geocoding/#GeocodingRequests
+         */
         function searchGoogle(input) {
             var deferred = $q.defer();
             var req = {
@@ -7105,7 +7191,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$http', 'common', addressService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', 'common', addressService]);
 })();(function () {
     'use strict';
 
@@ -22006,7 +22092,7 @@
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    logError(common.unexpectedOutcome(error), error);
                 })
                 .then(processSearchResults)
                 .then(function () {
@@ -22022,13 +22108,7 @@
                     vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
-                    var errorMessage;
-                    if (angular.isDefined(error.outcome.issue)) {
-                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
-                    } else {
-                        errorMessage = "Status " + error.status + ": " + error.outcome;
-                    }
-                    logError(errorMessage, error);
+                    logError(common.unexpectedOutcome(error), error);
                     deferred.resolve([]);
                 });
             return deferred.promise;
@@ -22048,8 +22128,7 @@
                     vm.selectedTab = 1;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError('Error getting practitioners', error);
-                    deferred.reject();
+                    logError(common.unexpectedOutcome(error), error);
                 })
                 .then(deferred.resolve());
             return deferred.promise;

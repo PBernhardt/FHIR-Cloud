@@ -201,14 +201,17 @@
         }
 
         function unexpectedOutcome(error) {
-            var message = 'Unexpected response from server - ';
+            var message = '';
             if (error.status) {
-                message = message + 'HTTP Status: ' + error.status;
+                message = 'HTTP Status - ' + error.status;
             }
             if (error.outcome && error.outcome.issue) {
                 _.forEach(error.outcome.issue, function (item) {
                     message = message + ': ' + item.severity + ' - ' + item.details;
                 });
+            }
+            if (message === '') {
+                message = 'Unexpected error returned from remote server.'
             }
             return message;
         }
