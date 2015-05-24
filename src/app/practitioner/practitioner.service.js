@@ -4,11 +4,12 @@
     var serviceId = 'practitionerService';
 
     function practitionerService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets,
-                                 practitionerValueSets) {
+                                 practitionerValueSets, store) {
         var dataCacheKey = 'localPractitioners';
         var itemCacheKey = 'contextPractitioner';
         var logError = common.logger.getLogFn(serviceId, 'error');
         var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var _practitionerContext = undefined;
         var $q = common.$q;
 
         function addPractitioner(resource) {
@@ -86,6 +87,8 @@
                 }
                 if (cachedPractitioner) {
                     deferred.resolve(cachedPractitioner);
+                } else if (getPractitionerContext()){
+                    deferred.resolve(_practitionerContext);
                 } else {
                     deferred.reject('Practitioner not found in cache: ' + hashKey);
                 }
@@ -129,7 +132,8 @@
         }
 
         function getPractitionerContext() {
-            return dataCache.readFromCache(dataCacheKey);
+            _practitionerContext = store.get('practitioner');
+            return _practitionerContext;
         }
 
         function getPractitionerReference(baseUrl, input) {
@@ -267,7 +271,7 @@
         }
 
         function setPractitionerContext(data) {
-            dataCache.addToCache(itemCacheKey, data);
+            store.set('practitioner', data);
         }
 
         function updatePractitioner(resourceVersionId, resource) {
@@ -373,7 +377,6 @@
                 });
             return deferred.promise;
         }
-
 
         function _randomRole(organizationName, organizationId, index) {
             var practitionerRoles = practitionerValueSets.practitionerRole();
@@ -515,6 +518,6 @@
     }
 
     angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient',
-        'fhirServers', 'localValueSets', 'practitionerValueSets', practitionerService]);
+        'fhirServers', 'localValueSets', 'practitionerValueSets', 'store' , practitionerService]);
 })
 ();

@@ -12,65 +12,56 @@
             <md-tab label="Search Options">
                 <md-content class="md-padding">
                     <form name="practitionerSearch">
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
+                        <div layout-gt-md="row" layout-align="space-between center" layout-wrap>
+                            <md-input-container flex="45">
                                 <label>First Name</label>
                                 <input ng-model="vm.practitionerSearch.name.given">
                             </md-input-container>
-                            <md-input-container flex>
+                            <md-input-container flex="45">
                                 <label>Last Name</label>
                                 <input ng-model="vm.practitionerSearch.name.family">
                             </md-input-container>
-                        </div>
 
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
+                            <md-input-container flex="45">
                                 <label>Identifier system</label>
                                 <input ng-model="vm.practitionerSearch.identifier.system">
                             </md-input-container>
-                            <md-input-container flex>
+                            <md-input-container flex="45">
                                 <label>Identifier value</label>
                                 <input ng-model="vm.practitionerSearch.identifier.value">
                             </md-input-container>
-                        </div>
 
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
+                            <md-input-container flex="45">
                                 <label>Managing Organization</label>
                                 <input ng-model="vm.practitionerSearch.organization">
                             </md-input-container>
-                        </div>
 
-                        <div layout layout-sm="column">
-                            <md-input-container flex>
+                            <md-input-container flex="45">
+                                <label>Location</label>
+                                <input ng-model="vm.practitionerSearch.location">
+                            </md-input-container>
+
+                            <md-input-container flex="30">
                                 <label>Street address</label>
                                 <input ng-model="vm.practitionerSearch.address.street">
                             </md-input-container>
-                            <md-input-container flex>
+                            <md-input-container flex="20">
                                 <label>City</label>
                                 <input ng-model="vm.practitionerSearch.address.city">
                             </md-input-container>
-                            <md-input-container flex>
+                            <md-input-container flex="10">
                                 <label>State</label>
                                 <input ng-model="vm.practitionerSearch.address.state">
                             </md-input-container>
-                            <md-input-container flex>
+                            <md-input-container flex="10">
                                 <label>Postal code</label>
                                 <input ng-model="vm.practitionerSearch.address.postalCode">
                             </md-input-container>
-                        </div>
+                            <md-input-container flex="20">
+                                <label>Telecom</label>
+                                <input ng-model="vm.practitionerSearch.telecom">
+                            </md-input-container>
 
-                        <div layout layout-sm="column">
-                            <div>
-                                <md-input-container flex>
-                                    <label>Birth date</label>
-                                    <input ng-model="vm.practitionerSearch.dob" id="dob" type="date"
-                                           data-ng-change="vm.dobChange()">
-                                </md-input-container>
-                            </div>
-                        </div>
-
-                        <div layout-gt-md="row" layout-align="space-between center">
                             <div layout="column" layout-align="center center" style="height: 100px;">
                                 <md-select placeholder="Gender" aria-label="gender"
                                            ng-model="vm.practitionerSearch.gender"
@@ -84,18 +75,10 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select placeholder="Practioner language" aria-label="language"
-                                           ng-model="vm.practitionerSearch.language">
-                                    <md-option ng-value="language" ng-repeat="language in vm.languages">
-                                        {{language.display}}
-                                    </md-option>
-                                </md-select>
-                                <p class="result">Language</p>
-                            </div>
-
-                            <div layout="column" layout-align="center center" style="height: 100px;">
                                 <md-select placeholder="Practitioner role"
-                                           aria-label="role" ng-model="vm.practitionerSearch.role">
+                                           aria-label="role"
+                                           ng-model="vm.practitionerSearch.role"
+                                           style="min-width: 175px;">
                                     <md-option ng-value="role" ng-repeat="role in vm.practitionerRoles.concept">
                                         {{role.display}}
                                     </md-option>
@@ -107,7 +90,7 @@
                                 <md-select aria-label="specialty"
                                            placeholder="Practitioner Specialty"
                                            ng-model="vm.practitionerSearch.specialty"
-                                           style="min-width: 200px;">
+                                           style="min-width: 250px;">
                                     <md-option></md-option>
                                     <md-optgroup label="General Specialties">
                                         <md-option ng-value="main"

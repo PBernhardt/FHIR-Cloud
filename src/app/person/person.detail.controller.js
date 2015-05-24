@@ -5,8 +5,7 @@
 
     function personDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
                            attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, personService, contactPointService, practitionerService, communicationService,
-                           careProviderService, observationService) {
+                           organizationService, personService, contactPointService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -88,52 +87,16 @@
 
         vm.goToManagingOrganization = goToManagingOrganization;
 
-        function _getEverything() {
-            personService.getPersonEverything(vm.person.resourceId)
-                .then(function (data) {
-                    vm.summary = data.summary;
-                    vm.history = data.history;
-                    logInfo("Retrieved everything for person at " + vm.person.resourceId, null, noToast);
-                }, function (error) {
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
-                });
-        }
-
-        function _getObservations() {
-            observationService.getObservations(vm.activeServer.baseUrl, null, vm.person.id)
-                .then(function (data) {
-                    vm.summary = data.entry;
-                    logInfo("Retrieved observations for person " + vm.person.fullName, null, noToast);
-                }, function (error) {
-                    vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), null, noToast);
-                });
-        }
-
         function _getRequestedPerson() {
             function initializeAdministrationData(data) {
                 vm.person = data;
                 humanNameService.init(vm.person.name);
-                demographicsService.init(vm.person.gender, vm.person.maritalStatus, vm.person.communication);
-                demographicsService.initBirth(vm.person.multipleBirthBoolean, vm.person.multipleBirthInteger);
-                demographicsService.initDeath(vm.person.deceasedBoolean, vm.person.deceasedDateTime);
-                demographicsService.setBirthDate(vm.person.birthDate);
-                demographicsService.initializeKnownExtensions(vm.person.extension);
-                vm.person.race = demographicsService.getRace();
-                vm.person.religion = demographicsService.getReligion();
-                vm.person.ethnicity = demographicsService.getEthnicity();
-                vm.person.mothersMaidenName = demographicsService.getMothersMaidenName();
-                vm.person.birthPlace = demographicsService.getBirthPlace();
-                vm.person.birthDate = demographicsService.getBirthDate();
-                attachmentService.init(vm.person.photo, "Photos");
+                demographicsService.init(vm.person.gender, vm.person.birthDate);
+                attachmentService.init([vm.person.photo], "Photos");
                 identifierService.init(vm.person.identifier, "multi", "person");
                 addressService.init(vm.person.address, true);
                 contactPointService.init(vm.person.telecom, true, true);
-                careProviderService.init(vm.person.careProvider);
-                if (vm.person.communication) {
-                    communicationService.init(vm.person.communication, "multi");
-                }
+                vm.person.birthDate = demographicsService.getBirthDate();
                 vm.person.fullName = humanNameService.getFullName();
                 if (angular.isDefined(vm.person.id)) {
                     vm.person.resourceId = (vm.activeServer.baseUrl + '/Person/' + vm.person.id);
@@ -171,9 +134,6 @@
                 personService.getPerson(resourceId)
                     .then(function (resource) {
                         initializeAdministrationData(resource.data);
-                        if (vm.person) {
-                            _getEverything(resourceId);
-                        }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
                     }).then(function () {
@@ -189,9 +149,6 @@
                 personService.getCachedPerson(vm.lookupKey)
                     .then(function (data) {
                         initializeAdministrationData(data);
-                        if (vm.person && vm.person.resourceId) {
-                            _getEverything(vm.person.resourceId);
-                        }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
                     })
@@ -226,28 +183,14 @@
             }
             person.name = humanNameService.mapFromViewModel();
             person.photo = attachmentService.getAll();
-
             person.birthDate = $filter('dateString')(demographicsService.getBirthDate());
             person.gender = demographicsService.getGender();
-            person.maritalStatus = demographicsService.getMaritalStatus();
-            person.multipleBirthBoolean = demographicsService.getMultipleBirth();
-            person.multipleBirthInteger = demographicsService.getBirthOrder();
-            person.deceasedBoolean = demographicsService.getDeceased();
-            person.deceasedDateTime = demographicsService.getDeceasedDate();
-            person.race = demographicsService.getRace();
-            person.religion = demographicsService.getReligion();
-            person.ethnicity = demographicsService.getEthnicity();
-            person.mothersMaidenName = demographicsService.getMothersMaidenName();
-            person.birthPlace = demographicsService.getBirthPlace();
-
             person.address = addressService.mapFromViewModel();
             person.telecom = contactPointService.mapFromViewModel();
             person.identifier = identifierService.getAll();
             person.managingOrganization = vm.person.managingOrganization;
-            person.communication = communicationService.getAll();
-            person.careProvider = careProviderService.getAll();
-
             person.active = vm.person.active;
+
             vm.isBusy = true;
             if (vm.isEditing) {
                 person.id = vm.person.id;
@@ -279,12 +222,6 @@
         }
 
         vm.showAuditData = showAuditData;
-
-        function showClinicalData($index, $event) {
-            _showRawData(vm.summary[$index], $event);
-        }
-
-        vm.showClinicalData = showClinicalData;
 
         function _showRawData(item, event) {
             $mdDialog.show({
@@ -330,12 +267,6 @@
                 targetEvent: $event
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
-                    case 0:
-                        $location.path('/consultation');
-                        break;
-                    case 1:
-                        $location.path('/lab');
-                        break;
                     case 2:
                         $location.path('/person');
                         break;
@@ -356,8 +287,6 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Vitals', icon: 'vitals', index: 0},
-                        {name: 'Lab', icon: 'lab', index: 1},
                         {name: 'Find another person', icon: 'quickFind', index: 2},
                         {name: 'Edit person', icon: 'edit', index: 3},
                         {name: 'Add new person', icon: 'personAdd', index: 4}
@@ -388,8 +317,6 @@
         vm.isSaving = false;
         vm.isEditing = true;
         vm.person = undefined;
-        vm.practitionerSearchText = '';
-        vm.selectedPractitioner = null;
         vm.title = 'Person Detail';
 
         _activate();
@@ -399,5 +326,5 @@
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'personService', 'contactPointService',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', personDetail]);
+            personDetail]);
 })();

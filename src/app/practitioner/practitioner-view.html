@@ -21,11 +21,8 @@
                      layout-align="space-between center"
                      layout-wrap
                      style="position: relative; top:15px">
-                    <md-input-container flex="100" class="md-icon-float" ng-if="vm.practitioner.resourceId">
-                        <label>Resource Id</label>
-                        <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
-                        <input ng-model="vm.practitioner.resourceId" ng-readonly/>
-                    </md-input-container>
+                    <fc-resource-view resource-id="vm.practitioner.resourceId" show="vm.showSource(event)"
+                                      flex="100"></fc-resource-view>
 
                     <md-input-container flex="40" ng-if="vm.practitioner.name">
                         <label>Name</label>
@@ -48,7 +45,7 @@
                                       ng-click="vm.showRole($event, r)">
                             <md-icon md-svg-icon="more"></md-icon>
                             <div class="md-list-item-text">
-                                <h3> {{ r.role.text || r.role.coding[0].display || "Not Provided" }} </h3>
+                                <h4> {{ r.role.text || r.role.coding[0].display || "Not Provided" }} </h4>
 
                                 <p ng-if="r.managingOrganization">{{r.managingOrganization.display ||
                                     r.managingOrganization.reference }}</p>
@@ -57,62 +54,15 @@
                         </md-list-item>
                     </md-list>
 
-                    <md-list flex="100" ng-if="vm.practitioner.communication">
-                        <md-subheader class="md-no-sticky">Languages</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="lang in vm.practitioner.communication">
-                            <md-icon md-svg-icon="language" ng-if="$index === 0"></md-icon>
-                            <div class="md-list-item-text" ng-class="{'md-offset': $index !== 0 }">
-                                <h3>{{lang | codeableConcept}}</h3>
-
-                                <p>{{lang.coding[0].system}} | {{lang.coding[0].code}}</p>
-                            </div>
-                            <md-divider ng-if="$last"></md-divider>
-                        </md-list-item>
-                    </md-list>
-
-                    <md-list flex="100" ng-if="vm.practitioner.address">
-                        <md-subheader class="md-no-sticky">Addresses</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="a in vm.practitioner.address">
-                            <md-icon md-svg-icon="address" ng-if="$index === 0"></md-icon>
-                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
-                                <h3> {{ a | singleLineAddress }} </h3>
-
-                                <p>{{a.use}}</p>
-                            </div>
-                            <md-divider ng-if="$last"></md-divider>
-                        </md-list-item>
-                    </md-list>
-
-                    <md-list flex="100" ng-if="vm.practitioner.telecom">
-                        <md-subheader class="md-no-sticky">Telecommunications</md-subheader>
-                        <md-list-item class="md-2-line" ng-repeat="t in vm.practitioner.telecom">
-                            <md-icon md-svg-icon="telecom" ng-if="$index === 0"></md-icon>
-                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
-                                <h3>{{ t.value }} </h3>
-
-                                <p>{{t.use}} {{t.system || "unspecified"}}</p>
-                            </div>
-                            <md-divider ng-if="$last"></md-divider>
-                        </md-list-item>
-                    </md-list>
-
-                    <md-list flex="100" ng-if="vm.practitioner.identifier">
-                        <md-subheader class="md-no-sticky">Identifiers</md-subheader>
-                        <md-list-item class="md-3-line" ng-repeat="id in vm.practitioner.identifier">
-                            <md-icon md-svg-icon="identifier" ng-if="$index === 0"></md-icon>
-                            <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
-                                <h3>{{id.system}} | {{id.value }} </h3>
-                                <h4>{{id.type | codeableConcept}}</h4>
-
-                                <p>{{id.use}}</p>
-                            </div>
-                            <md-divider ng-if="$last"></md-divider>
-                        </md-list-item>
-                    </md-list>
+                    <fc-language-list languages="vm.practitioner.communication" flex="100"></fc-language-list>
+                    <fc-address-list addresses="vm.practitioner.address" flex="100"></fc-address-list>
+                    <fc-contact-point-list contact-points="vm.practitioner.telecom" flex="100"></fc-contact-point-list>
+                    <fc-identifier-list identifiers="vm.practitioner.identifier" flex="100"></fc-identifier-list>
+                    <fc-extension-list extensions="vm.practitioner.extension" flex="100"></fc-extension-list>
                 </div>
             </md-tab>
             <md-tab label="Patients">
-
+                <div ng-include="'elements/patientList/patientList.html'"></div>
             </md-tab>
             <md-tab label="Schedule">
                 <h4 class="md-subtitle">To come</h4>

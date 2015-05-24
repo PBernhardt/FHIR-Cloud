@@ -71,13 +71,15 @@
             <div ng-if="vm.contactPoints.length > 0">
                 <md-subheader>Contact Point List</md-subheader>
                 <md-list>
-                    <md-list-item ng-click="vm.removeListItem(cp)" ng-repeat="cp in vm.contactPoints">
-                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
-                        <p>{{::cp.value}} - {{::cp.use}} {{::cp.system}}</p>
-
-                        <p ng-if="cp.period">
-                            {{::cp.period | periodText}}
-                        </p>
+                    <md-list-item class="md-3-line" ng-click="vm.removeListItem(cp)"
+                                  ng-repeat="cp in vm.contactPoints">
+                        <md-icon md-svg-icon="delete"></md-icon>
+                        <div class="md-list-item-text">
+                            <h3>{{cp.value}}</h3>
+                            <h4>{{cp.use ? cp.use + ' ' : ''}}{{cp.system}}</h4>
+                            <p ng-if="id.period">{{id.period | displayPeriod }}</p>
+                        </div>
+                        <md-divider ng-if="!$last"></md-divider>
                     </md-list-item>
                 </md-list>
             </div>

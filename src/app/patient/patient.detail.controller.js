@@ -4,8 +4,8 @@
     var controllerId = 'patientDetail';
 
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
-                           attachmentService, common, config, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService, practitionerService, communicationService,
+                           attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService, identifierService,
+                           organizationService, patientService, contactPointService, communicationService,
                            careProviderService, observationService) {
 
         /*jshint validthis:true */
@@ -116,17 +116,17 @@
             function initializeAdministrationData(data) {
                 vm.patient = data;
                 humanNameService.init(vm.patient.name);
-                demographicsService.init(vm.patient.gender, vm.patient.maritalStatus, vm.patient.communication);
-                demographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger);
-                demographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
-                demographicsService.setBirthDate(vm.patient.birthDate);
-                demographicsService.initializeKnownExtensions(vm.patient.extension);
-                vm.patient.race = demographicsService.getRace();
-                vm.patient.religion = demographicsService.getReligion();
-                vm.patient.ethnicity = demographicsService.getEthnicity();
-                vm.patient.mothersMaidenName = demographicsService.getMothersMaidenName();
-                vm.patient.birthPlace = demographicsService.getBirthPlace();
-                vm.patient.birthDate = demographicsService.getBirthDate();
+                patientDemographicsService.init(vm.patient.gender, vm.patient.maritalStatus, vm.patient.communication);
+                patientDemographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger);
+                patientDemographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
+                patientDemographicsService.setBirthDate(vm.patient.birthDate);
+                patientDemographicsService.initializeKnownExtensions(vm.patient.extension);
+                vm.patient.race = patientDemographicsService.getRace();
+                vm.patient.religion = patientDemographicsService.getReligion();
+                vm.patient.ethnicity = patientDemographicsService.getEthnicity();
+                vm.patient.mothersMaidenName = patientDemographicsService.getMothersMaidenName();
+                vm.patient.birthPlace = patientDemographicsService.getBirthPlace();
+                vm.patient.birthDate = patientDemographicsService.getBirthDate();
                 attachmentService.init(vm.patient.photo, "Photos");
                 identifierService.init(vm.patient.identifier, "multi", "patient");
                 addressService.init(vm.patient.address, true);
@@ -226,18 +226,18 @@
             patient.name = humanNameService.mapFromViewModel();
             patient.photo = attachmentService.getAll();
 
-            patient.birthDate = $filter('dateString')(demographicsService.getBirthDate());
-            patient.gender = demographicsService.getGender();
-            patient.maritalStatus = demographicsService.getMaritalStatus();
-            patient.multipleBirthBoolean = demographicsService.getMultipleBirth();
-            patient.multipleBirthInteger = demographicsService.getBirthOrder();
-            patient.deceasedBoolean = demographicsService.getDeceased();
-            patient.deceasedDateTime = demographicsService.getDeceasedDate();
-            patient.race = demographicsService.getRace();
-            patient.religion = demographicsService.getReligion();
-            patient.ethnicity = demographicsService.getEthnicity();
-            patient.mothersMaidenName = demographicsService.getMothersMaidenName();
-            patient.birthPlace = demographicsService.getBirthPlace();
+            patient.birthDate = $filter('dateString')(patientDemographicsService.getBirthDate());
+            patient.gender = patientDemographicsService.getGender();
+            patient.maritalStatus = patientDemographicsService.getMaritalStatus();
+            patient.multipleBirthBoolean = patientDemographicsService.getMultipleBirth();
+            patient.multipleBirthInteger = patientDemographicsService.getBirthOrder();
+            patient.deceasedBoolean = patientDemographicsService.getDeceased();
+            patient.deceasedDateTime = patientDemographicsService.getDeceasedDate();
+            patient.race = patientDemographicsService.getRace();
+            patient.religion = patientDemographicsService.getReligion();
+            patient.ethnicity = patientDemographicsService.getEthnicity();
+            patient.mothersMaidenName = patientDemographicsService.getMothersMaidenName();
+            patient.birthPlace = patientDemographicsService.getBirthPlace();
 
             patient.address = addressService.mapFromViewModel();
             patient.telecom = contactPointService.mapFromViewModel();
@@ -402,7 +402,7 @@
 
     angular.module('FHIRCloud').controller(controllerId,
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope',
-            'addressService', 'attachmentService', 'common', 'config', 'demographicsService', 'fhirServers',
+            'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', patientDetail]);
+            'communicationService', 'careProviderService', 'observationService', patientDetail]);
 })();

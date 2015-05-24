@@ -190,6 +190,25 @@
             return deferred.promise;
         }
 
+        function getPatientsByCareProvider(baseUrl, providerId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(providerId)) {
+                deferred.reject('Invalid search input');
+            } else {
+                params = 'careprovider=Practitioner/' + providerId;
+            }
+
+            fhirClient.getResource(baseUrl + '/Patient?' + params + '&_count=20&_sort:asc=family')
+                .then(function (results) {
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function getPatients(baseUrl, searchFilter, organizationId) {
             var deferred = $q.defer();
             var params = '';
@@ -240,22 +259,22 @@
 
         function initializeNewPatient() {
             return {
-                "resourceType": "Patient",
-                "name": [],
-                "identifier": [],
-                "gender": undefined,
-                "birthDate": undefined,
-                "maritalStatus": undefined,
-                "multipleBirth": false,
-                "telecom": [],
-                "address": [],
-                "photo": [],
-                "communication": [],
-                "managingOrganization": null,
-                "careProvider": [],
-                "contact": [],
-                "link": [],
-                "extension": []
+                resourceType: "Patient",
+                name: [],
+                identifier: [],
+                gender: undefined,
+                birthDate: undefined,
+                maritalStatus: undefined,
+                multipleBirth: false,
+                telecom: [],
+                address: [],
+                photo: [],
+                communication: [],
+                managingOrganization: null,
+                careProvider: [],
+                contact: [],
+                link: [],
+                extension: []
             };
         }
 
@@ -290,72 +309,72 @@
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
                         var resource = {
-                            "resourceType": "Patient",
-                            "name": [{
-                                "family": [$filter('titleCase')(user.name.last)],
-                                "given": [$filter('titleCase')(user.name.first)],
-                                "prefix": [$filter('titleCase')(user.name.title)],
-                                "use": "usual"
+                            resourceType: 'Patient',
+                            name: [{
+                                family: [$filter('titleCase')(user.name.last)],
+                                given: [$filter('titleCase')(user.name.first)],
+                                prefix: [$filter('titleCase')(user.name.title)],
+                                use: 'usual'
                             }],
-                            "gender": user.gender,
-                            "birthDate": _randomBirthDate(),
-                            "contact": [],
-                            "communication": _randomCommunication(index),
-                            "maritalStatus": _randomMaritalStatus(),
-                            "telecom": [
-                                {"system": "email", "value": user.email, "use": "home"},
-                                {"system": "phone", "value": user.cell, "use": "mobile"},
-                                {"system": "phone", "value": user.phone, "use": "home"}],
-                            "address": [{
-                                "line": [$filter('titleCase')(user.location.street)],
-                                "city": $filter('titleCase')(user.location.city),
-                                "state": $filter('abbreviateState')(user.location.state),
-                                "postalCode": user.location.zip,
-                                "use": "home"
+                            gender: user.gender,
+                            birthDate: _randomBirthDate(),
+                            contact: [],
+                            communication: _randomCommunication(index),
+                            maritalStatus: _randomMaritalStatus(),
+                            telecom: [
+                                {system: 'email', value: user.email, use: 'home'},
+                                {system: 'phone', value: user.cell, use: 'mobile'},
+                                {system: 'phone', value: user.phone, use: 'home'}],
+                            address: [{
+                                line: [$filter('titleCase')(user.location.street)],
+                                city: $filter('titleCase')(user.location.city),
+                                state: $filter('abbreviateState')(user.location.state),
+                                postalCode: user.location.zip,
+                                use: home
                             }],
-                            "photo": [{"url": user.picture.large}],
-                            "identifier": [
+                            photo: [{url: user.picture.large}],
+                            identifier: [
                                 {
-                                    "system": "urn:oid:2.16.840.1.113883.4.1",
-                                    "value": user.SSN,
-                                    "use": "usual",
-                                    "type": {
-                                        "text": "Social Security Number",
-                                        "coding": [{
-                                            "code": "SS",
-                                            "display": "Social Security Number",
-                                            "system": "http://hl7.org/fhir/v2/0203"
+                                    system: 'urn:oid:2.16.840.1.113883.4.1',
+                                    value: user.SSN,
+                                    use: 'usual',
+                                    type: {
+                                        text: 'Social Security Number',
+                                        coding: [{
+                                            code: 'SS',
+                                            display: 'Social Security Number',
+                                            system: 'http://hl7.org/fhir/v2/0203'
                                         }]
                                     },
-                                    "assigner": {"display": "Social Security Administration"}
+                                    assigner: {display: 'Social Security Administration'}
                                 },
                                 {
-                                    "system": "urn:oid:2.16.840.1.113883.15.18",
-                                    "value": user.registered,
-                                    "use": "official",
+                                    system: 'urn:oid:2.16.840.1.113883.15.18',
+                                    value: user.registered,
+                                    use: 'official',
                                     type: {
-                                        text: organizationName + " patient number",
+                                        text: organizationName + ' patient number',
                                         coding: [{
-                                            system: "http://hl7.org/fhir/v2/0203",
-                                            code: "MR",
-                                            display: "Medical record number"
+                                            system: 'http://hl7.org/fhir/v2/0203',
+                                            code: 'MR',
+                                            display: 'Medical record number'
                                         }]
                                     }
                                 },
                                 {
-                                    "system": "urn:fhir-cloud:patient",
-                                    "value": common.randomHash(),
-                                    "use": "secondary",
-                                    "assigner": {"display": "FHIR Cloud"}
+                                    system: 'urn:fhir-cloud:patient',
+                                    value: common.randomHash(),
+                                    use: 'secondary',
+                                    assigner: {display: 'FHIR Cloud'}
                                 }
                             ],
-                            "managingOrganization": {
-                                "reference": "Organization/" + organizationId,
-                                "display": organizationName
+                            managingOrganization: {
+                                reference: 'Organization/' + organizationId,
+                                display: organizationName
                             },
-                            "link": [],
-                            "active": true,
-                            "extension": []
+                            link: [],
+                            active: true,
+                            extension: []
                         };
                         resource.extension.push(_randomRace(index));
                         resource.extension.push(_randomEthnicity());
@@ -424,8 +443,11 @@
             var races = localValueSets.race();
             common.shuffle(races.concept);
             var white = {text: "White", coding: [{code: "2106-3", display: "White"}]};
-            var aa = {text: "Black or African American", coding: [{code: "2054-5", display: "Black or African American"}]};
-            var random = { text: races.concept[1].display, coding: [races.concept[1]]};
+            var aa = {
+                text: "Black or African American",
+                coding: [{code: "2054-5", display: "Black or African American"}]
+            };
+            var random = {text: races.concept[1].display, coding: [races.concept[1]]};
 
             var race = undefined;
             if (index % 5 === 0) {
@@ -560,6 +582,7 @@
             getPatientContext: getPatientContext,
             getPatientReference: getPatientReference,
             getPatients: getPatients,
+            getPatientsByCareProvider: getPatientsByCareProvider,
             getPatientsByLink: getPatientsByLink,
             getPatientEverything: getPatientEverything,
             initializeNewPatient: initializeNewPatient,

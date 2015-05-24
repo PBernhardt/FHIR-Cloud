@@ -1,32 +1,6 @@
 <div data-ng-controller="demographics as vm">
     <div layout-gt-lg="row" layout-align="space-between center" layout-wrap>
-        <md-input-container flex>
-            <label>Birth date</label>
-            <input ng-model="vm.demographics.birthDate" ng-change="vm.updateBirthDate()" id="dob" type="date">
-        </md-input-container>
-
-        <md-input-container flex>
-            <label>Birth order</label>
-            <input ng-model="vm.demographics.birthOrder" id="order" type="number">
-        </md-input-container>
-
-        <md-input-container flex>
-            <label>Place of birth</label>
-            <input ng-model="vm.demographics.placeOfBirth.text">
-        </md-input-container>
-
-        <md-input-container flex>
-            <label>Mother's maiden name</label>
-            <input ng-model="vm.demographics.mothersMaidenName">
-        </md-input-container>
-
-        <md-input-container flex>
-            <label>Date of death</label>
-            <input ng-model="vm.demographics.deceasedDate" id="dod" type="date">
-        </md-input-container>
-    </div>
-    <div layout-gt-md="row" layout-align="space-between center" layout-wrap>
-        <div layout="column" layout-align="center center" style="height: 100px;">
+        <div layout="column" layout-align="center center" style="height: 100px;" flex="30">
             <md-select aria-label="gender" ng-model="vm.demographics.gender" ng-change="vm.updateGender()"
                        ng-selected="vm.demographics.gender.code">
                 <md-option value="female">Female</md-option>
@@ -37,56 +11,9 @@
 
             <p class="result">Gender</p>
         </div>
-
-        <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select aria-label="marital" ng-model="vm.maritalStatusCoding"
-                       ng-change="vm.updateMaritalStatus()">
-                <md-option ng-repeat="coding in vm.maritalStatuses"
-                           ng-value="coding"
-                           ng-selected="coding.code===vm.demographics.maritalStatus.coding[0].code">
-                    {{coding.display}}
-                </md-option>
-            </md-select>
-
-            <p class="result">Marital Status</p>
-        </div>
-
-        <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select aria-label="ethnicity" ng-model="vm.demographics.ethnicity"
-                       ng-change="vm.updateEthnicity()">
-                <md-option ng-repeat="coding in vm.ethnicities"
-                           ng-value="coding"
-                           ng-selected="coding.code===vm.demographics.ethnicities.coding[0].code">
-                    {{coding.display}}
-                </md-option>
-            </md-select>
-
-            <p class="result">Ethnicity</p>
-        </div>
-
-        <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select aria-label="race" ng-model="vm.raceCoding"
-                       ng-change="vm.updateRace(vm.raceCoding)">
-                <md-option ng-value="coding"
-                           ng-selected="coding.code===vm.demographics.race.coding[0].code"
-                           ng-repeat="coding in vm.races.concept">{{coding.display}}
-                </md-option>
-            </md-select>
-            <p class="result">Race</p>
-        </div>
-
-        <div layout="column" layout-align="center center" style="height: 100px;">
-            <md-select aria-label="religion" ng-model="vm.religionCoding"
-                       ng-change="vm.updateReligion(vm.religionCoding)">
-                <md-option ng-value="coding"
-                           ng-repeat="coding in vm.religions.concept"
-                           ng-selected="coding.code===vm.demographics.religion.coding[0].code">
-                    {{coding.display}}
-                </md-option>
-            </md-select>
-
-            <p class="result">Religion</p>
-        </div>
-
+        <md-input-container flex="30">
+            <label>Birth date</label>
+            <input ng-model="vm.demographics.birthDate" ng-change="vm.updateBirthDate()" id="dob" type="date">
+        </md-input-container>
     </div>
 </div>

@@ -3,7 +3,7 @@
 
     var serviceId = 'personService';
 
-    function personService($filter, $http, $timeout, $window, common, dataCache, fhirClient, fhirServers, localValueSets) {
+    function personService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, store) {
         var dataCacheKey = 'localPersons';
         var _personContext = undefined;
         var logError = common.logger.getLogFn(serviceId, 'error');
@@ -70,25 +70,6 @@
             return deferred.promise;
         }
 
-        function getPersonEverything(resourceId) {
-            var deferred = $q.defer();
-            fhirClient.getResource(resourceId + '/$everything')
-                .then(function (results) {
-                    var everything = {"person": null, "summary": [], "history": []};
-                    everything.history = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'AuditEvent');
-                    });
-                    everything.person = _.remove(results.data.entry, function (item) {
-                        return (item.resource.resourceType === 'Person');
-                    })[0];
-                    everything.summary = results.data.entry;
-                    deferred.resolve(everything);
-                }, function (outcome) {
-                    deferred.reject(outcome);
-                });
-            return deferred.promise;
-        }
-
         function getCachedPerson(hashKey) {
             function getPerson(searchResults) {
                 var cachedPerson;
@@ -137,9 +118,9 @@
         function getPerson(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId)
-                .then(function (data) {
-                    dataCache.addToCache(dataCacheKey, data);
-                    deferred.resolve(data);
+                .then(function (results) {
+                    setPersonContext(results.data);
+                    deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
@@ -147,10 +128,7 @@
         }
 
         function getPersonContext() {
-            _personContext = undefined;
-            if ($window.localStorage.person && ($window.localStorage.person !== null)) {
-                _personContext = {"resource": JSON.parse($window.localStorage.person)};
-            }
+            _personContext = store.get('person');
             return _personContext;
         }
 
@@ -246,27 +224,22 @@
 
         function initializeNewPerson() {
             return {
-                "resourceType": "Person",
-                "name": [],
-                "identifier": [],
-                "gender": undefined,
-                "birthDate": undefined,
-                "maritalStatus": undefined,
-                "multipleBirth": false,
-                "telecom": [],
-                "address": [],
-                "photo": [],
-                "communication": [],
-                "managingOrganization": null,
-                "careProvider": [],
-                "contact": [],
-                "link": [],
-                "extension": []
+                resourceType: "Person",
+                name: [],
+                identifier: [],
+                gender: undefined,
+                birthDate: undefined,
+                telecom: [],
+                address: [],
+                photo: null,
+                managingOrganization: null,
+                link: [],
+                extension: []
             };
         }
 
         function setPersonContext(data) {
-            $window.localStorage.person = JSON.stringify(data);
+            store.set('person', data);
         }
 
         function updatePerson(resourceVersionId, resource) {
@@ -283,86 +256,71 @@
 
         function seedRandomPersons(organizationId, organizationName) {
             var deferred = $q.defer();
-            var birthPlace = [];
-            var mothersMaiden = [];
             $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
-                        var birthDate = new Date(parseInt(user.dob));
-                        var stringDOB = $filter('date')(birthDate, 'yyyy-MM-dd');
                         var resource = {
-                            "resourceType": "Person",
-                            "name": [{
-                                "family": [$filter('titleCase')(user.name.last)],
-                                "given": [$filter('titleCase')(user.name.first)],
-                                "prefix": [$filter('titleCase')(user.name.title)],
-                                "use": "usual"
+                            resourceType: "Person",
+                            name: [{
+                                family: [$filter('titleCase')(user.name.last)],
+                                given: [$filter('titleCase')(user.name.first)],
+                                prefix: [$filter('titleCase')(user.name.title)],
+                                use: "usual"
                             }],
-                            "gender": user.gender,
-                            "birthDate": _randomBirthDate(),
-                            "contact": [],
-                            "communication": _randomCommunication(),
-                            "maritalStatus": _randomMaritalStatus(),
-                            "telecom": [
-                                {"system": "email", "value": user.email, "use": "home"},
-                                {"system": "phone", "value": user.cell, "use": "mobile"},
-                                {"system": "phone", "value": user.phone, "use": "home"}],
-                            "address": [{
-                                "line": [$filter('titleCase')(user.location.street)],
-                                "city": $filter('titleCase')(user.location.city),
-                                "state": $filter('abbreviateState')(user.location.state),
-                                "postalCode": user.location.zip,
-                                "use": "home"
+                            gender: user.gender,
+                            birthDate: _randomBirthDate(),
+                            telecom: [
+                                {system: "email", value: user.email, use: "home"},
+                                {system: "phone", value: user.cell, use: "mobile"},
+                                {system: "phone", value: user.phone, use: "home"}],
+                            address: [{
+                                line: [$filter('titleCase')(user.location.street)],
+                                city: $filter('titleCase')(user.location.city),
+                                state: $filter('abbreviateState')(user.location.state),
+                                postalCode: user.location.zip,
+                                use: "home"
                             }],
-                            "photo": [{"url": user.picture.large}],
-                            "identifier": [
+                           photo: {url: user.picture.large},
+                            identifier: [
                                 {
-                                    "system": "urn:oid:2.16.840.1.113883.4.1",
-                                    "value": user.SSN,
-                                    "use": "usual",
-                                    "type": {
-                                        "text": "Social Security Number",
-                                        "coding": [{
-                                            "code": "SS",
-                                            "display": "Social Security Number",
-                                            "system": "http://hl7.org/fhir/v2/0203"
+                                    system: "urn:oid:2.16.840.1.113883.4.1",
+                                    value: user.SSN,
+                                    use: "usual",
+                                    type: {
+                                        text: "Social Security Number",
+                                        coding: [{
+                                            code: "SS",
+                                            display: "Social Security Number",
+                                            system: "http://hl7.org/fhir/v2/0203"
                                         }]
                                     },
-                                    "assigner": {"display": "Social Security Administration"}
+                                    assigner: {display: "Social Security Administration"}
                                 },
                                 {
-                                    "system": "urn:oid:2.16.840.1.113883.15.18",
-                                    "value": user.registered,
-                                    "use": "official",
-                                    "type": {
-                                        "text": organizationName + " identifier"
+                                    system: "urn:oid:2.16.840.1.113883.15.18",
+                                    value: user.registered,
+                                    use: "official",
+                                    type: {
+                                        text: organizationName + " identifier"
                                     },
-                                    "assigner": {"display": organizationName}
+                                    assigner: {display: organizationName}
                                 },
                                 {
-                                    "system": "urn:fhir-cloud:person",
-                                    "value": common.randomHash(),
-                                    "use": "secondary",
-                                    "assigner": {"display": "FHIR Cloud"}
+                                    system: "urn:fhir-cloud:person",
+                                    value: common.randomHash(),
+                                    use: "secondary",
+                                    assigner: {display: "FHIR Cloud"}
                                 }
                             ],
-                            "managingOrganization": {
-                                "reference": "Organization/" + organizationId,
-                                "display": organizationName
+                            managingOrganization: {
+                                reference: "Organization/" + organizationId,
+                                display: organizationName
                             },
-                            "link": [],
-                            "active": true,
-                            "extension": []
+                            link: [],
+                            active: true,
+                            extension: []
                         };
-                        resource.extension.push(_randomRace());
-                        resource.extension.push(_randomEthnicity());
-                        resource.extension.push(_randomReligion());
-                        resource.extension.push(_randomMothersMaiden(mothersMaiden));
-                        resource.extension.push(_randomBirthPlace(birthPlace));
-
-                        mothersMaiden.push($filter('titleCase')(user.name.last));
-                        birthPlace.push(resource.address[0].city + ', ' + $filter('abbreviateState')(user.location.state));
 
                         var timer = $timeout(function () {
                         }, 3000);
@@ -382,119 +340,11 @@
             return deferred.promise;
         }
 
-        function _randomMothersMaiden(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/person-mothersMaidenName",
-                "valueString": ''
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                extension.valueString = array[0];
-            } else {
-                extension.valueString = "Gibson";
-            }
-            return extension;
-        }
-
         function _randomBirthDate() {
             var start = new Date(1945, 1, 1);
-            var end = new Date(1995, 12, 31);
+            var end = new Date(1997, 1, 1);
             var randomDob = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
             return $filter('date')(randomDob, 'yyyy-MM-dd');
-        }
-
-        function _randomBirthPlace(array) {
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                "valueAddress": null
-            };
-            if (array.length > 0) {
-                common.shuffle(array);
-                var parts = array[0].split(",");
-                extension.valueAddress = {"text": array[0], "city": parts[0], "state": parts[1], "country": "USA"};
-            } else {
-                extension.valueAddress = {"text": "New York, NY", "city": "New York", "state": "NY", "country": "USA"};
-            }
-            return extension;
-        }
-
-        function _randomRace() {
-            var races = localValueSets.race();
-            common.shuffle(races.concept);
-            var race = races.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
-                "valueCodeableConcept": {"coding": [], "text": race.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": races.system,
-                "code": race.code,
-                "display": race.display
-            });
-            return extension;
-        }
-
-        function _randomEthnicity() {
-            var ethnicities = localValueSets.ethnicity();
-
-            common.shuffle(ethnicities);
-            var ethnicity = ethnicities[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
-                "valueCodeableConcept": {"coding": [], "text": ethnicity.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": ethnicity.system,
-                "code": ethnicity.code,
-                "display": ethnicity.display
-            });
-            return extension;
-        }
-
-        function _randomReligion() {
-            var religions = localValueSets.religion();
-            common.shuffle(religions.concept);
-            var religion = religions.concept[1];
-            var extension = {
-                "url": "http://hl7.org/fhir/StructureDefinition/us-core-religion",
-                "valueCodeableConcept": {"coding": [], "text": religion.display}
-            };
-            extension.valueCodeableConcept.coding.push({
-                "system": religions.system,
-                "code": religion.code,
-                "display": religion.display
-            });
-            return extension;
-        }
-
-        function _randomCommunication() {
-            var languages = localValueSets.iso6391Languages();
-            common.shuffle(languages);
-
-            var communication = [];
-            var primaryLanguage = {"language": {"text": languages[1].display, "coding": []}, "preferred": true};
-            primaryLanguage.language.coding.push({
-                "system": languages[1].system,
-                "code": languages[1].code,
-                "display": languages[1].display
-            });
-            communication.push(primaryLanguage);
-            return communication;
-        }
-
-        function _randomMaritalStatus() {
-            var maritalStatuses = localValueSets.maritalStatus();
-            common.shuffle(maritalStatuses);
-            var maritalStatus = maritalStatuses[1];
-            var concept = {
-                "coding": [], "text": maritalStatus.display
-            };
-            concept.coding.push({
-                "system": maritalStatus.system,
-                "code": maritalStatus.code,
-                "display": maritalStatus.display
-            });
-            return concept;
         }
 
         function _prepArrays(resource) {
@@ -504,25 +354,11 @@
             if (resource.identifier.length === 0) {
                 resource.identifier = null;
             }
-            if (resource.contact.length === 0) {
-                resource.contact = null;
-            }
             if (resource.telecom.length === 0) {
                 resource.telecom = null;
             }
-            if (resource.photo.length === 0) {
-                resource.photo = null;
-            }
-            if (resource.communication.length === 0) {
-                resource.communication = null;
-            }
             if (resource.link.length === 0) {
                 resource.link = null;
-            }
-            if (angular.isDefined(resource.maritalStatus)) {
-                if (angular.isUndefined(resource.maritalStatus.coding) || resource.maritalStatus.coding.length === 0) {
-                    resource.maritalStatus = null;
-                }
             }
             return $q.when(resource);
         }
@@ -539,7 +375,6 @@
             getPersonReference: getPersonReference,
             getPersons: getPersons,
             getPersonsByLink: getPersonsByLink,
-            getPersonEverything: getPersonEverything,
             initializeNewPerson: initializeNewPerson,
             setPersonContext: setPersonContext,
             updatePerson: updatePerson,
@@ -550,7 +385,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', '$window', 'common', 'dataCache',
-        'fhirClient', 'fhirServers', 'localValueSets', personService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache',
+        'fhirClient', 'fhirServers', 'store', personService]);
 })
 ();

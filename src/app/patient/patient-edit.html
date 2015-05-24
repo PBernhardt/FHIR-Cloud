@@ -17,7 +17,7 @@
                     <div ng-include="'elements/humanName/humanName.html'"></div>
                 </md-tab>
                 <md-tab label="Demographics">
-                    <div ng-include="'elements/demographics/demographics.html'"></div>
+                    <div ng-include="'patient/patient-demographics.html'"></div>
                 </md-tab>
                 <md-tab label="Address">
                     <div ng-include="'elements/address/address.html'"></div>
@@ -41,11 +41,11 @@
                     <div ng-include="'elements/careProvider/careProvider.html'"></div>
                 </md-tab>
             </md-tabs>
-            <div layout="row" layout-align="end end">
+            <div layout="column" layout-align="end end">
+                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
                 <md-button ng-click="vm.save()" aria-label="Execute save">
                     <md-icon md-svg-icon="saveToCloud" aria-label="save patient" alt="Save Patient"></md-icon>
                 </md-button>
-                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
             </div>
         </ng-form>
     </div>

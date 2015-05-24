@@ -13,7 +13,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
-        var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var $q = common.$q;
         var noToast = false;
 
@@ -40,7 +40,7 @@
                 if (organization && organization.resourceId) {
                     organizationService.deleteCachedOrganization(organization.hashKey, organization.resourceId)
                         .then(function () {
-                            logSuccess("Deleted organization " + organization.name);
+                            logDebug("Deleted organization " + organization.name);
                             $location.path('/organization');
                         },
                         function (error) {
@@ -76,11 +76,12 @@
             var deferred = $q.defer();
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data) ? data.length : 0) +
+                        ' Organizations from ' + vm.activeServer.name + '.');
                     deferred.resolve(data || []);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), error, noToast);
-                    deferred.reject();
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -107,6 +108,7 @@
                     $window.localStorage.organization = JSON.stringify(vm.organization);
                     _getAffiliatedPatients();
                     _getAffiliatedPractitioners();
+                    _getAffiliatedPersons();
                 }
 
             }
@@ -131,7 +133,7 @@
                 vm.isEditing = false;
             } else if (angular.isDefined($routeParams.resourceId)) {
                 var fullPath = vm.activeServer.baseUrl + '/Organization/' + $routeParams.resourceId;
-                logSuccess("Fetching " + fullPath, null, noToast);
+                logDebug("Fetching " + fullPath, null, noToast);
                 organizationService.getOrganization(fullPath)
                     .then(initializeRelatedData).then(function () {
                         var session = sessionService.getSession();
@@ -183,7 +185,7 @@
             if (angular.isUndefined(resourceVersionId)) {
                 logWarning("Organization saved, but location is unavailable. CORS is not implemented correctly at " + vm.activeServer.name);
             } else {
-                logInfo("Organization saved at " + resourceVersionId);
+                logInfo('Organization saved at ' + resourceVersionId + '.');
                 vm.organization.resourceVersionId = resourceVersionId;
                 vm.organization.resourceId = common.setResourceId(vm.organization.resourceId, resourceVersionId);
             }
@@ -226,7 +228,8 @@
             var deferred = $q.defer();
             practitionerService.getPractitioners(vm.activeServer.baseUrl, undefined, vm.organization.id)
                 .then(function (data) {
-                    logSuccess('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' + vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Practitioners from ' + vm.activeServer.name + '.');
                     common.changePractitionerList(data);
                     deferred.resolve();
                 }, function (error) {
@@ -240,8 +243,24 @@
             var deferred = $q.defer();
             patientService.getPatients(vm.activeServer.baseUrl, undefined, vm.organization.id)
                 .then(function (data) {
-                    logSuccess('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' + vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Patients from ' + vm.activeServer.name + '.');
                     common.changePatientList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function _getAffiliatedPersons() {
+            var deferred = $q.defer();
+            personService.getPersons(vm.activeServer.baseUrl, undefined, vm.organization.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Persons from ' + vm.activeServer.name + '.');
+                    common.changePersonList(data);
                     deferred.resolve();
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), error);
@@ -290,10 +309,10 @@
 
         function createRandomPatients(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logInfo("Creating random patients for " + vm.organization.name);
+            logDebug('Creating random patients for ' + vm.organization.resourceId + '.');
             patientService.seedRandomPatients(vm.organization.id, vm.organization.name).then(
                 function (result) {
-                    logSuccess(result, null, noToast);
+                    logDebug(result, null, noToast);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), error);
                 });
@@ -301,10 +320,10 @@
 
         function createRandomPractitioners(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logInfo("Creating random practitioners for " + vm.organization.name);
+            logDebug('Creating random practitioners for ' + vm.organization.resourceId + '.');
             practitionerService.seedRandomPractitioners(vm.organization.id, vm.organization.name).then(
                 function (result) {
-                    logSuccess(result, null, noToast);
+                    logDebug(result, null, noToast);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), error);
                 });
@@ -312,27 +331,16 @@
 
         function createRandomPersons(event) {
             vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logInfo("Creating random persons for " + vm.organization.resourceId);
+            logDebug('Creating random persons for ' + vm.organization.resourceId + '.');
             personService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
                 function (result) {
-                    logSuccess(result, null, noToast);
+                    logDebug(result, null, noToast);
                 }, function (error) {
                     logError(common.unexpectedOutcome(error), error);
                 });
         }
 
-        function createRandomRelatedPersons(event) {
-            vm.organization.resourceId = vm.activeServer.baseUrl + '/Organization/' + vm.organization.id;
-            logInfo("Creating random related persons for " + vm.organization.resourceId);
-            /*            replatedPersonService.seedRandomPersons(vm.organization.resourceId, vm.organization.name).then(
-             function (result) {
-             logSuccess(result, null, noToast);
-             }, function (error) {
-             logError(common.unexpectedOutcome(error), error);
-             });*/
-        }
-
-        function actions($event) {
+         function actions($event) {
             $mdBottomSheet.show({
                 parent: angular.element(document.getElementById('content')),
                 templateUrl: './templates/resourceSheet.html',
@@ -363,13 +371,17 @@
                     case 6:
                         createRandomPractitioners();
                         break;
+                    case 7:
+                        createRandomPersons();
+                        break;
                 }
             });
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
-                        {name: 'Add random patients', icon: 'groupAdd', index: 0},
+                        {name: 'Add random patients', icon: 'patient', index: 0},
                         {name: 'Add random practitioners', icon: 'doctor', index: 6},
+                        {name: 'Add random persons', icon: 'person', index: 7},
                         {name: 'Quick find', icon: 'quickFind', index: 2},
                         {name: 'Edit organization', icon: 'edit', index: 3},
                         {name: 'Add new organization', icon: 'hospital', index: 4}

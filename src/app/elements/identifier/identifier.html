@@ -69,9 +69,15 @@
             <div ng-if="vm.identifiers.length > 0 && vm.mode==='multi'">
                 <md-subheader>Identifier List</md-subheader>
                 <md-list>
-                    <md-list-item ng-click="vm.removeListItem(id)" ng-repeat="id in vm.identifiers">
-                        <md-icon md-svg-icon="delete" alt="Remove from list"></md-icon>
-                        <p>{{id.system}} | {{id.value}}</p>
+                    <md-list-item class="md-3-line" ng-click="vm.removeListItem(id)"
+                                  ng-repeat="id in vm.identifiers">
+                        <md-icon md-svg-icon="delete"></md-icon>
+                        <div class="md-list-item-text">
+                            <h3>{{id.system}} | {{id.value}}</h3>
+                            <h4>{{id.use}}</h4>
+                            <p ng-if="id.period">{{id.period | displayPeriod }}</p>
+                        </div>
+                        <md-divider ng-if="!$last"></md-divider>
                     </md-list-item>
                 </md-list>
             </div>

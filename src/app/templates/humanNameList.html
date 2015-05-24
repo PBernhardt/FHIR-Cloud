@@ -1,0 +1,12 @@
+<md-list ng-if="names">
+    <md-subheader class="md-no-sticky">Names</md-subheader>
+    <md-list-item class="md-3-line" ng-repeat="n in names">
+        <md-icon md-svg-icon="person" ng-if="$index === 0"></md-icon>
+        <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
+            <h3> {{ n | fullName }} </h3>
+            <h4>{{n.use}}</h4>
+            <p ng-if="n.period">{{n.period | displayPeriod }}</p>
+        </div>
+        <md-divider ng-if="$last"></md-divider>
+    </md-list-item>
+</md-list>

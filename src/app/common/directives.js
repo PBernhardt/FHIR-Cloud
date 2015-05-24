@@ -51,6 +51,84 @@
         return directive;
     }]);
 
+    app.directive('fcAddressList', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'addresses': '=addresses'
+            },
+            templateUrl: 'templates/addressList.html'
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcContactPointList', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'contactPoints': '=contactPoints'
+            },
+            templateUrl: 'templates/contactPointList.html'
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcExtensionList', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'extensions': '=extensions'
+            },
+            templateUrl: 'templates/extensionList.html'
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcHumanNameList', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'names': '=names'
+            },
+            templateUrl: 'templates/humanNameList.html'
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcIdentifierList', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'identifiers': '=identifiers'
+            },
+            templateUrl: 'templates/identifierList.html'
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcLanguageList', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'languages': '=languages'
+            },
+            templateUrl: 'templates/languageList.html'
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcResourceView', [function() {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'resourceId': '=resourceId',
+                'show': '&show'
+            },
+            templateUrl: 'templates/resourceView.html'
+        };
+        return directiveDefinitionObject;
+    }]);
+
     app.directive('fsPagination', function () {
         var directiveDefinitionObject = {
             restrict: 'E',

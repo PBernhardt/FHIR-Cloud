@@ -9,11 +9,8 @@
                     <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between end"
                          ng-if="vm.valueSet"
                          layout-wrap style="position: relative; top:15px">
-                        <md-input-container flex="100" class="md-icon-float" ng-if="vm.valueSet.resourceId">
-                            <label>Resource Id</label>
-                            <md-icon md-svg-icon="view" ng-click="vm.showSource($event)"></md-icon>
-                            <input ng-model="vm.valueSet.resourceId" ng-readonly/>
-                        </md-input-container>
+                        <fc-resource-view resource-id="vm.valueSet.resourceId" show="vm.showSource(event)"
+                                          flex="100"></fc-resource-view>
 
                         <md-input-container flex="25" ng-if="vm.valueSet.identifier">
                             <label>Identifier</label>

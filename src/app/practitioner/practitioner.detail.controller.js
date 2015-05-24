@@ -3,10 +3,10 @@
 
     var controllerId = 'practitionerDetail';
 
-    function practitionerDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
+    function practitionerDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
                                 attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
                                 organizationService, practitionerService, contactPointService, patientService, communicationService,
-                                careProviderService, config) {
+                                config) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -14,6 +14,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var $q = common.$q;
         var noToast = false;
 
@@ -97,6 +98,21 @@
                 });
         }
 
+        function _getAffiliatedPatients() {
+            var deferred = $q.defer();
+            patientService.getPatientsByCareProvider(vm.activeServer.baseUrl, vm.practitioner.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Patients from ' + vm.activeServer.name + '.');
+                    common.changePatientList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
         function getOrganizationReference(input) {
             var deferred = $q.defer();
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
@@ -113,8 +129,7 @@
             function initializeAdministrationData(data) {
                 vm.practitioner = data;
                 humanNameService.init([vm.practitioner.name], 'single');
-                demographicsService.init(vm.practitioner.gender, null, vm.practitioner.communication);
-                demographicsService.setBirthDate(vm.practitioner.birthDate);
+                demographicsService.init(vm.practitioner.gender, vm.practitioner.birthDate);
                 attachmentService.init(vm.practitioner.photo, "Photos");
                 identifierService.init(vm.practitioner.identifier, "multi", "practitioner");
                 addressService.init(vm.practitioner.address, true);
@@ -127,7 +142,8 @@
                     vm.practitioner.resourceId = (vm.activeServer.baseUrl + '/Practitioner/' + vm.practitioner.id);
                 }
                 if (vm.lookupKey !== "new") {
-                    $window.localStorage.practitioner = JSON.stringify(vm.practitioner);
+                    practitionerService.setPractitionerContext(vm.practitioner);
+                    _getAffiliatedPatients();
                 }
             }
 
@@ -135,10 +151,10 @@
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
-                if (angular.isUndefined($window.localStorage.practitioner) || ($window.localStorage.practitioner === null)) {
+                vm.practitioner = practitionerService.getPractitionerContext();
+                if (common.isUndefinedOrNull(vm.practitioner) && angular.isUndefined($routeParams.id)) {
                     $location.path('/practitioner');
                 } else {
-                    vm.practitioner = JSON.parse($window.localStorage.practitioner);
                     vm.practitioner.hashKey = "current";
                     initializeAdministrationData(vm.practitioner);
                 }
@@ -149,7 +165,7 @@
                     .then(function (resource) {
                         initializeAdministrationData(resource.data);
                         if (vm.practitioner) {
-                            //TODO: load practitioner's patients
+                            _getAffiliatedPatients();
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -167,7 +183,7 @@
                     .then(function (data) {
                         initializeAdministrationData(data);
                         if (vm.practitioner && vm.practitioner.resourceId) {
-                            //TODO: load practitioner's patients
+                            _getAffiliatedPatients();
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error));
@@ -192,24 +208,22 @@
                 }
                 vm.practitioner.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
-                $window.localStorage.practitioner = JSON.stringify(vm.practitioner);
+                practitionerService.setPractitionerContext(vm.practitioner);
                 vm.isBusy = false;
             }
 
             var practitioner = practitionerService.initializeNewPractitioner();
             if (humanNameService.getAll().length === 0) {
-                logError("Practitioner must have at least one name.");
+                logError("Practitioner must have a name.");
                 return;
             }
             practitioner.name = humanNameService.mapFromViewModel();
             practitioner.photo = attachmentService.getAll();
-
             practitioner.birthDate = $filter('dateString')(demographicsService.getBirthDate());
             practitioner.gender = demographicsService.getGender();
             practitioner.address = addressService.mapFromViewModel();
             practitioner.telecom = contactPointService.mapFromViewModel();
             practitioner.identifier = identifierService.getAll();
-
             practitioner.active = vm.practitioner.active;
             vm.isBusy = true;
             if (vm.isEditing) {
@@ -323,8 +337,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
-            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
-            'humanNameService', 'identifierService', 'organizationService', 'practitionerService', 'contactPointService',
-            'patientService', 'communicationService', 'careProviderService', 'config', practitionerDetail]);
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', 'addressService',
+            'attachmentService', 'common', 'demographicsService', 'fhirServers', 'humanNameService',
+            'identifierService', 'organizationService', 'practitionerService', 'contactPointService',
+            'patientService', 'communicationService', 'config', practitionerDetail]);
 })();

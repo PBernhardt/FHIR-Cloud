@@ -1,20 +1,20 @@
 <md-dialog>
     <md-content>
-        <md-input-container flex="45" ng-if="data.role">
+        <md-input-container flex="45" ng-if="vm.data.role">
             <label>Role</label>
-            <input ng-model="data.role.text" ng-readonly="true"/>
+            <input ng-model="vm.data.role.text" ng-readonly="true"/>
         </md-input-container>
 
-        <md-input-container flex="60" class="md-icon-float" ng-if="data.managingOrganization">
+        <md-input-container flex="60" class="md-icon-float" ng-if="vm.data.managingOrganization">
             <label>Managing Organization</label>
             <md-icon md-svg-icon="hospital"
-                     ng-click="goToManagingOrganization(data.managingOrganization)"></md-icon>
-            <input ng-model="data.managingOrganization.display" ng-readonly="true"/>
+                     ng-click="vm.goToManagingOrganization(vm.data.managingOrganization)"></md-icon>
+            <input ng-model="vm.data.managingOrganization.display" ng-readonly="true"/>
         </md-input-container>
 
-        <md-list flex="30" ng-if="data.specialty" layout-fill>
+        <md-list flex="30" ng-if="vm.data.specialty" layout-fill>
             <md-subheader>Specialties</md-subheader>
-            <md-list-item class="md-2-line" ng-repeat="sp in data.specialty">
+            <md-list-item class="md-2-line" ng-repeat="sp in vm.data.specialty">
                 <md-icon md-svg-icon="diagnosis" ng-if="$index === 0"></md-icon>
                 <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
                     <h3> {{ sp.text }} </h3>
@@ -24,7 +24,7 @@
         </md-list>
 
         <div class="md-actions">
-            <md-button ng-click="closeDialog()">
+            <md-button ng-click="vm.closeDialog()">
                 Close
             </md-button>
         </div>
