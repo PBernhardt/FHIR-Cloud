@@ -1,6 +1,7 @@
 <div ng-controller="consultationDetail as vm" layout="row" layout-wrap>
     <div flex="95">
-        <h3 class="md-title">Add Observations for {{vm.consultation.patient.name | fullName }} ({{vm.consultation.patient.gender}},
+        <h3 class="md-title">Add Observations for {{vm.consultation.patient.name | fullName }}
+            ({{vm.consultation.patient.gender}},
             {{vm.consultation.patient.birthDate | displayAge}})</h3>
     </div>
     <div flex="5">
@@ -12,7 +13,7 @@
         <md-tabs md-dynamic-height>
             <!-- begin bp -->
             <md-tab label="Blood Pressure">
-                <form name="bloodPressureForm" class="form-horizontal"
+                <form name="bloodPressureForm"
                       ng-model="vm.vitals.bp">
                     <div layout-sm="column" layout="row" layout-align="space-between center">
 
@@ -72,19 +73,21 @@
                         </md-input-container>
                     </div>
 
-                    <md-button ng-disabled="bloodPressureForm.$invalid"
-                               ng-click="vm.saveBloodPressure(bloodPressureForm)" aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save blood pressure"
-                                 alt="Save blood pressure"></md-icon>
-                    </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                    <div layout layout-align="end center" md-padding>
+                        <md-button ng-disabled="bloodPressureForm.$invalid"
+                                   ng-click="vm.saveBloodPressure(bloodPressureForm)" aria-label="Execute save">
+                            <md-icon md-svg-icon="saveToCloud" aria-label="save blood pressure"
+                                     alt="Save blood pressure"></md-icon>
+                        </md-button>
+                    </div>
                 </form>
             </md-tab>
 
             <!-- begin pulse/resp -->
             <md-tab label="Pulse and Respiration">
-                <ng-form name="pulseAndRespirationForm" class="form-horizontal"
-                         ng-model="vm.vitals">
+                <form name="pulseAndRespirationForm"
+                      ng-model="vm.vitals.hr">
                     <div layout-sm="column" layout="row" layout-align="space-between center">
                         <div flex="15" layout layout-align="center center">
                             <span>
@@ -163,20 +166,21 @@
                             <input ng-model="vm.vitals.date" id="pulse-date" type="datetime-local"/>
                         </md-input-container>
                     </div>
-
-                    <md-button ng-disabled="pulseAndRespirationForm.$invalid"
-                               ng-click="vm.savePulseAndRespiration(pulseAndRespirationForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save heart rate"
-                                 alt="Save heart rate"></md-icon>
-                    </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-                </ng-form>
+                    <div layout layout-align="end center" md-padding>
+                        <md-button ng-disabled="pulseAndRespirationForm.$invalid"
+                                   ng-click="vm.savePulseAndRespiration(pulseAndRespirationForm)"
+                                   aria-label="Execute save">
+                            <md-icon md-svg-icon="saveToCloud" aria-label="save heart rate"
+                                     alt="Save heart rate"></md-icon>
+                        </md-button>
+                    </div>
+                </form>
             </md-tab>
 
             <!-- begin BMI vitals -->
             <md-tab label="Height and Weight">
-                <form name="bmiForm" class="form-horizontal"
+                <form name="bmiForm"
                       ng-model="vm.vitals.bmi">
                     <div layout-sm="column" layout="row" layout-align="space-between center">
                         <div flex="25" layout layout-align="center center">
@@ -257,19 +261,22 @@
                         </md-input-container>
 
                     </div>
-                    <md-button ng-disabled="bmiForm.$invalid" ng-click="vm.saveBMI(bmiForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save BMI"
-                                 alt="Save BMI"></md-icon>
-                    </md-button>
+
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                    <div layout layout-align="end center" md-padding>
+                        <md-button ng-disabled="bmiForm.$invalid" ng-click="vm.saveBMI(bmiForm)"
+                                   aria-label="Execute save">
+                            <md-icon md-svg-icon="saveToCloud" aria-label="save BMI"
+                                     alt="Save BMI"></md-icon>
+                        </md-button>
+                    </div>
                 </form>
             </md-tab>
 
             <!-- begin other vitals -->
             <md-tab label="Other">
-                <form name="otherForm" class="form-horizontal"
-                      ng-model="vm.vitals">
+                <form name="otherForm"
+                      ng-model="vm.vitals.temperature">
 
                     <div layout-sm="column" layout="row" layout-align="space-between center">
                         <div flex="20" layout layout-align="center center">
@@ -349,18 +356,20 @@
                         </md-input-container>
 
                     </div>
-                    <md-button ng-disabled="otherForm.$invalid" ng-click="vm.saveOther(otherForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save other vital signs"
-                                 alt="Save other vitals"></md-icon>
-                    </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                    <div layout layout-align="end center" md-padding>
+                        <md-button ng-disabled="otherForm.$invalid" ng-click="vm.saveOther(otherForm)"
+                                   aria-label="Execute save">
+                            <md-icon md-svg-icon="saveToCloud" aria-label="save other vital signs"
+                                     alt="Save other vitals"></md-icon>
+                        </md-button>
+                    </div>
                 </form>
             </md-tab>
 
             <!--begin smoking status-->
             <md-tab label="Smoking Status">
-                <form name="smokingStatusForm" class="form-horizontal"
+                <form name="smokingStatusForm"
                       ng-model="vm.vitals.smokingStatus">
                     <div layout-sm="column" layout="row" layout-align="space-between center" layout-wrap>
                         <div layout="column" layout-align="center center" style="height: 100px;">
@@ -380,13 +389,15 @@
                             <input ng-model="vm.vitals.date" id="smoking-date" type="datetime-local"/>
                         </md-input-container>
                     </div>
-                    <md-button ng-disabled="smokingStatusForm.$invalid"
-                               ng-click="vm.saveSmokingStatus(smokingStatusForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save smoking status"
-                                 alt="Save smoking status"></md-icon>
-                    </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                    <div layout layout-align="end center" md-padding>
+                        <md-button ng-disabled="smokingStatusForm.$invalid"
+                                   ng-click="vm.saveSmokingStatus(smokingStatusForm)"
+                                   aria-label="Execute save">
+                            <md-icon md-svg-icon="saveToCloud" aria-label="save smoking status"
+                                     alt="Save smoking status"></md-icon>
+                        </md-button>
+                    </div>
                 </form>
             </md-tab>
         </md-tabs>

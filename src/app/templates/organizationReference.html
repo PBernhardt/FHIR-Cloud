@@ -1,0 +1,6 @@
+<md-input-container class="md-icon-float" ng-if="organization">
+    <label>{{title || 'Managing Organization'}}</label>
+    <md-icon md-svg-icon="hospital"
+             ng-click="goToManagingOrganization(organization.reference)"></md-icon>
+    <input ng-model="organization.display" ng-readonly="true"/>
+</md-input-container>

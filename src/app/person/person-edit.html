@@ -11,7 +11,7 @@
     </div>
     <div flex="100">
         <ng-form name="personEditForm" class="form-horizontal"
-              ng-model="vm.person">
+                 ng-model="vm.person">
             <md-tabs md-dynamic-height>
                 <md-tab label="Name">
                     <div ng-include="'elements/humanName/humanName.html'"></div>
@@ -25,18 +25,18 @@
                 <md-tab label="Telecom">
                     <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
                 </md-tab>
-                 <md-tab label="Photo">
+                <md-tab label="Photo">
                     <div ng-include="'elements/attachment/attachment.html'"></div>
                 </md-tab>
                 <md-tab label="Identifier">
                     <div ng-include="'elements/identifier/identifier.html'"></div>
                 </md-tab>
             </md-tabs>
-            <div layout="row" layout-align="end end">
+            <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            <div layout layout-align="end center" md-padding>
                 <md-button ng-click="vm.save()" aria-label="Execute save">
                     <md-icon md-svg-icon="saveToCloud" aria-label="save person" alt="Save Person"></md-icon>
                 </md-button>
-                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
             </div>
         </ng-form>
     </div>

@@ -289,18 +289,16 @@
                 var interpretationObs = _buildBPInterpretation();
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
-                        vm.isBusy = true;
                         observationService.addObservation(observations[i])
                             .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
                                 if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
                                     var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    relatedItem.target = {reference: 'Observation/' + observationId};
                                     interpretationObs.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
@@ -317,6 +315,7 @@
             var observations = [];
             observations.push(_buildDiastolic());
             observations.push(_buildSystolic());
+            vm.isBusy = true;
 
             savePrimaryObs(observations)
                 .then(function (interpretationObs) {
@@ -331,6 +330,7 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
+                    vm.isBusy = false;
                     _initializeBP();
                     form.$setPristine();
                 })
@@ -345,18 +345,16 @@
                 var interpretationObs = _buildBPInterpretation();
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
-                        vm.isBusy = true;
                         observationService.addObservation(observations[i])
                             .then(_processCreateResponse(),
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
                                 if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
                                     var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    relatedItem.target = {reference: 'Observation/' + observationId};
                                     interpretationObs.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
@@ -373,6 +371,7 @@
             var observations = [];
             observations.push(_buildHeartRate());
             observations.push(_buildRespiration());
+            vm.isBusy = true;
 
             savePrimaryObs(observations)
                 .then(function (interpretationObs) {
@@ -387,7 +386,7 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    _initializeBP();
+                    vm.isBusy = false;
                     form.$setPristine();
                 })
         }
@@ -406,13 +405,12 @@
                             .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
                                 if (angular.isDefined(observationId) && angular.isDefined(bmiObservation)) {
                                     var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    relatedItem.target = {reference: 'Observation/' + observationId};
                                     bmiObservation.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
@@ -442,6 +440,7 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
+                    vm.isBusy = false;
                     _initializeBMI();
                     form.$setPristine();
                 })
@@ -452,6 +451,7 @@
         function saveOther(form) {
             if (angular.isDefined(vm.vitals.temperature.value)) {
                 var tempObservation = _buildBodyTemp();
+                vm.isBusy = true;
                 logInfo("Saving body temperature to " + vm.activeServer.name);
                 observationService.addObservation(tempObservation)
                     .then(_processCreateResponse,
@@ -460,6 +460,7 @@
                     }).then(function () {
                         _initializeBMI();
                         form.$setPristine();
+                        vm.isBusy = false;
                     })
             }
         }
@@ -468,13 +469,14 @@
 
         function saveSmokingStatus(form) {
             var smokingObservation = _buildSmokingStatus();
+            vm.isBusy = true;
             logInfo("Saving smoking status to " + vm.activeServer.name);
             observationService.addObservation(smokingObservation)
                 .then(_processCreateResponse,
                 function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    _initializeBMI();
+                    vm.isBusy = false;
                     form.$setPristine();
                 })
         }
@@ -484,8 +486,8 @@
         function _buildSmokingStatus() {
             var smokingStatusObs = observationService.initializeNewObservation();
             smokingStatusObs.code = {
-                "coding": [],
-                "text": "Smoking status"
+                coding: [],
+                text: "Smoking status"
             };
             var coding = angular.fromJson(vm.vitals.smokingStatus);
             coding.system = vm.smokingStatuses.system;
@@ -493,8 +495,8 @@
             smokingStatusObs.status = "final";
             smokingStatusObs.reliability = "ok";
             smokingStatusObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             smokingStatusObs.appliesDateTime = vm.vitals.date.toISOString();
             return smokingStatusObs;
@@ -503,23 +505,23 @@
         function _buildHeartRate() {
             var systolicObs = observationService.initializeNewObservation();
             systolicObs.code = {
-                "coding": [{
-                    "system": "http://loinc.org",
-                    "code": "8867-4",
-                    "display": "Heart rate",
-                    "primary": true
+                coding: [{
+                    system: "http://loinc.org",
+                    code: "8867-4",
+                    display: "Heart rate",
+                    primary: true
                 }],
-                "text": "Heart rate"
+                text: "Heart rate"
             };
             systolicObs.valueQuantity = {
-                "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]"
+                value: vm.vitals.bp.systolic,
+                units: "mm[Hg]"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             systolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return systolicObs;
@@ -528,29 +530,29 @@
         function _buildRespiration() {
             var systolicObs = observationService.initializeNewObservation();
             systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "86290005",
-                    "display": "Respiratory rate"
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "86290005",
+                    display: "Respiratory rate"
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "9279-1",
-                    "display": "Respiratory rate",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "9279-1",
+                    display: "Respiratory rate",
+                    primary: true
                 }],
-                "text": "Respiratory rate"
+                text: "Respiratory rate"
             };
             systolicObs.valueQuantity = {
-                "value": vm.vitals.respiration.rate,
-                "units": "breaths/min",
-                "code": "258984001",
-                "system": "http://snomed.info/sct"
+                value: vm.vitals.respiration.rate,
+                units: "breaths/min",
+                code: "258984001",
+                system: "http://snomed.info/sct"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
 
             systolicObs.appliesDateTime = vm.vitals.date.toISOString();
@@ -560,25 +562,25 @@
         function _buildBodyTemp() {
             var bodyTempObs = observationService.initializeNewObservation();
             bodyTempObs.code = {
-                "coding": [
+                coding: [
                     {
-                        "system": "http://loinc.org",
-                        "code": "8310-5",
-                        "display": "Body temperature",
-                        "primary": true
+                        system: "http://loinc.org",
+                        code: "8310-5",
+                        display: "Body temperature",
+                        primary: true
                     },
                     {
-                        "system": "http://snomed.info/sct",
-                        "code": "386725007",
-                        "display": "Body temperature",
-                        "primary": false
+                        system: "http://snomed.info/sct",
+                        code: "386725007",
+                        display: "Body temperature",
+                        primary: false
                     }
                 ],
-                "text": "Body temperature"
+                text: "Body temperature"
             }
             if (angular.isDefined(vm.vitals.temperature.method)) {
                 bodyTempObs.method = {
-                    "coding": []
+                    coding: []
                 };
                 var methodCoding = angular.fromJson(vm.vitals.temperature.method);
                 methodCoding.system = vm.bodyTempMethods.system;
@@ -587,7 +589,7 @@
             }
             if (angular.isDefined(vm.vitals.temperature.interpretationCode)) {
                 bodyTempObs.interpretation = {
-                    "coding": []
+                    coding: []
                 };
                 var findingCoding = angular.fromJson(vm.vitals.temperature.interpretationCode);
                 findingCoding.system = vm.bodyTempFinding.system;
@@ -596,16 +598,16 @@
             }
 
             bodyTempObs.valueQuantity = {
-                "value": vm.vitals.temperature.value,
-                "units": "F",
-                "code": "258712004",
-                "system": "http://snomed.info/sct"
+                value: vm.vitals.temperature.value,
+                units: "F",
+                code: "258712004",
+                system: "http://snomed.info/sct"
             };
             bodyTempObs.status = "final";
             bodyTempObs.reliability = "ok";
             bodyTempObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             bodyTempObs.appliesDateTime = vm.vitals.date.toISOString();
             return bodyTempObs;
@@ -614,30 +616,30 @@
         function _buildSystolic() {
             var systolicObs = observationService.initializeNewObservation();
             systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271649006",
-                    "display": "Systolic blood pressure",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "271649006",
+                    display: "Systolic blood pressure",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "8480-6",
-                    "display": "Systolic blood pressure",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "8480-6",
+                    display: "Systolic blood pressure",
+                    primary: true
                 }],
-                "text": "Systolic blood pressure"
+                text: "Systolic blood pressure"
             };
             systolicObs.valueQuantity = {
-                "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]",
-                "system": "http://loinc.org",
-                "code": "20053-5"
+                value: vm.vitals.bp.systolic,
+                units: "mm[Hg]",
+                system: "http://loinc.org",
+                code: "20053-5"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             systolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return systolicObs;
@@ -646,30 +648,30 @@
         function _buildDiastolic() {
             var diastolicObs = observationService.initializeNewObservation();
             diastolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271650006",
-                    "display": "Diastolic blood pressure",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "271650006",
+                    display: "Diastolic blood pressure",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "8462-4",
-                    "display": "Diastolic blood pressure",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "8462-4",
+                    display: "Diastolic blood pressure",
+                    primary: true
                 }],
-                "text": "Diastolic blood pressure"
+                text: "Diastolic blood pressure"
             };
             diastolicObs.valueQuantity = {
-                "value": vm.vitals.bp.diastolic,
-                "units": "mm[Hg]",
-                "system": "http://loinc.org",
-                "code": "20053-5"
+                value: vm.vitals.bp.diastolic,
+                units: "mm[Hg]",
+                system: "http://loinc.org",
+                code: "20053-5"
             };
             diastolicObs.status = "final";
             diastolicObs.reliability = "ok";
             diastolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             diastolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return diastolicObs;
@@ -679,17 +681,17 @@
             if (vm.vitals.bp.interpretationCode) {
                 var bpInterpretationObs = observationService.initializeNewObservation();
                 bpInterpretationObs.code = {
-                    "coding": [
+                    coding: [
                         {
-                            "system": "http://loinc.org",
-                            "code": "55284-4",
-                            "display": "Blood pressure systolic & diastolic",
-                            "primary": true
-                        }], "text": "Blood pressure systolic & diastolic"
+                            system: "http://loinc.org",
+                            code: "55284-4",
+                            display: "Blood pressure systolic & diastolic",
+                            primary: true
+                        }], text: "Blood pressure systolic & diastolic"
                 };
                 bpInterpretationObs.interpretation = {
-                    "coding": [],
-                    "text": vm.vitals.bp.interpretationText
+                    coding: [],
+                    text: vm.vitals.bp.interpretationText
                 };
                 var coding = angular.fromJson(vm.vitals.bp.interpretationCode);
                 coding.system = vm.interpretations.system;
@@ -697,8 +699,8 @@
                 bpInterpretationObs.status = "final";
                 bpInterpretationObs.reliability = "ok";
                 bpInterpretationObs.subject = {
-                    "reference": 'Patient/' + vm.consultation.patient.id,
-                    "display": vm.consultation.patient.fullName
+                    reference: 'Patient/' + vm.consultation.patient.id,
+                    display: vm.consultation.patient.fullName
                 };
                 bpInterpretationObs.appliesDateTime = vm.vitals.date.toISOString();
 
@@ -711,128 +713,128 @@
         function _buildBMIObs() {
             var bmiObs = observationService.initializeNewObservation();
             bmiObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "60621009",
-                    "display": "Body mass index",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "60621009",
+                    display: "Body mass index",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "39156-5",
-                    "display": "Body mass index (BMI) [Ratio]",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "39156-5",
+                    display: "Body mass index (BMI) [Ratio]",
+                    primary: true
                 }],
-                "text": "Body mass index"
+                text: "Body mass index"
             };
             bmiObs.bodySiteCodeableConcept = {
-                "coding": [
+                coding: [
                     {
-                        "system": "http://snomed.info/sct",
-                        "code": "38266002",
-                        "display": "Entire body as a whole"
+                        system: "http://snomed.info/sct",
+                        code: "38266002",
+                        display: "Entire body as a whole"
                     }
                 ]
             };
             bmiObs.referenceRange =
                 [
                     {
-                        "high": {
-                            "value": 20
+                        high: {
+                            value: 20
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "310252000",
-                                    "display": "Low BMI"
+                                    system: "http://snomed.info/sct",
+                                    code: "310252000",
+                                    display: "Low BMI"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 20
+                        low: {
+                            value: 20
                         },
-                        "high": {
-                            "value": 25
+                        high: {
+                            value: 25
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "412768003",
-                                    "display": "Normal BMI"
+                                    system: "http://snomed.info/sct",
+                                    code: "412768003",
+                                    display: "Normal BMI"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 25
+                        low: {
+                            value: 25
                         },
-                        "high": {
-                            "value": 30
+                        high: {
+                            value: 30
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162863004",
-                                    "display": "Overweight"
+                                    system: "http://snomed.info/sct",
+                                    code: "162863004",
+                                    display: "Overweight"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 30
+                        low: {
+                            value: 30
                         },
-                        "high": {
-                            "value": 40
+                        high: {
+                            value: 40
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162864005",
-                                    "display": "Obesity"
+                                    system: "http://snomed.info/sct",
+                                    code: "162864005",
+                                    display: "Obesity"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 40
+                        low: {
+                            value: 40
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162864005",
-                                    "display": "Severe obesity"
+                                    system: "http://snomed.info/sct",
+                                    code: "162864005",
+                                    display: "Severe obesity"
                                 }
                             ]
                         }
                     }
                 ];
             bmiObs.valueQuantity = {
-                "value": vm.vitals.bmi.calculated,
-                "units": "lb/in2",
-                "code": "362981000",  //TODO: find rights code
-                "system": "http://snomed.info/sct"
+                value: vm.vitals.bmi.calculated,
+                units: "lb/in2",
+                code: "362981000",  //TODO: find rights code
+                system: "http://snomed.info/sct"
             };
             bmiObs.status = "final";
             bmiObs.reliability = "ok";
             bmiObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             bmiObs.appliesDateTime = vm.vitals.date.toISOString();
 
             if (vm.vitals.bmi.interpretationCode) {
                 bmiObs.interpretation = {
-                    "coding": [],
-                    "text": vm.vitals.bmi.interpretationText
+                    coding: [],
+                    text: vm.vitals.bmi.interpretationText
                 };
                 var coding = angular.fromJson(vm.vitals.bmi.interpretationCode);
                 coding.system = vm.interpretations.system;
@@ -845,46 +847,46 @@
             var heightObs = observationService.initializeNewObservation();
             if (vm.vitals.bmi.heightMeasured === "Standing") {
                 heightObs.code = {
-                    "coding": [{
-                        "system": "http://loinc.org",
-                        "code": "8302-2",
-                        "display": "Body height",
-                        "primary": true
+                    coding: [{
+                        system: "http://loinc.org",
+                        code: "8302-2",
+                        display: "Body height",
+                        primary: true
                     }, {
-                        "system": "http://snomed.info/sct",
-                        "code": "248333004",
-                        "display": "Standing height",
-                        "primary": false
+                        system: "http://snomed.info/sct",
+                        code: "248333004",
+                        display: "Standing height",
+                        primary: false
                     }],
-                    "text": "Standing body height"
+                    text: "Standing body height"
                 };
             } else {
                 heightObs.code = {
-                    "coding": [{
-                        "system": "http://loinc.org",
-                        "code": "8306-3",
-                        "display": "Body height - lying",
-                        "primary": true
+                    coding: [{
+                        system: "http://loinc.org",
+                        code: "8306-3",
+                        display: "Body height - lying",
+                        primary: true
                     }, {
-                        "system": "http://snomed.info/sct",
-                        "code": "248334005",
-                        "display": "Length of body",
-                        "primary": false
+                        system: "http://snomed.info/sct",
+                        code: "248334005",
+                        display: "Length of body",
+                        primary: false
                     }],
-                    "text": "Lying body height"
+                    text: "Lying body height"
                 };
             }
             heightObs.valueQuantity = {
-                "value": vm.vitals.bmi.height,
-                "units": "in",
-                "system": "http://snomed.info/sct",
-                "code": "258677007"
+                value: vm.vitals.bmi.height,
+                units: "in",
+                system: "http://snomed.info/sct",
+                code: "258677007"
             };
             heightObs.status = "final";
             heightObs.reliability = "ok";
             heightObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             heightObs.appliesDateTime = vm.vitals.date.toISOString();
 
@@ -894,30 +896,30 @@
         function _buildWeightObs() {
             var weightObs = observationService.initializeNewObservation();
             weightObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "27113001",
-                    "display": "Body weight",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "27113001",
+                    display: "Body weight",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "3141-9",
-                    "display": "Body weight Measured",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "3141-9",
+                    display: "Body weight Measured",
+                    primary: true
                 }],
-                "text": "Body weight"
+                text: "Body weight"
             };
             weightObs.valueQuantity = {
-                "value": vm.vitals.bmi.weight,
-                "units": "lb",
-                "system": "http://snomed.info/sct",
-                "code": "258693003"
+                value: vm.vitals.bmi.weight,
+                units: "lb",
+                system: "http://snomed.info/sct",
+                code: "258693003"
             };
             weightObs.status = "final";
             weightObs.reliability = "ok";
             weightObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             weightObs.appliesDateTime = vm.vitals.date.toISOString();
             return weightObs;
@@ -983,7 +985,7 @@
             },
             "smokingStatus": undefined,
             "temperature": {
-                "value": undefined,
+                value: undefined,
                 "method": undefined,
                 "interpretationCode": undefined,
                 "color": "black",

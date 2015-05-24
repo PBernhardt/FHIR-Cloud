@@ -289,12 +289,16 @@
         function saveCRP(form) {
             var crpObservation = _buildCrpResult();
             logInfo("Saving HS CRP result to " + vm.activeServer.name);
+            vm.isBusy = true;
             observationService.addObservation(crpObservation)
-                .then(_processCreateResponse,
+                .then(function(result) {
+                    _processCreateResponse(result);
+                    logInfo("HS CRP saved successfully.")
+                },
                 function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    logInfo("HS CRP result saved successfully!");
+                    vm.isBusy = false;
                     _initializeCrp(form);
                 })
         }

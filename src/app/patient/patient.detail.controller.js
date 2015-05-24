@@ -82,13 +82,6 @@
 
         vm.getOrganizationReference = getOrganizationReference;
 
-        function goToManagingOrganization(resourceReference) {
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
-        }
-
-        vm.goToManagingOrganization = goToManagingOrganization;
-
         function _getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
                 .then(function (data) {

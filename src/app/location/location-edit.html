@@ -67,12 +67,12 @@
                 </md-tab>
             </md-tabs>
 
-            <div layout="row" layout-align="end end">
+            <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            <div layout layout-align="end center" md-padding>
                 <md-button ng-click="vm.save()" aria-label="Execute save"
                            ng-disabled="locationEditForm.$pristine || locationEditForm.$invalid">
                     <md-icon md-svg-icon="saveToCloud" alt="Save Location"></md-icon>
                 </md-button>
-                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
             </div>
         </ng-form>
     </div>

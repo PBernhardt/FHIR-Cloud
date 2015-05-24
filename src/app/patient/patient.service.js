@@ -331,7 +331,7 @@
                                 city: $filter('titleCase')(user.location.city),
                                 state: $filter('abbreviateState')(user.location.state),
                                 postalCode: user.location.zip,
-                                use: home
+                                use: 'home'
                             }],
                             photo: [{url: user.picture.large}],
                             identifier: [

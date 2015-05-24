@@ -117,7 +117,28 @@
         return directiveDefinitionObject;
     });
 
-    app.directive('fcResourceView', [function() {
+    app.directive('fcOrganizationReference', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'organization': '=organization',
+                'title': '@'
+            },
+            templateUrl: 'templates/organizationReference.html',
+            controller: function ($filter, $location, $mdDialog, $scope) {
+                $scope.goToManagingOrganization = function (resourceReference) {
+                    if ($mdDialog) {
+                        $mdDialog.hide();
+                    }
+                    var id = ($filter)('idFromURL')(resourceReference);
+                    $location.path('/organization/get/' + id);
+                };
+            }
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcResourceView', [function () {
         var directiveDefinitionObject = {
             restrict: 'E',
             scope: {

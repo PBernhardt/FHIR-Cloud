@@ -53,6 +53,18 @@
             }
         }
 
+        function changeLocationList(locations) {
+            if (angular.isDefined(locations)) {
+                $broadcast(commonConfig.config.locationListChangeEvent, locations);
+            }
+        }
+        
+        function changeOrganizationList(organizations) {
+            if (angular.isDefined(organizations)) {
+                $broadcast(commonConfig.config.organizationListChangeEvent, organizations);
+            }         
+        }
+
         function changePatientList(patients) {
             if (angular.isDefined(patients)) {
                 $broadcast(commonConfig.config.patientListChangeEvent, patients);
@@ -253,6 +265,8 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeLocationList: changeLocationList,
+            changeOrganizationList: changeOrganizationList,
             changePatientList: changePatientList,
             changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,

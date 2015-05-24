@@ -1,6 +1,7 @@
 <div ng-controller="labDetail as vm" layout="row" layout-wrap>
     <div flex="95">
-        <h3 class="md-title">Create Lab Results for {{vm.lab.patient.fullName}} ({{vm.lab.patient.gender}}, {{vm.lab.patient.birthDate |
+        <h3 class="md-title">Create Lab Results for {{vm.lab.patient.fullName}} ({{vm.lab.patient.gender}},
+            {{vm.lab.patient.birthDate |
             displayAge }})</h3>
     </div>
     <div flex="5">
@@ -149,14 +150,16 @@
                         </md-input-container>
                     </div>
 
-                    <md-button name="save-lipid"
-                               ng-disabled="lipidForm.$invalid"
-                               ng-click="vm.saveLipid(lipidForm)"
-                               aria-label="Execute save">
-                        <md-icon md-svg-icon="saveToCloud" aria-label="save lipid panel"
-                                 alt="Save lipid panel"></md-icon>
-                    </md-button>
                     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                    <div layout layout-align="end center" md-padding>
+                        <md-button name="save-lipid"
+                                   ng-disabled="lipidForm.$invalid"
+                                   ng-click="vm.saveLipid(lipidForm)"
+                                   aria-label="Execute save">
+                            <md-icon md-svg-icon="saveToCloud" aria-label="save lipid panel"
+                                     alt="Save lipid panel"></md-icon>
+                        </md-button>
+                    </div>
                 </ng-form>
             </md-tab>
             <md-tab label="High-sensitivity CRP">
@@ -200,6 +203,9 @@
                             <input ng-model="vm.lab.date" id="crp-date" type="datetime-local" ng-required="true"/>
                         </md-input-container>
                     </div>
+
+                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                    <div layout layout-align="end center" md-padding>
                     <md-button name="save-crp"
                                ng-disabled="crpForm.$invalid"
                                ng-click="vm.saveCRP(crpForm)"
@@ -207,7 +213,7 @@
                         <md-icon md-svg-icon="saveToCloud" aria-label="save crp lab"
                                  alt="Save CRP"></md-icon>
                     </md-button>
-                    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+                    </div>
                 </ng-form>
             </md-tab>
         </md-tabs>

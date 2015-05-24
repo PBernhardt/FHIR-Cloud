@@ -3,10 +3,10 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
-                                $mdDialog, common, config, contactService, fhirServers, identifierService, localValueSets,
-                                organizationService, contactPointService, sessionService, patientService, personService,
-                                practitionerService) {
+    function organizationDetail($location, $mdBottomSheet, $routeParams, $scope, $window, addressService, $mdDialog,
+                                common, config, contactService, fhirServers, identifierService, localValueSets,
+                                locationService, organizationService, contactPointService, sessionService,
+                                patientService, personService, practitionerService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -109,6 +109,8 @@
                     _getAffiliatedPatients();
                     _getAffiliatedPractitioners();
                     _getAffiliatedPersons();
+                    _getAffiliatedOrganizations();
+                    _getAffiliatedLocations();
                 }
 
             }
@@ -224,6 +226,36 @@
             }
         }
 
+        function _getAffiliatedLocations() {
+            var deferred = $q.defer();
+            locationService.getLocationsByOrganization(vm.activeServer.baseUrl, vm.organization.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Locations from ' + vm.activeServer.name + '.');
+                    common.changeLocationList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function _getAffiliatedOrganizations() {
+            var deferred = $q.defer();
+            organizationService.getAffiliatedOrganizations(vm.activeServer.baseUrl, vm.organization.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Organizations from ' + vm.activeServer.name + '.');
+                    common.changeOrganizationList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
         function _getAffiliatedPractitioners() {
             var deferred = $q.defer();
             practitionerService.getPractitioners(vm.activeServer.baseUrl, undefined, vm.organization.id)
@@ -286,13 +318,6 @@
             });
         }
 
-        function goToPartOf(resourceReference) {
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
-        }
-
-        vm.goToPartOf = goToPartOf;
-
         Object.defineProperty(vm, 'canSave', {
             get: canSave
         });
@@ -340,7 +365,7 @@
                 });
         }
 
-         function actions($event) {
+        function actions($event) {
             $mdBottomSheet.show({
                 parent: angular.element(document.getElementById('content')),
                 templateUrl: './templates/resourceSheet.html',
@@ -425,10 +450,10 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
-            'common', 'config', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService',
-            'contactPointService', 'sessionService', 'patientService', 'personService', 'practitionerService',
-            organizationDetail]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
+            'common', 'config', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'locationService',
+            'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService',
+            'practitionerService', organizationDetail]);
 
 })
 ();

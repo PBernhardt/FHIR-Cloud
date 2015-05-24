@@ -3,7 +3,7 @@
 
     var controllerId = 'practitionerRole';
 
-    function practitionerRole($filter, $location, $mdDialog, common, data, fhirServers,
+    function practitionerRole($mdDialog, common, data, fhirServers,
                               organizationReferenceService, practitionerReferenceService, practitionerRoleService) {
 
         /*jshint validthis:true */
@@ -25,14 +25,6 @@
                     vm.activeServer = server;
                 });
         }
-
-        function goToManagingOrganization(resourceReference) {
-            $mdDialog.hide();
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
-        }
-
-        vm.goToManagingOrganization = goToManagingOrganization;
 
         function closeDialog() {
             $mdDialog.hide();
@@ -131,6 +123,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdDialog', 'common', 'data', 'fhirServers',
+        ['$mdDialog', 'common', 'data', 'fhirServers',
             'organizationReferenceService', 'practitionerReferenceService', 'practitionerRoleService', practitionerRole]);
 })();

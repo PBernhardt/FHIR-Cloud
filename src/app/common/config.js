@@ -29,6 +29,8 @@
     var events = {
         authenticatedUserChanged: 'user.changed',
         controllerActivateSuccess: 'controller.activateSuccess',
+        locationListChanged: 'locationList.changed',
+        organizationListChanged: 'organizationList.changed',
         patientListChanged: 'patientList.changed',
         personListChanged: 'personList.changed',
         practitionerListChanged: 'practitionerList.changed',
@@ -226,7 +228,7 @@
         $mdIconProvider
             .icon("actions", "./assets/svg/actions.svg", 24)
             .icon("account", "./assets/svg/account.svg", 24)
-            .icon("address", "./assets/svg/place.svg", 24)
+            .icon("address", "./assets/svg/address.svg", 24)
             .icon("add", "./assets/svg/add.svg", 24)
             .icon("authority", "./assets/svg/authority.svg", 24)
             .icon("cardio", "./assets/svg/cardio3.svg", 24)
@@ -260,10 +262,11 @@
             .icon("link", "./assets/svg/link.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("listAdd", "./assets/svg/listAdd.svg", 24)
+            .icon("location", "./assets/svg/map-marker-radius.svg", 24)
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
-            .icon("rectangle", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more16.svg", 24)
+            .icon("network", "./assets/svg/share.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("order", "./assets/svg/flask.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
@@ -277,6 +280,7 @@
             .icon("place", "./assets/svg/place.svg", 24)
             .icon("doctor", "./assets/svg/md.svg", 24)
             .icon("quickFind", "./assets/svg/quickFind.svg", 24)
+            .icon("rectangle", "./assets/svg/menu.svg", 24)
             .icon("refresh", "./assets/svg/refresh.svg", 24)
             .icon("relatedPerson", "./assets/svg/group.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
@@ -314,6 +318,8 @@
         cfg.config.personListChangeEvent = config.events.personListChanged;
         cfg.config.practitionerListChangeEvent = config.events.practitionerListChanged;
         cfg.config.relatedPersonListChangeEvent = config.events.relatedPersonListChanged;
+        cfg.config.locationListChangeEvent = config.events.locationListChanged;
+        cfg.config.organizationListChangeEvent = config.events.organizationListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {

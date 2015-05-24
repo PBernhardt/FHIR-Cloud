@@ -202,6 +202,18 @@
             }
         }
 
+        function changeLocationList(locations) {
+            if (angular.isDefined(locations)) {
+                $broadcast(commonConfig.config.locationListChangeEvent, locations);
+            }
+        }
+        
+        function changeOrganizationList(organizations) {
+            if (angular.isDefined(organizations)) {
+                $broadcast(commonConfig.config.organizationListChangeEvent, organizations);
+            }         
+        }
+
         function changePatientList(patients) {
             if (angular.isDefined(patients)) {
                 $broadcast(commonConfig.config.patientListChangeEvent, patients);
@@ -402,6 +414,8 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeLocationList: changeLocationList,
+            changeOrganizationList: changeOrganizationList,
             changePatientList: changePatientList,
             changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,
@@ -461,6 +475,8 @@
     var events = {
         authenticatedUserChanged: 'user.changed',
         controllerActivateSuccess: 'controller.activateSuccess',
+        locationListChanged: 'locationList.changed',
+        organizationListChanged: 'organizationList.changed',
         patientListChanged: 'patientList.changed',
         personListChanged: 'personList.changed',
         practitionerListChanged: 'practitionerList.changed',
@@ -658,7 +674,7 @@
         $mdIconProvider
             .icon("actions", "./assets/svg/actions.svg", 24)
             .icon("account", "./assets/svg/account.svg", 24)
-            .icon("address", "./assets/svg/place.svg", 24)
+            .icon("address", "./assets/svg/address.svg", 24)
             .icon("add", "./assets/svg/add.svg", 24)
             .icon("authority", "./assets/svg/authority.svg", 24)
             .icon("cardio", "./assets/svg/cardio3.svg", 24)
@@ -692,10 +708,11 @@
             .icon("link", "./assets/svg/link.svg", 24)
             .icon("list", "./assets/svg/list.svg", 24)
             .icon("listAdd", "./assets/svg/listAdd.svg", 24)
+            .icon("location", "./assets/svg/map-marker-radius.svg", 24)
             .icon("male", "./assets/svg/male.svg", 24)
             .icon("medication", "./assets/svg/medical12.svg", 24)
-            .icon("rectangle", "./assets/svg/menu.svg", 24)
             .icon("more", "./assets/svg/more16.svg", 24)
+            .icon("network", "./assets/svg/share.svg", 24)
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("order", "./assets/svg/flask.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
@@ -709,6 +726,7 @@
             .icon("place", "./assets/svg/place.svg", 24)
             .icon("doctor", "./assets/svg/md.svg", 24)
             .icon("quickFind", "./assets/svg/quickFind.svg", 24)
+            .icon("rectangle", "./assets/svg/menu.svg", 24)
             .icon("refresh", "./assets/svg/refresh.svg", 24)
             .icon("relatedPerson", "./assets/svg/group.svg", 24)
             .icon("rx", "./assets/svg/rx.svg", 24)
@@ -746,6 +764,8 @@
         cfg.config.personListChangeEvent = config.events.personListChanged;
         cfg.config.practitionerListChangeEvent = config.events.practitionerListChanged;
         cfg.config.relatedPersonListChangeEvent = config.events.relatedPersonListChanged;
+        cfg.config.locationListChangeEvent = config.events.locationListChanged;
+        cfg.config.organizationListChangeEvent = config.events.organizationListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {
@@ -936,7 +956,28 @@
         return directiveDefinitionObject;
     });
 
-    app.directive('fcResourceView', [function() {
+    app.directive('fcOrganizationReference', function () {
+        var directiveDefinitionObject = {
+            restrict: 'E',
+            scope: {
+                'organization': '=organization',
+                'title': '@'
+            },
+            templateUrl: 'templates/organizationReference.html',
+            controller: function ($filter, $location, $mdDialog, $scope) {
+                $scope.goToManagingOrganization = function (resourceReference) {
+                    if ($mdDialog) {
+                        $mdDialog.hide();
+                    }
+                    var id = ($filter)('idFromURL')(resourceReference);
+                    $location.path('/organization/get/' + id);
+                };
+            }
+        };
+        return directiveDefinitionObject;
+    });
+
+    app.directive('fcResourceView', [function () {
         var directiveDefinitionObject = {
             restrict: 'E',
             scope: {
@@ -1654,6 +1695,10 @@
     app.filter('idFromURL', function () {
         return function (uri) {
             if (uri.length > 5) {
+                var historyPosition = uri.indexOf('/_history');
+                if (historyPosition > -1) {
+                    uri = uri.substring(0, historyPosition);
+                }
                 var pathArray = uri.split('/');
                 return pathArray[pathArray.length - 1];
             }
@@ -8522,6 +8567,172 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'locationList';
+
+    function locationList($location, $scope, common, config, fhirServers, locationService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+        var noToast = false;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                }, function (error) {
+                    logError('Error initializing location search.', error);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToLocation(location) {
+            if (location && location.$$hashKey) {
+                $location.path('/location/view/' + location.$$hashKey);
+            }
+        }
+        vm.goToLocation = goToLocation;
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            locationService.getLocationsByLink(url)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Locations from ' +
+                        vm.activeServer.name + '.');
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                })
+                .then(_processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+        vm.dereferenceLink = dereferenceLink;
+
+        $scope.$on(config.events.locationListChanged,
+            function (event, data) {
+                _processSearchResults(data);
+                logDebug("Location list updated.");
+            }
+        );
+
+        function _processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.locations = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        vm.activeServer = null;
+        vm.locations = [];
+        vm.isBusy = false;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$scope', 'common', 'config', 'fhirServers', 'locationService', locationList]);
+})();
+(function () {
+    'use strict';
+
+    var controllerId = 'organizationList';
+
+    function organizationList($location, $scope, common, config, fhirServers, organizationService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+        var noToast = false;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                }, function (error) {
+                    logError('Error initializing organization search.', error);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToOrganization(organization) {
+            if (organization && organization.$$hashKey) {
+                $location.path('/organization/view/' + organization.$$hashKey);
+            }
+        }
+        vm.goToOrganization = goToOrganization;
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            organizationService.getOrganizationsByLink(url)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' +
+                        vm.activeServer.name + '.');
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                })
+                .then(_processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+        vm.dereferenceLink = dereferenceLink;
+
+        $scope.$on(config.events.organizationListChanged,
+            function (event, data) {
+                _processSearchResults(data);
+                logDebug("Organization list updated.");
+            }
+        );
+
+        function _processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.organizations = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        vm.activeServer = null;
+        vm.organizations = [];
+        vm.isBusy = false;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$scope', 'common', 'config', 'fhirServers', 'organizationService', organizationList]);
+})();
+(function () {
+    'use strict';
+
     var controllerId = 'organizationReference';
 
     function organizationReference(common, fhirServers, organizationReferenceService) {
@@ -13873,18 +14084,16 @@
                 var interpretationObs = _buildBPInterpretation();
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
-                        vm.isBusy = true;
                         observationService.addObservation(observations[i])
                             .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
                                 if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
                                     var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    relatedItem.target = {reference: 'Observation/' + observationId};
                                     interpretationObs.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
@@ -13901,6 +14110,7 @@
             var observations = [];
             observations.push(_buildDiastolic());
             observations.push(_buildSystolic());
+            vm.isBusy = true;
 
             savePrimaryObs(observations)
                 .then(function (interpretationObs) {
@@ -13915,6 +14125,7 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
+                    vm.isBusy = false;
                     _initializeBP();
                     form.$setPristine();
                 })
@@ -13929,18 +14140,16 @@
                 var interpretationObs = _buildBPInterpretation();
                 for (var i = 0, len = observations.length; i <= len; i++) {
                     if (observations[i] !== undefined) {
-                        vm.isBusy = true;
                         observationService.addObservation(observations[i])
                             .then(_processCreateResponse(),
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
                                 if (angular.isDefined(observationId) && angular.isDefined(interpretationObs)) {
                                     var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    relatedItem.target = {reference: 'Observation/' + observationId};
                                     interpretationObs.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
@@ -13957,6 +14166,7 @@
             var observations = [];
             observations.push(_buildHeartRate());
             observations.push(_buildRespiration());
+            vm.isBusy = true;
 
             savePrimaryObs(observations)
                 .then(function (interpretationObs) {
@@ -13971,7 +14181,7 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    _initializeBP();
+                    vm.isBusy = false;
                     form.$setPristine();
                 })
         }
@@ -13990,13 +14200,12 @@
                             .then(_processCreateResponse,
                             function (error) {
                                 logError(common.unexpectedOutcome(error));
-                                vm.isBusy = false;
                                 deferred.reject(error);
                             })
                             .then(function (observationId) {
                                 if (angular.isDefined(observationId) && angular.isDefined(bmiObservation)) {
                                     var relatedItem = {"type": "has-component"};
-                                    relatedItem.target = {"reference": 'Observation/' + observationId};
+                                    relatedItem.target = {reference: 'Observation/' + observationId};
                                     bmiObservation.related.push(relatedItem);
                                     completed = completed + 1;
                                 }
@@ -14026,6 +14235,7 @@
                 }, function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
+                    vm.isBusy = false;
                     _initializeBMI();
                     form.$setPristine();
                 })
@@ -14036,6 +14246,7 @@
         function saveOther(form) {
             if (angular.isDefined(vm.vitals.temperature.value)) {
                 var tempObservation = _buildBodyTemp();
+                vm.isBusy = true;
                 logInfo("Saving body temperature to " + vm.activeServer.name);
                 observationService.addObservation(tempObservation)
                     .then(_processCreateResponse,
@@ -14044,6 +14255,7 @@
                     }).then(function () {
                         _initializeBMI();
                         form.$setPristine();
+                        vm.isBusy = false;
                     })
             }
         }
@@ -14052,13 +14264,14 @@
 
         function saveSmokingStatus(form) {
             var smokingObservation = _buildSmokingStatus();
+            vm.isBusy = true;
             logInfo("Saving smoking status to " + vm.activeServer.name);
             observationService.addObservation(smokingObservation)
                 .then(_processCreateResponse,
                 function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    _initializeBMI();
+                    vm.isBusy = false;
                     form.$setPristine();
                 })
         }
@@ -14068,8 +14281,8 @@
         function _buildSmokingStatus() {
             var smokingStatusObs = observationService.initializeNewObservation();
             smokingStatusObs.code = {
-                "coding": [],
-                "text": "Smoking status"
+                coding: [],
+                text: "Smoking status"
             };
             var coding = angular.fromJson(vm.vitals.smokingStatus);
             coding.system = vm.smokingStatuses.system;
@@ -14077,8 +14290,8 @@
             smokingStatusObs.status = "final";
             smokingStatusObs.reliability = "ok";
             smokingStatusObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             smokingStatusObs.appliesDateTime = vm.vitals.date.toISOString();
             return smokingStatusObs;
@@ -14087,23 +14300,23 @@
         function _buildHeartRate() {
             var systolicObs = observationService.initializeNewObservation();
             systolicObs.code = {
-                "coding": [{
-                    "system": "http://loinc.org",
-                    "code": "8867-4",
-                    "display": "Heart rate",
-                    "primary": true
+                coding: [{
+                    system: "http://loinc.org",
+                    code: "8867-4",
+                    display: "Heart rate",
+                    primary: true
                 }],
-                "text": "Heart rate"
+                text: "Heart rate"
             };
             systolicObs.valueQuantity = {
-                "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]"
+                value: vm.vitals.bp.systolic,
+                units: "mm[Hg]"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             systolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return systolicObs;
@@ -14112,29 +14325,29 @@
         function _buildRespiration() {
             var systolicObs = observationService.initializeNewObservation();
             systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "86290005",
-                    "display": "Respiratory rate"
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "86290005",
+                    display: "Respiratory rate"
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "9279-1",
-                    "display": "Respiratory rate",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "9279-1",
+                    display: "Respiratory rate",
+                    primary: true
                 }],
-                "text": "Respiratory rate"
+                text: "Respiratory rate"
             };
             systolicObs.valueQuantity = {
-                "value": vm.vitals.respiration.rate,
-                "units": "breaths/min",
-                "code": "258984001",
-                "system": "http://snomed.info/sct"
+                value: vm.vitals.respiration.rate,
+                units: "breaths/min",
+                code: "258984001",
+                system: "http://snomed.info/sct"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
 
             systolicObs.appliesDateTime = vm.vitals.date.toISOString();
@@ -14144,25 +14357,25 @@
         function _buildBodyTemp() {
             var bodyTempObs = observationService.initializeNewObservation();
             bodyTempObs.code = {
-                "coding": [
+                coding: [
                     {
-                        "system": "http://loinc.org",
-                        "code": "8310-5",
-                        "display": "Body temperature",
-                        "primary": true
+                        system: "http://loinc.org",
+                        code: "8310-5",
+                        display: "Body temperature",
+                        primary: true
                     },
                     {
-                        "system": "http://snomed.info/sct",
-                        "code": "386725007",
-                        "display": "Body temperature",
-                        "primary": false
+                        system: "http://snomed.info/sct",
+                        code: "386725007",
+                        display: "Body temperature",
+                        primary: false
                     }
                 ],
-                "text": "Body temperature"
+                text: "Body temperature"
             }
             if (angular.isDefined(vm.vitals.temperature.method)) {
                 bodyTempObs.method = {
-                    "coding": []
+                    coding: []
                 };
                 var methodCoding = angular.fromJson(vm.vitals.temperature.method);
                 methodCoding.system = vm.bodyTempMethods.system;
@@ -14171,7 +14384,7 @@
             }
             if (angular.isDefined(vm.vitals.temperature.interpretationCode)) {
                 bodyTempObs.interpretation = {
-                    "coding": []
+                    coding: []
                 };
                 var findingCoding = angular.fromJson(vm.vitals.temperature.interpretationCode);
                 findingCoding.system = vm.bodyTempFinding.system;
@@ -14180,16 +14393,16 @@
             }
 
             bodyTempObs.valueQuantity = {
-                "value": vm.vitals.temperature.value,
-                "units": "F",
-                "code": "258712004",
-                "system": "http://snomed.info/sct"
+                value: vm.vitals.temperature.value,
+                units: "F",
+                code: "258712004",
+                system: "http://snomed.info/sct"
             };
             bodyTempObs.status = "final";
             bodyTempObs.reliability = "ok";
             bodyTempObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             bodyTempObs.appliesDateTime = vm.vitals.date.toISOString();
             return bodyTempObs;
@@ -14198,30 +14411,30 @@
         function _buildSystolic() {
             var systolicObs = observationService.initializeNewObservation();
             systolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271649006",
-                    "display": "Systolic blood pressure",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "271649006",
+                    display: "Systolic blood pressure",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "8480-6",
-                    "display": "Systolic blood pressure",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "8480-6",
+                    display: "Systolic blood pressure",
+                    primary: true
                 }],
-                "text": "Systolic blood pressure"
+                text: "Systolic blood pressure"
             };
             systolicObs.valueQuantity = {
-                "value": vm.vitals.bp.systolic,
-                "units": "mm[Hg]",
-                "system": "http://loinc.org",
-                "code": "20053-5"
+                value: vm.vitals.bp.systolic,
+                units: "mm[Hg]",
+                system: "http://loinc.org",
+                code: "20053-5"
             };
             systolicObs.status = "final";
             systolicObs.reliability = "ok";
             systolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             systolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return systolicObs;
@@ -14230,30 +14443,30 @@
         function _buildDiastolic() {
             var diastolicObs = observationService.initializeNewObservation();
             diastolicObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "271650006",
-                    "display": "Diastolic blood pressure",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "271650006",
+                    display: "Diastolic blood pressure",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "8462-4",
-                    "display": "Diastolic blood pressure",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "8462-4",
+                    display: "Diastolic blood pressure",
+                    primary: true
                 }],
-                "text": "Diastolic blood pressure"
+                text: "Diastolic blood pressure"
             };
             diastolicObs.valueQuantity = {
-                "value": vm.vitals.bp.diastolic,
-                "units": "mm[Hg]",
-                "system": "http://loinc.org",
-                "code": "20053-5"
+                value: vm.vitals.bp.diastolic,
+                units: "mm[Hg]",
+                system: "http://loinc.org",
+                code: "20053-5"
             };
             diastolicObs.status = "final";
             diastolicObs.reliability = "ok";
             diastolicObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             diastolicObs.appliesDateTime = vm.vitals.date.toISOString();
             return diastolicObs;
@@ -14263,17 +14476,17 @@
             if (vm.vitals.bp.interpretationCode) {
                 var bpInterpretationObs = observationService.initializeNewObservation();
                 bpInterpretationObs.code = {
-                    "coding": [
+                    coding: [
                         {
-                            "system": "http://loinc.org",
-                            "code": "55284-4",
-                            "display": "Blood pressure systolic & diastolic",
-                            "primary": true
-                        }], "text": "Blood pressure systolic & diastolic"
+                            system: "http://loinc.org",
+                            code: "55284-4",
+                            display: "Blood pressure systolic & diastolic",
+                            primary: true
+                        }], text: "Blood pressure systolic & diastolic"
                 };
                 bpInterpretationObs.interpretation = {
-                    "coding": [],
-                    "text": vm.vitals.bp.interpretationText
+                    coding: [],
+                    text: vm.vitals.bp.interpretationText
                 };
                 var coding = angular.fromJson(vm.vitals.bp.interpretationCode);
                 coding.system = vm.interpretations.system;
@@ -14281,8 +14494,8 @@
                 bpInterpretationObs.status = "final";
                 bpInterpretationObs.reliability = "ok";
                 bpInterpretationObs.subject = {
-                    "reference": 'Patient/' + vm.consultation.patient.id,
-                    "display": vm.consultation.patient.fullName
+                    reference: 'Patient/' + vm.consultation.patient.id,
+                    display: vm.consultation.patient.fullName
                 };
                 bpInterpretationObs.appliesDateTime = vm.vitals.date.toISOString();
 
@@ -14295,128 +14508,128 @@
         function _buildBMIObs() {
             var bmiObs = observationService.initializeNewObservation();
             bmiObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "60621009",
-                    "display": "Body mass index",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "60621009",
+                    display: "Body mass index",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "39156-5",
-                    "display": "Body mass index (BMI) [Ratio]",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "39156-5",
+                    display: "Body mass index (BMI) [Ratio]",
+                    primary: true
                 }],
-                "text": "Body mass index"
+                text: "Body mass index"
             };
             bmiObs.bodySiteCodeableConcept = {
-                "coding": [
+                coding: [
                     {
-                        "system": "http://snomed.info/sct",
-                        "code": "38266002",
-                        "display": "Entire body as a whole"
+                        system: "http://snomed.info/sct",
+                        code: "38266002",
+                        display: "Entire body as a whole"
                     }
                 ]
             };
             bmiObs.referenceRange =
                 [
                     {
-                        "high": {
-                            "value": 20
+                        high: {
+                            value: 20
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "310252000",
-                                    "display": "Low BMI"
+                                    system: "http://snomed.info/sct",
+                                    code: "310252000",
+                                    display: "Low BMI"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 20
+                        low: {
+                            value: 20
                         },
-                        "high": {
-                            "value": 25
+                        high: {
+                            value: 25
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "412768003",
-                                    "display": "Normal BMI"
+                                    system: "http://snomed.info/sct",
+                                    code: "412768003",
+                                    display: "Normal BMI"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 25
+                        low: {
+                            value: 25
                         },
-                        "high": {
-                            "value": 30
+                        high: {
+                            value: 30
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162863004",
-                                    "display": "Overweight"
+                                    system: "http://snomed.info/sct",
+                                    code: "162863004",
+                                    display: "Overweight"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 30
+                        low: {
+                            value: 30
                         },
-                        "high": {
-                            "value": 40
+                        high: {
+                            value: 40
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162864005",
-                                    "display": "Obesity"
+                                    system: "http://snomed.info/sct",
+                                    code: "162864005",
+                                    display: "Obesity"
                                 }
                             ]
                         }
                     },
                     {
-                        "low": {
-                            "value": 40
+                        low: {
+                            value: 40
                         },
-                        "meaning": {
-                            "coding": [
+                        meaning: {
+                            coding: [
                                 {
-                                    "system": "http://snomed.info/sct",
-                                    "code": "162864005",
-                                    "display": "Severe obesity"
+                                    system: "http://snomed.info/sct",
+                                    code: "162864005",
+                                    display: "Severe obesity"
                                 }
                             ]
                         }
                     }
                 ];
             bmiObs.valueQuantity = {
-                "value": vm.vitals.bmi.calculated,
-                "units": "lb/in2",
-                "code": "362981000",  //TODO: find rights code
-                "system": "http://snomed.info/sct"
+                value: vm.vitals.bmi.calculated,
+                units: "lb/in2",
+                code: "362981000",  //TODO: find rights code
+                system: "http://snomed.info/sct"
             };
             bmiObs.status = "final";
             bmiObs.reliability = "ok";
             bmiObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             bmiObs.appliesDateTime = vm.vitals.date.toISOString();
 
             if (vm.vitals.bmi.interpretationCode) {
                 bmiObs.interpretation = {
-                    "coding": [],
-                    "text": vm.vitals.bmi.interpretationText
+                    coding: [],
+                    text: vm.vitals.bmi.interpretationText
                 };
                 var coding = angular.fromJson(vm.vitals.bmi.interpretationCode);
                 coding.system = vm.interpretations.system;
@@ -14429,46 +14642,46 @@
             var heightObs = observationService.initializeNewObservation();
             if (vm.vitals.bmi.heightMeasured === "Standing") {
                 heightObs.code = {
-                    "coding": [{
-                        "system": "http://loinc.org",
-                        "code": "8302-2",
-                        "display": "Body height",
-                        "primary": true
+                    coding: [{
+                        system: "http://loinc.org",
+                        code: "8302-2",
+                        display: "Body height",
+                        primary: true
                     }, {
-                        "system": "http://snomed.info/sct",
-                        "code": "248333004",
-                        "display": "Standing height",
-                        "primary": false
+                        system: "http://snomed.info/sct",
+                        code: "248333004",
+                        display: "Standing height",
+                        primary: false
                     }],
-                    "text": "Standing body height"
+                    text: "Standing body height"
                 };
             } else {
                 heightObs.code = {
-                    "coding": [{
-                        "system": "http://loinc.org",
-                        "code": "8306-3",
-                        "display": "Body height - lying",
-                        "primary": true
+                    coding: [{
+                        system: "http://loinc.org",
+                        code: "8306-3",
+                        display: "Body height - lying",
+                        primary: true
                     }, {
-                        "system": "http://snomed.info/sct",
-                        "code": "248334005",
-                        "display": "Length of body",
-                        "primary": false
+                        system: "http://snomed.info/sct",
+                        code: "248334005",
+                        display: "Length of body",
+                        primary: false
                     }],
-                    "text": "Lying body height"
+                    text: "Lying body height"
                 };
             }
             heightObs.valueQuantity = {
-                "value": vm.vitals.bmi.height,
-                "units": "in",
-                "system": "http://snomed.info/sct",
-                "code": "258677007"
+                value: vm.vitals.bmi.height,
+                units: "in",
+                system: "http://snomed.info/sct",
+                code: "258677007"
             };
             heightObs.status = "final";
             heightObs.reliability = "ok";
             heightObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             heightObs.appliesDateTime = vm.vitals.date.toISOString();
 
@@ -14478,30 +14691,30 @@
         function _buildWeightObs() {
             var weightObs = observationService.initializeNewObservation();
             weightObs.code = {
-                "coding": [{
-                    "system": "http://snomed.info/sct",
-                    "code": "27113001",
-                    "display": "Body weight",
-                    "primary": false
+                coding: [{
+                    system: "http://snomed.info/sct",
+                    code: "27113001",
+                    display: "Body weight",
+                    primary: false
                 }, {
-                    "system": "http://loinc.org",
-                    "code": "3141-9",
-                    "display": "Body weight Measured",
-                    "primary": true
+                    system: "http://loinc.org",
+                    code: "3141-9",
+                    display: "Body weight Measured",
+                    primary: true
                 }],
-                "text": "Body weight"
+                text: "Body weight"
             };
             weightObs.valueQuantity = {
-                "value": vm.vitals.bmi.weight,
-                "units": "lb",
-                "system": "http://snomed.info/sct",
-                "code": "258693003"
+                value: vm.vitals.bmi.weight,
+                units: "lb",
+                system: "http://snomed.info/sct",
+                code: "258693003"
             };
             weightObs.status = "final";
             weightObs.reliability = "ok";
             weightObs.subject = {
-                "reference": 'Patient/' + vm.consultation.patient.id,
-                "display": vm.consultation.patient.fullName
+                reference: 'Patient/' + vm.consultation.patient.id,
+                display: vm.consultation.patient.fullName
             };
             weightObs.appliesDateTime = vm.vitals.date.toISOString();
             return weightObs;
@@ -14567,7 +14780,7 @@
             },
             "smokingStatus": undefined,
             "temperature": {
-                "value": undefined,
+                value: undefined,
                 "method": undefined,
                 "interpretationCode": undefined,
                 "color": "black",
@@ -15400,12 +15613,16 @@
         function saveCRP(form) {
             var crpObservation = _buildCrpResult();
             logInfo("Saving HS CRP result to " + vm.activeServer.name);
+            vm.isBusy = true;
             observationService.addObservation(crpObservation)
-                .then(_processCreateResponse,
+                .then(function(result) {
+                    _processCreateResponse(result);
+                    logInfo("HS CRP saved successfully.")
+                },
                 function (error) {
                     logError(common.unexpectedOutcome(error));
                 }).then(function () {
-                    logInfo("HS CRP result saved successfully!");
+                    vm.isBusy = false;
                     _initializeCrp(form);
                 })
         }
@@ -16683,11 +16900,24 @@
             return deferred.promise;
         }
 
+        function getLocationsByOrganization(baseUrl, organizationId) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/Location?organization=Organization/' + organizationId + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function getLocationsByLink(url) {
             var deferred = $q.defer();
             fhirClient.getResource(url)
                 .then(function (results) {
-                    var searchResults = {"links": {}, "locations": []};
+                    var searchResults = {links: {}, locations: []};
                     var locations = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
@@ -16787,6 +17017,7 @@
             getLocation: getLocation,
             getLocations: getLocations,
             getLocationsByLink: getLocationsByLink,
+            getLocationsByOrganization: getLocationsByOrganization,
             getLocationReference: getLocationReference,
             initializeNewLocation: initializeNewLocation,
             searchLocations: searchLocations,
@@ -17803,10 +18034,10 @@
 
     var controllerId = 'organizationDetail';
 
-    function organizationDetail($filter, $location, $mdBottomSheet, $routeParams, $scope, $window, addressService,
-                                $mdDialog, common, config, contactService, fhirServers, identifierService, localValueSets,
-                                organizationService, contactPointService, sessionService, patientService, personService,
-                                practitionerService) {
+    function organizationDetail($location, $mdBottomSheet, $routeParams, $scope, $window, addressService, $mdDialog,
+                                common, config, contactService, fhirServers, identifierService, localValueSets,
+                                locationService, organizationService, contactPointService, sessionService,
+                                patientService, personService, practitionerService) {
         /* jshint validthis:true */
         var vm = this;
 
@@ -17909,6 +18140,8 @@
                     _getAffiliatedPatients();
                     _getAffiliatedPractitioners();
                     _getAffiliatedPersons();
+                    _getAffiliatedOrganizations();
+                    _getAffiliatedLocations();
                 }
 
             }
@@ -18024,6 +18257,36 @@
             }
         }
 
+        function _getAffiliatedLocations() {
+            var deferred = $q.defer();
+            locationService.getLocationsByOrganization(vm.activeServer.baseUrl, vm.organization.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Locations from ' + vm.activeServer.name + '.');
+                    common.changeLocationList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function _getAffiliatedOrganizations() {
+            var deferred = $q.defer();
+            organizationService.getAffiliatedOrganizations(vm.activeServer.baseUrl, vm.organization.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Organizations from ' + vm.activeServer.name + '.');
+                    common.changeOrganizationList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
         function _getAffiliatedPractitioners() {
             var deferred = $q.defer();
             practitionerService.getPractitioners(vm.activeServer.baseUrl, undefined, vm.organization.id)
@@ -18086,13 +18349,6 @@
             });
         }
 
-        function goToPartOf(resourceReference) {
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
-        }
-
-        vm.goToPartOf = goToPartOf;
-
         Object.defineProperty(vm, 'canSave', {
             get: canSave
         });
@@ -18140,7 +18396,7 @@
                 });
         }
 
-         function actions($event) {
+        function actions($event) {
             $mdBottomSheet.show({
                 parent: angular.element(document.getElementById('content')),
                 templateUrl: './templates/resourceSheet.html',
@@ -18225,10 +18481,10 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
-            'common', 'config', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'organizationService',
-            'contactPointService', 'sessionService', 'patientService', 'personService', 'practitionerService',
-            organizationDetail]);
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', '$window', 'addressService', '$mdDialog',
+            'common', 'config', 'contactService', 'fhirServers', 'identifierService', 'localValueSets', 'locationService',
+            'organizationService', 'contactPointService', 'sessionService', 'patientService', 'personService',
+            'practitionerService', organizationDetail]);
 
 })
 ();(function () {
@@ -18610,6 +18866,19 @@
             return deferred.promise;
         }
 
+        function getAffiliatedOrganizations(baseUrl, parentId) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/Organization?partof=Organization/' + parentId + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         //TODO: add support for summary when DSTU2 server implementers have support
         function getOrganizationReference(baseUrl, input) {
             var deferred = $q.defer();
@@ -18776,6 +19045,7 @@
             deleteOrganization: deleteOrganization,
             getCachedOrganization: getCachedOrganization,
             getCachedSearchResults: getCachedSearchResults,
+            getAffiliatedOrganizations: getAffiliatedOrganizations,
             getOrganization: getOrganization,
             getOrganizations: getOrganizations,
             getOrganizationsByLink: getOrganizationsByLink,
@@ -19350,13 +19620,6 @@
         }
 
         vm.getOrganizationReference = getOrganizationReference;
-
-        function goToManagingOrganization(resourceReference) {
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
-        }
-
-        vm.goToManagingOrganization = goToManagingOrganization;
 
         function _getEverything() {
             patientService.getPatientEverything(vm.patient.resourceId)
@@ -20366,7 +20629,7 @@
                                 city: $filter('titleCase')(user.location.city),
                                 state: $filter('abbreviateState')(user.location.state),
                                 postalCode: user.location.zip,
-                                use: home
+                                use: 'home'
                             }],
                             photo: [{url: user.picture.large}],
                             identifier: [
@@ -20649,6 +20912,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var $q = common.$q;
         var noToast = false;
 
@@ -20716,12 +20980,20 @@
 
         vm.getOrganizationReference = getOrganizationReference;
 
-        function goToManagingOrganization(resourceReference) {
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
+        function _getLinkedPatients() {
+            var deferred = $q.defer();
+            patientService.getPatientsByPerson(vm.activeServer.baseUrl, vm.practitioner.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Patients from ' + vm.activeServer.name + '.');
+                    common.changePatientList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
         }
-
-        vm.goToManagingOrganization = goToManagingOrganization;
 
         function _getRequestedPerson() {
             function initializeAdministrationData(data) {
@@ -20903,6 +21175,9 @@
                 targetEvent: $event
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
+                    case 0:
+                        $location.path('person/link');
+                        break;
                     case 2:
                         $location.path('/person');
                         break;
@@ -20923,6 +21198,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
+                        {name: 'Find patient records', icon: 'network', index: 0},
                         {name: 'Find another person', icon: 'quickFind', index: 2},
                         {name: 'Edit person', icon: 'edit', index: 3},
                         {name: 'Add new person', icon: 'personAdd', index: 4}
@@ -22006,7 +22282,7 @@
 
     var controllerId = 'practitionerRole';
 
-    function practitionerRole($filter, $location, $mdDialog, common, data, fhirServers,
+    function practitionerRole($mdDialog, common, data, fhirServers,
                               organizationReferenceService, practitionerReferenceService, practitionerRoleService) {
 
         /*jshint validthis:true */
@@ -22028,14 +22304,6 @@
                     vm.activeServer = server;
                 });
         }
-
-        function goToManagingOrganization(resourceReference) {
-            $mdDialog.hide();
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
-        }
-
-        vm.goToManagingOrganization = goToManagingOrganization;
 
         function closeDialog() {
             $mdDialog.hide();
@@ -22134,7 +22402,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdDialog', 'common', 'data', 'fhirServers',
+        ['$mdDialog', 'common', 'data', 'fhirServers',
             'organizationReferenceService', 'practitionerReferenceService', 'practitionerRoleService', practitionerRole]);
 })();(function () {
     'use strict';

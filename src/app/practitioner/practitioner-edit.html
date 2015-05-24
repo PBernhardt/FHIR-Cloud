@@ -39,11 +39,11 @@
                 </md-tab>
 
             </md-tabs>
-            <div layout="row" layout-align="end end">
+            <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            <div layout layout-align="end center" md-padding>
                 <md-button ng-click="vm.save()" aria-label="Execute save">
-                    <md-icon md-svg-icon="saveToCloud" aria-label="save practitioner" alt="Save Practitioner"></md-icon>
+                    <md-icon md-svg-icon="saveToCloud" aria-label="save person" alt="Save Practitioner"></md-icon>
                 </md-button>
-                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
             </div>
         </form>
     </div>

@@ -39,12 +39,8 @@
                         <input ng-model="vm.person.active" ng-readonly="true"/>
                     </md-input-container>
 
-                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.person.managingOrganization">
-                        <label>Managing Organization</label>
-                        <md-icon md-svg-icon="hospital"
-                                 ng-click="vm.goToManagingOrganization(vm.person.managingOrganization)"></md-icon>
-                        <input ng-model="vm.person.managingOrganization.display" ng-readonly="true"/>
-                    </md-input-container>
+                    <fc-organization-reference organization="vm.person.managingOrganization"
+                                               flex="60"></fc-organization-reference>
 
                     <md-list flex="100" ng-if="vm.person.link">
                         <md-subheader class="md-no-sticky">Person Links</md-subheader>
@@ -66,7 +62,7 @@
                     <fc-extension-list extensions="vm.person.extension" flex="100"></fc-extension-list>
                 </div>
             </md-tab>
-            <md-tab label="Related Patients">
+            <md-tab label="Patient Records">
                 <div ng-include="'elements/patientList/patientList.html'"></div>
             </md-tab>
             <md-tab label="Audit History">

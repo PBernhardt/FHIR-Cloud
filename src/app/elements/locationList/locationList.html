@@ -1,0 +1,19 @@
+<div ng-controller="locationList as vm">
+    <section>
+        <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
+        <md-list layout="column">
+            <md-list-item class="md-2-line" ng-click="vm.goToLocation(loc)"
+                          ng-repeat="loc in vm.locations">
+                <md-icon md-svg-icon="location"></md-icon>
+                <div class="md-list-item-text">
+                    <h4> {{ loc.resource.name }} </h4>
+                    <p ng-if="loc.resource.partOf">Part of {{loc.resource.partOf.display ||
+                        loc.resource.partOf.reference || "No Location"}}</p>
+                </div>
+                <md-divider ng-if="!$last"></md-divider>
+            </md-list-item>
+        </md-list>
+    </section>
+    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+    <fs-pagination on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
+</div>

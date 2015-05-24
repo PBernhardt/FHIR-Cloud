@@ -123,6 +123,19 @@
             return deferred.promise;
         }
 
+        function getAffiliatedOrganizations(baseUrl, parentId) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/Organization?partof=Organization/' + parentId + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         //TODO: add support for summary when DSTU2 server implementers have support
         function getOrganizationReference(baseUrl, input) {
             var deferred = $q.defer();
@@ -289,6 +302,7 @@
             deleteOrganization: deleteOrganization,
             getCachedOrganization: getCachedOrganization,
             getCachedSearchResults: getCachedSearchResults,
+            getAffiliatedOrganizations: getAffiliatedOrganizations,
             getOrganization: getOrganization,
             getOrganizations: getOrganizations,
             getOrganizationsByLink: getOrganizationsByLink,

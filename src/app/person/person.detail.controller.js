@@ -13,6 +13,7 @@
         var logError = common.logger.getLogFn(controllerId, 'error');
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var $q = common.$q;
         var noToast = false;
 
@@ -80,12 +81,20 @@
 
         vm.getOrganizationReference = getOrganizationReference;
 
-        function goToManagingOrganization(resourceReference) {
-            var id = ($filter)('idFromURL')(resourceReference.reference);
-            $location.path('/organization/get/' + id);
+        function _getLinkedPatients() {
+            var deferred = $q.defer();
+            patientService.getPatientsByPerson(vm.activeServer.baseUrl, vm.practitioner.id)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Patients from ' + vm.activeServer.name + '.');
+                    common.changePatientList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error);
+                    deferred.resolve();
+                });
+            return deferred.promise;
         }
-
-        vm.goToManagingOrganization = goToManagingOrganization;
 
         function _getRequestedPerson() {
             function initializeAdministrationData(data) {
@@ -267,6 +276,9 @@
                 targetEvent: $event
             }).then(function (clickedItem) {
                 switch (clickedItem.index) {
+                    case 0:
+                        $location.path('person/link');
+                        break;
                     case 2:
                         $location.path('/person');
                         break;
@@ -287,6 +299,7 @@
             function ResourceSheetController($mdBottomSheet) {
                 if (vm.isEditing) {
                     this.items = [
+                        {name: 'Find patient records', icon: 'network', index: 0},
                         {name: 'Find another person', icon: 'quickFind', index: 2},
                         {name: 'Edit person', icon: 'edit', index: 3},
                         {name: 'Add new person', icon: 'personAdd', index: 4}

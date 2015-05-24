@@ -29,11 +29,9 @@
                         <input ng-model="vm.organization.active" readonly/>
                     </md-input-container>
 
-                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.organization.partOf">
-                        <label>Parent Organization</label>
-                        <md-icon md-svg-icon="hospital" ng-click="vm.goToPartOf(vm.organization.partOf)"></md-icon>
-                        <input ng-model="vm.organization.partOf.display" readonly/>
-                    </md-input-container>
+                    <fc-organization-reference organization="vm.organization.partOf"
+                                               title="Parent Organization"
+                                               flex="60"></fc-organization-reference>
 
                     <md-list flex="100" ng-if="vm.organization.contact">
                         <md-subheader class="md-no-sticky">Contacts</md-subheader>
@@ -54,6 +52,12 @@
                     <fc-identifier-list identifiers="vm.organization.identifier" flex="100"></fc-identifier-list>
                     <fc-extension-list extensions="vm.organization.extension" flex="100"></fc-extension-list>
                 </div>
+            </md-tab>
+            <md-tab label="Affiliates">
+                <div ng-include="'elements/organizationList/organizationList.html'"></div>
+            </md-tab>
+            <md-tab label="Locations">
+                <div ng-include="'elements/locationList/locationList.html'"></div>
             </md-tab>
             <md-tab label="Practitioners">
                 <div ng-include="'elements/practitionerList/practitionerList.html'"></div>

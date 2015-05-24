@@ -41,10 +41,10 @@
                     <div ng-include="'elements/careProvider/careProvider.html'"></div>
                 </md-tab>
             </md-tabs>
-            <div layout="column" layout-align="end end">
-                <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+            <div layout layout-align="end center" md-padding>
                 <md-button ng-click="vm.save()" aria-label="Execute save">
-                    <md-icon md-svg-icon="saveToCloud" aria-label="save patient" alt="Save Patient"></md-icon>
+                    <md-icon md-svg-icon="saveToCloud" aria-label="save person" alt="Save Patient"></md-icon>
                 </md-button>
             </div>
         </ng-form>

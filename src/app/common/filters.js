@@ -140,6 +140,10 @@
     app.filter('idFromURL', function () {
         return function (uri) {
             if (uri.length > 5) {
+                var historyPosition = uri.indexOf('/_history');
+                if (historyPosition > -1) {
+                    uri = uri.substring(0, historyPosition);
+                }
                 var pathArray = uri.split('/');
                 return pathArray[pathArray.length - 1];
             }

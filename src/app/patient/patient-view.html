@@ -81,12 +81,8 @@
                         <input ng-model="vm.patient.active" ng-readonly="true"/>
                     </md-input-container>
 
-                    <md-input-container flex="60" class="md-icon-float" ng-if="vm.patient.managingOrganization">
-                        <label>Managing Organization</label>
-                        <md-icon md-svg-icon="hospital"
-                                 ng-click="vm.goToManagingOrganization(vm.patient.managingOrganization)"></md-icon>
-                        <input ng-model="vm.patient.managingOrganization.display" ng-readonly="true"/>
-                    </md-input-container>
+                    <fc-organization-reference organization="vm.patient.managingOrganization"
+                                               flex="60"></fc-organization-reference>
 
                     <md-list flex="100" ng-if="vm.patient.careProvider">
                         <md-subheader class="md-no-sticky">Care Providers</md-subheader>

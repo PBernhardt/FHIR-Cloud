@@ -184,11 +184,24 @@
             return deferred.promise;
         }
 
+        function getLocationsByOrganization(baseUrl, organizationId) {
+            var deferred = $q.defer();
+
+            fhirClient.getResource(baseUrl + '/Location?organization=Organization/' + organizationId + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function getLocationsByLink(url) {
             var deferred = $q.defer();
             fhirClient.getResource(url)
                 .then(function (results) {
-                    var searchResults = {"links": {}, "locations": []};
+                    var searchResults = {links: {}, locations: []};
                     var locations = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
@@ -288,6 +301,7 @@
             getLocation: getLocation,
             getLocations: getLocations,
             getLocationsByLink: getLocationsByLink,
+            getLocationsByOrganization: getLocationsByOrganization,
             getLocationReference: getLocationReference,
             initializeNewLocation: initializeNewLocation,
             searchLocations: searchLocations,
