@@ -202,6 +202,7 @@
 
             fhirClient.getResource(baseUrl + '/Patient?' + params + '&_count=20&_sort:asc=family')
                 .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
