@@ -3,13 +3,13 @@
 
     var controllerId = 'demographics';
 
-    function demographics(common, config, demographicsService, localValueSets) {
+    function demographics(common, demographicsService, localValueSets) {
         /*jshint validthis:true */
         var vm = this;
 
-        function activate() {
+        function _activate() {
             common.activateController([], controllerId).then(function () {
-                initData();
+                _initData();
             });
         }
 
@@ -19,11 +19,7 @@
 
         vm.loadGenders = loadGenders;
 
-        function loadLanguages() {
-            return vm.languages = localValueSets.iso6391Languages();
-        }
-
-        function initData() {
+        function _initData() {
             vm.demographics.birthDate = demographicsService.getBirthDate();
             vm.demographics.gender = demographicsService.getGender();
         }
@@ -46,11 +42,10 @@
         };
         vm.genders = [];
 
-
-        activate();
+        _activate();
     }
 
-    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'demographicsService', 'localValueSets',
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'demographicsService', 'localValueSets',
         demographics]);
 
 })();

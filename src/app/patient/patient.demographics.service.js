@@ -106,7 +106,8 @@
             }
         }
 
-        function initBirth(multipleBirth, birthOrder) {
+        function initBirth(multipleBirth, birthOrder, birthDate) {
+            _birthDate = undefined;
             _birthOrder = undefined;
             _multipleBirth = undefined;
             if (birthOrder) {
@@ -114,6 +115,9 @@
                 _multipleBirth = true;
             } else {
                 _multipleBirth = multipleBirth;
+            }
+            if (birthDate) {
+                _birthDate = new Date(birthDate);
             }
         }
 
@@ -160,6 +164,42 @@
                     }
                 }
             }
+        }
+
+        function setKnownExtensions() {
+            var extensions = [];
+            if (_race) {
+                extensions.push({
+                    url: "http://hl7.org/fhir/StructureDefinition/us-core-race",
+                    valueCodeableConcept: _race
+                });
+            }
+            if (_religion) {
+                extensions.push({
+                    url: "http://hl7.org/fhir/StructureDefinition/us-core-religion",
+                    valueCodeableConcept: _religion
+                });
+            }
+            if (_ethnicity) {
+                extensions.push({
+                    url: "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+                    valueCodeableConcept: _ethnicity
+                });
+            }
+            if (_mothersMaidenName) {
+                extensions.push({
+                    url: "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
+                    valueString: _mothersMaidenName
+                });
+            }
+            if (_birthPlace) {
+                var address = {text: _birthPlace};
+                extensions.push({
+                    url: "http://hl7.org/fhir/StructureDefinition/birthPlace",
+                    valueAddress: address
+                });
+            }
+            return extensions;
         }
 
         function setRace(value) {
@@ -209,16 +249,8 @@
             _language = value;
         }
 
-        // only 1 item in array permitted
         function setMaritalStatus(value) {
-            _maritalStatus.coding = [];
-            if (value) {
-                if (angular.isObject(value)) {
-                    _maritalStatus.coding.push(value);
-                } else {
-                    _maritalStatus.coding.push(JSON.parse(value));
-                }
-            }
+            _maritalStatus = value;
         }
 
         function setMultipleBirth(value) {
@@ -245,6 +277,7 @@
             setDeceased: setDeceased,
             setDeceasedDate: setDeceasedDate,
             setGender: setGender,
+            setKnownExtensions: setKnownExtensions,
             setLanguage: setLanguage,
             setMaritalStatus: setMaritalStatus,
             setMultipleBirth: setMultipleBirth,

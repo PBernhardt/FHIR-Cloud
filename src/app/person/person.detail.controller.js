@@ -5,7 +5,7 @@
 
     function personDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
                            attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, personService, contactPointService) {
+                           organizationService, personService, contactPointService, store) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -120,7 +120,7 @@
                     }
                 }
                 if (vm.lookupKey !== "new") {
-                    $window.localStorage.person = JSON.stringify(vm.person);
+                     store.set('person', vm.person);
                 }
             }
 

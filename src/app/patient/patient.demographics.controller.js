@@ -6,72 +6,27 @@
     function patientDemographics(common, config, patientDemographicsService, localValueSets) {
         /*jshint validthis:true */
         var vm = this;
-        var keyCodes = config.keyCodes;
 
-        function activate() {
-            common.activateController([], controllerId).then(function () {
-                initData();
-            });
+        function _activate() {
+            common.activateController([_initData()], controllerId)
+                .then(function () {
+                })
         }
 
-        function addLanguage($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.selectedLanguage = null;
-            } else if ($event.keyCode === keyCodes.enter) {
-                if (vm.selectedLanguage !== null) {
-                    var coding = {"coding": [vm.selectedLanguage], "text": vm.selectedLanguage.display};
-                    if (_.first(vm.patientDemographics.language, coding).length === 0) {
-                        vm.patientDemographics.language.push(coding);
-                    }
-                    //  updateLanguage();
-                }
-                vm.selectedLanguage = null;
-            }
+        function _loadValueSets() {
+            vm.ethnicities = localValueSets.ethnicity();
+            vm.genders = localValueSets.administrativeGender();
+            vm.maritalStatuses = localValueSets.maritalStatus();
+            vm.religions = localValueSets.religion();
+            vm.races = localValueSets.race();
         }
 
-        function loadEthnicities() {
-            return vm.ethnicities = localValueSets.ethnicity();
-        }
-
-        vm.loadEthnicities = loadEthnicities;
-
-        function loadGenders() {
-            return vm.genders = localValueSets.administrativeGender();
-        }
-
-        vm.loadGenders = loadGenders;
-
-        function loadLanguages() {
-            return vm.languages = localValueSets.iso6391Languages();
-        }
-
-        vm.loadLanguages = loadLanguages;
-
-        function loadMaritalStatuses() {
-            return vm.maritalStatuses = localValueSets.maritalStatus();
-        }
-
-        vm.loadMaritalStatuses = loadMaritalStatuses;
-
-        function loadReligions() {
-            return vm.religions = localValueSets.religion();
-        }
-
-        vm.loadReligions = loadReligions;
-
-        function loadRaces() {
-            return vm.races = localValueSets.race();
-        }
-
-        vm.loadRaces = loadRaces;
-
-        function initData() {
+        function _initData() {
             vm.patientDemographics.birthDate = patientDemographicsService.getBirthDate();
             vm.patientDemographics.birthOrder = patientDemographicsService.getBirthOrder();
             vm.patientDemographics.deceased = patientDemographicsService.getDeceased();
             vm.patientDemographics.deceasedDate = patientDemographicsService.getDeceasedDate();
             vm.patientDemographics.gender = patientDemographicsService.getGender();
-            vm.patientDemographics.language = patientDemographicsService.getLanguage();
             vm.patientDemographics.maritalStatus = patientDemographicsService.getMaritalStatus();
             vm.patientDemographics.multipleBirth = patientDemographicsService.getMultipleBirth();
             // Known extensions
@@ -81,105 +36,129 @@
             vm.patientDemographics.mothersMaidenName = patientDemographicsService.getMothersMaidenName();
             vm.patientDemographics.placeOfBirth = patientDemographicsService.getBirthPlace();
 
-            loadMaritalStatuses();
-            loadRaces();
-            loadEthnicities();
-            loadReligions();
+            _loadValueSets();
         }
 
         function updateBirthDate() {
             patientDemographicsService.setBirthDate(vm.patientDemographics.birthDate);
         }
 
+        vm.updateBirthDate = updateBirthDate;
 
         function updateBirthOrder() {
             patientDemographicsService.setBirthOrder(vm.patientDemographics.birthOrder);
         }
 
+        vm.updateBirthOrder = updateBirthOrder;
 
         function updateDeceased() {
             patientDemographicsService.setDeceased(vm.patientDemographics.deceased);
         }
 
+        vm.updateDeceased = updateDeceased;
 
         function updateDeceasedDate() {
             patientDemographicsService.setDeceasedDate(vm.patientDemographics.deceasedDate);
         }
 
+        vm.updateDeceasedDate = updateDeceasedDate;
+
         function updateGender() {
             patientDemographicsService.setGender(vm.patientDemographics.gender);
         }
 
-        function updateMaritalStatus(maritalStatusCoding) {
-            if (maritalStatusCoding !== undefined) {
+        vm.updateGender = updateGender;
+
+        function updateMaritalStatus() {
+            if (vm.maritalStatusCoding !== undefined) {
                 var codeableConcept = {
-                    "text": maritalStatusCoding.display,
-                    "coding": [{
-                        "system": maritalStatusCoding.system,
-                        "code": maritalStatusCoding.code,
-                        "display": maritalStatusCoding.display
+                    text: vm.maritalStatusCoding.display,
+                    coding: [{
+                        system: vm.maritalStatusCoding.system,
+                        code: vm.maritalStatusCoding.code,
+                        display: vm.maritalStatusCoding.display
                     }]
                 };
                 patientDemographicsService.setMaritalStatus(codeableConcept);
             }
         }
 
+        vm.updateMaritalStatus = updateMaritalStatus;
+
         function updateMultipleBirth() {
             patientDemographicsService.setMultipleBirth(vm.patientDemographics.multipleBirth);
         }
 
-        function updateRace(raceCoding) {
-            if (raceCoding !== undefined) {
+        vm.updateMultipleBirth = updateMultipleBirth;
+
+        function updateRace() {
+            if (vm.raceCoding !== undefined) {
                 var codeableConcept = {
-                    "text": raceCoding.display,
-                    "coding": [{
-                        "system": vm.races.system,
-                        "code": raceCoding.code,
-                        "display": raceCoding.display
+                    text: vm.raceCoding.display,
+                    coding: [{
+                        system: vm.races.system,
+                        code: vm.raceCoding.code,
+                        display: vm.raceCoding.display
                     }]
                 };
                 patientDemographicsService.setRace(codeableConcept);
             }
         }
 
-        function updateReligion(religionCoding) {
-            if (religionCoding !== undefined) {
+        vm.updateRace = updateRace;
+
+        function updateReligion() {
+            if (vm.religionCoding !== undefined) {
                 var codeableConcept = {
-                    "text": religionCoding.display,
-                    "coding": [{
-                        "system": vm.religions.system,
-                        "code": religionCoding.code,
-                        "display": religionCoding.display
+                    text: vm.religionCoding .display,
+                    coding: [{
+                        system: vm.religions.system,
+                        code: vm.religionCoding.code,
+                        display: vm.religionCoding.display
                     }]
                 };
                 patientDemographicsService.setReligion(codeableConcept);
             }
         }
 
-        function updateEthnicity(ethnicityCoding) {
-            if (ethnicityCoding !== undefined) {
+        vm.updateReligion = updateReligion;
+
+        function updateEthnicity() {
+            if (vm.ethnicityCoding !== undefined) {
                 var codeableConcept = {
-                    "text": ethnicityCoding.display,
-                    "coding": [{
-                        "system": ethnicityCoding.system,
-                        "code": ethnicityCoding.code,
-                        "display": ethnicityCoding.display
+                    text: vm.ethnicityCoding.display,
+                    coding: [{
+                        system: vm.ethnicityCoding.system,
+                        code: vm.ethnicityCoding.code,
+                        display: vm.ethnicityCoding.display
                     }]
                 };
                 patientDemographicsService.setEthnicity(codeableConcept);
             }
         }
 
-        vm.addLanguage = addLanguage;
+        vm.updateEthnicity = updateEthnicity;
+
+        function updateBirthPlace() {
+            patientDemographicsService.setBirthPlace(vm.patientDemographics.placeOfBirth.text);
+        }
+        vm.updateBirthPlace = updateBirthPlace;
+
+        function updateMothersMaidenName() {
+             patientDemographicsService.setMothersMaidenName(vm.patientDemographics.mothersMaidenName);
+        }
+        vm.updateMothersMaidenName = updateMothersMaidenName;
+
         vm.patientDemographics = {
-            "birthDate": null,
-            "birthOrder": null,
-            "deceased": false,
-            "deceasedDate": null,
-            "gender": null,
-            "language": [],
-            "maritalStatus": null,
-            "multipleBirth": false
+            birthDate: null,
+            birthOrder: null,
+            deceased: false,
+            deceasedDate: null,
+            gender: null,
+            maritalStatus: null,
+            mothersMaidenName: null,
+            multipleBirth: false,
+            placeOfBirth: {text: null}
         };
         vm.genders = [];
         vm.maritalStatuses = [];
@@ -191,20 +170,11 @@
         vm.raceCoding = null;
         vm.maritalStatusCoding = null;
         vm.ethnicities = [];
-        vm.updateBirthDate = updateBirthDate;
-        vm.updateBirthOrder = updateBirthOrder;
-        vm.updateDeceased = updateDeceased;
-        vm.updateDeceasedDate = updateDeceasedDate;
-        vm.updateGender = updateGender;
-        vm.updateMaritalStatus = updateMaritalStatus;
-        vm.updateMultipleBirth = updateMultipleBirth;
-        vm.updateRace = updateRace;
-        vm.updateReligion = updateReligion;
-        vm.updateEthnicity = updateEthnicity;
 
-        activate();
+        _activate();
     }
 
-    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'patientDemographicsService', 'localValueSets', patientDemographics]);
+    angular.module('FHIRCloud').controller(controllerId, ['common', 'config', 'patientDemographicsService',
+        'localValueSets', patientDemographics]);
 
 })();
