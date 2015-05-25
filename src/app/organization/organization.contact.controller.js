@@ -1,9 +1,9 @@
 (function () {
     'use strict';
 
-    var controllerId = 'contact';
+    var controllerId = 'organizationContact';
 
-    function contact(addressService, common, contactService, localValueSets) {
+    function organizationContact(addressService, common, organizationContactService, organizationValueSets) {
         /* jshint validthis:true */
         var vm = this;
         var logError = common.logger.getLogFn(controllerId, 'error');
@@ -17,8 +17,11 @@
 
         function addToList(form, item) {
             if (form.$valid) {
-                contactService.add(item);
-                vm.contacts = contactService.getAll();
+                if (vm.googleAddress) {
+                    vm.contact.address = addressService.parseGoogleAddress(vm.googleAddress);
+                }
+                organizationContactService.add(item);
+                vm.contacts = organizationContactService.getAll();
                 vm.contact = {};
                 form.$setPristine();
             }
@@ -33,7 +36,7 @@
                     deferred.resolve(data);
                 }, function (error) {
                     logError(error);
-                    deferred.reject();
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -41,16 +44,17 @@
         vm.getLocation = getLocation;
 
         function _getContacts() {
-            vm.contacts = contactService.getAll();
+            vm.contacts = organizationContactService.getAll();
         }
 
         function _getContactTypes() {
-            vm.contactTypes = localValueSets.contactEntityType();
+            vm.contactTypes = organizationValueSets.contactEntityType();
         }
 
-        function removeListItem(item) {
-            contactService.remove(item);
-            vm.contacts = contactService.getAll();
+        function removeListItem(form, item) {
+            organizationContactService.remove(item);
+            vm.contacts = organizationContactService.getAll();
+            form.$setPristine();
         }
 
         vm.removeListItem = removeListItem;
@@ -58,10 +62,12 @@
         vm.contact = {purpose: {coding: []}};
         vm.contacts = [];
         vm.addressSearchText = '';
+        vm.googleAddress = null;
 
         _activate();
     }
 
-    angular.module('FHIRCloud').controller(controllerId, ['addressService', 'common', 'contactService', 'localValueSets', contact]);
+    angular.module('FHIRCloud').controller(controllerId, ['addressService', 'common', 'organizationContactService',
+        'organizationValueSets', organizationContact]);
 
 })();

@@ -266,7 +266,6 @@
                 gender: undefined,
                 birthDate: undefined,
                 maritalStatus: undefined,
-                multipleBirth: false,
                 telecom: [],
                 address: [],
                 photo: [],

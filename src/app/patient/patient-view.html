@@ -41,9 +41,10 @@
                     </md-input-container>
 
                     <md-input-container flex="15"
-                                        ng-if="vm.patient.deceasedDateTime">
+                                        ng-if="vm.patient.deceasedDate">
                         <label>Date of Death</label>
-                        <input ng-value="vm.patient.deceasedDateTime.$$display" ng-readonly="true"/>
+                        <input ng-model="vm.patient.deceasedDate.$$display"
+                               ng-readonly="true"/>
                     </md-input-container>
 
                     <md-input-container flex="20" ng-if="vm.patient.birthPlace">

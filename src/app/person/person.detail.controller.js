@@ -3,9 +3,9 @@
 
     var controllerId = 'personDetail';
 
-    function personDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                           attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, personService, contactPointService, store) {
+    function personDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
+                          attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
+                          organizationService, personService, contactPointService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -120,7 +120,7 @@
                     }
                 }
                 if (vm.lookupKey !== "new") {
-                     store.set('person', vm.person);
+                    personService.setPersonContext(vm.person);
                 }
             }
 
@@ -128,12 +128,10 @@
             vm.lookupKey = $routeParams.hashKey;
 
             if (vm.lookupKey === "current") {
-                if (angular.isUndefined($window.localStorage.person) || ($window.localStorage.person === null)) {
-                    if (angular.isUndefined($routeParams.id)) {
-                        $location.path('/person');
-                    }
+                vm.person = personService.getPersonContext();
+                if (common.isUndefinedOrNull(vm.person) && angular.isUndefined($routeParams.id)) {
+                    $location.path('/person');
                 } else {
-                    vm.person = JSON.parse($window.localStorage.person);
                     vm.person.hashKey = "current";
                     initializeAdministrationData(vm.person);
                 }
@@ -181,8 +179,6 @@
                 }
                 vm.person.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
-                $window.localStorage.person = JSON.stringify(vm.person);
-                vm.isBusy = false;
             }
 
             var person = personService.initializeNewPerson();
@@ -204,20 +200,28 @@
             if (vm.isEditing) {
                 person.id = vm.person.id;
                 personService.updatePerson(vm.person.resourceId, person)
-                    .then(processResult,
+                    .then(function (result) {
+                        processResult(result);
+                        personService.setPersonContext(person);
+                    },
                     function (error) {
                         logError(common.unexpectedOutcome(error));
-                        vm.isBusy = false;
-                    });
+
+                    })
+                    .then(vm.isBusy = false);
             } else {
                 personService.addPerson(person)
-                    .then(processResult,
+                    .then(function (result) {
+                        processResult(result);
+                        personService.setPersonContext(person);
+                    },
                     function (error) {
                         logError(common.unexpectedOutcome(error));
-                        vm.isBusy = false;
-                    });
+                    })
+                    .then(vm.isBusy = false);
             }
         }
+
         vm.save = save;
 
         function showSource($event) {
@@ -234,7 +238,7 @@
 
         function _showRawData(item, event) {
             $mdDialog.show({
-                 templateUrl: 'templates/rawData-dialog.html',
+                templateUrl: 'templates/rawData-dialog.html',
                 controller: 'rawDataController',
                 locals: {
                     data: item
@@ -336,7 +340,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
+        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope',
             'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'personService', 'contactPointService',
             personDetail]);

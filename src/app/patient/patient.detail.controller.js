@@ -119,6 +119,7 @@
                 vm.patient.mothersMaidenName = patientDemographicsService.getMothersMaidenName();
                 vm.patient.birthPlace = patientDemographicsService.getBirthPlace();
                 vm.patient.birthDate = patientDemographicsService.getBirthDate();
+                vm.patient.deceasedDate = patientDemographicsService.getDeceasedDate();
                 attachmentService.init(vm.patient.photo, "Photos");
                 identifierService.init(vm.patient.identifier, "multi", "patient");
                 addressService.init(vm.patient.address, true);
@@ -200,14 +201,13 @@
                 if (angular.isUndefined(resourceVersionId)) {
                     logWarning("Patient saved, but location is unavailable. CORS not implemented correctly at remote host.");
                 } else {
-                    logInfo("Patient saved at " + resourceVersionId);
+                    logInfo("Patient saved at " + resourceVersionId + ".");
                     vm.patient.resourceVersionId = resourceVersionId;
                     vm.patient.resourceId = common.setResourceId(vm.patient.resourceId, resourceVersionId);
                 }
                 vm.patient.fullName = humanNameService.getFullName();
                 vm.isEditing = true;
                 patientService.setPatientContext(vm.patient);
-                vm.isBusy = false;
             }
 
             var patient = patientService.initializeNewPatient();
@@ -220,10 +220,18 @@
             patient.birthDate = $filter('dateString')(patientDemographicsService.getBirthDate());
             patient.gender = patientDemographicsService.getGender();
             patient.maritalStatus = patientDemographicsService.getMaritalStatus();
-            patient.multipleBirthBoolean = patientDemographicsService.getMultipleBirth();
-            patient.multipleBirthInteger = patientDemographicsService.getBirthOrder();
-            patient.deceasedBoolean = patientDemographicsService.getDeceased();
-            patient.deceasedDateTime = patientDemographicsService.getDeceasedDate();
+            var birthOrder = patientDemographicsService.getBirthOrder();
+            if (!(common.isUndefinedOrNull(birthOrder)) && birthOrder > 0) {
+                patient.multipleBirthInteger = birthOrder;
+            } else {
+                patient.multipleBirthBoolean = patientDemographicsService.getMultipleBirth();
+            }
+            var deceasedDate = patientDemographicsService.getDeceasedDate();
+            if (common.isUndefinedOrNull(deceasedDate) === false) {
+                patient.deceasedDateTime = $filter('dateString')(deceasedDate);
+            } else {
+                patient.deceasedBoolean = patientDemographicsService.getDeceased();
+            }
             patient.extension = patientDemographicsService.setKnownExtensions();
             patient.address = addressService.mapFromViewModel();
             patient.telecom = contactPointService.mapFromViewModel();
@@ -231,24 +239,30 @@
             patient.managingOrganization = vm.patient.managingOrganization;
             patient.communication = communicationService.getAll();
             patient.careProvider = careProviderService.getAll();
-
             patient.active = vm.patient.active;
+
             vm.isBusy = true;
             if (vm.isEditing) {
                 patient.id = vm.patient.id;
                 patientService.updatePatient(vm.patient.resourceId, patient)
-                    .then(processResult,
+                    .then(function (result) {
+                        processResult(result);
+                        patientService.setPatientContext(patient);
+                    },
                     function (error) {
                         logError(common.unexpectedOutcome(error), error);
-                        vm.isBusy = false;
-                    });
+                    })
+                    .then(vm.isBusy = false);
             } else {
                 patientService.addPatient(patient)
-                    .then(processResult,
+                    .then(function (result) {
+                        processResult(result);
+                        patientService.setPatientContext(patient);
+                    },
                     function (error) {
                         logError(common.unexpectedOutcome(error), error);
-                        vm.isBusy = false;
-                    });
+                    })
+                    .then(vm.isBusy = false);
             }
         }
 

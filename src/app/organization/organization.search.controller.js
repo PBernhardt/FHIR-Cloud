@@ -3,15 +3,18 @@
 
     var controllerId = 'organizationSearch';
 
-    function organizationSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, localValueSets, organizationService) {
-        var getLogFn = common.logger.getLogFn;
-        var logInfo = getLogFn(controllerId, 'info');
-        var logError = getLogFn(controllerId, 'error');
+    function organizationSearch($location, $mdBottomSheet, $scope, common, config, fhirServers, organizationValueSets,
+                                organizationService) {
+        /* jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logWarning = common.logger.getLogFn(controllerId, 'warning');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var noToast = false;
         var $q = common.$q;
 
-        /* jshint validthis:true */
-        var vm = this;
 
         $scope.$on(config.events.serverChanged,
             function (event, server) {
@@ -60,21 +63,17 @@
             vm.noresults = false;
             organizationService.getOrganizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from '
+                        + vm.activeServer.name + '.');
                     deferred.resolve(data.entry || []);
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
-                    var errorMessage;
-                    if (angular.isDefined(error.outcome.issue)) {
-                          errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
-                    } else {
-                        errorMessage = "Status " + error.status + ": " + error.outcome;
-                    }
-                    logError(errorMessage, error);
+                    logError(common.unexpectedOutcome(error), error);
                     deferred.resolve([]);
                 });
             return deferred.promise;
         }
+
         vm.quickSearch = quickSearch;
 
         function searchOrganizations(searchText) {
@@ -82,11 +81,12 @@
             vm.isBusy = true;
             organizationService.searchOrganizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from ' +
+                        vm.activeServer.name + '.');
                     processSearchResults(data);
                     vm.selectedTab = 1;
                 }, function (error) {
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    logError(common.unexpectedOutcome(error), error);
                     deferred.resolve();
                 })
                 .then(vm.isBusy = false);
@@ -96,14 +96,13 @@
         function dereferenceLink(url) {
             organizationService.getOrganizationsByLink(url)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.organizations) ? data.organizations.length : 0) +
+                        ' Organizations from ' + vm.activeServer.name + '.');
                     return data;
                 }, function (error) {
-                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    logError(common.unexpectedOutcome(error), error);
                 })
-                .then(processSearchResults)
-                .then(function () {
-                });
+                .then(processSearchResults);
         }
 
         vm.dereferenceLink = dereferenceLink;
@@ -112,11 +111,12 @@
             var deferred = $q.defer();
             organizationService.getOrganizationReference(vm.activeServer.baseUrl, input)
                 .then(function (data) {
-                    logInfo('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Organizations from ' + vm.activeServer.name, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data) ? data.length : 0) + ' Organizations from ' +
+                        vm.activeServer.name + '.');
                     deferred.resolve(data || []);
                 }, function (error) {
-                    logError('Error getting organizations', error, noToast);
-                    deferred.reject();
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
                 });
             return deferred.promise;
         }
@@ -128,10 +128,11 @@
                 $location.path('/organization/view/' + organization.$$hashKey);
             }
         }
+
         vm.goToOrganization = goToOrganization;
 
         function _loadOrganizationTypes() {
-            vm.organizationTypes = localValueSets.organizationType();
+            vm.organizationTypes = organizationValueSets.organizationType();
         }
 
         function actions($event) {
@@ -249,6 +250,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'localValueSets',
+        ['$location', '$mdBottomSheet', '$scope', 'common', 'config', 'fhirServers', 'organizationValueSets',
             'organizationService', organizationSearch]);
 })();

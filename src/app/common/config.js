@@ -270,6 +270,7 @@
             .icon("openId", "./assets/svg/openId.svg", 24)
             .icon("order", "./assets/svg/flask.svg", 24)
             .icon("organization", "./assets/svg/hospital.svg", 24)
+            .icon("other", "./assets/svg/genderOther.svg", 24)
             .icon("patient", "./assets/svg/person.svg", 24)
             .icon("patientAdd", "./assets/svg/personAdd.svg", 24)
             .icon("people", "./assets/svg/people.svg", 24)
@@ -292,6 +293,7 @@
             .icon("smart", "./assets/svg/SMART.svg", 24)
             .icon("telecom", "./assets/svg/telecom.svg", 24)
             .icon("terminology", "./assets/svg/terminology.svg", 24)
+            .icon("unknown", "./assets/svg/question-mark.svg", 24)
             .icon("view", "./assets/svg/visibility.svg", 12)
             .icon("vitals", "./assets/svg/pulse1.svg", 24)
             .icon("web", "./assets/svg/www.svg", 16);

@@ -3,12 +3,20 @@
 
     var serviceId = 'organizationService';
 
-    function organizationService(common, dataCache, fhirClient, fhirServers) {
+    function organizationService(common, dataCache, fhirClient, fhirServers, store) {
         var dataCacheKey = 'localOrganizations';
         var getLogFn = common.logger.getLogFn;
         var logWarning = getLogFn(serviceId, 'warning');
         var $q = common.$q;
         var noToast = false;
+
+        function getOrganizationContext() {
+            return store.get('organization');
+        }
+
+        function setOrganizationContext(value) {
+            store.set('organization', value);
+        }
 
         function addOrganization(resource) {
             _prepArrays(resource)
@@ -309,12 +317,14 @@
             getOrganizationReference: getOrganizationReference,
             initializeNewOrganization: initializeNewOrganization,
             searchOrganizations: searchOrganizations,
+            getOrganizationContext: getOrganizationContext,
+            setOrganizationContext:setOrganizationContext,
             updateOrganization: updateOrganization
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', organizationService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'dataCache', 'fhirClient', 'fhirServers', 'store', organizationService]);
 
 })();

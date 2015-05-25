@@ -1,9 +1,9 @@
 (function () {
     'use strict';
 
-    var serviceId = 'contactService';
+    var serviceId = 'organizationContactService';
 
-    function contactService(common, localValueSets) {
+    function organizationContactService(common, organizationValueSets) {
         var contacts = [];
 
         function add(item) {
@@ -42,28 +42,28 @@
         }
 
         function _mapFromViewModel(item) {
-            var mappedItem = {"telecom": [], "purpose": {}};
+            var mappedItem = {telecom: [], purpose: {}};
             if (item) {
                 if (item.name) {
                     mappedItem.name = common.makeHumanName(item.name);
                 }
                 if (item.email) {
-                    var email = {"value": item.email, "use": "work", "system": "email"};
+                    var email = {value: item.email, use: "work", system: "email"};
                     mappedItem.telecom.push(email);
                 }
                 if (item.phone) {
-                    var phone = {"value": item.phone, "use": "work", "system": "phone"};
+                    var phone = {value: item.phone, use: "work", system: "phone"};
                     mappedItem.telecom.push(phone);
                 }
                 if (item.purpose) {
-                    var coding = common.mapDisplayToCoding(item.purpose, localValueSets.contactEntityType());
+                    var coding = common.mapDisplayToCoding(item.purpose, organizationValueSets.contactEntityType());
                     if (coding) {
                         mappedItem.purpose.coding = [];
                         mappedItem.purpose.coding.push(coding);
                     }
                 }
                 if (item.address) {
-                    mappedItem.address = common.makeAddress(item.address);
+                    mappedItem.address = item.address;
                 }
             }
             return mappedItem;
@@ -91,6 +91,7 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', 'localValueSets', contactService]);
+    angular.module('FHIRCloud').factory(serviceId, ['common', 'organizationValueSets',
+        organizationContactService]);
 
 })();

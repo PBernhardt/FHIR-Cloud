@@ -3,30 +3,40 @@
         <div layout-gt-lg="row" layout-align="space-between center" layout-wrap>
             <md-input-container flex>
                 <label>Birth date</label>
-                <input ng-model="vm.patientDemographics.birthDate" ng-change="vm.updateBirthDate()" id="dob"
+                <input ng-model="vm.patientDemographics.birthDate"
+                       ng-change="vm.updateBirthDate()"
+                       id="dob"
                        type="date">
             </md-input-container>
 
             <md-input-container flex>
                 <label>Birth order</label>
-                <input ng-model="vm.patientDemographics.birthOrder" id="order" type="number">
+                <input ng-model="vm.patientDemographics.birthOrder"
+                       ng-change="vm.updateBirthOrder()"
+                       id="order"
+                       type="number">
             </md-input-container>
 
             <md-input-container flex>
                 <label>Place of birth</label>
                 <input ng-model="vm.patientDemographics.placeOfBirth.text"
-                        ng-change="vm.updateBirthPlace()">
+                       ng-change="vm.updateBirthPlace()"
+                       id="birthPlace">
             </md-input-container>
 
             <md-input-container flex>
                 <label>Mother's maiden name</label>
                 <input ng-model="vm.patientDemographics.mothersMaidenName"
-                       ng-change="vm.updateMothersMaidenName()">
+                       ng-change="vm.updateMothersMaidenName()"
+                       id="mothersMaiden">
             </md-input-container>
 
             <md-input-container flex>
                 <label>Date of death</label>
-                <input ng-model="vm.patientDemographics.deceasedDate" id="dod" type="date">
+                <input ng-model="vm.patientDemographics.deceasedDate"
+                       id="dod"
+                       ng-change="vm.updateDeceasedDate()"
+                       type="date">
             </md-input-container>
         </div>
         <div layout-gt-md="row" layout-align="space-between center" layout-wrap>

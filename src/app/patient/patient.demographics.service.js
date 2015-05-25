@@ -3,7 +3,7 @@
 
     var serviceId = 'patientDemographicsService';
 
-    function patientDemographicsService($filter) {
+    function patientDemographicsService($filter, common) {
         var _birthDate = null;
         var _birthOrder = null;
         var _deceased = false;
@@ -101,7 +101,7 @@
             _birthDate = undefined;
             _birthOrder = undefined;
             _multipleBirth = undefined;
-            if (birthOrder) {
+            if (birthOrder && birthOrder > 0) {
                 _birthOrder = birthOrder;
                 _multipleBirth = true;
             } else {
@@ -115,7 +115,7 @@
         function initDeath(deceased, dateOfDeath) {
             _deceased = undefined;
             if (dateOfDeath) {
-                _deceasedDate = dateOfDeath;
+                _deceasedDate = new Date(dateOfDeath);
                 _deceased = true;
             } else {
                 _deceased = deceased;
@@ -147,7 +147,7 @@
                                 break;
                             case "http://hl7.org/fhir/StructureDefinition/birthPlace":
                                 _birthPlace = ext.valueAddress;
-                                _birthPlace.text = $filter('singleLineAddress')(ext.valueAddress);
+                                _birthPlace.text = $filter('singleLineAddress')(_birthPlace);
                                 break;
                             default:
                                 break;
@@ -218,17 +218,16 @@
         }
 
         function setBirthOrder(value) {
+            _multipleBirth = !!(value && (value > 0));
             _birthOrder = value;
         }
 
         function setDeceased(value) {
             _deceased = value;
-            if (_deceased === false) {
-                _deceasedDate = null;
-            }
         }
 
         function setDeceasedDate(value) {
+            _deceased = common.isUndefinedOrNull(value) === false;
             _deceasedDate = value;
         }
 
@@ -242,9 +241,6 @@
 
         function setMultipleBirth(value) {
             _multipleBirth = value;
-            if (_multipleBirth === false) {
-                _birthOrder = null;
-            }
         }
 
         var service = {
@@ -281,6 +277,6 @@
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', patientDemographicsService]);
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', 'common', patientDemographicsService]);
 
 })();

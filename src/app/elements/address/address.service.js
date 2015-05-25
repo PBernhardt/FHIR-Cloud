@@ -13,94 +13,93 @@
         var _countyURL = "http://hl7.org/fhir/StructureDefinition/us-core-county";
 
         function add(googleAddress) {
-            function _parseAddress(item) {
-                var address = {};
-                var streetNumber;
-                var route;
-                var streetAddress;
-                var county;
-                for (var i = 0; i < item.address_components.length; i++) {
-                    var types = item.address_components[i].types;
-                    if (angular.isDefined(types)) {
-                        if (_.indexOf(types, 'administrative_area_level_2') !== -1) {
-                            county = item.address_components[i].long_name;
-                            _county = county;
-                            continue;
-                        }
-                        if (_.indexOf(types, 'country') !== -1) {
-                            address.country = item.address_components[i].short_name;
-                            continue;
-                        }
-                        if (_.indexOf(types, 'administrative_area_level_1') !== -1) {
-                            address.state = item.address_components[i].short_name;
-                            continue;
-                        }
-
-                        if (_.indexOf(types, 'locality') !== -1) {
-                            address.city = item.address_components[i].long_name;
-                            continue;
-                        }
-                        if (_.indexOf(types, 'postal_code') !== -1) {
-                            address.postalCode = item.address_components[i].long_name;
-                            continue;
-                        }
-                        if (_.indexOf(types, 'street_number') !== -1) {
-                            streetNumber = item.address_components[i].long_name;
-                            continue;
-                        }
-                        if (_.indexOf(types, 'route') !== -1) {
-                            route = item.address_components[i].long_name;
-                            continue;
-                        }
-                        if (_.indexOf(types, 'street_address') !== -1) {
-                            streetAddress = item.address_components[i].long_name;
-                        }
-                    }
-                }
-
-                address.line = [];
-                /*
-                The street address will either be concat of street_number and route
-                or just street_address (Google is fickle this way)
-                 */
-                if (angular.isDefined(streetAddress)) {
-                    address.line.push(streetAddress);
-                } else if(angular.isDefined(route)) {
-                    streetAddress = route;
-                    if (angular.isDefined(streetNumber)) {
-                        streetAddress = streetNumber + ' ' + route;
-                    }
-                    address.line.push(streetAddress);
-                }
-                var result = {};
-                result.$$hashKey = common.randomHash();
-                result.address = address;
-                result.text = item.formatted_address;
-                result.county = county;
-                result.use = item.use ? item.use : null;
-
-                var period = undefined;
-                if (angular.isDefined(item.period)) {
-                    period = {};
-                    if (angular.isDefined(item.period.start)) {
-                        period.start = $filter('date')(item.period.start, 'yyyy-MM-dd');
-                    }
-                    if (angular.isDefined(item.period.end)) {
-                        period.end = $filter('date')(item.period.end, 'yyyy-MM-dd');
-                    }
-                }
-                result.period = period;
-
-                return result;
-            }
-
             var index = _.indexOf(addresses, googleAddress);
-
             if (index > -1) {
-                addresses[index] = _parseAddress(googleAddress);
+                addresses[index] = parseGoogleAddress(googleAddress);
             } else {
-                addresses.push(_parseAddress(googleAddress));
+                addresses.push(parseGoogleAddress(googleAddress));
             }
+        }
+
+        function parseGoogleAddress(item) {
+            var address = {};
+            var streetNumber;
+            var route;
+            var streetAddress;
+            var county;
+            for (var i = 0; i < item.address_components.length; i++) {
+                var types = item.address_components[i].types;
+                if (angular.isDefined(types)) {
+                    if (_.indexOf(types, 'administrative_area_level_2') !== -1) {
+                        county = item.address_components[i].long_name;
+                        _county = county;
+                        continue;
+                    }
+                    if (_.indexOf(types, 'country') !== -1) {
+                        address.country = item.address_components[i].short_name;
+                        continue;
+                    }
+                    if (_.indexOf(types, 'administrative_area_level_1') !== -1) {
+                        address.state = item.address_components[i].short_name;
+                        continue;
+                    }
+
+                    if (_.indexOf(types, 'locality') !== -1) {
+                        address.city = item.address_components[i].long_name;
+                        continue;
+                    }
+                    if (_.indexOf(types, 'postal_code') !== -1) {
+                        address.postalCode = item.address_components[i].long_name;
+                        continue;
+                    }
+                    if (_.indexOf(types, 'street_number') !== -1) {
+                        streetNumber = item.address_components[i].long_name;
+                        continue;
+                    }
+                    if (_.indexOf(types, 'route') !== -1) {
+                        route = item.address_components[i].long_name;
+                        continue;
+                    }
+                    if (_.indexOf(types, 'street_address') !== -1) {
+                        streetAddress = item.address_components[i].long_name;
+                    }
+                }
+            }
+
+            address.line = [];
+            /*
+             The street address will either be concat of street_number and route
+             or just street_address (Google is fickle this way)
+             */
+            if (angular.isDefined(streetAddress)) {
+                address.line.push(streetAddress);
+            } else if(angular.isDefined(route)) {
+                streetAddress = route;
+                if (angular.isDefined(streetNumber)) {
+                    streetAddress = streetNumber + ' ' + route;
+                }
+                address.line.push(streetAddress);
+            }
+            var result = {};
+            result.$$hashKey = common.randomHash();
+            result.address = address;
+            result.text = item.formatted_address;
+            result.county = county;
+            result.use = item.use ? item.use : null;
+
+            var period = undefined;
+            if (angular.isDefined(item.period)) {
+                period = {};
+                if (angular.isDefined(item.period.start)) {
+                    period.start = $filter('date')(item.period.start, 'yyyy-MM-dd');
+                }
+                if (angular.isDefined(item.period.end)) {
+                    period.end = $filter('date')(item.period.end, 'yyyy-MM-dd');
+                }
+            }
+            result.period = period;
+
+            return result;
         }
 
         function getAll() {
@@ -260,6 +259,7 @@
             init: init,
             initializeKnownExtensions: initializeKnownExtensions,
             mapFromViewModel: mapFromViewModel,
+            parseGoogleAddress: parseGoogleAddress,
             reset: reset,
             searchGoogle: searchGoogle,
             setSingle: setSingle,

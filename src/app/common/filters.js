@@ -305,7 +305,7 @@
 
     app.filter('singleLineAddress', function () {
         return function (address) {
-            if (address && address.text && address.text.length > 10) {
+            if (address && address.text && address.text.length > 5) {
                 return address.text;
             } else if (address) {
                 return (address.line ? address.line.join(' ') + ', ' : '') + (address.city ? address.city + ', ' : '') + (address.state ? address.state : '') + (address.postalCode ? ' ' + address.postalCode : '') + (address.country ? ', ' + address.country : '');

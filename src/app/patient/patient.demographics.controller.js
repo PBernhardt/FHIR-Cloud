@@ -51,12 +51,6 @@
 
         vm.updateBirthOrder = updateBirthOrder;
 
-        function updateDeceased() {
-            patientDemographicsService.setDeceased(vm.patientDemographics.deceased);
-        }
-
-        vm.updateDeceased = updateDeceased;
-
         function updateDeceasedDate() {
             patientDemographicsService.setDeceasedDate(vm.patientDemographics.deceasedDate);
         }

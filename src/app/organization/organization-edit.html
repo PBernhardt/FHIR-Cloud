@@ -36,7 +36,7 @@
                                          md-delay="300"
                                          md-item-text="org.display"
                                          md-min-length="3"
-                                         md-floating-label="Affiliated organization">
+                                         md-floating-label="Parent organization">
                             <span md-highlight-text="vm.searchText">{{org.display}}</span>
                         </md-autocomplete>
 
@@ -59,8 +59,8 @@
                 <md-tab label="Telecom">
                     <div ng-include="'elements/contactPoint/contactPoint.html'"></div>
                 </md-tab>
-                <md-tab label="Admin Contact">
-                    <div ng-include="'elements/contact/contact.html'"></div>
+                <md-tab label="Contact">
+                    <div ng-include="'organization/organization-contact.html'"></div>
                 </md-tab>
                 <md-tab label="Identifiers">
                     <div ng-include="'elements/identifier/identifier.html'"></div>
