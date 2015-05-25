@@ -19063,30 +19063,12 @@
     function patientDemographics(common, config, patientDemographicsService, localValueSets) {
         /*jshint validthis:true */
         var vm = this;
-/*        var keyCodes = config.keyCodes;*/
 
         function _activate() {
             common.activateController([_initData()], controllerId)
                 .then(function () {
                 })
         }
-
-/*        function addLanguage($event) {
-            if ($event.keyCode === keyCodes.esc) {
-                vm.selectedLanguage = null;
-            } else if ($event.keyCode === keyCodes.enter) {
-                if (vm.selectedLanguage !== null) {
-                    var coding = {coding: [vm.selectedLanguage], text: vm.selectedLanguage.display};
-                    if (_.first(vm.patientDemographics.language, coding).length === 0) {
-                        vm.patientDemographics.language.push(coding);
-                    }
-                    //  updateLanguage();
-                }
-                vm.selectedLanguage = null;
-            }
-        }
-
-        vm.addLanguage = addLanguage;*/
 
         function _loadValueSets() {
             vm.ethnicities = localValueSets.ethnicity();
@@ -19263,7 +19245,6 @@
         var _birthOrder = null;
         var _deceased = false;
         var _deceasedDate = null;
-        var _language = [];
         var _multipleBirth = false;
         var _gender = null;
         var _maritalStatus = undefined;
@@ -19331,10 +19312,6 @@
             return _gender;
         }
 
-        function getLanguage() {
-            return _language;
-        }
-
         function getMaritalStatus() {
             if (_maritalStatus !== undefined) {
                 _maritalStatus.text = ($filter)('codeableConcept')(_maritalStatus);
@@ -19346,18 +19323,14 @@
             return _multipleBirth;
         }
 
-        function init(gender, maritalStatus, language) {
+        function init(gender, maritalStatus) {
             _gender = undefined;
             _maritalStatus = undefined;
-            _language = undefined;
             if (gender) {
                 _gender = gender;
             }
             if (maritalStatus) {
                 _maritalStatus = maritalStatus;
-            }
-            if (language) {
-                _language = language;
             }
         }
 
@@ -19500,10 +19473,6 @@
             _gender = value;
         }
 
-        function setLanguage(value) {
-            _language = value;
-        }
-
         function setMaritalStatus(value) {
             _maritalStatus = value;
         }
@@ -19517,25 +19486,22 @@
 
         var service = {
             getBirthDate: getBirthDate,
+            setBirthDate: setBirthDate,
             getBirthOrder: getBirthOrder,
+            setBirthOrder: setBirthOrder,
             getDeceased: getDeceased,
             getDeceasedDate: getDeceasedDate,
             getGender: getGender,
-            getLanguage: getLanguage,
+            setGender: setGender,
             getMaritalStatus: getMaritalStatus,
+            setMaritalStatus: setMaritalStatus,
             getMultipleBirth: getMultipleBirth,
+            setMultipleBirth: setMultipleBirth,
             init: init,
             initBirth: initBirth,
             initDeath: initDeath,
-            setBirthDate: setBirthDate,
-            setBirthOrder: setBirthOrder,
             setDeceased: setDeceased,
             setDeceasedDate: setDeceasedDate,
-            setGender: setGender,
-            setKnownExtensions: setKnownExtensions,
-            setLanguage: setLanguage,
-            setMaritalStatus: setMaritalStatus,
-            setMultipleBirth: setMultipleBirth,
             getRace: getRace,
             setRace: setRace,
             getEthnicity: getEthnicity,
@@ -19546,6 +19512,7 @@
             setMothersMaidenName: setMothersMaidenName,
             getBirthPlace: getBirthPlace,
             setBirthPlace: setBirthPlace,
+            setKnownExtensions: setKnownExtensions,
             initializeKnownExtensions: initializeKnownExtensions
         };
         return service;
@@ -19664,7 +19631,7 @@
             function initializeAdministrationData(data) {
                 vm.patient = data;
                 humanNameService.init(vm.patient.name);
-                patientDemographicsService.init(vm.patient.gender, vm.patient.maritalStatus, vm.patient.communication);
+                patientDemographicsService.init(vm.patient.gender, vm.patient.maritalStatus);
                 patientDemographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger, vm.patient.birthDate);
                 patientDemographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
                 patientDemographicsService.initializeKnownExtensions(vm.patient.extension);
@@ -19775,18 +19742,11 @@
             patient.birthDate = $filter('dateString')(patientDemographicsService.getBirthDate());
             patient.gender = patientDemographicsService.getGender();
             patient.maritalStatus = patientDemographicsService.getMaritalStatus();
-
             patient.multipleBirthBoolean = patientDemographicsService.getMultipleBirth();
             patient.multipleBirthInteger = patientDemographicsService.getBirthOrder();
             patient.deceasedBoolean = patientDemographicsService.getDeceased();
             patient.deceasedDateTime = patientDemographicsService.getDeceasedDate();
             patient.extension = patientDemographicsService.setKnownExtensions();
-/*            patient.race = patientDemographicsService.getRace();
-            patient.religion = patientDemographicsService.getReligion();
-            patient.ethnicity = patientDemographicsService.getEthnicity();
-            patient.mothersMaidenName = patientDemographicsService.getMothersMaidenName();
-            patient.birthPlace = patientDemographicsService.getBirthPlace();*/
-
             patient.address = addressService.mapFromViewModel();
             patient.telecom = contactPointService.mapFromViewModel();
             patient.identifier = identifierService.getAll();

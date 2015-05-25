@@ -67,7 +67,7 @@
                            ng-change="vm.updateEthnicity()">
                     <md-option ng-repeat="coding in vm.ethnicities"
                                ng-value="coding"
-                               ng-selected="coding.code===vm.patientDemographics.ethnicities.coding[0].code">
+                               ng-selected="coding.code===vm.patientDemographics.ethnicity.coding[0].code">
                         {{coding.display}}
                     </md-option>
                 </md-select>

@@ -8,7 +8,6 @@
         var _birthOrder = null;
         var _deceased = false;
         var _deceasedDate = null;
-        var _language = [];
         var _multipleBirth = false;
         var _gender = null;
         var _maritalStatus = undefined;
@@ -76,10 +75,6 @@
             return _gender;
         }
 
-        function getLanguage() {
-            return _language;
-        }
-
         function getMaritalStatus() {
             if (_maritalStatus !== undefined) {
                 _maritalStatus.text = ($filter)('codeableConcept')(_maritalStatus);
@@ -91,18 +86,14 @@
             return _multipleBirth;
         }
 
-        function init(gender, maritalStatus, language) {
+        function init(gender, maritalStatus) {
             _gender = undefined;
             _maritalStatus = undefined;
-            _language = undefined;
             if (gender) {
                 _gender = gender;
             }
             if (maritalStatus) {
                 _maritalStatus = maritalStatus;
-            }
-            if (language) {
-                _language = language;
             }
         }
 
@@ -245,10 +236,6 @@
             _gender = value;
         }
 
-        function setLanguage(value) {
-            _language = value;
-        }
-
         function setMaritalStatus(value) {
             _maritalStatus = value;
         }
@@ -262,25 +249,22 @@
 
         var service = {
             getBirthDate: getBirthDate,
+            setBirthDate: setBirthDate,
             getBirthOrder: getBirthOrder,
+            setBirthOrder: setBirthOrder,
             getDeceased: getDeceased,
             getDeceasedDate: getDeceasedDate,
             getGender: getGender,
-            getLanguage: getLanguage,
+            setGender: setGender,
             getMaritalStatus: getMaritalStatus,
+            setMaritalStatus: setMaritalStatus,
             getMultipleBirth: getMultipleBirth,
+            setMultipleBirth: setMultipleBirth,
             init: init,
             initBirth: initBirth,
             initDeath: initDeath,
-            setBirthDate: setBirthDate,
-            setBirthOrder: setBirthOrder,
             setDeceased: setDeceased,
             setDeceasedDate: setDeceasedDate,
-            setGender: setGender,
-            setKnownExtensions: setKnownExtensions,
-            setLanguage: setLanguage,
-            setMaritalStatus: setMaritalStatus,
-            setMultipleBirth: setMultipleBirth,
             getRace: getRace,
             setRace: setRace,
             getEthnicity: getEthnicity,
@@ -291,6 +275,7 @@
             setMothersMaidenName: setMothersMaidenName,
             getBirthPlace: getBirthPlace,
             setBirthPlace: setBirthPlace,
+            setKnownExtensions: setKnownExtensions,
             initializeKnownExtensions: initializeKnownExtensions
         };
         return service;

@@ -109,7 +109,7 @@
             function initializeAdministrationData(data) {
                 vm.patient = data;
                 humanNameService.init(vm.patient.name);
-                patientDemographicsService.init(vm.patient.gender, vm.patient.maritalStatus, vm.patient.communication);
+                patientDemographicsService.init(vm.patient.gender, vm.patient.maritalStatus);
                 patientDemographicsService.initBirth(vm.patient.multipleBirthBoolean, vm.patient.multipleBirthInteger, vm.patient.birthDate);
                 patientDemographicsService.initDeath(vm.patient.deceasedBoolean, vm.patient.deceasedDateTime);
                 patientDemographicsService.initializeKnownExtensions(vm.patient.extension);
@@ -220,18 +220,11 @@
             patient.birthDate = $filter('dateString')(patientDemographicsService.getBirthDate());
             patient.gender = patientDemographicsService.getGender();
             patient.maritalStatus = patientDemographicsService.getMaritalStatus();
-
             patient.multipleBirthBoolean = patientDemographicsService.getMultipleBirth();
             patient.multipleBirthInteger = patientDemographicsService.getBirthOrder();
             patient.deceasedBoolean = patientDemographicsService.getDeceased();
             patient.deceasedDateTime = patientDemographicsService.getDeceasedDate();
             patient.extension = patientDemographicsService.setKnownExtensions();
-/*            patient.race = patientDemographicsService.getRace();
-            patient.religion = patientDemographicsService.getReligion();
-            patient.ethnicity = patientDemographicsService.getEthnicity();
-            patient.mothersMaidenName = patientDemographicsService.getMothersMaidenName();
-            patient.birthPlace = patientDemographicsService.getBirthPlace();*/
-
             patient.address = addressService.mapFromViewModel();
             patient.telecom = contactPointService.mapFromViewModel();
             patient.identifier = identifierService.getAll();
