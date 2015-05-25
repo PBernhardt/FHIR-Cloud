@@ -6,7 +6,7 @@
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
                            attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, communicationService,
-                           careProviderService, observationService) {
+                           careProviderService, observationService, patientContactService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -125,6 +125,7 @@
                 addressService.init(vm.patient.address, true);
                 contactPointService.init(vm.patient.telecom, true, true);
                 careProviderService.init(vm.patient.careProvider);
+                patientContactService.init(vm.patient.contact);
                 if (vm.patient.communication) {
                     communicationService.init(vm.patient.communication, "multi");
                 }
@@ -239,6 +240,7 @@
             patient.managingOrganization = vm.patient.managingOrganization;
             patient.communication = communicationService.getAll();
             patient.careProvider = careProviderService.getAll();
+            patient.contact = patientContactService.getAll();
             patient.active = vm.patient.active;
 
             vm.isBusy = true;
@@ -404,5 +406,5 @@
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope',
             'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'communicationService', 'careProviderService', 'observationService', patientDetail]);
+            'communicationService', 'careProviderService', 'observationService', 'patientContactService', patientDetail]);
 })();

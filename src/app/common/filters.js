@@ -66,6 +66,20 @@
         };
     });
 
+    app.filter('codeableConceptList', ['$filter', function ($filter) {
+        return function (codeableConceptList) {
+            var result = '';
+            if (angular.isUndefined(codeableConceptList) === false && angular.isArray(codeableConceptList)) {
+                _.forEach(codeableConceptList, function (item) {
+                    var display = ($filter)('codeableConcept')(item);
+                    result = result + display + ', ';
+                });
+                result = result.substr(0, result.length - 2);
+            }
+            return result;
+        };
+    }]);
+
     app.filter('extensionValue', ['$filter', function ($filter) {
         return function (extension) {
             if (angular.isDefined(extension.valueString)) {
