@@ -10,9 +10,9 @@
         function add(item) {
             var index = getIndex(item.$$hashKey);
             if (index > -1) {
-                careProviders[index] = resourceReference;
+                careProviders[index] = item;
             } else {
-                careProviders.push(resourceReference);
+                careProviders.push(item);
             }
         }
 
