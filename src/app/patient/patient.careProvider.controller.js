@@ -117,7 +117,7 @@
             else {
                 var reference = _setResourceReference(item)
                 list.push(reference);
-                patientCareProviderService.add(item);
+                patientCareProviderService.add(reference);
             }
         }
 
