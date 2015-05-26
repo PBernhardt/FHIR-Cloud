@@ -504,11 +504,11 @@
             getCachedSearchResults: getCachedSearchResults,
             getPractitioner: getPractitioner,
             getPractitionerContext: getPractitionerContext,
+            setPractitionerContext: setPractitionerContext,
             getPractitionerReference: getPractitionerReference,
             getPractitioners: getPractitioners,
             getPractitionersByLink: getPractitionersByLink,
             initializeNewPractitioner: initializeNewPractitioner,
-            setPractitionerContext: setPractitionerContext,
             updatePractitioner: updatePractitioner,
             seedRandomPractitioners: seedRandomPractitioners,
             searchPractitioners: searchPractitioners
