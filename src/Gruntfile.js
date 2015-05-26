@@ -200,6 +200,8 @@ module.exports = function (grunt) {
                     'app/patient/patient.directives.js',
                     'app/patient/patient.search.controller.js',
                     'app/patient/patient.service.js',
+                    'app/patient/patient.careProvider.controller.js',
+                    'app/patient/patient.careProvider.service.js',
                     'app/patient/patientValueSets.service.js',
                     'app/person/person.detail.controller.js',
                     'app/person/person.search.controller.js',

@@ -6,7 +6,7 @@
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
                            attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService, identifierService,
                            organizationService, patientService, contactPointService, communicationService,
-                           careProviderService, observationService, patientContactService) {
+                           patientCareProviderService, observationService, patientContactService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -124,7 +124,8 @@
                 identifierService.init(vm.patient.identifier, "multi", "patient");
                 addressService.init(vm.patient.address, true);
                 contactPointService.init(vm.patient.telecom, true, true);
-                careProviderService.init(vm.patient.careProvider);
+                patientCareProviderService.init(vm.patient.careProvider);
+                patientCareProviderService.setManagingOrganization(vm.patient.managingOrganization);
                 patientContactService.init(vm.patient.contact);
                 if (vm.patient.communication) {
                     communicationService.init(vm.patient.communication, "multi");
@@ -237,9 +238,9 @@
             patient.address = addressService.mapFromViewModel();
             patient.telecom = contactPointService.mapFromViewModel();
             patient.identifier = identifierService.getAll();
-            patient.managingOrganization = vm.patient.managingOrganization;
+            patient.managingOrganization = patientCareProviderService.getManagingOrganization();
             patient.communication = communicationService.getAll();
-            patient.careProvider = careProviderService.getAll();
+            patient.careProvider = patientCareProviderService.getAll();
             patient.contact = patientContactService.getAll();
             patient.active = vm.patient.active;
 
@@ -406,5 +407,5 @@
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope',
             'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'communicationService', 'careProviderService', 'observationService', 'patientContactService', patientDetail]);
+            'communicationService', 'patientCareProviderService', 'observationService', 'patientContactService', patientDetail]);
 })();

@@ -165,10 +165,10 @@
         function searchPractitioners(baseUrl, searchFilter) {
             var deferred = $q.defer();
 
-            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter)) {
                 deferred.reject('Invalid search input');
             }
-            fhirClient.getResource(baseUrl + '/Practitioner?' + searchFilter + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Practitioner?' + searchFilter + '&_count=20&_sort:asc=family')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);

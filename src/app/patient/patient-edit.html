@@ -11,13 +11,19 @@
     </div>
     <div flex="100">
         <ng-form name="patientEditForm" class="form-horizontal"
-              ng-model="vm.patient">
+                 ng-model="vm.patient">
             <md-tabs md-dynamic-height>
                 <md-tab label="Name">
                     <div ng-include="'elements/humanName/humanName.html'"></div>
                 </md-tab>
+                <md-tab label="Care Providers">
+                    <div ng-include="'patient/patient-careProvider.html'"></div>
+                </md-tab>
                 <md-tab label="Demographics">
                     <div ng-include="'patient/patient-demographics.html'"></div>
+                </md-tab>
+                <md-tab label="Languages">
+                    <div ng-include="'elements/communication/communication.html'"></div>
                 </md-tab>
                 <md-tab label="Address">
                     <div ng-include="'elements/address/address.html'"></div>
@@ -33,12 +39,6 @@
                 </md-tab>
                 <md-tab label="Identifier">
                     <div ng-include="'elements/identifier/identifier.html'"></div>
-                </md-tab>
-                <md-tab label="Languages">
-                    <div ng-include="'elements/communication/communication.html'"></div>
-                </md-tab>
-                <md-tab label="Care Providers">
-                    <div ng-include="'elements/careProvider/careProvider.html'"></div>
                 </md-tab>
             </md-tabs>
             <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>

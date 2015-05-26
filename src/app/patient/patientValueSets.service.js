@@ -65,493 +65,493 @@
                 concept: [
                     {
                         code: "1001",
-                        "abstract": false,
+                        abstract: false,
                         display: "Adventist",
                         definition: "Adventist"
                     },
                     {
                         code: "1002",
-                        "abstract": false,
+                        abstract: false,
                         display: "African Religions",
                         definition: "African Religions"
                     },
                     {
                         code: "1003",
-                        "abstract": false,
+                        abstract: false,
                         display: "Afro-Caribbean Religions",
                         definition: "Afro-Caribbean Religions"
                     },
                     {
                         code: "1004",
-                        "abstract": false,
+                        abstract: false,
                         display: "Agnosticism",
                         definition: "Agnosticism"
                     },
                     {
                         code: "1005",
-                        "abstract": false,
+                        abstract: false,
                         display: "Anglican",
                         definition: "Anglican"
                     },
                     {
                         code: "1006",
-                        "abstract": false,
+                        abstract: false,
                         display: "Animism",
                         definition: "Animism"
                     },
                     {
                         code: "1007",
-                        "abstract": false,
+                        abstract: false,
                         display: "Atheism",
                         definition: "Atheism"
                     },
                     {
                         code: "1008",
-                        "abstract": false,
+                        abstract: false,
                         display: "Babi & Baha'I faiths",
                         definition: "Babi & Baha'I faiths"
                     },
                     {
                         code: "1009",
-                        "abstract": false,
+                        abstract: false,
                         display: "Baptist",
                         definition: "Baptist"
                     },
                     {
                         code: "1010",
-                        "abstract": false,
+                        abstract: false,
                         display: "Bon",
                         definition: "Bon"
                     },
                     {
                         code: "1011",
-                        "abstract": false,
+                        abstract: false,
                         display: "Cao Dai",
                         definition: "Cao Dai"
                     },
                     {
                         code: "1012",
-                        "abstract": false,
+                        abstract: false,
                         display: "Celticism",
                         definition: "Celticism"
                     },
                     {
                         code: "1013",
-                        "abstract": false,
+                        abstract: false,
                         display: "Christian (non-Catholic, non-specific)",
                         definition: "Christian (non-Catholic, non-specific)"
                     },
                     {
                         code: "1014",
-                        "abstract": false,
+                        abstract: false,
                         display: "Confucianism",
                         definition: "Confucianism"
                     },
                     {
                         code: "1015",
-                        "abstract": false,
+                        abstract: false,
                         display: "Cyberculture Religions",
                         definition: "Cyberculture Religions"
                     },
                     {
                         code: "1016",
-                        "abstract": false,
+                        abstract: false,
                         display: "Divination",
                         definition: "Divination"
                     },
                     {
                         code: "1017",
-                        "abstract": false,
+                        abstract: false,
                         display: "Fourth Way",
                         definition: "Fourth Way"
                     },
                     {
                         code: "1018",
-                        "abstract": false,
+                        abstract: false,
                         display: "Free Daism",
                         definition: "Free Daism"
                     },
                     {
                         code: "1019",
-                        "abstract": false,
+                        abstract: false,
                         display: "Gnosis",
                         definition: "Gnosis"
                     },
                     {
                         code: "1020",
-                        "abstract": false,
+                        abstract: false,
                         display: "Hinduism",
                         definition: "Hinduism"
                     },
                     {
                         code: "1021",
-                        "abstract": false,
+                        abstract: false,
                         display: "Humanism",
                         definition: "Humanism"
                     },
                     {
                         code: "1022",
-                        "abstract": false,
+                        abstract: false,
                         display: "Independent",
                         definition: "Independent"
                     },
                     {
                         code: "1023",
-                        "abstract": false,
+                        abstract: false,
                         display: "Islam",
                         definition: "Islam"
                     },
                     {
                         code: "1024",
-                        "abstract": false,
+                        abstract: false,
                         display: "Jainism",
                         definition: "Jainism"
                     },
                     {
                         code: "1025",
-                        "abstract": false,
+                        abstract: false,
                         display: "Jehovah's Witnesses",
                         definition: "Jehovah's Witnesses"
                     },
                     {
                         code: "1026",
-                        "abstract": false,
+                        abstract: false,
                         display: "Judaism",
                         definition: "Judaism"
                     },
                     {
                         code: "1027",
-                        "abstract": false,
+                        abstract: false,
                         display: "Latter Day Saints",
                         definition: "Latter Day Saints"
                     },
                     {
                         code: "1028",
-                        "abstract": false,
+                        abstract: false,
                         display: "Lutheran",
                         definition: "Lutheran"
                     },
                     {
                         code: "1029",
-                        "abstract": false,
+                        abstract: false,
                         display: "Mahayana",
                         definition: "Mahayana"
                     },
                     {
                         code: "1030",
-                        "abstract": false,
+                        abstract: false,
                         display: "Meditation",
                         definition: "Meditation"
                     },
                     {
                         code: "1031",
-                        "abstract": false,
+                        abstract: false,
                         display: "Messianic Judaism",
                         definition: "Messianic Judaism"
                     },
                     {
                         code: "1032",
-                        "abstract": false,
+                        abstract: false,
                         display: "Mitraism",
                         definition: "Mitraism"
                     },
                     {
                         code: "1033",
-                        "abstract": false,
+                        abstract: false,
                         display: "New Age",
                         definition: "New Age"
                     },
                     {
                         code: "1034",
-                        "abstract": false,
+                        abstract: false,
                         display: "non-Roman Catholic",
                         definition: "non-Roman Catholic"
                     },
                     {
                         code: "1035",
-                        "abstract": false,
+                        abstract: false,
                         display: "Occult",
                         definition: "Occult"
                     },
                     {
                         code: "1036",
-                        "abstract": false,
+                        abstract: false,
                         display: "Orthodox",
                         definition: "Orthodox"
                     },
                     {
                         code: "1037",
-                        "abstract": false,
+                        abstract: false,
                         display: "Paganism",
                         definition: "Paganism"
                     },
                     {
                         code: "1038",
-                        "abstract": false,
+                        abstract: false,
                         display: "Pentecostal",
                         definition: "Pentecostal"
                     },
                     {
                         code: "1039",
-                        "abstract": false,
+                        abstract: false,
                         display: "Process, The",
                         definition: "Process, The"
                     },
                     {
                         code: "1040",
-                        "abstract": false,
+                        abstract: false,
                         display: "Reformed/Presbyterian",
                         definition: "Reformed/Presbyterian"
                     },
                     {
                         code: "1041",
-                        "abstract": false,
+                        abstract: false,
                         display: "Roman Catholic Church",
                         definition: "Roman Catholic Church"
                     },
                     {
                         code: "1042",
-                        "abstract": false,
+                        abstract: false,
                         display: "Satanism",
                         definition: "Satanism"
                     },
                     {
                         code: "1043",
-                        "abstract": false,
+                        abstract: false,
                         display: "Scientology",
                         definition: "Scientology"
                     },
                     {
                         code: "1044",
-                        "abstract": false,
+                        abstract: false,
                         display: "Shamanism",
                         definition: "Shamanism"
                     },
                     {
                         code: "1045",
-                        "abstract": false,
+                        abstract: false,
                         display: "Shiite (Islam)",
                         definition: "Shiite (Islam)"
                     },
                     {
                         code: "1046",
-                        "abstract": false,
+                        abstract: false,
                         display: "Shinto",
                         definition: "Shinto"
                     },
                     {
                         code: "1047",
-                        "abstract": false,
+                        abstract: false,
                         display: "Sikism",
                         definition: "Sikism"
                     },
                     {
                         code: "1048",
-                        "abstract": false,
+                        abstract: false,
                         display: "Spiritualism",
                         definition: "Spiritualism"
                     },
                     {
                         code: "1049",
-                        "abstract": false,
+                        abstract: false,
                         display: "Sunni (Islam)",
                         definition: "Sunni (Islam)"
                     },
                     {
                         code: "1050",
-                        "abstract": false,
+                        abstract: false,
                         display: "Taoism",
                         definition: "Taoism"
                     },
                     {
                         code: "1051",
-                        "abstract": false,
+                        abstract: false,
                         display: "Theravada",
                         definition: "Theravada"
                     },
                     {
                         code: "1052",
-                        "abstract": false,
+                        abstract: false,
                         display: "Unitarian-Universalism",
                         definition: "Unitarian-Universalism"
                     },
                     {
                         code: "1053",
-                        "abstract": false,
+                        abstract: false,
                         display: "Universal Life Church",
                         definition: "Universal Life Church"
                     },
                     {
                         code: "1054",
-                        "abstract": false,
+                        abstract: false,
                         display: "Vajrayana (Tibetan)",
                         definition: "Vajrayana (Tibetan)"
                     },
                     {
                         code: "1055",
-                        "abstract": false,
+                        abstract: false,
                         display: "Veda",
                         definition: "Veda"
                     },
                     {
                         code: "1056",
-                        "abstract": false,
+                        abstract: false,
                         display: "Voodoo",
                         definition: "Voodoo"
                     },
                     {
                         code: "1057",
-                        "abstract": false,
+                        abstract: false,
                         display: "Wicca",
                         definition: "Wicca"
                     },
                     {
                         code: "1058",
-                        "abstract": false,
+                        abstract: false,
                         display: "Yaohushua",
                         definition: "Yaohushua"
                     },
                     {
                         code: "1059",
-                        "abstract": false,
+                        abstract: false,
                         display: "Zen Buddhism",
                         definition: "Zen Buddhism"
                     },
                     {
                         code: "1060",
-                        "abstract": false,
+                        abstract: false,
                         display: "Zoroastrianism",
                         definition: "Zoroastrianism"
                     },
                     {
                         code: "1061",
-                        "abstract": false,
+                        abstract: false,
                         display: "Assembly of God",
                         definition: "Assembly of God"
                     },
                     {
                         code: "1062",
-                        "abstract": false,
+                        abstract: false,
                         display: "Brethren",
                         definition: "Brethren"
                     },
                     {
                         code: "1063",
-                        "abstract": false,
+                        abstract: false,
                         display: "Christian Scientist",
                         definition: "Christian Scientist"
                     },
                     {
                         code: "1064",
-                        "abstract": false,
+                        abstract: false,
                         display: "Church of Christ",
                         definition: "Church of Christ"
                     },
                     {
                         code: "1065",
-                        "abstract": false,
+                        abstract: false,
                         display: "Church of God",
                         definition: "Church of God"
                     },
                     {
                         code: "1066",
-                        "abstract": false,
+                        abstract: false,
                         display: "Congregational",
                         definition: "Congregational"
                     },
                     {
                         code: "1067",
-                        "abstract": false,
+                        abstract: false,
                         display: "Disciples of Christ",
                         definition: "Disciples of Christ"
                     },
                     {
                         code: "1068",
-                        "abstract": false,
+                        abstract: false,
                         display: "Eastern Orthodox",
                         definition: "Eastern Orthodox"
                     },
                     {
                         code: "1069",
-                        "abstract": false,
+                        abstract: false,
                         display: "Episcopalian",
                         definition: "Episcopalian"
                     },
                     {
                         code: "1070",
-                        "abstract": false,
+                        abstract: false,
                         display: "Evangelical Covenant",
                         definition: "Evangelical Covenant"
                     },
                     {
                         code: "1071",
-                        "abstract": false,
+                        abstract: false,
                         display: "Friends",
                         definition: "Friends"
                     },
                     {
                         code: "1072",
-                        "abstract": false,
+                        abstract: false,
                         display: "Full Gospel",
                         definition: "Full Gospel"
                     },
                     {
                         code: "1073",
-                        "abstract": false,
+                        abstract: false,
                         display: "Methodist",
                         definition: "Methodist"
                     },
                     {
                         code: "1074",
-                        "abstract": false,
+                        abstract: false,
                         display: "Native American",
                         definition: "Native American"
                     },
                     {
                         code: "1075",
-                        "abstract": false,
+                        abstract: false,
                         display: "Nazarene",
                         definition: "Nazarene"
                     },
                     {
                         code: "1076",
-                        "abstract": false,
+                        abstract: false,
                         display: "Presbyterian",
                         definition: "Presbyterian"
                     },
                     {
                         code: "1077",
-                        "abstract": false,
+                        abstract: false,
                         display: "Protestant",
                         definition: "Protestant"
                     },
                     {
                         code: "1078",
-                        "abstract": false,
+                        abstract: false,
                         display: "Protestant, No Denomination",
                         definition: "Protestant, No Denomination"
                     },
                     {
                         code: "1079",
-                        "abstract": false,
+                        abstract: false,
                         display: "Reformed",
                         definition: "Reformed"
                     },
                     {
                         code: "1080",
-                        "abstract": false,
+                        abstract: false,
                         display: "Salvation Army",
                         definition: "Salvation Army"
                     },
                     {
                         code: "1081",
-                        "abstract": false,
+                        abstract: false,
                         display: "Unitarian Universalist",
                         definition: "Unitarian Universalist"
                     },
                     {
                         code: "1082",
-                        "abstract": false,
+                        abstract: false,
                         display: "United Church of Christ",
                         definition: "United Church of Christ"
                     }
