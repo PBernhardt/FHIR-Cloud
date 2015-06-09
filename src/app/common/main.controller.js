@@ -73,16 +73,55 @@
         function _activate() {
             common.activateController([_getActiveServers()], controllerId)
                 .then(function () {
-                    //for processing 2nd leg of SMART authorization
-                    var authorizeResponse = $location.search();
-                    var code = authorizeResponse.code;
-                    var state = authorizeResponse.state;
-                    if (code && state) {
-                        _getAccessToken(code, state);
+                    //for processing SMART authorization
+                    if (vm.activeServer.mode === 'authCode') {
+                        _processAuthorizationResponse();
+                    } else if (vm.activeServer.mode === 'implicit') {
+                        _processImplicitResponse();
                     }
                 }, function (error) {
                     logError('Error ' + error);
                 });
+        }
+
+        function _processImplicitResponse() {
+            var response = $location.hash();
+            if (angular.isUndefined(response) === false) {
+                var args = response.split('&');
+                for (var i = 0, len = args.length; i < len; i++) {
+                    var arg = args[i];
+                    var parsedArg = arg.split('=');
+                    switch (parsedArg[0]) {
+                        case "state":
+                            var state = parsedArg[1];
+                            //TODO: compare state
+                            break;
+                        case "session_state":
+                            store.set('token.session', parsedArg[1]);
+                            break;
+                        case "expires_in":
+                            store.set('token.expires', parsedArg[1]);
+                            break;
+                        case "access_token":
+                            store.set('authToken', parsedArg[1]);
+                            store.set('profile', jwt_decode(parsedArg[1]));
+                            break;
+                        default:
+                            logWarning("Unexpected argument " + parsedArg[0] + "=" + parsedArg[1], args, noToast);
+                    }
+                }
+            }
+        }
+
+        function _processAuthorizationResponse() {
+            var authorizeResponse = $location.search();
+            if (angular.isUndefined(authorizeResponse.code) === false) {
+                var code = authorizeResponse.code;
+                var state = authorizeResponse.state;
+                if (code && state) {
+                    _getAccessToken(code, state);
+                }
+            }
         }
 
         function _getActiveServers() {
@@ -199,7 +238,7 @@
 
             function _updateActiveServer(fhirServer) {
                 conformanceService.clearCache();
-                conformanceService.getConformanceMetadata(fhirServer.baseUrl)
+                conformanceService.getConformanceMetadata(fhirServer.metadataUrl ? fhirServer.metadataUrl : fhirServer.baseUrl)
                     .then(function (conformance) {
                         logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.activeServer = fhirServer;
@@ -224,7 +263,7 @@
                         vm.activeServer.redirectUri = url;
                         fhirServers.setActiveServer(vm.activeServer);
                         common.changeServer(vm.activeServer);
-                        if (angular.isDefined(vm.activeServer.clientId)) {
+                        if (angular.isUndefined(vm.activeServer.clientId) === false) {
                             authorize();
                         } else {
                             store.remove('authToken');
@@ -325,7 +364,16 @@
             if (angular.isUndefined(vm.activeServer.authorizeUri) || angular.isUndefined(vm.activeServer.tokenUri)) {
                 logWarning("Selected server does NOT support OAuth");
             } else {
-                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri, vm.activeServer.baseUrl);
+                if (vm.activeServer.mode === 'authCode') {
+                    smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri,
+                        vm.activeServer.redirectUri, vm.activeServer.baseUrl);
+                } else if (vm.activeServer.mode === 'implicit') {
+                    smartAuthorizationService.implicit(vm.activeServer.clientId, vm.activeServer.authorizeUri,
+                        vm.activeServer.redirectUri, vm.activeServer.baseUrl, vm.activeServer.resourceId);
+
+                } else {
+                    logError("OAuth authorization flow is not specified.")
+                }
             }
         }
 

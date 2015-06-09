@@ -442,12 +442,12 @@
         function _randomRace(index) {
             var races = localValueSets.race();
             common.shuffle(races.concept);
-            var white = {text: "White", coding: [{code: "2106-3", display: "White"}]};
+            var white = {text: "White", coding: [{code: "2106-3", system: "http://hl7.org/fhir/v3/Race", display: "White"}]};
             var aa = {
                 text: "Black or African American",
-                coding: [{code: "2054-5", display: "Black or African American"}]
+                coding: [{code: "2054-5", system: "http://hl7.org/fhir/v3/Race", display: "Black or African American"}]
             };
-            var random = {text: races.concept[1].display, coding: [races.concept[1]]};
+            var random = {text: races.concept[1].display, system: races.system, coding: [races.concept[1]]};
 
             var race = undefined;
             if (index % 5 === 0) {

@@ -33,67 +33,67 @@
             try {
                 var baseList = [
                     {
-                        "id": 0,
-                        "name": "SMART",
-                        "baseUrl": "https://fhir-api-dstu2.smarthealthit.org",
-                        "secure": true,
-                        "clientId": "c1be9476-39f4-4bc4-a6ce-85306034571f"
+                        id: 0,
+                        name: "SMART",
+                        baseUrl: "https://fhir-api-dstu2.smarthealthit.org",
+                        clientId: "c1be9476-39f4-4bc4-a6ce-85306034571f",
+                        mode: "authCode"
                     },
                     {
-                        "id": 1,
-                        "name": "HAPI",
-                        "baseUrl": "https://fhirtest.uhn.ca/baseDstu2",
-                        "secure": true
+                        id: 1,
+                        name: "HAPI",
+                        baseUrl: "https://fhirtest.uhn.ca/baseDstu2"
                     },
                     {
-                        "id": 2,
-                        "name": "RelayHealth",
-                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
-                        "secure": true
+                        id: 2,
+                        name: "RelayHealth (Stage)",
+                        baseUrl: "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                     },
                     {
-                        "id": 3,
-                        "name": "Health Directions",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
-                        "secure": false
+                        id: 3,
+                        name: "RelayHealth (Dev)",
+                        baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        metadataUrl: "https://api.dev.data.relayhealth.com/rhc/fhirmetadata",
+                        clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
+                        resourceId: "1405e304-13ff-46b8-ac21-679ee28c1723",
+                        mode: "implicit"
                     },
                     {
-                        "id": 4,
-                        "name": "Furore Spark",
-                        "baseUrl": "http://spark-dstu2.furore.com/fhir",
-                        "secure": false
+                        id: 4,
+                        name: "Health Directions",
+                        baseUrl: "http://fhir-dev.healthintersections.com.au/open"
                     },
                     {
-                        "id": 5,
-                        "name": "Aegis",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2",
-                        "secure": false
+                        id: 5,
+                        name: "Furore Spark",
+                        baseUrl: "http://spark-dstu2.furore.com/fhir"
                     },
                     {
-                        "id": 7,
-                        "name": "HealthConnex",
-                        "baseUrl": "https://sqlonfhir.azurewebsites.net/api",
-                        "secure": true
-                    },
-
-                    {
-                        "id": 8,
-                        "name": "EPIC",
-                        "baseUrl": "http://open.epic.com/Clinical/FHIR",
-                        "secure": false
+                        id: 6,
+                        name: "Aegis",
+                        baseUrl: "http://wildfhir.aegis.net/fhir2"
                     },
                     {
-                        "id": 9,
-                        "name": "Cerner",
-                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
-                        "secure": true
+                        id: 7,
+                        name: "HealthConnex",
+                        baseUrl: "https://sqlonfhir.azurewebsites.net/api"
                     },
                     {
-                        "id": 10,
-                        "name": "Argonaut Reference",
-                        "baseUrl": "https://argonaut.healthintersections.com.au/closed",
-                        "secure": true,
-                        "clientId": "c1be9476-39f4-4bc4-a6ce-85306034571f"
+                        id: 8,
+                        name: "EPIC",
+                        baseUrl: "http://open.epic.com/Clinical/FHIR"
+                    },
+                    {
+                        id: 9,
+                        name: "Cerner",
+                        baseUrl: "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                    },
+                    {
+                        id: 10,
+                        name: "Argonaut Reference",
+                        baseUrl: "https://argonaut.healthintersections.com.au/closed",
+                        clientId: "c1be9476-39f4-4bc4-a6ce-85306034571f",
+                        mode: "authCode"
                     }
 
                 ];

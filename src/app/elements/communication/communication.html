@@ -5,7 +5,7 @@
             <md-list-item ng-repeat="comm in vm.communications track by $index" style="height: 48px;">
                 <md-icon md-svg-icon="delete" alt="Remove from list" ng-click="vm.removeFromList(comm)"></md-icon>
                 <p>{{comm.language ? (comm.language | codeableConcept) : (comm | codeableConcept) }}</p>
-                <md-checkbox aria-label="Preferred language" ng-change="vm.changePreferred(comm)" md-no-ink
+                <md-checkbox ng-if="vm.includePreferred" aria-label="Preferred language" ng-change="vm.changePreferred(comm)" md-no-ink
                              class="md-primary" ng-model="comm.preferred">
                     Preferred
                 </md-checkbox>

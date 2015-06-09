@@ -1393,67 +1393,67 @@
             try {
                 var baseList = [
                     {
-                        "id": 0,
-                        "name": "SMART",
-                        "baseUrl": "https://fhir-api-dstu2.smarthealthit.org",
-                        "secure": true,
-                        "clientId": "c1be9476-39f4-4bc4-a6ce-85306034571f"
+                        id: 0,
+                        name: "SMART",
+                        baseUrl: "https://fhir-api-dstu2.smarthealthit.org",
+                        clientId: "c1be9476-39f4-4bc4-a6ce-85306034571f",
+                        mode: "authCode"
                     },
                     {
-                        "id": 1,
-                        "name": "HAPI",
-                        "baseUrl": "https://fhirtest.uhn.ca/baseDstu2",
-                        "secure": true
+                        id: 1,
+                        name: "HAPI",
+                        baseUrl: "https://fhirtest.uhn.ca/baseDstu2"
                     },
                     {
-                        "id": 2,
-                        "name": "RelayHealth",
-                        "baseUrl": "https://api.stage.data.relayhealth.com/rhc/fhirservice",
-                        "secure": true
+                        id: 2,
+                        name: "RelayHealth (Stage)",
+                        baseUrl: "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                     },
                     {
-                        "id": 3,
-                        "name": "Health Directions",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open",
-                        "secure": false
+                        id: 3,
+                        name: "RelayHealth (Dev)",
+                        baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        metadataUrl: "https://api.dev.data.relayhealth.com/rhc/fhirmetadata",
+                        clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
+                        resourceId: "1405e304-13ff-46b8-ac21-679ee28c1723",
+                        mode: "implicit"
                     },
                     {
-                        "id": 4,
-                        "name": "Furore Spark",
-                        "baseUrl": "http://spark-dstu2.furore.com/fhir",
-                        "secure": false
+                        id: 4,
+                        name: "Health Directions",
+                        baseUrl: "http://fhir-dev.healthintersections.com.au/open"
                     },
                     {
-                        "id": 5,
-                        "name": "Aegis",
-                        "baseUrl": "http://wildfhir.aegis.net/fhir2",
-                        "secure": false
+                        id: 5,
+                        name: "Furore Spark",
+                        baseUrl: "http://spark-dstu2.furore.com/fhir"
                     },
                     {
-                        "id": 7,
-                        "name": "HealthConnex",
-                        "baseUrl": "https://sqlonfhir.azurewebsites.net/api",
-                        "secure": true
-                    },
-
-                    {
-                        "id": 8,
-                        "name": "EPIC",
-                        "baseUrl": "http://open.epic.com/Clinical/FHIR",
-                        "secure": false
+                        id: 6,
+                        name: "Aegis",
+                        baseUrl: "http://wildfhir.aegis.net/fhir2"
                     },
                     {
-                        "id": 9,
-                        "name": "Cerner",
-                        "baseUrl": "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
-                        "secure": true
+                        id: 7,
+                        name: "HealthConnex",
+                        baseUrl: "https://sqlonfhir.azurewebsites.net/api"
                     },
                     {
-                        "id": 10,
-                        "name": "Argonaut Reference",
-                        "baseUrl": "https://argonaut.healthintersections.com.au/closed",
-                        "secure": true,
-                        "clientId": "c1be9476-39f4-4bc4-a6ce-85306034571f"
+                        id: 8,
+                        name: "EPIC",
+                        baseUrl: "http://open.epic.com/Clinical/FHIR"
+                    },
+                    {
+                        id: 9,
+                        name: "Cerner",
+                        baseUrl: "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                    },
+                    {
+                        id: 10,
+                        name: "Argonaut Reference",
+                        baseUrl: "https://argonaut.healthintersections.com.au/closed",
+                        clientId: "c1be9476-39f4-4bc4-a6ce-85306034571f",
+                        mode: "authCode"
                     }
 
                 ];
@@ -3208,16 +3208,55 @@
         function _activate() {
             common.activateController([_getActiveServers()], controllerId)
                 .then(function () {
-                    //for processing 2nd leg of SMART authorization
-                    var authorizeResponse = $location.search();
-                    var code = authorizeResponse.code;
-                    var state = authorizeResponse.state;
-                    if (code && state) {
-                        _getAccessToken(code, state);
+                    //for processing SMART authorization
+                    if (vm.activeServer.mode === 'authCode') {
+                        _processAuthorizationResponse();
+                    } else if (vm.activeServer.mode === 'implicit') {
+                        _processImplicitResponse();
                     }
                 }, function (error) {
                     logError('Error ' + error);
                 });
+        }
+
+        function _processImplicitResponse() {
+            var response = $location.hash();
+            if (angular.isUndefined(response) === false) {
+                var args = response.split('&');
+                for (var i = 0, len = args.length; i < len; i++) {
+                    var arg = args[i];
+                    var parsedArg = arg.split('=');
+                    switch (parsedArg[0]) {
+                        case "state":
+                            var state = parsedArg[1];
+                            //TODO: compare state
+                            break;
+                        case "session_state":
+                            store.set('token.session', parsedArg[1]);
+                            break;
+                        case "expires_in":
+                            store.set('token.expires', parsedArg[1]);
+                            break;
+                        case "access_token":
+                            store.set('authToken', parsedArg[1]);
+                            store.set('profile', jwt_decode(parsedArg[1]));
+                            break;
+                        default:
+                            logWarning("Unexpected argument " + parsedArg[0] + "=" + parsedArg[1], args, noToast);
+                    }
+                }
+            }
+        }
+
+        function _processAuthorizationResponse() {
+            var authorizeResponse = $location.search();
+            if (angular.isUndefined(authorizeResponse.code) === false) {
+                var code = authorizeResponse.code;
+                var state = authorizeResponse.state;
+                if (code && state) {
+                    _getAccessToken(code, state);
+                }
+            }
         }
 
         function _getActiveServers() {
@@ -3334,7 +3373,7 @@
 
             function _updateActiveServer(fhirServer) {
                 conformanceService.clearCache();
-                conformanceService.getConformanceMetadata(fhirServer.baseUrl)
+                conformanceService.getConformanceMetadata(fhirServer.metadataUrl ? fhirServer.metadataUrl : fhirServer.baseUrl)
                     .then(function (conformance) {
                         logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.activeServer = fhirServer;
@@ -3359,7 +3398,7 @@
                         vm.activeServer.redirectUri = url;
                         fhirServers.setActiveServer(vm.activeServer);
                         common.changeServer(vm.activeServer);
-                        if (angular.isDefined(vm.activeServer.clientId)) {
+                        if (angular.isUndefined(vm.activeServer.clientId) === false) {
                             authorize();
                         } else {
                             store.remove('authToken');
@@ -3460,7 +3499,16 @@
             if (angular.isUndefined(vm.activeServer.authorizeUri) || angular.isUndefined(vm.activeServer.tokenUri)) {
                 logWarning("Selected server does NOT support OAuth");
             } else {
-                smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri, vm.activeServer.redirectUri, vm.activeServer.baseUrl);
+                if (vm.activeServer.mode === 'authCode') {
+                    smartAuthorizationService.authorize(vm.activeServer.clientId, vm.activeServer.authorizeUri,
+                        vm.activeServer.redirectUri, vm.activeServer.baseUrl);
+                } else if (vm.activeServer.mode === 'implicit') {
+                    smartAuthorizationService.implicit(vm.activeServer.clientId, vm.activeServer.authorizeUri,
+                        vm.activeServer.redirectUri, vm.activeServer.baseUrl, vm.activeServer.resourceId);
+
+                } else {
+                    logError("OAuth authorization flow is not specified.")
+                }
             }
         }
 
@@ -3628,10 +3676,21 @@
 
         function authorize(clientId, authorizeUrl, redirectUri, resourceOwnerUrl) {
             var state = common.randomHash();
+            var nonce = common.randomHash();
             store.set(stateKey, state);
             var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) +
                 "&aud=" + encodeURIComponent(resourceOwnerUrl) +
-                "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
+                "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state + '&nonce=' + nonce;
+            $window.open(authorizeUrl + queryParams, "_parent");
+        }
+
+        function implicit(clientId, authorizeUrl, redirectUri, resourceOwnerUrl, resource) {
+            var state = common.randomHash();
+            var nonce = common.randomHash();
+            store.set(stateKey, state);
+            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) +
+                "&aud=" + encodeURIComponent(resourceOwnerUrl) +
+                "&response_type=token&scope=user%2F*.*+openid+profile&state=" + state + '&nonce=' + nonce + '&resource=' + resource;
             $window.open(authorizeUrl + queryParams, "_parent");
         }
 
@@ -3658,7 +3717,8 @@
             var req = {
                 method: 'post',
                 url: tokenUrl,
-                params: authParams
+                data: $.param(authParams),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
             };
             var deferred = $q.defer();
             $http(req)
@@ -3685,7 +3745,8 @@
 
         var service = {
             authorize: authorize,
-            getToken: getToken
+            getToken: getToken,
+            implicit: implicit
         };
 
         return service;
@@ -3867,14 +3928,14 @@
             try {
                 var baseList = [
                     {
-                        "id": 1,
-                        "name": "Health Directions",
-                        "baseUrl": "http://fhir-dev.healthintersections.com.au/open"
+                        id: 1,
+                        name: "Health Directions",
+                        baseUrl: "http://fhir-dev.healthintersections.com.au/open"
                     },
                     {
-                        "id": 2,
-                        "name": "Argonaut Reference",
-                        "baseUrl": "http://argonaut.healthintersections.com.au/open"
+                        id: 2,
+                        name: "Argonaut Reference",
+                        baseUrl: "http://argonaut.healthintersections.com.au/open"
                     }
                 ];
                 var servers = dataCache.readFromCache(serversKey);
@@ -7490,9 +7551,10 @@
         /* jshint validthis:true */
         var vm = this;
 
-        function activate() {
-            common.activateController([getCommunications(), loadLanguageValues()], controllerId)
+        function _activate() {
+            common.activateController([_getCommunications(), _loadLanguageValues()], controllerId)
                 .then(function () {
+                    vm.includePreferred = communicationService.includePreferred();
                 });
         }
 
@@ -7505,14 +7567,13 @@
                 vm.communications = communicationService.getAll();
                 vm.communication = initCommunication();
                 form.$setPristine();
-                form.$setUntouched();
             }
         }
 
         vm.addToList = addToList;
 
-        function getCommunications() {
-            return vm.communications = communicationService.getAll();
+        function _getCommunications() {
+            vm.communications = communicationService.getAll();
         }
 
         function changePreferred(language) {
@@ -7523,21 +7584,20 @@
         vm.changePreferred = changePreferred;
 
         function querySearch(query) {
-            var results = query ? vm.languageValues.filter(createFilterFor(query)) : [];
-            return results;
+            return query ? vm.languageValues.filter(_createFilterFor(query)) : [];
         }
 
         vm.querySearch = querySearch;
 
-        function createFilterFor(query) {
+        function _createFilterFor(query) {
             var lowercaseQuery = angular.lowercase(query);
             return function filterFn(language) {
                 return (angular.lowercase(language.display).indexOf(lowercaseQuery) === 0);
             };
         }
 
-        function loadLanguageValues() {
-            return vm.languageValues = localValueSets.iso6391Languages();
+        function _loadLanguageValues() {
+            vm.languageValues = localValueSets.iso6391Languages();
         }
 
         function removeFromList(language) {
@@ -7558,17 +7618,23 @@
         }
 
         function initCommunication() {
-            return vm.communication = { "language": {"coding": [], "text": undefined}, "preferred": false };
+            if (vm.includePreferred) {
+                vm.communication = { "language": {"coding": [], "text": undefined}, "preferred": false };
+            } else {
+                vm.communication = { "language": {"coding": [], "text": undefined}};
+            }
+
         }
 
         vm.updateLanguage = updateLanguage;
+        vm.includePreferred = true;
         vm.communication = initCommunication();
         vm.communications = [];
         vm.languageSearchText = '';
         vm.languageValues = [];
         vm.selectedLanguage = {};
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId, ['common', 'communicationService', 'localValueSets', communication]);
@@ -7579,10 +7645,9 @@
 
     var serviceId = 'communicationService';
 
-    function communicationService(common) {
+    function communicationService() {
         var communications = [];
-        var _mode = 'multi';
-        var _communication = { "language": null, "preferred": false };
+        var _includePreferred = true;
 
         function add(item) {
             var index = getIndex(item.$$hashKey);
@@ -7593,8 +7658,21 @@
             }
         }
 
+        /*
+        Kinda fugly to accommodate difference in the language is structured
+        in patient and practitioner (where patient includes a "preferred property"
+         */
         function getAll() {
-            return _.compact(communications);
+            var compacted = _.compact(communications);
+            if (_includePreferred) {
+                return compacted;
+            } else {
+                var languages = [];
+                _.forEach(compacted, function (item) {
+                    languages.push(item.language);
+                });
+                return _.compact(languages);
+            }
         }
 
         function getIndex(hashKey) {
@@ -7608,23 +7686,14 @@
             return -1;
         }
 
-        function getMode() {
-            return _mode;
-        }
-
-        function getSingle() {
-            return _communication;
-        }
-
-        function init(items, mode) {
-            _mode = mode ? mode : 'multi';
+        function init(items, includePreferred) {
+            _includePreferred = includePreferred;
             if (angular.isArray(items)) {
                 communications = items;
             } else if (angular.isObject(items)) {
                 communications = [];
                 communications.push(items);
             }
-            _communication = communications[0];
             return communications;
         }
 
@@ -7633,43 +7702,21 @@
             communications.splice(index, 1);
         }
 
-        function update(item) {
-            if (angular.isUndefined(item.$$hashKey) === false) {
-                for (var i = 0, len = communications.length; i < len; i++) {
-                    if (communications[i].$$hashKey === item.$$hashKey) {
-                        communications[i] = item;
-                    } else if (item.preferred == true) {
-                        communications[i].preferred = false;
-                    }
-                }
-            }
-        }
-
-        function reset() {
-            while (communications.length > 0) {
-                communications.pop();
-            }
-        }
-
-        function setSingle(item) {
-            _communication = item;
+        function includePreferred() {
+            return _includePreferred;
         }
 
         var service = {
             add: add,
             remove: remove,
-            update: update,
             getAll: getAll,
-            getMode: getMode,
-            getSingle: getSingle,
-            init: init,
-            reset: reset,
-            setSingle: setSingle
+            includePreferred: includePreferred,
+            init: init
         };
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['common', communicationService]);
+    angular.module('FHIRCloud').factory(serviceId, [communicationService]);
 
 })();(function () {
     'use strict';
@@ -19887,7 +19934,7 @@
                 patientCareProviderService.setManagingOrganization(vm.patient.managingOrganization);
                 patientContactService.init(vm.patient.contact);
                 if (vm.patient.communication) {
-                    communicationService.init(vm.patient.communication, "multi");
+                    communicationService.init(vm.patient.communication, true);
                 }
                 vm.patient.fullName = humanNameService.getFullName();
                 if (angular.isDefined(vm.patient.id)) {
@@ -20970,12 +21017,12 @@
         function _randomRace(index) {
             var races = localValueSets.race();
             common.shuffle(races.concept);
-            var white = {text: "White", coding: [{code: "2106-3", display: "White"}]};
+            var white = {text: "White", coding: [{code: "2106-3", system: "http://hl7.org/fhir/v3/Race", display: "White"}]};
             var aa = {
                 text: "Black or African American",
-                coding: [{code: "2054-5", display: "Black or African American"}]
+                coding: [{code: "2054-5", system: "http://hl7.org/fhir/v3/Race", display: "Black or African American"}]
             };
-            var random = {text: races.concept[1].display, coding: [races.concept[1]]};
+            var random = {text: races.concept[1].display, system: races.system, coding: [races.concept[1]]};
 
             var race = undefined;
             if (index % 5 === 0) {
@@ -23181,9 +23228,7 @@
                 identifierService.init(vm.practitioner.identifier, "multi", "practitioner");
                 addressService.init(vm.practitioner.address, true);
                 contactPointService.init(vm.practitioner.telecom, true, true);
-                if (vm.practitioner.communication) {
-                    communicationService.init(vm.practitioner.communication, "multi");
-                }
+                communicationService.init(vm.practitioner.communication, false);
                 vm.practitioner.$$fullName = humanNameService.getFullName();
                 if (angular.isDefined(vm.practitioner.id)) {
                     vm.practitioner.resourceId = (vm.activeServer.baseUrl + '/Practitioner/' + vm.practitioner.id);
@@ -23272,6 +23317,7 @@
             practitioner.telecom = contactPointService.mapFromViewModel();
             practitioner.identifier = identifierService.getAll();
             practitioner.active = vm.practitioner.active;
+            practitioner.communication = communicationService.getAll();
             vm.isBusy = true;
             if (vm.isEditing) {
                 practitioner.id = vm.practitioner.id;
@@ -24346,11 +24392,11 @@
             getCachedSearchResults: getCachedSearchResults,
             getPractitioner: getPractitioner,
             getPractitionerContext: getPractitionerContext,
+            setPractitionerContext: setPractitionerContext,
             getPractitionerReference: getPractitionerReference,
             getPractitioners: getPractitioners,
             getPractitionersByLink: getPractitionersByLink,
             initializeNewPractitioner: initializeNewPractitioner,
-            setPractitionerContext: setPractitionerContext,
             updatePractitioner: updatePractitioner,
             seedRandomPractitioners: seedRandomPractitioners,
             searchPractitioners: searchPractitioners

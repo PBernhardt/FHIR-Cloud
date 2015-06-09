@@ -7,9 +7,10 @@
         /* jshint validthis:true */
         var vm = this;
 
-        function activate() {
-            common.activateController([getCommunications(), loadLanguageValues()], controllerId)
+        function _activate() {
+            common.activateController([_getCommunications(), _loadLanguageValues()], controllerId)
                 .then(function () {
+                    vm.includePreferred = communicationService.includePreferred();
                 });
         }
 
@@ -22,14 +23,13 @@
                 vm.communications = communicationService.getAll();
                 vm.communication = initCommunication();
                 form.$setPristine();
-                form.$setUntouched();
             }
         }
 
         vm.addToList = addToList;
 
-        function getCommunications() {
-            return vm.communications = communicationService.getAll();
+        function _getCommunications() {
+            vm.communications = communicationService.getAll();
         }
 
         function changePreferred(language) {
@@ -40,21 +40,20 @@
         vm.changePreferred = changePreferred;
 
         function querySearch(query) {
-            var results = query ? vm.languageValues.filter(createFilterFor(query)) : [];
-            return results;
+            return query ? vm.languageValues.filter(_createFilterFor(query)) : [];
         }
 
         vm.querySearch = querySearch;
 
-        function createFilterFor(query) {
+        function _createFilterFor(query) {
             var lowercaseQuery = angular.lowercase(query);
             return function filterFn(language) {
                 return (angular.lowercase(language.display).indexOf(lowercaseQuery) === 0);
             };
         }
 
-        function loadLanguageValues() {
-            return vm.languageValues = localValueSets.iso6391Languages();
+        function _loadLanguageValues() {
+            vm.languageValues = localValueSets.iso6391Languages();
         }
 
         function removeFromList(language) {
@@ -75,17 +74,23 @@
         }
 
         function initCommunication() {
-            return vm.communication = { "language": {"coding": [], "text": undefined}, "preferred": false };
+            if (vm.includePreferred) {
+                vm.communication = { "language": {"coding": [], "text": undefined}, "preferred": false };
+            } else {
+                vm.communication = { "language": {"coding": [], "text": undefined}};
+            }
+
         }
 
         vm.updateLanguage = updateLanguage;
+        vm.includePreferred = true;
         vm.communication = initCommunication();
         vm.communications = [];
         vm.languageSearchText = '';
         vm.languageValues = [];
         vm.selectedLanguage = {};
 
-        activate();
+        _activate();
     }
 
     angular.module('FHIRCloud').controller(controllerId, ['common', 'communicationService', 'localValueSets', communication]);

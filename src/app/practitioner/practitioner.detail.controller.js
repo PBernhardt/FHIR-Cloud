@@ -134,9 +134,7 @@
                 identifierService.init(vm.practitioner.identifier, "multi", "practitioner");
                 addressService.init(vm.practitioner.address, true);
                 contactPointService.init(vm.practitioner.telecom, true, true);
-                if (vm.practitioner.communication) {
-                    communicationService.init(vm.practitioner.communication, "multi");
-                }
+                communicationService.init(vm.practitioner.communication, false);
                 vm.practitioner.$$fullName = humanNameService.getFullName();
                 if (angular.isDefined(vm.practitioner.id)) {
                     vm.practitioner.resourceId = (vm.activeServer.baseUrl + '/Practitioner/' + vm.practitioner.id);
@@ -225,6 +223,7 @@
             practitioner.telecom = contactPointService.mapFromViewModel();
             practitioner.identifier = identifierService.getAll();
             practitioner.active = vm.practitioner.active;
+            practitioner.communication = communicationService.getAll();
             vm.isBusy = true;
             if (vm.isEditing) {
                 practitioner.id = vm.practitioner.id;

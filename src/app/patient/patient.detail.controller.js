@@ -128,7 +128,7 @@
                 patientCareProviderService.setManagingOrganization(vm.patient.managingOrganization);
                 patientContactService.init(vm.patient.contact);
                 if (vm.patient.communication) {
-                    communicationService.init(vm.patient.communication, "multi");
+                    communicationService.init(vm.patient.communication, true);
                 }
                 vm.patient.fullName = humanNameService.getFullName();
                 if (angular.isDefined(vm.patient.id)) {

@@ -11,10 +11,21 @@
 
         function authorize(clientId, authorizeUrl, redirectUri, resourceOwnerUrl) {
             var state = common.randomHash();
+            var nonce = common.randomHash();
             store.set(stateKey, state);
             var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) +
                 "&aud=" + encodeURIComponent(resourceOwnerUrl) +
-                "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state;
+                "&response_type=code&scope=user%2F*.*+openid+profile&state=" + state + '&nonce=' + nonce;
+            $window.open(authorizeUrl + queryParams, "_parent");
+        }
+
+        function implicit(clientId, authorizeUrl, redirectUri, resourceOwnerUrl, resource) {
+            var state = common.randomHash();
+            var nonce = common.randomHash();
+            store.set(stateKey, state);
+            var queryParams = "?client_id=" + clientId + "&redirect_uri=" + encodeURIComponent(redirectUri) +
+                "&aud=" + encodeURIComponent(resourceOwnerUrl) +
+                "&response_type=token&scope=user%2F*.*+openid+profile&state=" + state + '&nonce=' + nonce + '&resource=' + resource;
             $window.open(authorizeUrl + queryParams, "_parent");
         }
 
@@ -41,7 +52,8 @@
             var req = {
                 method: 'post',
                 url: tokenUrl,
-                params: authParams
+                data: $.param(authParams),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
             };
             var deferred = $q.defer();
             $http(req)
@@ -68,7 +80,8 @@
 
         var service = {
             authorize: authorize,
-            getToken: getToken
+            getToken: getToken,
+            implicit: implicit
         };
 
         return service;
