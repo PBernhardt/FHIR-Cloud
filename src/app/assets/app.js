@@ -1436,7 +1436,7 @@
                     {
                         id: 7,
                         name: "HealthConnex",
-                        baseUrl: "https://sqlonfhir.azurewebsites.net/api"
+                        baseUrl: "http://sqlonfhir.azurewebsites.net/fhir"
                     },
                     {
                         id: 8,
