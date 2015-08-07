@@ -1408,14 +1408,16 @@
                         id: 2,
                         name: "RelayHealth (Stage)",
                         baseUrl: "https://api.stage.data.relayhealth.com/rhc/fhirservice",
+                        clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
+                        resourceId: "http://apps.data.relayhealth.com/rhc/fhirservice/stage",
+                        mode: "implicit"
                     },
                     {
                         id: 3,
                         name: "RelayHealth (Dev)",
                         baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservice",
-                        metadataUrl: "https://api.dev.data.relayhealth.com/rhc/fhirmetadata",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
-                        resourceId: "1405e304-13ff-46b8-ac21-679ee28c1723",
+                        resourceId: "http://apps.data.relayhealth.com/rhc/fhirservice/dev",
                         mode: "implicit"
                     },
                     {
