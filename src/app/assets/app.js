@@ -20881,7 +20881,7 @@
             var birthPlace = [];
             var mothersMaiden = [];
             var index = 1;
-            $http.get('https://api.randomuser.me/?results=25&nat=us')
+            $http.get('http://api.randomuser.me/?results=25&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
