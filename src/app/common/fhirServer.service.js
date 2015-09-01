@@ -83,7 +83,7 @@
                     {
                         id: 8,
                         name: "EPIC",
-                        baseUrl: "https://open-ic.epic.com/Argonaut-Fixed/api/FHIR/Argonaut",
+                        baseUrl: "https://open-ic.epic.com/Argonaut-Secure/api/FHIR/Argonaut",
                         clientId: "",
                         mode: "authCode"
                     },
@@ -117,8 +117,12 @@
                         id: 13,
                         name: "MEDITECH",
                         baseUrl: "http://direct.meditech.com/FHIR/api2"
+                    },
+                    {
+                        id: 8,
+                        name: "EPIC (Open)",
+                        baseUrl: "https://open-ic.epic.com/Argonaut-Unsecure/api/FHIR/Argonaut"
                     }
-
                 ];
                 var servers = dataCache.readFromCache(serversKey);
                 if (angular.isUndefined(servers)) {
