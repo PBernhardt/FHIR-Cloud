@@ -1443,19 +1443,40 @@
                     {
                         id: 8,
                         name: "EPIC",
-                        baseUrl: "http://open.epic.com/Clinical/FHIR"
+                        baseUrl: "https://open-ic.epic.com/Argonaut-Fixed/api/FHIR/Argonaut",
+                        clientId: "",
+                        mode: "authCode"
                     },
                     {
                         id: 9,
                         name: "Cerner",
-                        baseUrl: "https://fhir.sandboxcernerpowerchart.com/fhir/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                        baseUrl: "https://fhir.sandboxcernerpowerchart.com/may2015/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        clientId: "",
+                        mode: "authCode"
                     },
                     {
                         id: 10,
+                        name: "Cerner (Open)",
+                        baseUrl: "https://fhir.sandboxcernerpowerchart.com/may2015/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                    },
+                    {
+                        id: 11,
                         name: "Argonaut Reference",
                         baseUrl: "https://argonaut.healthintersections.com.au/closed",
                         clientId: "c1be9476-39f4-4bc4-a6ce-85306034571f",
                         mode: "authCode"
+                    },
+                    {
+                        id: 12,
+                        name: "Allscripts",
+                        baseUrl: "https://cloud.allscriptsunity.com/FHIR",
+                        clientId: "6D1A05FF-4DA7-46CA-8E60-2DCD38A183B2",
+                        mode: "authCode"
+                    },
+                    {
+                        id: 13,
+                        name: "MEDITECH",
+                        baseUrl: "http://direct.meditech.com/FHIR/api2"
                     }
 
                 ];
