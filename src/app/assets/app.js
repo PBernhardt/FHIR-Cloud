@@ -1479,7 +1479,7 @@
                         baseUrl: "http://direct.meditech.com/FHIR/api2"
                     },
                     {
-                        id: 8,
+                        id: 14,
                         name: "EPIC (Open)",
                         baseUrl: "https://open-ic.epic.com/Argonaut-Unsecure/api/FHIR/Argonaut"
                     }
