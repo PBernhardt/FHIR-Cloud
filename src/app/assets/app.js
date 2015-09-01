@@ -1443,7 +1443,7 @@
                     {
                         id: 8,
                         name: "EPIC",
-                        baseUrl: "https://open-ic.epic.com/Argonaut-Fixed/api/FHIR/Argonaut",
+                        baseUrl: "https://open-ic.epic.com/Argonaut/api/FHIR/Argonaut",
                         clientId: "",
                         mode: "authCode"
                     },
