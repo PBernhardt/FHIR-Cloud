@@ -55,9 +55,9 @@
                     {
                         id: 3,
                         name: "RelayHealth (Dev)",
-                        baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservice",
+                        baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservicepr",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
-                        resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/dev",
+                        resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/dev-pr",
                         mode: "implicit"
                     },
                     {
