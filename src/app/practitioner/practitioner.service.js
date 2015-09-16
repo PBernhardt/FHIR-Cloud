@@ -186,6 +186,15 @@
                 deferred.reject('Invalid search input');
             }
 
+            if (angular.isDefined(searchFilter) && searchFilter.length > 1) {
+                var names = searchFilter.split(' ');
+                if (names.length === 1) {
+                    params = 'name=' + names[0];
+                } else {
+                    params = 'given=' + names[0] + '&family=' + names[1];
+                }
+            }
+
             if (angular.isDefined(organizationId)) {
                 var orgParam = 'organization=' + organizationId;
                 if (params.length > 1) {
