@@ -352,10 +352,6 @@
                                     assigner: {display: "FHIR Cloud"}
                                 }
                             ],
-                            managingOrganization: {
-                                reference: "Organization/" + organizationId,
-                                display: organizationName
-                            },
                             active: true,
                             practitionerRole: _randomRole(organizationName, organizationId, index)
                         };

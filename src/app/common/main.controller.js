@@ -66,7 +66,7 @@
             //       {name: 'Clinical', id: 2, pages: _clinicalPages},
             {name: 'Conformance', id: 3, pages: _conformancePages},
             //        {name: 'Documents', id: 4, pages: _documentsPages},
-            {name: 'DAF Profiles', id: 5, pages: _dafResources}
+            //{name: 'DAF Profiles', id: 5, pages: _dafResources}
         ];
         var noToast = false;
 
