@@ -24271,7 +24271,6 @@
                                     assigner: {display: "FHIR Cloud"}
                                 }
                             ],
-                            active: true,
                             practitionerRole: _randomRole(organizationName, organizationId, index)
                         };
                         index = index + 1;
