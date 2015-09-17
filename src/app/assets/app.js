@@ -3401,13 +3401,13 @@
                         vm.activeServer = fhirServer;
                         if (angular.isUndefined(conformance.rest[0].security)) {
                             logWarning("Security information missing - this is an OPEN server.", null, noToast);
-                        } else if (angular.isArray(conformance.rest[0].security.extension)) {
-                            _.forEach(conformance.rest[0].security.extension, function (ex) {
-                                if (_.endsWith(ex.url, "#authorize")) {
+                        } else if (angular.isArray(conformance.rest[0].security.extension[0].extension)) {
+                            _.forEach(conformance.rest[0].security.extension[0].extension, function (ex) {
+                                if (_.endsWith(ex.url, "authorize")) {
                                     vm.activeServer.authorizeUri = ex.valueUri;
                                     logInfo("Authorize URI found: " + vm.activeServer.authorizeUri, null, noToast);
                                 }
-                                if (_.endsWith(ex.url, "#token")) {
+                                if (_.endsWith(ex.url, "token")) {
                                     vm.activeServer.tokenUri = ex.valueUri;
                                     logInfo("Token URI found: " + vm.activeServer.tokenUri, null, noToast);
                                 }

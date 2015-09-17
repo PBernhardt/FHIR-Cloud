@@ -135,12 +135,14 @@
                         <input ng-model="vm.conformance.rest[0].security.cors" ng-readonly="true"/>
                     </md-input-container>
                     <md-list flex="100" ng-if="vm.conformance.rest">
+                        <md-sub-header ng-if="vm.conformance.rest[0].security.extension[0]">
+                            {{vm.conformance.rest[0].security.extension[0].url}}
+                        </md-sub-header>
                         <md-list-item class="md-2-line"
-                                      ng-repeat="ext in vm.conformance.rest[0].security.extension">
+                                      ng-repeat="ext in vm.conformance.rest[0].security.extension[0].extension">
                             <md-icon md-svg-icon="openId" ng-if="$index === 0"></md-icon>
                             <div class="md-list-item-text" ng-class="{'md-offset': $index != 0 }">
                                 <h3>{{ext.url}} </h3>
-
                                 <p>{{ext.valueUri}}</p>
                             </div>
 
