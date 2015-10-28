@@ -19731,10 +19731,9 @@
                 });
             }
             if (_birthPlace) {
-                var address = {text: _birthPlace};
                 extensions.push({
                     url: "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                    valueAddress: address
+                    valueAddress: _birthPlace
                 });
             }
             return extensions;
@@ -20901,7 +20900,7 @@
             var birthPlace = [];
             var mothersMaiden = [];
             var index = 1;
-            $http.get('http://api.randomuser.me/?results=25&nat=us')
+            $http.get('http://api.randomuser.me/?results=25&key=89ZL-HI0R-DSKU-H606&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;
