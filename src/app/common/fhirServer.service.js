@@ -42,7 +42,7 @@
                     {
                         id: 1,
                         name: "HAPI",
-                        baseUrl: "https://fhirtest.uhn.ca/baseDstu2"
+                        baseUrl: "https://fhirtest.uhn.ca"
                     },
                     {
                         id: 2,
@@ -68,7 +68,7 @@
                     {
                         id: 5,
                         name: "Furore Spark",
-                        baseUrl: "http://spark-dstu2.furore.com/fhir"
+                        baseUrl: "http://spark.furore.com/fhir"
                     },
                     {
                         id: 6,
@@ -97,7 +97,7 @@
                     {
                         id: 10,
                         name: "Cerner (Open)",
-                        baseUrl: "https://fhir.sandboxcernerpowerchart.com/may2015/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        baseUrl: "https://fhir-open.sandboxcernerpowerchart.com/may2015/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
                     },
                     {
                         id: 11,
