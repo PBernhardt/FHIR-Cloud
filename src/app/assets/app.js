@@ -1297,7 +1297,7 @@
                             }
                         });
                     } else {
-                        if (angular.isDefined(data.outcome)) {
+                        if (angular.isDefined(data.issue)) {
                             deferred.reject({status: status, outcome: data});
                         } else {
                             deferred.reject({
@@ -1402,7 +1402,11 @@
                     {
                         id: 1,
                         name: "HAPI",
+<<<<<<< HEAD
                         baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
+=======
+                        baseUrl: "https://fhirtest.uhn.ca"
+>>>>>>> 278df9489a40b993c4bd347c973c9b0e23e91e9c
                     },
                     {
                         id: 2,
@@ -1428,7 +1432,7 @@
                     {
                         id: 5,
                         name: "Furore Spark",
-                        baseUrl: "http://spark-dstu2.furore.com/fhir"
+                        baseUrl: "http://spark.furore.com/fhir"
                     },
                     {
                         id: 6,
@@ -1457,7 +1461,7 @@
                     {
                         id: 10,
                         name: "Cerner (Open)",
-                        baseUrl: "https://fhir.sandboxcernerpowerchart.com/may2015/open/d075cf8b-3261-481d-97e5-ba6c48d3b41f",
+                        baseUrl: "https://fhir-open.sandboxcernerpowerchart.com/may2015/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
                     },
                     {
                         id: 11,
@@ -3399,7 +3403,7 @@
                     .then(function (conformance) {
                         logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.activeServer = fhirServer;
-                        if (angular.isUndefined(conformance.rest[0].security)) {
+                        if (angular.isUndefined(conformance.rest[0].security) || angular.isUndefined(conformance.rest[0].security.extension)) {
                             logWarning("Security information missing - this is an OPEN server.", null, noToast);
                         } else if (angular.isArray(conformance.rest[0].security.extension[0].extension)) {
                             _.forEach(conformance.rest[0].security.extension[0].extension, function (ex) {
@@ -14177,12 +14181,11 @@
             coding.system = vm.smokingStatuses.system;
             smokingStatusObs.code.coding.push(coding);
             smokingStatusObs.status = "final";
-            smokingStatusObs.reliability = "ok";
-            smokingStatusObs.subject = {
+            smokingStatusObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            smokingStatusObs.appliesDateTime = vm.vitals.date.toISOString();
+            smokingStatusObs.effectiveDateTime = vm.vitals.date.toISOString();
             return smokingStatusObs;
         }
 
@@ -14202,12 +14205,11 @@
                 units: "mm[Hg]"
             };
             systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
+            systolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            systolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -14233,13 +14235,12 @@
                 system: "http://snomed.info/sct"
             };
             systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
+            systolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
 
-            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            systolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -14288,12 +14289,11 @@
                 system: "http://snomed.info/sct"
             };
             bodyTempObs.status = "final";
-            bodyTempObs.reliability = "ok";
-            bodyTempObs.subject = {
+            bodyTempObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            bodyTempObs.appliesDateTime = vm.vitals.date.toISOString();
+            bodyTempObs.effectiveDateTime = vm.vitals.date.toISOString();
             return bodyTempObs;
         }
 
@@ -14320,12 +14320,11 @@
                 code: "20053-5"
             };
             systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
+            systolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            systolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -14352,12 +14351,11 @@
                 code: "20053-5"
             };
             diastolicObs.status = "final";
-            diastolicObs.reliability = "ok";
-            diastolicObs.subject = {
+            diastolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            diastolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            diastolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return diastolicObs;
         }
 
@@ -14381,12 +14379,11 @@
                 coding.system = vm.interpretations.system;
                 bpInterpretationObs.interpretation.coding.push(coding);
                 bpInterpretationObs.status = "final";
-                bpInterpretationObs.reliability = "ok";
-                bpInterpretationObs.subject = {
+                bpInterpretationObs.patient = {
                     reference: 'Patient/' + vm.consultation.patient.id,
                     display: vm.consultation.patient.fullName
                 };
-                bpInterpretationObs.appliesDateTime = vm.vitals.date.toISOString();
+                bpInterpretationObs.effectiveDateTime = vm.vitals.date.toISOString();
 
                 return bpInterpretationObs;
             } else {
@@ -14508,12 +14505,11 @@
                 system: "http://snomed.info/sct"
             };
             bmiObs.status = "final";
-            bmiObs.reliability = "ok";
-            bmiObs.subject = {
+            bmiObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            bmiObs.appliesDateTime = vm.vitals.date.toISOString();
+            bmiObs.effectiveDateTime = vm.vitals.date.toISOString();
 
             if (vm.vitals.bmi.interpretationCode) {
                 bmiObs.interpretation = {
@@ -14567,12 +14563,11 @@
                 code: "258677007"
             };
             heightObs.status = "final";
-            heightObs.reliability = "ok";
-            heightObs.subject = {
+            heightObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            heightObs.appliesDateTime = vm.vitals.date.toISOString();
+            heightObs.effectiveDateTime = vm.vitals.date.toISOString();
 
             return heightObs;
         }
@@ -14600,12 +14595,11 @@
                 code: "258693003"
             };
             weightObs.status = "final";
-            weightObs.reliability = "ok";
-            weightObs.subject = {
+            weightObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            weightObs.appliesDateTime = vm.vitals.date.toISOString();
+            weightObs.effectiveDateTime = vm.vitals.date.toISOString();
             return weightObs;
         }
 
@@ -14872,7 +14866,7 @@
 
 
             if (angular.isDefined(patientId)) {
-                var patientParam = 'subject:Patient=' + patientId;
+                var patientParam = 'patient=' + patientId;
                 if (params.length > 1) {
                     params = params + '&' + patientParam;
                 } else {
@@ -14880,7 +14874,7 @@
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Observation/_filter?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Observation?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -14923,13 +14917,12 @@
                 "interpretation": null, // CodeableConcept
                 "comments": null,
 
-                // applies[x]: Physiologically Relevant time/time-period for observation. One of these 2:
-                "appliesDateTime": null,
-                "appliesPeriod": null,
+                // effective[x]: Physiologically Relevant time/time-period for observation. One of these 2:
+                "effectiveDateTime": null,
+                "effectivePeriod": null,
 
                 "issued": null, // instant
                 "status": null, // code: registered | preliminary | final | amended
-                "reliability": null, // code:  ok | ongoing | early | questionable | calibrating | error
 
                 // bodySite[x]: Observed body part. One of these 2:
                 "bodySiteCodeableConcept": null,
@@ -18324,7 +18317,7 @@
                     common.changeLocationList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -18339,7 +18332,7 @@
                     common.changeOrganizationList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -18354,7 +18347,7 @@
                     common.changePractitionerList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -18369,7 +18362,7 @@
                     common.changePatientList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -18384,7 +18377,7 @@
                     common.changePersonList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -20900,7 +20893,7 @@
             var birthPlace = [];
             var mothersMaiden = [];
             var index = 1;
-            $http.get('http://api.randomuser.me/?results=25&nat=us')
+            $http.get('http://api.randomuser.me/?results=25&key=89ZL-HI0R-DSKU-H606&nat=us')
                 .success(function (data) {
                     angular.forEach(data.results, function (result) {
                         var user = result.user;

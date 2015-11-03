@@ -242,7 +242,7 @@
                     .then(function (conformance) {
                         logDebug('Retrieved conformance statement for ' + fhirServer.name, null, noToast);
                         vm.activeServer = fhirServer;
-                        if (angular.isUndefined(conformance.rest[0].security)) {
+                        if (angular.isUndefined(conformance.rest[0].security) || angular.isUndefined(conformance.rest[0].security.extension)) {
                             logWarning("Security information missing - this is an OPEN server.", null, noToast);
                         } else if (angular.isArray(conformance.rest[0].security.extension[0].extension)) {
                             _.forEach(conformance.rest[0].security.extension[0].extension, function (ex) {

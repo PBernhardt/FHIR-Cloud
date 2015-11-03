@@ -493,12 +493,11 @@
             coding.system = vm.smokingStatuses.system;
             smokingStatusObs.code.coding.push(coding);
             smokingStatusObs.status = "final";
-            smokingStatusObs.reliability = "ok";
-            smokingStatusObs.subject = {
+            smokingStatusObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            smokingStatusObs.appliesDateTime = vm.vitals.date.toISOString();
+            smokingStatusObs.effectiveDateTime = vm.vitals.date.toISOString();
             return smokingStatusObs;
         }
 
@@ -518,12 +517,11 @@
                 units: "mm[Hg]"
             };
             systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
+            systolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            systolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -549,13 +547,12 @@
                 system: "http://snomed.info/sct"
             };
             systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
+            systolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
 
-            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            systolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -604,12 +601,11 @@
                 system: "http://snomed.info/sct"
             };
             bodyTempObs.status = "final";
-            bodyTempObs.reliability = "ok";
-            bodyTempObs.subject = {
+            bodyTempObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            bodyTempObs.appliesDateTime = vm.vitals.date.toISOString();
+            bodyTempObs.effectiveDateTime = vm.vitals.date.toISOString();
             return bodyTempObs;
         }
 
@@ -636,12 +632,11 @@
                 code: "20053-5"
             };
             systolicObs.status = "final";
-            systolicObs.reliability = "ok";
-            systolicObs.subject = {
+            systolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            systolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            systolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return systolicObs;
         }
 
@@ -668,12 +663,11 @@
                 code: "20053-5"
             };
             diastolicObs.status = "final";
-            diastolicObs.reliability = "ok";
-            diastolicObs.subject = {
+            diastolicObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            diastolicObs.appliesDateTime = vm.vitals.date.toISOString();
+            diastolicObs.effectiveDateTime = vm.vitals.date.toISOString();
             return diastolicObs;
         }
 
@@ -697,12 +691,11 @@
                 coding.system = vm.interpretations.system;
                 bpInterpretationObs.interpretation.coding.push(coding);
                 bpInterpretationObs.status = "final";
-                bpInterpretationObs.reliability = "ok";
-                bpInterpretationObs.subject = {
+                bpInterpretationObs.patient = {
                     reference: 'Patient/' + vm.consultation.patient.id,
                     display: vm.consultation.patient.fullName
                 };
-                bpInterpretationObs.appliesDateTime = vm.vitals.date.toISOString();
+                bpInterpretationObs.effectiveDateTime = vm.vitals.date.toISOString();
 
                 return bpInterpretationObs;
             } else {
@@ -824,12 +817,11 @@
                 system: "http://snomed.info/sct"
             };
             bmiObs.status = "final";
-            bmiObs.reliability = "ok";
-            bmiObs.subject = {
+            bmiObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            bmiObs.appliesDateTime = vm.vitals.date.toISOString();
+            bmiObs.effectiveDateTime = vm.vitals.date.toISOString();
 
             if (vm.vitals.bmi.interpretationCode) {
                 bmiObs.interpretation = {
@@ -883,12 +875,11 @@
                 code: "258677007"
             };
             heightObs.status = "final";
-            heightObs.reliability = "ok";
-            heightObs.subject = {
+            heightObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            heightObs.appliesDateTime = vm.vitals.date.toISOString();
+            heightObs.effectiveDateTime = vm.vitals.date.toISOString();
 
             return heightObs;
         }
@@ -916,12 +907,11 @@
                 code: "258693003"
             };
             weightObs.status = "final";
-            weightObs.reliability = "ok";
-            weightObs.subject = {
+            weightObs.patient = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
-            weightObs.appliesDateTime = vm.vitals.date.toISOString();
+            weightObs.effectiveDateTime = vm.vitals.date.toISOString();
             return weightObs;
         }
 

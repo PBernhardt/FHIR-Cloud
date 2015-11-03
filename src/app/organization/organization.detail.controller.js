@@ -235,7 +235,7 @@
                     common.changeLocationList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -250,7 +250,7 @@
                     common.changeOrganizationList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -265,7 +265,7 @@
                     common.changePractitionerList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -280,7 +280,7 @@
                     common.changePatientList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;
@@ -295,7 +295,7 @@
                     common.changePersonList(data);
                     deferred.resolve();
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError(common.unexpectedOutcome(error), error, noToast);
                     deferred.resolve();
                 });
             return deferred.promise;

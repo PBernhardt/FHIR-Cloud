@@ -113,7 +113,7 @@
                             }
                         });
                     } else {
-                        if (angular.isDefined(data.outcome)) {
+                        if (angular.isDefined(data.issue)) {
                             deferred.reject({status: status, outcome: data});
                         } else {
                             deferred.reject({

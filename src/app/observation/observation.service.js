@@ -183,7 +183,7 @@
 
 
             if (angular.isDefined(patientId)) {
-                var patientParam = 'subject:Patient=' + patientId;
+                var patientParam = 'patient=' + patientId;
                 if (params.length > 1) {
                     params = params + '&' + patientParam;
                 } else {
@@ -191,7 +191,7 @@
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Observation/_filter?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Observation?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -234,13 +234,12 @@
                 "interpretation": null, // CodeableConcept
                 "comments": null,
 
-                // applies[x]: Physiologically Relevant time/time-period for observation. One of these 2:
-                "appliesDateTime": null,
-                "appliesPeriod": null,
+                // effective[x]: Physiologically Relevant time/time-period for observation. One of these 2:
+                "effectiveDateTime": null,
+                "effectivePeriod": null,
 
                 "issued": null, // instant
                 "status": null, // code: registered | preliminary | final | amended
-                "reliability": null, // code:  ok | ongoing | early | questionable | calibrating | error
 
                 // bodySite[x]: Observed body part. One of these 2:
                 "bodySiteCodeableConcept": null,
