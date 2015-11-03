@@ -1402,11 +1402,7 @@
                     {
                         id: 1,
                         name: "HAPI",
-<<<<<<< HEAD
                         baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
-=======
-                        baseUrl: "https://fhirtest.uhn.ca"
->>>>>>> 278df9489a40b993c4bd347c973c9b0e23e91e9c
                     },
                     {
                         id: 2,
