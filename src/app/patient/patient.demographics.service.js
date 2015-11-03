@@ -184,10 +184,9 @@
                 });
             }
             if (_birthPlace) {
-                var address = {text: _birthPlace};
                 extensions.push({
                     url: "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                    valueAddress: address
+                    valueAddress: _birthPlace
                 });
             }
             return extensions;

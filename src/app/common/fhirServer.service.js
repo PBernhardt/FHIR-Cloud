@@ -42,7 +42,7 @@
                     {
                         id: 1,
                         name: "HAPI",
-                        baseUrl: "https://fhirtest.uhn.ca/baseDstu2"
+                        baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
                     },
                     {
                         id: 2,

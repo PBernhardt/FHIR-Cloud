@@ -1402,7 +1402,7 @@
                     {
                         id: 1,
                         name: "HAPI",
-                        baseUrl: "https://fhirtest.uhn.ca/baseDstu2"
+                        baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
                     },
                     {
                         id: 2,
@@ -19731,10 +19731,9 @@
                 });
             }
             if (_birthPlace) {
-                var address = {text: _birthPlace};
                 extensions.push({
                     url: "http://hl7.org/fhir/StructureDefinition/birthPlace",
-                    valueAddress: address
+                    valueAddress: _birthPlace
                 });
             }
             return extensions;
