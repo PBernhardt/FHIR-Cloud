@@ -35,7 +35,8 @@
         personListChanged: 'personList.changed',
         practitionerListChanged: 'practitionerList.changed',
         relatedPersonListChanged: 'relatedPersonList.changed',
-        serverChanged: 'server.changed'
+        serverChanged: 'server.changed',
+        valueSetListChanged: 'valueSetList.changed'
 
     };
 
@@ -197,6 +198,8 @@
             templateUrl: 'structureDefinition/structureDefinition-edit.html'
         }).when('/valueSet', {
             templateUrl: 'valueSet/valueSet-search.html'
+        }).when('/valueSet/summary/:hashKey', {
+            templateUrl: 'valueSet/valueSet-summary.html'
         }).when('/valueSet/view/:hashKey', {
             templateUrl: 'valueSet/valueSet-view.html'
         }).when('/valueSet/edit/:hashKey', {
@@ -322,6 +325,7 @@
         cfg.config.relatedPersonListChangeEvent = config.events.relatedPersonListChanged;
         cfg.config.locationListChangeEvent = config.events.locationListChanged;
         cfg.config.organizationListChangeEvent = config.events.organizationListChanged;
+        cfg.config.valueSetListChangeEvent = config.events.valueSetListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {

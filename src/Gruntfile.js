@@ -227,6 +227,7 @@ module.exports = function (grunt) {
                     'app/valueSet/valueSet.expand.controller.js',
                     'app/valueSet/valueSet.include.controller.js',
                     'app/valueSet/valueSet.search.controller.js',
+                    'app/valueSet/valueSet.summary.controller.js',
                     'app/valueSet/valueSet.service.js'
                     //place your JavaScript files here
                 ]

@@ -62,8 +62,8 @@
                     },
                     {
                         id: 4,
-                        name: "Health Directions",
-                        baseUrl: "http://fhir-dev.healthintersections.com.au/open"
+                        name: "Health Directions (Open)",
+                        baseUrl: "http://fhir2.healthintersections.com.au/open"
                     },
                     {
                         id: 5,

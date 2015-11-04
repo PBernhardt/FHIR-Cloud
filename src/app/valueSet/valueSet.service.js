@@ -124,7 +124,8 @@
             terminologyClient.getResource(resourceId)
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
-                    deferred.resolve(results.data);
+                    results.resource = results.data;
+                    deferred.resolve(results);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
@@ -192,29 +193,12 @@
             var deferred = $q.defer();
             terminologyClient.getResource(url)
                 .then(function (results) {
-                    var searchResults = {"links": {}, "valueSets": []};
-                    var valueSets = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                if (item.content && item.content.resourceType === 'ValueSet') {
-                                    valueSets.push({display: item.content.name, reference: item.id});
-                                }
-                            });
-
-                    }
-                    if (valueSets.length === 0) {
-                        valueSets.push({display: "No matches", reference: ''});
-                    }
-                    searchResults.valueSets = valueSets;
-                    if (results.data.link) {
-                        searchResults.links = results.data.link;
-                    }
-                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
-                    deferred.resolve(searchResults);
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
+
             return deferred.promise;
         }
 
@@ -243,6 +227,23 @@
                             }
                         });
                 });
+            return deferred.promise;
+        }
+
+        function getValueSetSummary() {
+            var deferred = $q.defer();
+
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet?_summary=true')
+                        .then(function (results) {
+                            dataCache.addToCache(dataCacheKey, results.data);
+                            deferred.resolve(results.data);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+
             return deferred.promise;
         }
 
@@ -292,6 +293,7 @@
             getValueSets: getValueSets,
             getValueSetsByLink: getValueSetsByLink,
             getValueSetReference: getValueSetReference,
+            getValueSetSummary: getValueSetSummary,
             setActiveValueSet: setActiveValueSet,
             initializeNewValueSet: initializeNewValueSet,
             updateValueSet: updateValueSet

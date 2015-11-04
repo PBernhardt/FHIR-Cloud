@@ -3,7 +3,7 @@
 
     var controllerId = 'valueSetSearch';
 
-    function valueSetSearch($location, common, valueSetService) {
+    function valueSetSearch($location, $mdBottomSheet, common, valueSetService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -16,6 +16,9 @@
         function _activate() {
             common.activateController([], controllerId)
                 .then(function () {
+                    if ($location.path() == '/valueSet/summary') {
+                       return _summary();
+                    }
                 });
         }
 
@@ -51,6 +54,21 @@
         }
 
         vm.quickSearch = quickSearch;
+
+        function _summary() {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            valueSetService.getValueSetSummary()
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets', null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry);
+                }, function (error) {
+                    logError('Error getting value sets', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
 
         function dereferenceLink(url) {
             toggleSpinner(true);
@@ -91,7 +109,10 @@
                         $location.path('/valueSet/detailed-search');
                         break;
                     case 2:
-                        $location.path('/valueSet');
+                        $location.path('/valueSet/');
+                        break;
+                    case 3:
+                        $location.path('/valueSet/summary/refresh');
                         break;
                 }
             });
@@ -103,7 +124,8 @@
                 this.items = [
                     {name: 'Add new value set', icon: 'terminology', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
-                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                    {name: 'Quick find', icon: 'quickFind', index: 2},
+                    {name: 'Summary', icon:'terminology', index: 3}
                 ];
                 this.title = 'Value Set search options';
                 this.performAction = function (action) {
@@ -132,5 +154,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', 'common', 'valueSetService', valueSetSearch]);
+        ['$location', '$mdBottomSheet','common', 'valueSetService', valueSetSearch]);
 })();

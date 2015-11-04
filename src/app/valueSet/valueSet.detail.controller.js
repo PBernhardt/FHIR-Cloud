@@ -12,6 +12,7 @@
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var noToast = false;
+        var $q = common.$q;
 
         function cancel() {
 
@@ -90,7 +91,7 @@
         }
 
         function getRequestedValueSet() {
-            function intitializeRelatedData(data) {
+            function initializeRelatedData(data) {
                 var rawData = angular.copy(data.resource);
                 vm.narrative = (rawData.text.div || '<div>Not provided</div>');
                 vm.json = rawData;
@@ -105,23 +106,29 @@
                 valueSetService.setActiveValueSet(vm.valueSet);
             }
 
+            function fetchFromServer() {
+                var resourceId = vm.terminologyServer.baseUrl + '/ValueSet/' + $routeParams.hashKey;
+                valueSetService.getValueSet(resourceId)
+                    .then(function(data) {
+                        return initializeRelatedData(data);
+                    },
+                    function (error) {
+                        logError(error, null, noToast);
+                    });
+            }
+
             if ($routeParams.hashKey === 'new') {
                 var data = valueSetService.initializeNewValueSet();
-                intitializeRelatedData(data);
+                initializeRelatedData(data);
                 vm.title = 'Add New ValueSet';
                 vm.isEditing = false;
             } else {
                 if ($routeParams.hashKey) {
                     valueSetService.getCachedValueSet($routeParams.hashKey)
-                        .then(intitializeRelatedData).then(function () {
+                        .then(initializeRelatedData).then(function () {
                         }, function (error) {
                             logError(error, null, noToast);
-                        });
-                } else if ($routeParams.id) {
-                    var resourceId = vm.terminologyServer.baseUrl + '/ValueSet/' + $routeParams.id;
-                    valueSetService.getValueSet(resourceId)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error, null, noToast);
+                            return fetchFromServer();
                         });
                 }
             }

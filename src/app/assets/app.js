@@ -232,6 +232,12 @@
             }
         }
 
+        function changeValueSetList(valueSets) {
+            if (angular.isDefined(valueSets)) {
+                $broadcast(commonConfig.config.valueSetListChangeEvent, valueSets);
+            }
+        }
+
         function changeRelatedPersonList(relatedPerson) {
             if (angular.isDefined(relatedPerson)) {
                 $broadcast(commonConfig.config.relatedPersonListChangeEvent, relatedPerson);
@@ -420,6 +426,7 @@
             changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,
             changeRelatedPersonList: changeRelatedPersonList,
+            changeValueSetList: changeValueSetList,
             changeServer: changeServer,
             changeUser: changeUser,
             generateUUID: generateUUID,
@@ -481,7 +488,8 @@
         personListChanged: 'personList.changed',
         practitionerListChanged: 'practitionerList.changed',
         relatedPersonListChanged: 'relatedPersonList.changed',
-        serverChanged: 'server.changed'
+        serverChanged: 'server.changed',
+        valueSetListChanged: 'valueSetList.changed'
 
     };
 
@@ -643,6 +651,8 @@
             templateUrl: 'structureDefinition/structureDefinition-edit.html'
         }).when('/valueSet', {
             templateUrl: 'valueSet/valueSet-search.html'
+        }).when('/valueSet/summary/:hashKey', {
+            templateUrl: 'valueSet/valueSet-summary.html'
         }).when('/valueSet/view/:hashKey', {
             templateUrl: 'valueSet/valueSet-view.html'
         }).when('/valueSet/edit/:hashKey', {
@@ -768,6 +778,7 @@
         cfg.config.relatedPersonListChangeEvent = config.events.relatedPersonListChanged;
         cfg.config.locationListChangeEvent = config.events.locationListChanged;
         cfg.config.organizationListChangeEvent = config.events.organizationListChanged;
+        cfg.config.valueSetListChangeEvent = config.events.valueSetListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {
@@ -1422,8 +1433,8 @@
                     },
                     {
                         id: 4,
-                        name: "Health Directions",
-                        baseUrl: "http://fhir-dev.healthintersections.com.au/open"
+                        name: "Health Directions (Open)",
+                        baseUrl: "http://fhir2.healthintersections.com.au/open"
                     },
                     {
                         id: 5,
@@ -3952,7 +3963,7 @@
                     {
                         id: 1,
                         name: "Health Directions",
-                        baseUrl: "http://fhir-dev.healthintersections.com.au/open"
+                        baseUrl: "http://fhir2.healthintersections.com.au/open"
                     },
                     {
                         id: 2,
@@ -26701,6 +26712,7 @@
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var noToast = false;
+        var $q = common.$q;
 
         function cancel() {
 
@@ -26779,7 +26791,8 @@
         }
 
         function getRequestedValueSet() {
-            function intitializeRelatedData(data) {
+            function initializeRelatedData(data) {
+                logSuccess(data.resource);
                 var rawData = angular.copy(data.resource);
                 vm.narrative = (rawData.text.div || '<div>Not provided</div>');
                 vm.json = rawData;
@@ -26794,23 +26807,29 @@
                 valueSetService.setActiveValueSet(vm.valueSet);
             }
 
+            function fetchFromServer() {
+                var resourceId = vm.terminologyServer.baseUrl + '/ValueSet/' + $routeParams.hashKey;
+                valueSetService.getValueSet(resourceId)
+                    .then(function(data) {
+                        return initializeRelatedData(data);
+                    },
+                    function (error) {
+                        logError(error, null, noToast);
+                    });
+            }
+
             if ($routeParams.hashKey === 'new') {
                 var data = valueSetService.initializeNewValueSet();
-                intitializeRelatedData(data);
+                initializeRelatedData(data);
                 vm.title = 'Add New ValueSet';
                 vm.isEditing = false;
             } else {
                 if ($routeParams.hashKey) {
                     valueSetService.getCachedValueSet($routeParams.hashKey)
-                        .then(intitializeRelatedData).then(function () {
+                        .then(initializeRelatedData).then(function () {
                         }, function (error) {
                             logError(error, null, noToast);
-                        });
-                } else if ($routeParams.id) {
-                    var resourceId = vm.terminologyServer.baseUrl + '/ValueSet/' + $routeParams.id;
-                    valueSetService.getValueSet(resourceId)
-                        .then(intitializeRelatedData, function (error) {
-                            logError(error, null, noToast);
+                            return fetchFromServer();
                         });
                 }
             }
@@ -26980,7 +26999,7 @@
 
     var controllerId = 'valueSetSearch';
 
-    function valueSetSearch($location, common, valueSetService) {
+    function valueSetSearch($location, $mdBottomSheet, common, valueSetService) {
         var getLogFn = common.logger.getLogFn;
         var logInfo = getLogFn(controllerId, 'info');
         var logError = getLogFn(controllerId, 'error');
@@ -26993,6 +27012,9 @@
         function _activate() {
             common.activateController([], controllerId)
                 .then(function () {
+                    if ($location.path() == '/valueSet/summary') {
+                       return _summary();
+                    }
                 });
         }
 
@@ -27028,6 +27050,21 @@
         }
 
         vm.quickSearch = quickSearch;
+
+        function _summary() {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            valueSetService.getValueSetSummary()
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets', null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    deferred.resolve(data.entry);
+                }, function (error) {
+                    logError('Error getting value sets', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
 
         function dereferenceLink(url) {
             toggleSpinner(true);
@@ -27068,7 +27105,10 @@
                         $location.path('/valueSet/detailed-search');
                         break;
                     case 2:
-                        $location.path('/valueSet');
+                        $location.path('/valueSet/');
+                        break;
+                    case 3:
+                        $location.path('/valueSet/summary/refresh');
                         break;
                 }
             });
@@ -27080,7 +27120,8 @@
                 this.items = [
                     {name: 'Add new value set', icon: 'terminology', index: 0},
                     {name: 'Detailed search', icon: 'search', index: 1},
-                    {name: 'Quick find', icon: 'quickFind', index: 2}
+                    {name: 'Quick find', icon: 'quickFind', index: 2},
+                    {name: 'Summary', icon:'terminology', index: 3}
                 ];
                 this.title = 'Value Set search options';
                 this.performAction = function (action) {
@@ -27109,7 +27150,113 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', 'common', 'valueSetService', valueSetSearch]);
+        ['$location', '$mdBottomSheet','common', 'valueSetService', valueSetSearch]);
+})();
+(function () {
+    'use strict';
+
+    var controllerId = 'valueSetSummary';
+
+    function valueSetSummary($location, $scope, $routeParams, common, config, fhirServers, valueSetService) {
+        /*jshint validthis:true */
+        var vm = this;
+        var logInfo = common.logger.getLogFn(controllerId, 'info');
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+        var noToast = false;
+        var $q = common.$q;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                    if ($routeParams.hashKey != null) {
+                        return _summary();
+                    }
+                }, function (error) {
+                    logError('Error initializing valueSet search.', error);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToValueSet(id) {
+            if (id) {
+                $location.path('/valueSet/view/' + id);
+            }
+        }
+        vm.goToValueSet = goToValueSet;
+
+        function dereferenceLink(url) {
+            var deferred = $q.defer();
+            vm.isBusy = true;
+            valueSetService.getValueSetsByLink(url)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets from ' +
+                        vm.activeServer.name + '.');
+                    common.changeValueSetList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                    deferred.reject();
+                })
+                .then(_processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+        vm.dereferenceLink = dereferenceLink;
+
+        $scope.$on(config.events.valueSetListChanged,
+            function (event, data) {
+                _processSearchResults(data);
+                logDebug("ValueSet list updated.");
+            }
+        );
+
+        function _processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.valueSets = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function _summary() {
+            var deferred = $q.defer();
+            vm.noresults = false;
+            valueSetService.getValueSetSummary()
+                .then(function (data) {
+                    logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' ValueSets', null, noToast);
+                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
+                    common.changeValueSetList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError('Error getting value sets', error, noToast);
+                    deferred.reject();
+                });
+            return deferred.promise;
+        }
+
+        vm.activeServer = null;
+        vm.valueSets = [];
+        vm.isBusy = false;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$scope', '$routeParams', 'common', 'config', 'fhirServers', 'valueSetService', valueSetSummary]);
 })();
 (function () {
     'use strict';
@@ -27237,7 +27384,8 @@
             terminologyClient.getResource(resourceId)
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
-                    deferred.resolve(results.data);
+                    results.resource = results.data;
+                    deferred.resolve(results);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
@@ -27305,29 +27453,12 @@
             var deferred = $q.defer();
             terminologyClient.getResource(url)
                 .then(function (results) {
-                    var searchResults = {"links": {}, "valueSets": []};
-                    var valueSets = [];
-                    if (results.data.entry) {
-                        angular.forEach(results.data.entry,
-                            function (item) {
-                                if (item.content && item.content.resourceType === 'ValueSet') {
-                                    valueSets.push({display: item.content.name, reference: item.id});
-                                }
-                            });
-
-                    }
-                    if (valueSets.length === 0) {
-                        valueSets.push({display: "No matches", reference: ''});
-                    }
-                    searchResults.valueSets = valueSets;
-                    if (results.data.link) {
-                        searchResults.links = results.data.link;
-                    }
-                    searchResults.totalResults = results.data.totalResults ? results.data.totalResults : 0;
-                    deferred.resolve(searchResults);
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
+
             return deferred.promise;
         }
 
@@ -27356,6 +27487,23 @@
                             }
                         });
                 });
+            return deferred.promise;
+        }
+
+        function getValueSetSummary() {
+            var deferred = $q.defer();
+
+            terminologyServers.getActiveServer()
+                .then(function (server) {
+                    terminologyClient.getResource(server.baseUrl + '/ValueSet?_summary=true')
+                        .then(function (results) {
+                            dataCache.addToCache(dataCacheKey, results.data);
+                            deferred.resolve(results.data);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+
             return deferred.promise;
         }
 
@@ -27405,6 +27553,7 @@
             getValueSets: getValueSets,
             getValueSetsByLink: getValueSetsByLink,
             getValueSetReference: getValueSetReference,
+            getValueSetSummary: getValueSetSummary,
             setActiveValueSet: setActiveValueSet,
             initializeNewValueSet: initializeNewValueSet,
             updateValueSet: updateValueSet

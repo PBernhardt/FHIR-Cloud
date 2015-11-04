@@ -83,6 +83,12 @@
             }
         }
 
+        function changeValueSetList(valueSets) {
+            if (angular.isDefined(valueSets)) {
+                $broadcast(commonConfig.config.valueSetListChangeEvent, valueSets);
+            }
+        }
+
         function changeRelatedPersonList(relatedPerson) {
             if (angular.isDefined(relatedPerson)) {
                 $broadcast(commonConfig.config.relatedPersonListChangeEvent, relatedPerson);
@@ -271,6 +277,7 @@
             changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,
             changeRelatedPersonList: changeRelatedPersonList,
+            changeValueSetList: changeValueSetList,
             changeServer: changeServer,
             changeUser: changeUser,
             generateUUID: generateUUID,
