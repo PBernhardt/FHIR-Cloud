@@ -4,9 +4,10 @@
     var controllerId = 'patientDetail';
 
     function patientDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, addressService,
-                           attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService, identifierService,
-                           organizationService, patientService, contactPointService, communicationService,
-                           patientCareProviderService, observationService, patientContactService) {
+                           attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService,
+                           identifierService, organizationService, patientService, contactPointService,
+                           communicationService, patientCareProviderService, observationService, patientContactService,
+                           medicationStatementService, conditionService, procedureService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -87,20 +88,50 @@
                 .then(function (data) {
                     vm.summary = data.summary;
                     vm.history = data.history;
-                    logSuccess("Retrieved everything for patient at " + vm.patient.resourceId + ".");
+                    logSuccess("Retrieved everything for patient " + patientId + ".");
                 }, function (error) {
                     logWarning(common.unexpectedOutcome(error), null, noToast);
-                    _getObservations();  //TODO: fallback for those servers that haven't implemented $everything operation
                 });
         }
 
-        function _getObservations() {
-            observationService.getObservations(vm.activeServer.baseUrl, null, vm.patient.id)
+        function _getObservations(patientId) {
+            observationService.getObservations(vm.activeServer.baseUrl, null, patientId)
                 .then(function (data) {
-                    vm.summary = data.entry;
-                    logSuccess("Retrieved observations for patient " + vm.patient.fullName, null, noToast);
+                    vm.observations = data.entry;
+                    logSuccess("Retrieved observations for patient " + patientId, null, noToast);
                 }, function (error) {
                     vm.isBusy = false;
+                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getMedicationStatements(patientId) {
+            medicationStatementService.getMedicationStatements(vm.activeServer.baseUrl, null, patientId)
+                .then(function (data) {
+                    vm.medications = data.entry;
+                    logSuccess("Retrieved medication statements for patient " + patientId, null, noToast);
+                }, function (error) {
+                    vm.isBusy = false;
+                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getConditions(patientId) {
+            conditionService.getConditions(vm.activeServer.baseUrl, null, patientId)
+                .then(function (data) {
+                    vm.conditions = data.entry;
+                    logSuccess("Retrieved conditions for patient " + patientId, null, noToast);
+                }, function (error) {
+                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                });
+        }
+
+        function _getProcedures(patientId) {
+            procedureService.getProcedures(vm.activeServer.baseUrl, null, patientId)
+                .then(function (data) {
+                    vm.procedures = data.entry;
+                    logSuccess("Retrieved procedures for patient " + patientId, null, noToast);
+                }, function (error) {
                     logWarning(common.unexpectedOutcome(error), null, noToast);
                 });
         }
@@ -158,6 +189,7 @@
                 } else {
                     vm.patient.hashKey = "current";
                     initializeAdministrationData(vm.patient);
+                    _getClinicalData(vm.patient.id);
                 }
             } else if (angular.isDefined($routeParams.id)) {
                 vm.isBusy = true;
@@ -166,7 +198,7 @@
                     .then(function (resource) {
                         initializeAdministrationData(resource.data);
                         if (vm.patient) {
-                            _getEverything(resourceId);
+                            _getClinicalData(resourceId);
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error), error);
@@ -184,7 +216,7 @@
                     .then(function (data) {
                         initializeAdministrationData(data);
                         if (vm.patient && vm.patient.resourceId) {
-                            _getEverything(vm.patient.resourceId);
+                            _getClinicalData(vm.patient.resourceId);
                         }
                     }, function (error) {
                         logError(common.unexpectedOutcome(error), error);
@@ -195,6 +227,14 @@
             } else {
                 logError("Unable to resolve patient lookup");
             }
+        }
+
+        function _getClinicalData(patientId)  {
+            _getEverything();
+            _getObservations(patientId);
+            _getMedicationStatements(patientId);
+            _getConditions(patientId);
+            _getProcedures(patientId);
         }
 
         function save() {
@@ -407,5 +447,6 @@
         ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope',
             'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
-            'communicationService', 'patientCareProviderService', 'observationService', 'patientContactService', patientDetail]);
+            'communicationService', 'patientCareProviderService', 'observationService', 'patientContactService',
+            'medicationStatementService', 'conditionService', 'procedureService', patientDetail]);
 })();

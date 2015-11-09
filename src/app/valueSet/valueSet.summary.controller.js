@@ -15,7 +15,7 @@
         function _activate() {
             common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
-                    if ($routeParams.hashKey != null) {
+                    if ($routeParams.hashKey == 'refresh') {
                         return _summary();
                     }
                 }, function (error) {

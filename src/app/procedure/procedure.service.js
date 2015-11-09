@@ -1,21 +1,21 @@
 ﻿(function () {
     'use strict';
 
-    var serviceId = 'conditionService';
+    var serviceId = 'procedureService';
 
-    function conditionService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
-        var dataCacheKey = 'localConditions';
-        var itemCacheKey = 'contextCondition';
+    function procedureService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets, fhirResourceBase) {
+        var dataCacheKey = 'localProcedures';
+        var itemCacheKey = 'contextProcedure';
         var logError = common.logger.getLogFn(serviceId, 'error');
         var logInfo = common.logger.getLogFn(serviceId, 'info');
         var $q = common.$q;
 
-        function addCondition(resource) {
+        function addProcedure(resource) {
             _prepArrays(resource);
             var deferred = $q.defer();
             fhirServers.getActiveServer()
                 .then(function (server) {
-                    var url = server.baseUrl + "/Condition";
+                    var url = server.baseUrl + "/Procedure";
                     fhirClient.addResource(url, resource)
                         .then(function (results) {
                             deferred.resolve(results);
@@ -30,11 +30,11 @@
             dataCache.addToCache(dataCacheKey, null);
         }
 
-        function deleteCachedCondition(hashKey, resourceId) {
+        function deleteCachedProcedure(hashKey, resourceId) {
             function removeFromCache(searchResults) {
                 if (searchResults && searchResults.entry) {
-                    var cachedConditions = searchResults.entry;
-                    searchResults.entry = _.remove(cachedConditions, function (item) {
+                    var cachedProcedures = searchResults.entry;
+                    searchResults.entry = _.remove(cachedProcedures, function (item) {
                         return item.$$hashKey !== hashKey;
                     });
                     searchResults.totalResults = (searchResults.totalResults - 1);
@@ -44,7 +44,7 @@
             }
 
             var deferred = $q.defer();
-            deleteCondition(resourceId)
+            deleteProcedure(resourceId)
                 .then(getCachedSearchResults,
                 function (error) {
                     deferred.reject(error);
@@ -59,7 +59,7 @@
             return deferred.promise;
         }
 
-        function deleteCondition(resourceId) {
+        function deleteProcedure(resourceId) {
             var deferred = $q.defer();
             fhirClient.deleteResource(resourceId)
                 .then(function (results) {
@@ -70,23 +70,23 @@
             return deferred.promise;
         }
 
-        function getCachedCondition(hashKey) {
-            function getCondition(searchResults) {
-                var cachedCondition;
-                var cachedConditions = searchResults.entry;
-                for (var i = 0, len = cachedConditions.length; i < len; i++) {
-                    if (cachedConditions[i].$$hashKey === hashKey) {
-                        cachedCondition = cachedConditions[i].resource;
+        function getCachedProcedure(hashKey) {
+            function getProcedure(searchResults) {
+                var cachedProcedure;
+                var cachedProcedures = searchResults.entry;
+                for (var i = 0, len = cachedProcedures.length; i < len; i++) {
+                    if (cachedProcedures[i].$$hashKey === hashKey) {
+                        cachedProcedure = cachedProcedures[i].resource;
                         var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
-                        cachedCondition.resourceId = (baseUrl + cachedCondition.resourceType + '/' + cachedCondition.id);
-                        cachedCondition.hashKey = hashKey;
+                        cachedProcedure.resourceId = (baseUrl + cachedProcedure.resourceType + '/' + cachedProcedure.id);
+                        cachedProcedure.hashKey = hashKey;
                         break;
                     }
                 }
-                if (cachedCondition) {
-                    deferred.resolve(cachedCondition);
+                if (cachedProcedure) {
+                    deferred.resolve(cachedProcedure);
                 } else {
-                    deferred.reject('Condition not found in cache: ' + hashKey);
+                    deferred.reject('Procedure not found in cache: ' + hashKey);
                 }
             }
 
@@ -97,9 +97,9 @@
                     .then(function (server) {
                         activeServer = server;
                     }))
-                .then(getCondition,
+                .then(getProcedure,
                 function () {
-                    deferred.reject('Condition search results not found in cache.');
+                    deferred.reject('Procedure search results not found in cache.');
                 });
             return deferred.promise;
         }
@@ -115,7 +115,7 @@
             return deferred.promise;
         }
 
-        function getCondition(resourceId) {
+        function getProcedure(resourceId) {
             var deferred = $q.defer();
             fhirClient.getResource(resourceId)
                 .then(function (data) {
@@ -127,43 +127,43 @@
             return deferred.promise;
         }
 
-        function getConditionContext() {
+        function getProcedureContext() {
             return dataCache.readFromCache(dataCacheKey);
         }
 
-        function getConditionReference(baseUrl, input) {
+        function getProcedureReference(baseUrl, input) {
             var deferred = $q.defer();
-            fhirClient.getResource(baseUrl + '/Condition?name=' + input + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Procedure?code=' + input + '&_count=20')
                 .then(function (results) {
-                    var familyHistories = [];
+                    var procedures = [];
                     if (results.data.entry) {
                         angular.forEach(results.data.entry,
                             function (item) {
-                                if (item.content && item.content.resourceType === 'Condition') {
-                                    familyHistories.push({
+                                if (item.content && item.content.resourceType === 'Procedure') {
+                                    procedures.push({
                                         display: $filter('fullName')(item.content.name),
                                         reference: item.id
                                     });
                                 }
                             });
                     }
-                    if (familyHistories.length === 0) {
-                        familyHistories.push({display: "No matches", reference: ''});
+                    if (procedures.length === 0) {
+                        procedures.push({display: "No matches", reference: ''});
                     }
-                    deferred.resolve(familyHistories);
+                    deferred.resolve(procedures);
                 }, function (outcome) {
                     deferred.reject(outcome);
                 });
             return deferred.promise;
         }
 
-        function searchConditions(baseUrl, searchFilter) {
+        function searchProcedures(baseUrl, searchFilter) {
             var deferred = $q.defer();
 
-            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+            if (angular.isUndefined(searchFilter)) {
                 deferred.reject('Invalid search input');
             }
-            fhirClient.getResource(baseUrl + '/Condition?' + searchFilter + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Procedure?' + searchFilter + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -173,7 +173,7 @@
             return deferred.promise;
         }
 
-        function getConditions(baseUrl, searchFilter, patientId) {
+        function getProcedures(baseUrl, searchFilter, patientId) {
             var deferred = $q.defer();
             var params = '';
 
@@ -191,7 +191,7 @@
                 }
             }
 
-            fhirClient.getResource(baseUrl + '/Condition?' + params + '&_count=20')
+            fhirClient.getResource(baseUrl + '/Procedure?' + params + '&_count=20')
                 .then(function (results) {
                     dataCache.addToCache(dataCacheKey, results.data);
                     deferred.resolve(results.data);
@@ -201,7 +201,7 @@
             return deferred.promise;
         }
 
-        function getConditionsByLink(url) {
+        function getProceduresByLink(url) {
             var deferred = $q.defer();
             fhirClient.getResource(url)
                 .then(function (results) {
@@ -213,20 +213,25 @@
             return deferred.promise;
         }
 
-        function initializeNewCondition() {
-            return {
-                "resourceType": "Condition",
-                "identifier": [],
-                "patient": null
+        function initializeNewProcedure() {
 
-            };
+            var procedure = fhirResourceBase.getBase();
+
+            // DSTU2 1.0.2
+            procedure.resourceType = "Procedure";
+                procedure.id = null;
+                procedure.identifier = []; // External identifier
+                procedure.patient = null; // R!  Who is/was taking  the medication
+
+
+            return procedure;
         }
 
-        function setConditionContext(data) {
+        function setProcedureContext(data) {
             dataCache.addToCache(itemCacheKey, data);
         }
 
-        function updateCondition(resourceVersionId, resource) {
+        function updateProcedure(resourceVersionId, resource) {
             _prepArrays(resource);
             var deferred = $q.defer();
             fhirClient.updateResource(resourceVersionId, resource)
@@ -238,41 +243,48 @@
             return deferred.promise;
         }
 
-        function seedRandomConditions(patientId, practitionerId) {
+        function seedRandomProcedures(patientId, patientName) {
 
         }
 
         function _prepArrays(resource) {
-
             if (resource.identifier.length === 0) {
                 resource.identifier = null;
+            }
+            if (resource.performer.length === 0) {
+                resource.performer = null;
+            }
+            if (resource.referenceRange.length === 0) {
+                resource.referenceRange = null;
+            }
+            if (resource.related.length === 0) {
+                resource.related = null;
             }
             return $q.when(resource);
         }
 
         var service = {
-            addCondition: addCondition,
+            addProcedure: addProcedure,
             clearCache: clearCache,
-            deleteCachedCondition: deleteCachedCondition,
-            deleteCondition: deleteCondition,
-            getCachedCondition: getCachedCondition,
+            deleteCachedProcedure: deleteCachedProcedure,
+            deleteProcedure: deleteProcedure,
+            getCachedProcedure: getCachedProcedure,
             getCachedSearchResults: getCachedSearchResults,
-            getCondition: getCondition,
-            getConditionContext: getConditionContext,
-            getConditionReference: getConditionReference,
-            getConditions: getConditions,
-            getConditionsByLink: getConditionsByLink,
-            initializeNewCondition: initializeNewCondition,
-            setConditionContext: setConditionContext,
-            updateCondition: updateCondition,
-            seedRandomConditions: seedRandomConditions,
-            searchConditions: searchConditions
+            getProcedure: getProcedure,
+            getProcedureContext: getProcedureContext,
+            getProcedureReference: getProcedureReference,
+            getProcedures: getProcedures,
+            getProceduresByLink: getProceduresByLink,
+            initializeNewProcedure: initializeNewProcedure,
+            setProcedureContext: setProcedureContext,
+            updateProcedure: updateProcedure,
+            seedRandomProcedures: seedRandomProcedures,
+            searchProcedures: searchProcedures
         };
 
         return service;
     }
 
-    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets',
-        conditionService]);
-})
-();
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient', 'fhirServers', 'localValueSets', 'fhirResourceBase',
+        procedureService]);
+})();

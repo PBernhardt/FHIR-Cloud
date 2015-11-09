@@ -12,7 +12,6 @@
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var noToast = false;
-        var $q = common.$q;
 
         function cancel() {
 
