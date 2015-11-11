@@ -3181,11 +3181,13 @@
             }
             if (showToast) {
                 if (!angular.isString(message)) {
-                    if  (angular.isDefined(message.Message)) {
+                    if  (angular.isDefined(message)
+                        && angular.isDefined(message.Message)
+                        && angular.isString(message.Message)) {
                         message = message.Message;
                     }
                     else {
-                        return;
+                        message = "The server responded with an unspecified error."
                     }
                 }
                 var truncatedMessage = $filter('truncate')(message, 200);
