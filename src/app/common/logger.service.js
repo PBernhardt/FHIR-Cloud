@@ -88,6 +88,14 @@
                 write(source, data);
             }
             if (showToast) {
+                if (!angular.isString(message)) {
+                    if  (angular.isDefined(message.Message)) {
+                        message = message.Message;
+                    }
+                    else {
+                        return;
+                    }
+                }
                 var truncatedMessage = $filter('truncate')(message, 200);
                 $mdToast.show($mdToast.simple()
                     .content(truncatedMessage)
