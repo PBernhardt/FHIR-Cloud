@@ -171,13 +171,7 @@
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
-                    var errorMessage;
-                    if (angular.isDefined(error.outcome.issue)) {
-                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
-                    } else {
-                        errorMessage = "Status " + error.status + ": " + error.outcome;
-                    }
-                    logError(errorMessage, error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);
                 });
             return deferred.promise;

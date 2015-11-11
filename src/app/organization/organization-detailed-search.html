@@ -1,14 +1,14 @@
-﻿<div ng-controller="organizationSearch as vm" layout="column" layout-wrap>
-    <div flex="100">
+﻿<div ng-controller="organizationSearch as vm" layout="row" layout-wrap ng-cloak>
+    <div flex="90">
         <h3 class="md-title">Organization Detailed Search</h3>
     </div>
-    <div flex="20">
+    <div flex="5">
         <md-button class="md-icon-button launch" ng-click="vm.actions($event)" aria-label="Actions">
             <md-icon md-svg-icon="actions"></md-icon>
         </md-button>
     </div>
-    <div flex>
-        <md-tabs md-selected="vm.selectedTab">
+    <div flex="100">
+        <md-tabs md-selected="vm.selectedTab" md-dynamic-height md-border-bottom>
             <md-tab label="Search Options">
                 <md-content class="md-padding">
                     <form name="organizationSearch">

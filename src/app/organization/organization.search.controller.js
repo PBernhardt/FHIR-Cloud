@@ -68,7 +68,7 @@
                     deferred.resolve(data.entry || []);
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);
                 });
             return deferred.promise;
@@ -86,7 +86,7 @@
                     processSearchResults(data);
                     vm.selectedTab = 1;
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve();
                 })
                 .then(vm.isBusy = false);
@@ -100,7 +100,7 @@
                         ' Organizations from ' + vm.activeServer.name + '.');
                     return data;
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                 })
                 .then(processSearchResults);
         }

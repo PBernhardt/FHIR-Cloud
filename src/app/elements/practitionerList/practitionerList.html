@@ -20,5 +20,5 @@
         </md-list>
     </section>
     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-    <fs-pagination on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
+    <fs-pagination ng-if="vm.practitioners.count > 0" on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
 </div>

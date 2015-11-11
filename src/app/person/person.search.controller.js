@@ -69,11 +69,6 @@
                 queryParam.value = vm.personSearch.name.family;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.personSearch.mothersMaidenName) {
-                queryParam.param = "mothersMaidenName";
-                queryParam.value = vm.personSearch.mothersMaidenName;
-                queryParams.push(_.clone(queryParam));
-            }
             if (vm.personSearch.address.street) {
                 queryParam.param = "addressLine";
                 queryParam.value = vm.personSearch.address.street;
@@ -128,21 +123,6 @@
                 queryParam.value = vm.personSearch.gender;
                 queryParams.push(_.clone(queryParam));
             }
-            if (vm.personSearch.race) {
-                queryParam.param = "race";
-                queryParam.value = localValueSets.race().system.concat("|", vm.personSearch.race.code);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.personSearch.language) {
-                queryParam.param = "language";
-                queryParam.value = vm.personSearch.language.system.concat("|", vm.personSearch.language.code);
-                queryParams.push(_.clone(queryParam));
-            }
-            if (vm.personSearch.ethnicity) {
-                queryParam.param = "ethnicity";
-                queryParam.value = vm.personSearch.ethnicity.system.concat("|", vm.personSearch.ethnicity.code);
-                queryParams.push(_.clone(queryParam));
-            }
 
             _.forEach(queryParams, function (item) {
                 queryString = queryString.concat(item.param, "=", encodeURIComponent(item.value), "&");
@@ -171,13 +151,7 @@
                     vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                     deferred.resolve(data.entry);
                 }, function (error) {
-                    var errorMessage;
-                    if (angular.isDefined(error.outcome.issue)) {
-                        errorMessage = "Status " + error.status + ": " + error.outcome.issue[0].details;
-                    } else {
-                        errorMessage = "Status " + error.status + ": " + error.outcome;
-                    }
-                    logError(errorMessage, error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);
                 });
             return deferred.promise;
@@ -198,7 +172,7 @@
                     vm.selectedTab = 1;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError('Error getting persons', error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.reject();
                 })
                 .then(deferred.resolve());

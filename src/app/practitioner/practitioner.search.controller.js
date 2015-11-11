@@ -3,8 +3,8 @@
 
     var controllerId = 'practitionerSearch';
 
-    function practitionerSearch($location, $mdBottomSheet, $routeParams, $scope, common, fhirServers, localValueSets,
-                                practitionerService, practitionerValueSets) {
+    function practitionerSearch($location, $mdBottomSheet, $routeParams, $scope, common, config, fhirServers,
+                                localValueSets, practitionerService, practitionerValueSets) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -13,6 +13,12 @@
         var logInfo = getLogFn(controllerId, 'info');
         var noToast = false;
         var $q = common.$q;
+
+        $scope.$on(config.events.serverChanged,
+            function (event, server) {
+                vm.activeServer = server;
+            }
+        );
 
         function activate() {
             common.activateController([_getActiveServer()], controllerId)
@@ -136,7 +142,7 @@
                     return data;
                 }, function (error) {
                     vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                 })
                 .then(processSearchResults)
                 .then(function () {
@@ -152,7 +158,7 @@
                     vm.activeServer.name, null, noToast);
                     deferred.resolve(data.entry || []);
                 }, function (error) {
-                    logError(common.unexpectedOutcome(error), error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);
                 });
             return deferred.promise;
@@ -167,23 +173,15 @@
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Practitioners from ' +
                     vm.activeServer.name, null, noToast);
-                    processSearchResults(data);
-                    vm.isBusy = false;
+                    common.changePractitionerList(data);
+                    deferred.resolve();
                     vm.selectedTab = 1;
                 }, function (error) {
-                    vm.isBusy = false;
-                    logError(common.unexpectedOutcome(error), error);
+                    logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
+                    deferred.resolve();
                 })
-                .then(deferred.resolve());
+                .then(vm.isBusy = false);
             return deferred.promise;
-        }
-
-        function processSearchResults(searchResults) {
-            if (searchResults) {
-                vm.practitioners = (searchResults.entry || []);
-                vm.paging.links = (searchResults.link || []);
-                vm.paging.totalResults = (searchResults.total || 0);
-            }
         }
 
         function actions($event) {
@@ -262,6 +260,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'fhirServers', 'localValueSets',
+        ['$location', '$mdBottomSheet', '$routeParams', '$scope', 'common', 'config', 'fhirServers', 'localValueSets',
             'practitionerService', 'practitionerValueSets', practitionerSearch]);
 })();

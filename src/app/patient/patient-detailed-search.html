@@ -120,7 +120,7 @@
 
                         <div layout-gt-md="row" layout-align="space-between center">
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.patientSearch.gender" style="min-width: 100px;">
+                                <md-select ng-model="vm.patientSearch.gender" style="min-width: 100px;" aria-label="gender">
                                     <md-option value="female">Female</md-option>
                                     <md-option value="male">Male</md-option>
                                     <md-option value="other">Other</md-option>
@@ -130,7 +130,7 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.patientSearch.language">
+                                <md-select ng-model="vm.patientSearch.language" aria-label="language">
                                     <md-option ng-value="language" ng-repeat="language in vm.languages">
                                         {{language.display}}
                                     </md-option>
@@ -139,14 +139,14 @@
                             </div>
 
                             <div layout="column" layout-align="center center" style="height: 100px;">
-                                <md-select ng-model="vm.patientSearch.race">
+                                <md-select ng-model="vm.patientSearch.race" aria-label="race">
                                     <md-option ng-value="race" ng-repeat="race in vm.races">{{race.display}}</md-option>
                                 </md-select>
                                 <p class="result">Race</p>
                             </div>
                             <div layout="column" layout-align="center center" style="height: 100px;">
                                 <md-select ng-model="vm.patientSearch.ethnicity"
-                                           style="min-width: 200px;">
+                                           style="min-width: 200px;" aria-label="ethnicity">
                                     <md-option ng-value="ethnicity" ng-repeat="ethnicity in vm.ethnicities">{{ethnicity.display}}</md-option>
                                 </md-select>
                                 <p class="result">Ethnicity</p>
