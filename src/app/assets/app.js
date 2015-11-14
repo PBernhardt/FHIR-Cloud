@@ -1407,7 +1407,7 @@
                         id: 0,
                         name: "SMART",
                         baseUrl: "https://fhir-api-dstu2.smarthealthit.org",
-                        clientId: "c1be9476-39f4-4bc4-a6ce-85306034571f",
+                        clientId: "1a5e6061-f60e-425e-a0fa-933448d97814",
                         mode: "authCode"
                     },
                     {
