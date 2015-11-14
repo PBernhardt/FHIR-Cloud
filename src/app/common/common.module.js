@@ -58,6 +58,12 @@
             }
         }
 
+        function changeEncounterList(list) {
+            if (angular.isDefined(list)) {
+                $delayedBroadcast(commonConfig.config.encounterListChangeEvent, list);
+            }
+        }
+
         function changeConditionList(list) {
             if (angular.isDefined(list)) {
                 $delayedBroadcast(commonConfig.config.conditionListChangeEvent, list);
@@ -303,6 +309,7 @@
             activateController: activateController,
             changeAllergyList: changeAllergyList,
             changeConditionList: changeConditionList,
+            changeEncounterList: changeEncounterList,
             changeLocationList: changeLocationList,
             changeObservationList: changeObservationList,
             changeOrganizationList: changeOrganizationList,

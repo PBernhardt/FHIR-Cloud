@@ -163,6 +163,34 @@
             return deferred.promise;
         }
 
+        function getEncounters(baseUrl, searchFilter, patientId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(patientId)) {
+                deferred.reject('Invalid search input');
+            }
+
+
+            if (angular.isDefined(patientId)) {
+                var patientParam = 'patient=' + patientId;
+                if (params.length > 1) {
+                    params = params + '&' + patientParam;
+                } else {
+                    params = patientParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Encounter?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function searchEncounters(baseUrl, searchFilter) {
             var deferred = $q.defer();
 
@@ -302,6 +330,7 @@
             getCachedEncounter: getCachedEncounter,
             getCachedSearchResults: getCachedSearchResults,
             getEncounter: getEncounter,
+            getEncounters: getEncounters,
             getEncounterContext: getEncounterContext,
             getEncounterReference: getEncounterReference,
             getEncountersByLink: getEncountersByLink,

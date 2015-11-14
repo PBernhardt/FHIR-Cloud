@@ -484,6 +484,12 @@
             }
         }
 
+        function changeEncounterList(list) {
+            if (angular.isDefined(list)) {
+                $delayedBroadcast(commonConfig.config.encounterListChangeEvent, list);
+            }
+        }
+
         function changeConditionList(list) {
             if (angular.isDefined(list)) {
                 $delayedBroadcast(commonConfig.config.conditionListChangeEvent, list);
@@ -729,6 +735,7 @@
             activateController: activateController,
             changeAllergyList: changeAllergyList,
             changeConditionList: changeConditionList,
+            changeEncounterList: changeEncounterList,
             changeLocationList: changeLocationList,
             changeObservationList: changeObservationList,
             changeOrganizationList: changeOrganizationList,
@@ -3553,18 +3560,18 @@
         var logDebug = common.logger.getLogFn(controllerId, 'debug');
 
         var _adminPages = [
-            {name: 'Encounter', href: 'encounter/view/current'},
+            //{name: 'Encounter', href: 'encounter/view/current'},
             {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
             {name: 'Person', href: 'person/view/current'},
             {name: 'Practitioner', href: 'practitioner/view/current'},
-            {name: 'Related Person', href: 'relatedPerson/view/current'}
+            //{name: 'Related Person', href: 'relatedPerson/view/current'}
         ];
-        var _conformancePages = [
+        var _infrastructurePages = [
             {name: 'Conformance Statement', href: 'conformance/view/current'},
-            {name: 'Extension Definition', href: 'extensionDefinition'},
-            {name: 'Operation Definition', href: 'operationDefinition'},
-            {name: 'Structure Definition', href: 'structureDefinition'},
+            //{name: 'Extension Definition', href: 'extensionDefinition'},
+            //{name: 'Operation Definition', href: 'operationDefinition'},
+            //{name: 'Structure Definition', href: 'structureDefinition'},
             {name: 'Value Set', href: 'valueSet'}
         ];
         var _documentsPages = [
@@ -3603,7 +3610,7 @@
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
             //       {name: 'Clinical', id: 2, pages: _clinicalPages},
-            {name: 'Conformance', id: 3, pages: _conformancePages},
+            {name: 'Infrastructure', id: 3, pages: _infrastructurePages},
             //        {name: 'Documents', id: 4, pages: _documentsPages},
             //{name: 'DAF Profiles', id: 5, pages: _dafResources}
         ];
@@ -7526,14 +7533,14 @@
 
         function _processSearchResults(searchResults) {
             if (searchResults) {
-                vm.allergys = (searchResults.entry || []);
+                vm.allergies = (searchResults.entry || []);
                 vm.paging.links = (searchResults.link || []);
                 vm.paging.totalResults = (searchResults.total || 0);
             }
         }
 
         function showRawData($index, $event) {
-            _showRawData(vm.allergys[$index], $event);
+            _showRawData(vm.allergies[$index], $event);
         }
 
         vm.showRawData = showRawData;
@@ -7551,7 +7558,7 @@
         }
 
         vm.activeServer = null;
-        vm.allergys = [];
+        vm.allergies = [];
         vm.isBusy = false;
         vm.paging = {
             currentPage: 1,
@@ -8329,6 +8336,107 @@
     angular.module('FHIRCloud').factory(serviceId, ['$filter', demographicsService]);
 
 })();(function () {
+    'use strict';
+
+    var controllerId = 'encounterList';
+
+    function encounterList($location, $mdDialog, $scope, common, config, fhirServers, encounterService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+        var noToast = false;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                }, function (error) {
+                    logError('Error initializing encounter search.', error);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToEncounter(encounter) {
+            if (encounter && encounter.$$hashKey) {
+                $location.path('/encounter/view/' + encounter.$$hashKey);
+            }
+        }
+        vm.goToEncounter = goToEncounter;
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            encounterService.getEncountersByLink(url)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
+                        vm.activeServer.name + '.');
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                })
+                .then(_processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+        vm.dereferenceLink = dereferenceLink;
+
+        $scope.$on(config.events.encounterListChanged,
+            function (event, data) {
+                _processSearchResults(data);
+                logDebug("Encounter list updated.");
+            }
+        );
+
+        function _processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.encounters = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function showRawData($index, $event) {
+            _showRawData(vm.encounters[$index], $event);
+        }
+
+        vm.showRawData = showRawData;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event,
+                clickOutsideToClose: true
+            });
+        }
+
+        vm.activeServer = null;
+        vm.encounters = [];
+        vm.isBusy = false;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdDialog', '$scope', 'common', 'config', 'fhirServers', 'encounterService', encounterList]);
+})();
+(function () {
     'use strict';
 
     var controllerId = 'humanName';
@@ -10438,6 +10546,34 @@
             return deferred.promise;
         }
 
+        function getEncounters(baseUrl, searchFilter, patientId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(patientId)) {
+                deferred.reject('Invalid search input');
+            }
+
+
+            if (angular.isDefined(patientId)) {
+                var patientParam = 'patient=' + patientId;
+                if (params.length > 1) {
+                    params = params + '&' + patientParam;
+                } else {
+                    params = patientParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/Encounter?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
         function searchEncounters(baseUrl, searchFilter) {
             var deferred = $q.defer();
 
@@ -10577,6 +10713,7 @@
             getCachedEncounter: getCachedEncounter,
             getCachedSearchResults: getCachedSearchResults,
             getEncounter: getEncounter,
+            getEncounters: getEncounters,
             getEncounterContext: getEncounterContext,
             getEncounterReference: getEncounterReference,
             getEncountersByLink: getEncountersByLink,
@@ -21034,7 +21171,8 @@
                            attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService,
                            identifierService, organizationService, patientService, contactPointService,
                            communicationService, patientCareProviderService, observationService, patientContactService,
-                           medicationStatementService, conditionService, procedureService, allergyIntoleranceService) {
+                           medicationStatementService, conditionService, procedureService, allergyIntoleranceService,
+                           encounterService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -21178,6 +21316,21 @@
             return deferred.promise;
         }
 
+        function _getEncounters(patientId) {
+            var deferred = $q.defer();
+            encounterService.getEncounters(vm.activeServer.baseUrl, null, patientId)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Encounters from ' + vm.activeServer.name + '.');
+                    common.changeEncounterList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
         function _getProcedures(patientId) {
             var deferred = $q.defer();
             procedureService.getProcedures(vm.activeServer.baseUrl, null, patientId)
@@ -21293,6 +21446,7 @@
             _getConditions(patientId);
             _getProcedures(patientId);
             _getAllergies(patientId);
+            _getEncounters(patientId);
         }
 
         function save() {
@@ -21506,7 +21660,8 @@
             'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
             'communicationService', 'patientCareProviderService', 'observationService', 'patientContactService',
-            'medicationStatementService', 'conditionService', 'procedureService', 'allergyIntoleranceService', patientDetail]);
+            'medicationStatementService', 'conditionService', 'procedureService', 'allergyIntoleranceService',
+            'encounterService', patientDetail]);
 })();(function () {
     'use strict';
 

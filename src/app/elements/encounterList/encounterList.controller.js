@@ -1,9 +1,9 @@
 (function () {
     'use strict';
 
-    var controllerId = 'allergyList';
+    var controllerId = 'encounterList';
 
-    function allergyList($location, $mdDialog, $scope, common, config, fhirServers, allergyIntoleranceService) {
+    function encounterList($location, $mdDialog, $scope, common, config, fhirServers, encounterService) {
         /*jshint validthis:true */
         var vm = this;
 
@@ -15,7 +15,7 @@
             common.activateController([_getActiveServer()], controllerId)
                 .then(function () {
                 }, function (error) {
-                    logError('Error initializing allergy search.', error);
+                    logError('Error initializing encounter search.', error);
                 });
         }
 
@@ -26,18 +26,18 @@
                 });
         }
 
-        function goToAllergy(allergy) {
-            if (allergy && allergy.$$hashKey) {
-                $location.path('/allergy/view/' + allergy.$$hashKey);
+        function goToEncounter(encounter) {
+            if (encounter && encounter.$$hashKey) {
+                $location.path('/encounter/view/' + encounter.$$hashKey);
             }
         }
-        vm.goToAllergy = goToAllergy;
+        vm.goToEncounter = goToEncounter;
 
         function dereferenceLink(url) {
             vm.isBusy = true;
-            allergyIntoleranceService.getAllergysByLink(url)
+            encounterService.getEncountersByLink(url)
                 .then(function (data) {
-                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Allergys from ' +
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Encounters from ' +
                         vm.activeServer.name + '.');
                     return data;
                 }, function (error) {
@@ -51,23 +51,23 @@
         }
         vm.dereferenceLink = dereferenceLink;
 
-        $scope.$on(config.events.allergyListChanged,
+        $scope.$on(config.events.encounterListChanged,
             function (event, data) {
                 _processSearchResults(data);
-                logDebug("Allergy list updated.");
+                logDebug("Encounter list updated.");
             }
         );
 
         function _processSearchResults(searchResults) {
             if (searchResults) {
-                vm.allergies = (searchResults.entry || []);
+                vm.encounters = (searchResults.entry || []);
                 vm.paging.links = (searchResults.link || []);
                 vm.paging.totalResults = (searchResults.total || 0);
             }
         }
 
         function showRawData($index, $event) {
-            _showRawData(vm.allergies[$index], $event);
+            _showRawData(vm.encounters[$index], $event);
         }
 
         vm.showRawData = showRawData;
@@ -85,7 +85,7 @@
         }
 
         vm.activeServer = null;
-        vm.allergies = [];
+        vm.encounters = [];
         vm.isBusy = false;
         vm.paging = {
             currentPage: 1,
@@ -97,5 +97,5 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$location', '$mdDialog', '$scope', 'common', 'config', 'fhirServers', 'allergyIntoleranceService', allergyList]);
+        ['$location', '$mdDialog', '$scope', 'common', 'config', 'fhirServers', 'encounterService', encounterList]);
 })();

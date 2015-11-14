@@ -1,22 +1,21 @@
-<div ng-controller="allergyList as vm" ng-cloak>
+<div ng-controller="encounterList as vm" ng-cloak>
     <section>
         <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
         <md-list>
             <md-list-item ng-click="vm.showRawData($index, $event)" class="md-3-line"
-                          ng-repeat="item in vm.allergies">
+                          ng-repeat="item in vm.encounters">
                 <md-icon md-svg-src="view"></md-icon>
                 <div class="md-list-item-text">
-                    <div ng-hide="item.resource.substance && item.resource.substance.text">
+                    <div ng-hide="item.resource.type">
                         <h4>{{ item.resource.resourceType }}</h4>
                     </div>
-                    <div ng-show="item.resource.substance && item.resource.substance.text">
-                        <h4>{{ item.resource.substance.text }}</h4>
-
-                        <div ng-show="item.resource.recordedDate">
-                            <p> {{ item.resource.recordedDate| date:'mediumDate' }}</p>
+                    <div ng-show="item.resource.type">
+                        <h4>{{ item.resource.type[0].text }}</h4>
+                        <div ng-show="item.resource.period">
+                            <p> {{ item.resource.period.start | date:'mediumDate' }}</p>
                         </div>
                         <div ng-show="item.resource.status">
-                            <p> {{ item.resource.status }}</p>
+                            <p>{{ item.resource.status }} [{{item.resource.class}}]</p>
                         </div>
                     </div>
                 </div>
@@ -24,6 +23,6 @@
         </md-list>
     </section>
     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-    <fs-pagination ng-if="vm.allergys.count > 0" on-click="vm.dereferenceLink(url)"
+    <fs-pagination ng-if="vm.encounters.count > 0" on-click="vm.dereferenceLink(url)"
                    links="vm.paging.links"></fs-pagination>
 </div>

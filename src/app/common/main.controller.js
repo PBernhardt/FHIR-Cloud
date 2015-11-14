@@ -14,18 +14,18 @@
         var logDebug = common.logger.getLogFn(controllerId, 'debug');
 
         var _adminPages = [
-            {name: 'Encounter', href: 'encounter/view/current'},
+            //{name: 'Encounter', href: 'encounter/view/current'},
             {name: 'Organization', href: 'organization/view/current'},
             {name: 'Patient', href: 'patient/view/current'},
             {name: 'Person', href: 'person/view/current'},
             {name: 'Practitioner', href: 'practitioner/view/current'},
-            {name: 'Related Person', href: 'relatedPerson/view/current'}
+            //{name: 'Related Person', href: 'relatedPerson/view/current'}
         ];
-        var _conformancePages = [
+        var _infrastructurePages = [
             {name: 'Conformance Statement', href: 'conformance/view/current'},
-            {name: 'Extension Definition', href: 'extensionDefinition'},
-            {name: 'Operation Definition', href: 'operationDefinition'},
-            {name: 'Structure Definition', href: 'structureDefinition'},
+            //{name: 'Extension Definition', href: 'extensionDefinition'},
+            //{name: 'Operation Definition', href: 'operationDefinition'},
+            //{name: 'Structure Definition', href: 'structureDefinition'},
             {name: 'Value Set', href: 'valueSet'}
         ];
         var _documentsPages = [
@@ -64,7 +64,7 @@
         var _sections = [
             {name: 'Administration', id: 1, pages: _adminPages},
             //       {name: 'Clinical', id: 2, pages: _clinicalPages},
-            {name: 'Conformance', id: 3, pages: _conformancePages},
+            {name: 'Infrastructure', id: 3, pages: _infrastructurePages},
             //        {name: 'Documents', id: 4, pages: _documentsPages},
             //{name: 'DAF Profiles', id: 5, pages: _dafResources}
         ];

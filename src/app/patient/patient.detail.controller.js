@@ -7,7 +7,8 @@
                            attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService,
                            identifierService, organizationService, patientService, contactPointService,
                            communicationService, patientCareProviderService, observationService, patientContactService,
-                           medicationStatementService, conditionService, procedureService, allergyIntoleranceService) {
+                           medicationStatementService, conditionService, procedureService, allergyIntoleranceService,
+                           encounterService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -151,6 +152,21 @@
             return deferred.promise;
         }
 
+        function _getEncounters(patientId) {
+            var deferred = $q.defer();
+            encounterService.getEncounters(vm.activeServer.baseUrl, null, patientId)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Encounters from ' + vm.activeServer.name + '.');
+                    common.changeEncounterList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
         function _getProcedures(patientId) {
             var deferred = $q.defer();
             procedureService.getProcedures(vm.activeServer.baseUrl, null, patientId)
@@ -266,6 +282,7 @@
             _getConditions(patientId);
             _getProcedures(patientId);
             _getAllergies(patientId);
+            _getEncounters(patientId);
         }
 
         function save() {
@@ -479,5 +496,6 @@
             'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
             'communicationService', 'patientCareProviderService', 'observationService', 'patientContactService',
-            'medicationStatementService', 'conditionService', 'procedureService', 'allergyIntoleranceService', patientDetail]);
+            'medicationStatementService', 'conditionService', 'procedureService', 'allergyIntoleranceService',
+            'encounterService', patientDetail]);
 })();
