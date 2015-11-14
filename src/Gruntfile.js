@@ -219,6 +219,7 @@ module.exports = function (grunt) {
                     'app/practitioner/practitioner.specialty.controller.js',
                     'app/practitioner/practitioner.valueSets.js',
                     'app/procedure/procedure.service.js',
+                    'app/elements/procedureList/procedureList.controller.js',
                     'app/relatedPerson/relatedPerson.detail.controller.js',
                     'app/relatedPerson/relatedPerson.search.controller.js',
                     'app/relatedPerson/relatedPerson.service.js',

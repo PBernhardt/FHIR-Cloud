@@ -137,13 +137,18 @@
         }
 
         function _getProcedures(patientId) {
+            var deferred = $q.defer();
             procedureService.getProcedures(vm.activeServer.baseUrl, null, patientId)
                 .then(function (data) {
-                    vm.procedures = data.entry;
-                    logSuccess("Retrieved procedures for patient " + patientId, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Procedures from ' + vm.activeServer.name + '.');
+                    common.changeProcedureList(data);
+                    deferred.resolve();
                 }, function (error) {
-                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
                 });
+            return deferred.promise;
         }
 
         function _getRequestedPatient() {

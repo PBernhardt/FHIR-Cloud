@@ -59,6 +59,12 @@
             }
         }
 
+        function changeProcedureList(list) {
+            if (angular.isDefined(list)) {
+                $delayedBroadcast(commonConfig.config.procedureListChangeEvent, list);
+            }
+        }
+
         function changeLocationList(locations) {
             if (angular.isDefined(locations)) {
                 $broadcast(commonConfig.config.locationListChangeEvent, locations);
@@ -297,6 +303,7 @@
             changePatientList: changePatientList,
             changePersonList: changePersonList,
             changePractitionerList: changePractitionerList,
+            changeProcedureList: changeProcedureList,
             changeRelatedPersonList: changeRelatedPersonList,
             changeValueSetList: changeValueSetList,
             changeServer: changeServer,
