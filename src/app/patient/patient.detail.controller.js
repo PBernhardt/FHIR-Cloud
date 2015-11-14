@@ -122,13 +122,18 @@
         }
 
         function _getConditions(patientId) {
+            var deferred = $q.defer();
             conditionService.getConditions(vm.activeServer.baseUrl, null, patientId)
                 .then(function (data) {
-                    vm.conditions = data.entry;
-                    logSuccess("Retrieved conditions for patient " + patientId, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Conditions from ' + vm.activeServer.name + '.');
+                    common.changeConditionList(data);
+                    deferred.resolve();
                 }, function (error) {
-                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
                 });
+            return deferred.promise;
         }
 
         function _getProcedures(patientId) {

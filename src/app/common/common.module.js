@@ -53,6 +53,12 @@
             }
         }
 
+        function changeConditionList(list) {
+            if (angular.isDefined(list)) {
+                $delayedBroadcast(commonConfig.config.conditionListChangeEvent, list);
+            }
+        }
+
         function changeLocationList(locations) {
             if (angular.isDefined(locations)) {
                 $broadcast(commonConfig.config.locationListChangeEvent, locations);
@@ -284,6 +290,7 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeConditionList: changeConditionList,
             changeLocationList: changeLocationList,
             changeObservationList: changeObservationList,
             changeOrganizationList: changeOrganizationList,

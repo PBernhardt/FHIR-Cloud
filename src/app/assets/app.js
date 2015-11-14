@@ -202,6 +202,12 @@
             }
         }
 
+        function changeConditionList(list) {
+            if (angular.isDefined(list)) {
+                $delayedBroadcast(commonConfig.config.conditionListChangeEvent, list);
+            }
+        }
+
         function changeLocationList(locations) {
             if (angular.isDefined(locations)) {
                 $broadcast(commonConfig.config.locationListChangeEvent, locations);
@@ -433,6 +439,7 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeConditionList: changeConditionList,
             changeLocationList: changeLocationList,
             changeObservationList: changeObservationList,
             changeOrganizationList: changeOrganizationList,
@@ -7290,64 +7297,6 @@
 })();(function () {
     'use strict';
 
-    var serviceId = 'careProviderService';
-
-    function careProviderService(common) {
-        var careProviders = [];
-
-        function add(item) {
-            var index = getIndex(item.$$hashKey);
-            if (index > -1) {
-                careProviders[index] = item;
-            } else {
-                careProviders.push(item);
-            }
-        }
-
-        function getAll() {
-            return _.compact(careProviders);
-        }
-
-        function getIndex(hashKey) {
-            if (angular.isUndefined(hashKey) === false) {
-                for (var i = 0, len = careProviders.length; i < len; i++) {
-                    if (careProviders[i].$$hashKey === hashKey) {
-                        return i;
-                    }
-                }
-            }
-            return -1;
-        }
-
-        function init(items) {
-            if (angular.isArray(items)) {
-                careProviders = items;
-            } else if (angular.isObject(items)) {
-                careProviders = [];
-                careProviders.push(items);
-            }
-            return careProviders;
-        }
-
-        function remove(item) {
-            var index = getIndex(item.$$hashKey);
-            careProviders.splice(index, 1);
-        }
-
-        var service = {
-            add: add,
-            remove: remove,
-            getAll: getAll,
-            init: init
-        };
-        return service;
-    }
-
-    angular.module('FHIRCloud').factory(serviceId, ['common', careProviderService]);
-
-})();(function () {
-    'use strict';
-
     var controllerId = 'communication';
 
     function communication(common, communicationService, localValueSets) {
@@ -7522,6 +7471,107 @@
     angular.module('FHIRCloud').factory(serviceId, [communicationService]);
 
 })();(function () {
+    'use strict';
+
+    var controllerId = 'conditionList';
+
+    function conditionList($location, $mdDialog, $scope, common, config, fhirServers, conditionService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+        var noToast = false;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                }, function (error) {
+                    logError('Error initializing condition search.', error);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToCondition(condition) {
+            if (condition && condition.$$hashKey) {
+                $location.path('/condition/view/' + condition.$$hashKey);
+            }
+        }
+        vm.goToCondition = goToCondition;
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            conditionService.getConditionsByLink(url)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Conditions from ' +
+                        vm.activeServer.name + '.');
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                })
+                .then(_processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+        vm.dereferenceLink = dereferenceLink;
+
+        $scope.$on(config.events.conditionListChanged,
+            function (event, data) {
+                _processSearchResults(data);
+                logDebug("Condition list updated.");
+            }
+        );
+
+        function _processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.conditions = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function showRawData($index, $event) {
+            _showRawData(vm.conditions[$index], $event);
+        }
+
+        vm.showRawData = showRawData;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event,
+                clickOutsideToClose: true
+            });
+        }
+
+        vm.activeServer = null;
+        vm.conditions = [];
+        vm.isBusy = false;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdDialog', '$scope', 'common', 'config', 'fhirServers', 'conditionService', conditionList]);
+})();
+(function () {
     'use strict';
 
     var controllerId = 'contactPoint';
@@ -20656,13 +20706,18 @@
         }
 
         function _getConditions(patientId) {
+            var deferred = $q.defer();
             conditionService.getConditions(vm.activeServer.baseUrl, null, patientId)
                 .then(function (data) {
-                    vm.conditions = data.entry;
-                    logSuccess("Retrieved conditions for patient " + patientId, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Conditions from ' + vm.activeServer.name + '.');
+                    common.changeConditionList(data);
+                    deferred.resolve();
                 }, function (error) {
-                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
                 });
+            return deferred.promise;
         }
 
         function _getProcedures(patientId) {
