@@ -207,6 +207,12 @@
                 $broadcast(commonConfig.config.locationListChangeEvent, locations);
             }
         }
+
+        function changeObservationList(observations) {
+            if (angular.isDefined(observations)) {
+                $delayedBroadcast(commonConfig.config.observationListChangeEvent, observations);
+            }
+        }
         
         function changeOrganizationList(organizations) {
             if (angular.isDefined(organizations)) {
@@ -252,6 +258,13 @@
 
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
+        }
+
+        function $delayedBroadcast(event, data) {
+            function resumeBroadcast() {
+                $broadcast(event, data);
+            }
+            $timeout(resumeBroadcast, 1000);
         }
 
         function generateUUID() {
@@ -421,6 +434,7 @@
             // generic
             activateController: activateController,
             changeLocationList: changeLocationList,
+            changeObservationList: changeObservationList,
             changeOrganizationList: changeOrganizationList,
             changePatientList: changePatientList,
             changePersonList: changePersonList,
@@ -489,8 +503,13 @@
         practitionerListChanged: 'practitionerList.changed',
         relatedPersonListChanged: 'relatedPersonList.changed',
         serverChanged: 'server.changed',
-        valueSetListChanged: 'valueSetList.changed'
-
+        valueSetListChanged: 'valueSetList.changed',
+        observationListChanged: 'observationList.changed',
+        conditionListChanged: 'conditionList.changed',
+        procedureListChanged: 'procedureList.changed',
+        allergyListChanged: 'allergyList.changed',
+        medicationListChanged: 'medicationList.changed',
+        encounterListChanged: 'encounterList.changed'
     };
 
     var config = {
@@ -779,6 +798,12 @@
         cfg.config.locationListChangeEvent = config.events.locationListChanged;
         cfg.config.organizationListChangeEvent = config.events.organizationListChanged;
         cfg.config.valueSetListChangeEvent = config.events.valueSetListChanged;
+        cfg.config.observationListChangeEvent = config.events.observationListChanged;
+        cfg.config.conditionListChangeEvent = config.events.conditionListChanged;
+        cfg.config.procedureListChangeEvent = config.events.procedureListChanged;
+        cfg.config.allergyListChangeEvent = config.events.allergyListChanged;
+        cfg.config.medicationListChangeEvent = config.events.medicationListChanged;
+        cfg.config.encounterListChangeEvent = config.events.encounterListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {
@@ -1412,20 +1437,20 @@
                     },
                     {
                         id: 1,
-                        name: "HAPI",
+                        name: "HAPI (Open)",
                         baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
                     },
-                    {
+/*                   {
                         id: 2,
                         name: "RelayHealth (Stage)",
                         baseUrl: "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
                         resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/stage",
                         mode: "implicit"
-                    },
+                    },*/
                     {
                         id: 3,
-                        name: "RelayHealth (Dev)",
+                        name: "RelayHealth",
                         baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
                         resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/dev",
@@ -1437,20 +1462,22 @@
                         baseUrl: "http://fhir2.healthintersections.com.au/open"
                     },
                     {
+                        id: 7,
+                        name: "HealthConnex",
+                        baseUrl: "http://sqlonfhir.azurewebsites.net/fhir"
+                    },
+                    {
                         id: 5,
                         name: "Furore Spark",
                         baseUrl: "http://spark.furore.com/fhir"
                     },
+                        /*
                     {
                         id: 6,
                         name: "Aegis",
                         baseUrl: "http://wildfhir.aegis.net/fhir2"
                     },
-                    {
-                        id: 7,
-                        name: "HealthConnex",
-                        baseUrl: "http://sqlonfhir.azurewebsites.net/fhir"
-                    },
+
                     {
                         id: 8,
                         name: "EPIC",
@@ -1488,7 +1515,7 @@
                         id: 13,
                         name: "MEDITECH",
                         baseUrl: "http://direct.meditech.com/FHIR/api2"
-                    }
+                    },*/
                 ];
                 var servers = dataCache.readFromCache(serversKey);
                 if (angular.isUndefined(servers)) {
@@ -8293,6 +8320,107 @@
 (function () {
     'use strict';
 
+    var controllerId = 'observationList';
+
+    function observationList($location, $mdDialog, $scope, common, config, fhirServers, observationService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+        var noToast = false;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                }, function (error) {
+                    logError('Error initializing observation search.', error);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToObservation(observation) {
+            if (observation && observation.$$hashKey) {
+                $location.path('/observation/view/' + observation.$$hashKey);
+            }
+        }
+        vm.goToObservation = goToObservation;
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            observationService.getObservationsByLink(url)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Observations from ' +
+                        vm.activeServer.name + '.');
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                })
+                .then(_processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+        vm.dereferenceLink = dereferenceLink;
+
+        $scope.$on(config.events.observationListChanged,
+            function (event, data) {
+                _processSearchResults(data);
+                logDebug("Observation list updated.");
+            }
+        );
+
+        function _processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.observations = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function showRawData($index, $event) {
+            _showRawData(vm.observations[$index], $event);
+        }
+
+        vm.showRawData = showRawData;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event,
+                clickOutsideToClose: true
+            });
+        }
+
+        vm.activeServer = null;
+        vm.observations = [];
+        vm.isBusy = false;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdDialog', '$scope', 'common', 'config', 'fhirServers', 'observationService', observationList]);
+})();
+(function () {
+    'use strict';
+
     var controllerId = 'organizationList';
 
     function organizationList($location, $scope, common, config, fhirServers, organizationService) {
@@ -13931,7 +14059,7 @@
             coding.system = vm.smokingStatuses.system;
             smokingStatusObs.code.coding.push(coding);
             smokingStatusObs.status = "final";
-            smokingStatusObs.patient = {
+            smokingStatusObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -13955,7 +14083,7 @@
                 units: "mm[Hg]"
             };
             systolicObs.status = "final";
-            systolicObs.patient = {
+            systolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -13985,7 +14113,7 @@
                 system: "http://snomed.info/sct"
             };
             systolicObs.status = "final";
-            systolicObs.patient = {
+            systolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -14039,7 +14167,7 @@
                 system: "http://snomed.info/sct"
             };
             bodyTempObs.status = "final";
-            bodyTempObs.patient = {
+            bodyTempObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -14070,7 +14198,7 @@
                 code: "20053-5"
             };
             systolicObs.status = "final";
-            systolicObs.patient = {
+            systolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -14101,7 +14229,7 @@
                 code: "20053-5"
             };
             diastolicObs.status = "final";
-            diastolicObs.patient = {
+            diastolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -14129,7 +14257,7 @@
                 coding.system = vm.interpretations.system;
                 bpInterpretationObs.interpretation.coding.push(coding);
                 bpInterpretationObs.status = "final";
-                bpInterpretationObs.patient = {
+                bpInterpretationObs.subject = {
                     reference: 'Patient/' + vm.consultation.patient.id,
                     display: vm.consultation.patient.fullName
                 };
@@ -14255,7 +14383,7 @@
                 system: "http://snomed.info/sct"
             };
             bmiObs.status = "final";
-            bmiObs.patient = {
+            bmiObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -14313,7 +14441,7 @@
                 code: "258677007"
             };
             heightObs.status = "final";
-            heightObs.patient = {
+            heightObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -14345,7 +14473,7 @@
                 code: "258693003"
             };
             weightObs.status = "final";
-            weightObs.patient = {
+            weightObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -15467,7 +15595,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            hsCRPObs.appliesDateTime = vm.lab.date.toISOString();
+            hsCRPObs.effectiveDateTime = vm.lab.date.toISOString();
             return hsCRPObs;
         }
 
@@ -15506,7 +15634,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            triglycerideResult.appliesDateTime = vm.lab.date.toISOString();
+            triglycerideResult.effectiveDateTime = vm.lab.date.toISOString();
             return triglycerideResult;
         }
 
@@ -15546,7 +15674,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            cholesterolResult.appliesDateTime = vm.lab.date.toISOString();
+            cholesterolResult.effectiveDateTime = vm.lab.date.toISOString();
             return cholesterolResult;
         }
 
@@ -15591,7 +15719,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            ldlCResult.appliesDateTime = vm.lab.date.toISOString();
+            ldlCResult.effectiveDateTime = vm.lab.date.toISOString();
 
             return ldlCResult;
         }
@@ -15631,7 +15759,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            hdlCResult.appliesDateTime = vm.lab.date.toISOString();
+            hdlCResult.effectiveDateTime = vm.lab.date.toISOString();
 
             return hdlCResult;
         }
@@ -20422,6 +20550,7 @@
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var $q = common.$q;
         var noToast = false;
 
@@ -20489,8 +20618,8 @@
 
         vm.getOrganizationReference = getOrganizationReference;
 
-        function _getEverything() {
-            patientService.getPatientEverything(vm.patient.resourceId)
+        function _getEverything(patientId) {
+            patientService.getPatientEverything(patientId)
                 .then(function (data) {
                     vm.summary = data.summary;
                     vm.history = data.history;
@@ -20501,14 +20630,18 @@
         }
 
         function _getObservations(patientId) {
+            var deferred = $q.defer();
             observationService.getObservations(vm.activeServer.baseUrl, null, patientId)
                 .then(function (data) {
-                    vm.observations = data.entry;
-                    logSuccess("Retrieved observations for patient " + patientId, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Observations from ' + vm.activeServer.name + '.');
+                    common.changeObservationList(data);
+                    deferred.resolve();
                 }, function (error) {
-                    vm.isBusy = false;
-                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
                 });
+            return deferred.promise;
         }
 
         function _getMedicationStatements(patientId) {
@@ -20636,7 +20769,7 @@
         }
 
         function _getClinicalData(patientId)  {
-            _getEverything();
+        //    _getEverything(patientId);
             _getObservations(patientId);
             _getMedicationStatements(patientId);
             _getConditions(patientId);

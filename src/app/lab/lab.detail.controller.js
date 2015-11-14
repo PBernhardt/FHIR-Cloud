@@ -511,7 +511,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            hsCRPObs.appliesDateTime = vm.lab.date.toISOString();
+            hsCRPObs.effectiveDateTime = vm.lab.date.toISOString();
             return hsCRPObs;
         }
 
@@ -550,7 +550,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            triglycerideResult.appliesDateTime = vm.lab.date.toISOString();
+            triglycerideResult.effectiveDateTime = vm.lab.date.toISOString();
             return triglycerideResult;
         }
 
@@ -590,7 +590,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            cholesterolResult.appliesDateTime = vm.lab.date.toISOString();
+            cholesterolResult.effectiveDateTime = vm.lab.date.toISOString();
             return cholesterolResult;
         }
 
@@ -635,7 +635,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            ldlCResult.appliesDateTime = vm.lab.date.toISOString();
+            ldlCResult.effectiveDateTime = vm.lab.date.toISOString();
 
             return ldlCResult;
         }
@@ -675,7 +675,7 @@
                 "reference": 'Patient/' + vm.lab.patient.id,
                 "display": vm.lab.patient.fullName
             };
-            hdlCResult.appliesDateTime = vm.lab.date.toISOString();
+            hdlCResult.effectiveDateTime = vm.lab.date.toISOString();
 
             return hdlCResult;
         }

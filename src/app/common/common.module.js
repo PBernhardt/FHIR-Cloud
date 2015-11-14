@@ -58,6 +58,12 @@
                 $broadcast(commonConfig.config.locationListChangeEvent, locations);
             }
         }
+
+        function changeObservationList(observations) {
+            if (angular.isDefined(observations)) {
+                $delayedBroadcast(commonConfig.config.observationListChangeEvent, observations);
+            }
+        }
         
         function changeOrganizationList(organizations) {
             if (angular.isDefined(organizations)) {
@@ -103,6 +109,13 @@
 
         function $broadcast() {
             return $rootScope.$broadcast.apply($rootScope, arguments);
+        }
+
+        function $delayedBroadcast(event, data) {
+            function resumeBroadcast() {
+                $broadcast(event, data);
+            }
+            $timeout(resumeBroadcast, 1000);
         }
 
         function generateUUID() {
@@ -272,6 +285,7 @@
             // generic
             activateController: activateController,
             changeLocationList: changeLocationList,
+            changeObservationList: changeObservationList,
             changeOrganizationList: changeOrganizationList,
             changePatientList: changePatientList,
             changePersonList: changePersonList,

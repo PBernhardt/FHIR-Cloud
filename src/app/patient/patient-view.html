@@ -208,28 +208,7 @@
                 </md-list>
             </md-tab>
             <md-tab label="Observations">
-                <md-list>
-                    <md-list-item ng-click="vm.showObservations($index, $event)" class="md-3-line"
-                                  ng-repeat="item in vm.observations">
-                        <md-icon md-svg-src="view"></md-icon>
-                        <div class="md-list-item-text">
-                            <div ng-hide="item.resource.code && item.resource.code.text">
-                                <h4>{{ item.resource.resourceType }}</h4>
-                            </div>
-                            <div ng-show="item.resource.code && item.resource.code.text">
-                                <h4>{{ item.resource.code.text }}</h4>
-                            </div>
-                            <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
-                            </div>
-                            <div ng-show="item.resource.emptyReason.text">
-                                <p> {{ item.resource.emptyReason.text }}</p>
-                            </div>
-                            <div ng-show="item.resource.appliesDateTime">
-                                <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
-                            </div>
-                        </div>
-                    </md-list-item>
-                </md-list>
+                <div ng-include="'elements/observationList/observationList.html'"></div>
             </md-tab>
             <md-tab label="Procedures">
                 <md-list>
@@ -279,7 +258,7 @@
                     </md-list-item>
                 </md-list>
             </md-tab>
-            <md-tab label="Clinical Summary">
+<!--            <md-tab label="Clinical Summary">
                 <md-list>
                     <md-list-item ng-click="vm.showClinicalData($index, $event)" class="md-3-line"
                                   ng-repeat="item in vm.summary">
@@ -302,8 +281,8 @@
                         </div>
                     </md-list-item>
                 </md-list>
-            </md-tab>
-            <md-tab label="Audit History">
+            </md-tab>-->
+<!--            <md-tab label="Audit History">
                 <md-list>
                     <md-list-item ng-repeat="ev in vm.history" ng-click="vm.showAuditData($index, $event)"
                                   class="md-2-line">
@@ -316,7 +295,7 @@
                         <md-divider ng-if="!$last"></md-divider>
                     </md-list-item>
                 </md-list>
-            </md-tab>
+            </md-tab>-->
         </md-tabs>
     </div>
 </div>

@@ -36,8 +36,13 @@
         practitionerListChanged: 'practitionerList.changed',
         relatedPersonListChanged: 'relatedPersonList.changed',
         serverChanged: 'server.changed',
-        valueSetListChanged: 'valueSetList.changed'
-
+        valueSetListChanged: 'valueSetList.changed',
+        observationListChanged: 'observationList.changed',
+        conditionListChanged: 'conditionList.changed',
+        procedureListChanged: 'procedureList.changed',
+        allergyListChanged: 'allergyList.changed',
+        medicationListChanged: 'medicationList.changed',
+        encounterListChanged: 'encounterList.changed'
     };
 
     var config = {
@@ -326,6 +331,12 @@
         cfg.config.locationListChangeEvent = config.events.locationListChanged;
         cfg.config.organizationListChangeEvent = config.events.organizationListChanged;
         cfg.config.valueSetListChangeEvent = config.events.valueSetListChanged;
+        cfg.config.observationListChangeEvent = config.events.observationListChanged;
+        cfg.config.conditionListChangeEvent = config.events.conditionListChanged;
+        cfg.config.procedureListChangeEvent = config.events.procedureListChanged;
+        cfg.config.allergyListChangeEvent = config.events.allergyListChanged;
+        cfg.config.medicationListChangeEvent = config.events.medicationListChanged;
+        cfg.config.encounterListChangeEvent = config.events.encounterListChanged;
     }]);
 
     app.config(['$compileProvider', function ($compileProvider) {

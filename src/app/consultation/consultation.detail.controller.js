@@ -493,7 +493,7 @@
             coding.system = vm.smokingStatuses.system;
             smokingStatusObs.code.coding.push(coding);
             smokingStatusObs.status = "final";
-            smokingStatusObs.patient = {
+            smokingStatusObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -517,7 +517,7 @@
                 units: "mm[Hg]"
             };
             systolicObs.status = "final";
-            systolicObs.patient = {
+            systolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -547,7 +547,7 @@
                 system: "http://snomed.info/sct"
             };
             systolicObs.status = "final";
-            systolicObs.patient = {
+            systolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -601,7 +601,7 @@
                 system: "http://snomed.info/sct"
             };
             bodyTempObs.status = "final";
-            bodyTempObs.patient = {
+            bodyTempObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -632,7 +632,7 @@
                 code: "20053-5"
             };
             systolicObs.status = "final";
-            systolicObs.patient = {
+            systolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -663,7 +663,7 @@
                 code: "20053-5"
             };
             diastolicObs.status = "final";
-            diastolicObs.patient = {
+            diastolicObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -691,7 +691,7 @@
                 coding.system = vm.interpretations.system;
                 bpInterpretationObs.interpretation.coding.push(coding);
                 bpInterpretationObs.status = "final";
-                bpInterpretationObs.patient = {
+                bpInterpretationObs.subject = {
                     reference: 'Patient/' + vm.consultation.patient.id,
                     display: vm.consultation.patient.fullName
                 };
@@ -817,7 +817,7 @@
                 system: "http://snomed.info/sct"
             };
             bmiObs.status = "final";
-            bmiObs.patient = {
+            bmiObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -875,7 +875,7 @@
                 code: "258677007"
             };
             heightObs.status = "final";
-            heightObs.patient = {
+            heightObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };
@@ -907,7 +907,7 @@
                 code: "258693003"
             };
             weightObs.status = "final";
-            weightObs.patient = {
+            weightObs.subject = {
                 reference: 'Patient/' + vm.consultation.patient.id,
                 display: vm.consultation.patient.fullName
             };

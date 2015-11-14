@@ -1,0 +1,29 @@
+<div ng-controller="observationList as vm" ng-cloak>
+    <section>
+        <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
+        <md-list>
+            <md-list-item ng-click="vm.showRawData($index, $event)" class="md-3-line"
+                          ng-repeat="item in vm.observations">
+                <md-icon md-svg-src="view"></md-icon>
+                <div class="md-list-item-text">
+                    <div ng-hide="item.resource.code && item.resource.code.text">
+                        <h4>{{ item.resource.resourceType }}</h4>
+                    </div>
+                    <div ng-show="item.resource.code && item.resource.code.text">
+                        <h4>{{ item.resource.code.text }}</h4>
+                    </div>
+                    <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
+                    </div>
+                    <div ng-show="item.resource.emptyReason.text">
+                        <p> {{ item.resource.emptyReason.text }}</p>
+                    </div>
+                    <div ng-show="item.resource.effectiveDateTime">
+                        <p> {{ item.resource.effectiveDateTime | date:'medium' }}</p>
+                    </div>
+                </div>
+            </md-list-item>
+        </md-list>
+    </section>
+    <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
+    <fs-pagination ng-if="vm.observations.count > 0" on-click="vm.dereferenceLink(url)" links="vm.paging.links"></fs-pagination>
+</div>

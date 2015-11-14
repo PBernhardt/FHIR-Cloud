@@ -16,6 +16,7 @@
         var logInfo = common.logger.getLogFn(controllerId, 'info');
         var logWarning = common.logger.getLogFn(controllerId, 'warning');
         var logSuccess = common.logger.getLogFn(controllerId, 'success');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
         var $q = common.$q;
         var noToast = false;
 
@@ -83,8 +84,8 @@
 
         vm.getOrganizationReference = getOrganizationReference;
 
-        function _getEverything() {
-            patientService.getPatientEverything(vm.patient.resourceId)
+        function _getEverything(patientId) {
+            patientService.getPatientEverything(patientId)
                 .then(function (data) {
                     vm.summary = data.summary;
                     vm.history = data.history;
@@ -95,14 +96,18 @@
         }
 
         function _getObservations(patientId) {
+            var deferred = $q.defer();
             observationService.getObservations(vm.activeServer.baseUrl, null, patientId)
                 .then(function (data) {
-                    vm.observations = data.entry;
-                    logSuccess("Retrieved observations for patient " + patientId, null, noToast);
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' Observations from ' + vm.activeServer.name + '.');
+                    common.changeObservationList(data);
+                    deferred.resolve();
                 }, function (error) {
-                    vm.isBusy = false;
-                    logWarning(common.unexpectedOutcome(error), null, noToast);
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
                 });
+            return deferred.promise;
         }
 
         function _getMedicationStatements(patientId) {
@@ -230,7 +235,7 @@
         }
 
         function _getClinicalData(patientId)  {
-            _getEverything();
+        //    _getEverything(patientId);
             _getObservations(patientId);
             _getMedicationStatements(patientId);
             _getConditions(patientId);

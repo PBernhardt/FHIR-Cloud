@@ -41,20 +41,20 @@
                     },
                     {
                         id: 1,
-                        name: "HAPI",
+                        name: "HAPI (Open)",
                         baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
                     },
-                    {
+/*                   {
                         id: 2,
                         name: "RelayHealth (Stage)",
                         baseUrl: "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
                         resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/stage",
                         mode: "implicit"
-                    },
+                    },*/
                     {
                         id: 3,
-                        name: "RelayHealth (Dev)",
+                        name: "RelayHealth",
                         baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
                         resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/dev",
@@ -66,20 +66,22 @@
                         baseUrl: "http://fhir2.healthintersections.com.au/open"
                     },
                     {
+                        id: 7,
+                        name: "HealthConnex",
+                        baseUrl: "http://sqlonfhir.azurewebsites.net/fhir"
+                    },
+                    {
                         id: 5,
                         name: "Furore Spark",
                         baseUrl: "http://spark.furore.com/fhir"
                     },
+                        /*
                     {
                         id: 6,
                         name: "Aegis",
                         baseUrl: "http://wildfhir.aegis.net/fhir2"
                     },
-                    {
-                        id: 7,
-                        name: "HealthConnex",
-                        baseUrl: "http://sqlonfhir.azurewebsites.net/fhir"
-                    },
+
                     {
                         id: 8,
                         name: "EPIC",
@@ -117,7 +119,7 @@
                         id: 13,
                         name: "MEDITECH",
                         baseUrl: "http://direct.meditech.com/FHIR/api2"
-                    }
+                    },*/
                 ];
                 var servers = dataCache.readFromCache(serversKey);
                 if (angular.isUndefined(servers)) {
