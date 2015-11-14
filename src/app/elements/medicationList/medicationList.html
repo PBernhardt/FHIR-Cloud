@@ -1,9 +1,9 @@
-<div ng-controller="observationList as vm" ng-cloak>
+<div ng-controller="medicationList as vm" ng-cloak>
     <section>
         <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
         <md-list>
             <md-list-item ng-click="vm.showRawData($index, $event)" class="md-3-line"
-                          ng-repeat="item in vm.observations">
+                          ng-repeat="item in vm.medications">
                 <md-icon md-svg-src="view"></md-icon>
                 <div class="md-list-item-text">
                     <div ng-hide="item.resource.code && item.resource.code.text">
@@ -12,8 +12,8 @@
                     <div ng-show="item.resource.code && item.resource.code.text">
                         <h4>{{ item.resource.code.text }}</h4>
 
-                        <div ng-show="item.resource.effectiveDateTime">
-                            <p> {{ item.resource.effectiveDateTime | date:'medium' }}</p>
+                        <div ng-show="item.resource.onsetDateTime">
+                            <p> {{ item.resource.onsetDateTime | date:'mediumDate' }}</p>
                         </div>
                         <div ng-show="item.resource.status">
                             <p> {{ item.resource.status }}</p>
@@ -24,6 +24,6 @@
         </md-list>
     </section>
     <md-progress-linear md-mode="indeterminate" ng-if="vm.isBusy"></md-progress-linear>
-    <fs-pagination ng-if="vm.observations.count > 0" on-click="vm.dereferenceLink(url)"
+    <fs-pagination ng-if="vm.medications.count > 0" on-click="vm.dereferenceLink(url)"
                    links="vm.paging.links"></fs-pagination>
 </div>

@@ -18,6 +18,283 @@
 (function () {
     'use strict';
 
+    var serviceId = 'allergyIntoleranceService';
+
+    function allergyIntoleranceService($filter, $http, $timeout, common, dataCache, fhirClient, fhirServers, localValueSets) {
+        var dataCacheKey = 'localAllergyIntolerances';
+        var itemCacheKey = 'contextAllergyIntolerance';
+        var logError = common.logger.getLogFn(serviceId, 'error');
+        var logInfo = common.logger.getLogFn(serviceId, 'info');
+        var $q = common.$q;
+
+        function addAllergyIntolerance(resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    var url = server.baseUrl + "/AllergyIntolerance";
+                    fhirClient.addResource(url, resource)
+                        .then(function (results) {
+                            deferred.resolve(results);
+                        }, function (outcome) {
+                            deferred.reject(outcome);
+                        });
+                });
+            return deferred.promise;
+        }
+
+        function clearCache() {
+            dataCache.addToCache(dataCacheKey, null);
+        }
+
+        function deleteCachedAllergyIntolerance(hashKey, resourceId) {
+            function removeFromCache(searchResults) {
+                if (searchResults && searchResults.entry) {
+                    var cachedAllergyIntolerances = searchResults.entry;
+                    searchResults.entry = _.remove(cachedAllergyIntolerances, function (item) {
+                        return item.$$hashKey !== hashKey;
+                    });
+                    searchResults.totalResults = (searchResults.totalResults - 1);
+                    dataCache.addToCache(dataCacheKey, searchResults);
+                }
+                deferred.resolve();
+            }
+
+            var deferred = $q.defer();
+            deleteAllergyIntolerance(resourceId)
+                .then(getCachedSearchResults,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(removeFromCache,
+                function (error) {
+                    deferred.reject(error);
+                })
+                .then(function () {
+                    deferred.resolve();
+                });
+            return deferred.promise;
+        }
+
+        function deleteAllergyIntolerance(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.deleteResource(resourceId)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getCachedAllergyIntolerance(hashKey) {
+            function getAllergyIntolerance(searchResults) {
+                var cachedAllergyIntolerance;
+                var cachedAllergyIntolerances = searchResults.entry;
+                for (var i = 0, len = cachedAllergyIntolerances.length; i < len; i++) {
+                    if (cachedAllergyIntolerances[i].$$hashKey === hashKey) {
+                        cachedAllergyIntolerance = cachedAllergyIntolerances[i].resource;
+                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                        cachedAllergyIntolerance.resourceId = (baseUrl + cachedAllergyIntolerance.resourceType + '/' + cachedAllergyIntolerance.id);
+                        cachedAllergyIntolerance.hashKey = hashKey;
+                        break;
+                    }
+                }
+                if (cachedAllergyIntolerance) {
+                    deferred.resolve(cachedAllergyIntolerance);
+                } else {
+                    deferred.reject('AllergyIntolerance not found in cache: ' + hashKey);
+                }
+            }
+
+            var deferred = $q.defer();
+            var activeServer;
+            getCachedSearchResults()
+                .then(fhirServers.getActiveServer()
+                    .then(function (server) {
+                        activeServer = server;
+                    }))
+                .then(getAllergyIntolerance,
+                function () {
+                    deferred.reject('AllergyIntolerance search results not found in cache.');
+                });
+            return deferred.promise;
+        }
+
+        function getCachedSearchResults() {
+            var deferred = $q.defer();
+            var cachedSearchResults = dataCache.readFromCache(dataCacheKey);
+            if (cachedSearchResults) {
+                deferred.resolve(cachedSearchResults);
+            } else {
+                deferred.reject('Search results not cached.');
+            }
+            return deferred.promise;
+        }
+
+        function getAllergyIntolerance(resourceId) {
+            var deferred = $q.defer();
+            fhirClient.getResource(resourceId)
+                .then(function (data) {
+                    dataCache.addToCache(dataCacheKey, data);
+                    deferred.resolve(data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getAllergyIntoleranceContext() {
+            return dataCache.readFromCache(dataCacheKey);
+        }
+
+        function getAllergyIntoleranceReference(baseUrl, input) {
+            var deferred = $q.defer();
+            fhirClient.getResource(baseUrl + '/AllergyIntolerance?name=' + input + '&_count=20')
+                .then(function (results) {
+                    var familyHistories = [];
+                    if (results.data.entry) {
+                        angular.forEach(results.data.entry,
+                            function (item) {
+                                if (item.content && item.content.resourceType === 'AllergyIntolerance') {
+                                    familyHistories.push({
+                                        display: $filter('fullName')(item.content.name),
+                                        reference: item.id
+                                    });
+                                }
+                            });
+                    }
+                    if (familyHistories.length === 0) {
+                        familyHistories.push({display: "No matches", reference: ''});
+                    }
+                    deferred.resolve(familyHistories);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function searchAllergyIntolerances(baseUrl, searchFilter) {
+            var deferred = $q.defer();
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(organizationId)) {
+                deferred.reject('Invalid search input');
+            }
+            fhirClient.getResource(baseUrl + '/AllergyIntolerance?' + searchFilter + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getAllergyIntolerances(baseUrl, searchFilter, patientId) {
+            var deferred = $q.defer();
+            var params = '';
+
+            if (angular.isUndefined(searchFilter) && angular.isUndefined(patientId)) {
+                deferred.reject('Invalid search input');
+            }
+
+
+            if (angular.isDefined(patientId)) {
+                var patientParam = 'patient=' + patientId;
+                if (params.length > 1) {
+                    params = params + '&' + patientParam;
+                } else {
+                    params = patientParam;
+                }
+            }
+
+            fhirClient.getResource(baseUrl + '/AllergyIntolerance?' + params + '&_count=20')
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function getAllergyIntolerancesByLink(url) {
+            var deferred = $q.defer();
+            fhirClient.getResource(url)
+                .then(function (results) {
+                    dataCache.addToCache(dataCacheKey, results.data);
+                    deferred.resolve(results.data);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function initializeNewAllergyIntolerance() {
+            return {
+                "resourceType": "AllergyIntolerance",
+                "identifier": [],
+                "patient": null
+
+            };
+        }
+
+        function setAllergyIntoleranceContext(data) {
+            dataCache.addToCache(itemCacheKey, data);
+        }
+
+        function updateAllergyIntolerance(resourceVersionId, resource) {
+            _prepArrays(resource);
+            var deferred = $q.defer();
+            fhirClient.updateResource(resourceVersionId, resource)
+                .then(function (results) {
+                    deferred.resolve(results);
+                }, function (outcome) {
+                    deferred.reject(outcome);
+                });
+            return deferred.promise;
+        }
+
+        function seedRandomAllergyIntolerances(patientId, practitionerId) {
+
+        }
+
+        function _prepArrays(resource) {
+
+            if (resource.identifier.length === 0) {
+                resource.identifier = null;
+            }
+            return $q.when(resource);
+        }
+
+        var service = {
+            addAllergyIntolerance: addAllergyIntolerance,
+            clearCache: clearCache,
+            deleteCachedAllergyIntolerance: deleteCachedAllergyIntolerance,
+            deleteAllergyIntolerance: deleteAllergyIntolerance,
+            getCachedAllergyIntolerance: getCachedAllergyIntolerance,
+            getCachedSearchResults: getCachedSearchResults,
+            getAllergyIntolerance: getAllergyIntolerance,
+            getAllergyIntoleranceContext: getAllergyIntoleranceContext,
+            getAllergyIntoleranceReference: getAllergyIntoleranceReference,
+            getAllergyIntolerances: getAllergyIntolerances,
+            getAllergyIntolerancesByLink: getAllergyIntolerancesByLink,
+            initializeNewAllergyIntolerance: initializeNewAllergyIntolerance,
+            setAllergyIntoleranceContext: setAllergyIntoleranceContext,
+            updateAllergyIntolerance: updateAllergyIntolerance,
+            seedRandomAllergyIntolerances: seedRandomAllergyIntolerances,
+            searchAllergyIntolerances: searchAllergyIntolerances
+        };
+
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['$filter', '$http', '$timeout', 'common', 'dataCache', 'fhirClient',
+        'fhirServers', 'localValueSets', allergyIntoleranceService]);
+})
+();(function () {
+    'use strict';
+
     var controllerId = 'appGallery';
 
     function appGallery($location, $mdBottomSheet, $routeParams, common, fhirServers, patientService) {
@@ -199,6 +476,11 @@
                     $location.path('/conformance/view/current');
                 }
                 $broadcast(commonConfig.config.serverChangeEvent, server);
+            }
+        }
+        function changeAllergyList(list) {
+            if (angular.isDefined(list)) {
+                $delayedBroadcast(commonConfig.config.allergyListChangeEvent, list);
             }
         }
 
@@ -445,6 +727,7 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeAllergyList: changeAllergyList,
             changeConditionList: changeConditionList,
             changeLocationList: changeLocationList,
             changeObservationList: changeObservationList,
@@ -7184,6 +7467,107 @@
 })();(function () {
     'use strict';
 
+    var controllerId = 'allergyList';
+
+    function allergyList($location, $mdDialog, $scope, common, config, fhirServers, allergyIntoleranceService) {
+        /*jshint validthis:true */
+        var vm = this;
+
+        var logError = common.logger.getLogFn(controllerId, 'error');
+        var logDebug = common.logger.getLogFn(controllerId, 'debug');
+        var noToast = false;
+
+        function _activate() {
+            common.activateController([_getActiveServer()], controllerId)
+                .then(function () {
+                }, function (error) {
+                    logError('Error initializing allergy search.', error);
+                });
+        }
+
+        function _getActiveServer() {
+            fhirServers.getActiveServer()
+                .then(function (server) {
+                    vm.activeServer = server;
+                });
+        }
+
+        function goToAllergy(allergy) {
+            if (allergy && allergy.$$hashKey) {
+                $location.path('/allergy/view/' + allergy.$$hashKey);
+            }
+        }
+        vm.goToAllergy = goToAllergy;
+
+        function dereferenceLink(url) {
+            vm.isBusy = true;
+            allergyIntoleranceService.getAllergysByLink(url)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Allergys from ' +
+                        vm.activeServer.name + '.');
+                    return data;
+                }, function (error) {
+                    vm.isBusy = false;
+                    logError(common.unexpectedOutcome(error), null, noToast);
+                })
+                .then(_processSearchResults)
+                .then(function () {
+                    vm.isBusy = false;
+                });
+        }
+        vm.dereferenceLink = dereferenceLink;
+
+        $scope.$on(config.events.allergyListChanged,
+            function (event, data) {
+                _processSearchResults(data);
+                logDebug("Allergy list updated.");
+            }
+        );
+
+        function _processSearchResults(searchResults) {
+            if (searchResults) {
+                vm.allergys = (searchResults.entry || []);
+                vm.paging.links = (searchResults.link || []);
+                vm.paging.totalResults = (searchResults.total || 0);
+            }
+        }
+
+        function showRawData($index, $event) {
+            _showRawData(vm.allergys[$index], $event);
+        }
+
+        vm.showRawData = showRawData;
+
+        function _showRawData(item, event) {
+            $mdDialog.show({
+                templateUrl: 'templates/rawData-dialog.html',
+                controller: 'rawDataController',
+                locals: {
+                    data: item
+                },
+                targetEvent: event,
+                clickOutsideToClose: true
+            });
+        }
+
+        vm.activeServer = null;
+        vm.allergys = [];
+        vm.isBusy = false;
+        vm.paging = {
+            currentPage: 1,
+            totalResults: 0,
+            links: null
+        };
+
+        _activate();
+    }
+
+    angular.module('FHIRCloud').controller(controllerId,
+        ['$location', '$mdDialog', '$scope', 'common', 'config', 'fhirServers', 'allergyIntoleranceService', allergyList]);
+})();
+(function () {
+    'use strict';
+
     var controllerId = 'careProvider';
 
     function careProvider(common, fhirServers, organizationReferenceService, practitionerReferenceService, careProviderService) {
@@ -7301,6 +7685,64 @@
 
     angular.module('FHIRCloud').controller(controllerId,
         ['common', 'fhirServers', 'organizationReferenceService', 'practitionerReferenceService', 'careProviderService', careProvider]);
+})();(function () {
+    'use strict';
+
+    var serviceId = 'careProviderService';
+
+    function careProviderService(common) {
+        var careProviders = [];
+
+        function add(item) {
+            var index = getIndex(item.$$hashKey);
+            if (index > -1) {
+                careProviders[index] = item;
+            } else {
+                careProviders.push(item);
+            }
+        }
+
+        function getAll() {
+            return _.compact(careProviders);
+        }
+
+        function getIndex(hashKey) {
+            if (angular.isUndefined(hashKey) === false) {
+                for (var i = 0, len = careProviders.length; i < len; i++) {
+                    if (careProviders[i].$$hashKey === hashKey) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        function init(items) {
+            if (angular.isArray(items)) {
+                careProviders = items;
+            } else if (angular.isObject(items)) {
+                careProviders = [];
+                careProviders.push(items);
+            }
+            return careProviders;
+        }
+
+        function remove(item) {
+            var index = getIndex(item.$$hashKey);
+            careProviders.splice(index, 1);
+        }
+
+        var service = {
+            add: add,
+            remove: remove,
+            getAll: getAll,
+            init: init
+        };
+        return service;
+    }
+
+    angular.module('FHIRCloud').factory(serviceId, ['common', careProviderService]);
+
 })();(function () {
     'use strict';
 
@@ -9297,10 +9739,8 @@
 
     var controllerId = 'encounterDetail';
 
-    function encounterDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                             attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                             organizationService, encounterService, encounterValueSets, practitionerService, communicationService,
-                             careProviderService, observationService, config) {
+    function encounterDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, common, fhirServers,
+                             organizationService, encounterService, encounterValueSets) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -9610,10 +10050,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
-            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
-            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'encounterValueSets',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', encounterDetail]);
+        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'common', 'fhirServers',
+            'organizationService', 'encounterService', 'encounterValueSets', encounterDetail]);
 })();(function () {
     'use strict';
 
@@ -13626,9 +14064,8 @@
 
     var controllerId = 'consultationDetail';
 
-    function consultationDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window,
-                                common, fhirServers, localValueSets, identifierService, observationService,
-                                observationValueSets, practitionerService, careProviderService, patientService) {
+    function consultationDetail($filter, $location, $mdBottomSheet, common, fhirServers, observationService,
+                                observationValueSets, practitionerService, patientService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -14612,9 +15049,8 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
-            'common', 'fhirServers', 'localValueSets', 'identifierService', 'observationService',
-            'observationValueSets', 'practitionerService', 'careProviderService', 'patientService', consultationDetail]);
+        ['$filter', '$location', '$mdBottomSheet', 'common', 'fhirServers', 'observationService',
+            'observationValueSets', 'practitionerService', 'patientService', consultationDetail]);
 
 })();(function () {
     'use strict';
@@ -20598,7 +21034,7 @@
                            attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService,
                            identifierService, organizationService, patientService, contactPointService,
                            communicationService, patientCareProviderService, observationService, patientContactService,
-                           medicationStatementService, conditionService, procedureService) {
+                           medicationStatementService, conditionService, procedureService, allergyIntoleranceService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -20710,6 +21146,21 @@
                     vm.isBusy = false;
                     logWarning(common.unexpectedOutcome(error), null, noToast);
                 });
+        }
+
+        function _getAllergies(patientId) {
+            var deferred = $q.defer();
+            allergyIntoleranceService.getAllergyIntolerances(vm.activeServer.baseUrl, null, patientId)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' AllergyIntolerances from ' + vm.activeServer.name + '.');
+                    common.changeAllergyList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
+                });
+            return deferred.promise;
         }
 
         function _getConditions(patientId) {
@@ -20835,12 +21286,13 @@
             }
         }
 
-        function _getClinicalData(patientId)  {
-        //    _getEverything(patientId);
+        function _getClinicalData(patientId) {
+            //    _getEverything(patientId);
             _getObservations(patientId);
             _getMedicationStatements(patientId);
             _getConditions(patientId);
             _getProcedures(patientId);
+            _getAllergies(patientId);
         }
 
         function save() {
@@ -21054,7 +21506,7 @@
             'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
             'communicationService', 'patientCareProviderService', 'observationService', 'patientContactService',
-            'medicationStatementService', 'conditionService', 'procedureService', patientDetail]);
+            'medicationStatementService', 'conditionService', 'procedureService', 'allergyIntoleranceService', patientDetail]);
 })();(function () {
     'use strict';
 

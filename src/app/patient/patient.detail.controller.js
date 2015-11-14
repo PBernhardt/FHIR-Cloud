@@ -7,7 +7,7 @@
                            attachmentService, common, config, patientDemographicsService, fhirServers, humanNameService,
                            identifierService, organizationService, patientService, contactPointService,
                            communicationService, patientCareProviderService, observationService, patientContactService,
-                           medicationStatementService, conditionService, procedureService) {
+                           medicationStatementService, conditionService, procedureService, allergyIntoleranceService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -119,6 +119,21 @@
                     vm.isBusy = false;
                     logWarning(common.unexpectedOutcome(error), null, noToast);
                 });
+        }
+
+        function _getAllergies(patientId) {
+            var deferred = $q.defer();
+            allergyIntoleranceService.getAllergyIntolerances(vm.activeServer.baseUrl, null, patientId)
+                .then(function (data) {
+                    logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) +
+                        ' AllergyIntolerances from ' + vm.activeServer.name + '.');
+                    common.changeAllergyList(data);
+                    deferred.resolve();
+                }, function (error) {
+                    logError(common.unexpectedOutcome(error), error, noToast);
+                    deferred.resolve();
+                });
+            return deferred.promise;
         }
 
         function _getConditions(patientId) {
@@ -244,12 +259,13 @@
             }
         }
 
-        function _getClinicalData(patientId)  {
-        //    _getEverything(patientId);
+        function _getClinicalData(patientId) {
+            //    _getEverything(patientId);
             _getObservations(patientId);
             _getMedicationStatements(patientId);
             _getConditions(patientId);
             _getProcedures(patientId);
+            _getAllergies(patientId);
         }
 
         function save() {
@@ -463,5 +479,5 @@
             'addressService', 'attachmentService', 'common', 'config', 'patientDemographicsService', 'fhirServers',
             'humanNameService', 'identifierService', 'organizationService', 'patientService', 'contactPointService',
             'communicationService', 'patientCareProviderService', 'observationService', 'patientContactService',
-            'medicationStatementService', 'conditionService', 'procedureService', patientDetail]);
+            'medicationStatementService', 'conditionService', 'procedureService', 'allergyIntoleranceService', patientDetail]);
 })();

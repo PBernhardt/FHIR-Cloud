@@ -3,10 +3,8 @@
 
     var controllerId = 'encounterDetail';
 
-    function encounterDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, addressService,
-                             attachmentService, common, demographicsService, fhirServers, humanNameService, identifierService,
-                             organizationService, encounterService, encounterValueSets, practitionerService, communicationService,
-                             careProviderService, observationService, config) {
+    function encounterDetail($location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window, common, fhirServers,
+                             organizationService, encounterService, encounterValueSets) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -316,8 +314,6 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
-            'addressService', 'attachmentService', 'common', 'demographicsService', 'fhirServers',
-            'humanNameService', 'identifierService', 'organizationService', 'encounterService', 'encounterValueSets',
-            'practitionerService', 'communicationService', 'careProviderService', 'observationService', 'config', encounterDetail]);
+        ['$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window', 'common', 'fhirServers',
+            'organizationService', 'encounterService', 'encounterValueSets', encounterDetail]);
 })();

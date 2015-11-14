@@ -110,6 +110,7 @@ module.exports = function (grunt) {
 
                 src: [
                     'app/app.module.js',
+                    'app/allergyIntolerance/allergyIntolerance.service.js' ,
                     'app/appGallery/appGallery.controller.js',
                     'app/common/common.module.js',
                     'app/common/config.js',
@@ -141,7 +142,9 @@ module.exports = function (grunt) {
                     'app/elements/attachment/attachment.controller.js',
                     'app/elements/address/address.controller.js',
                     'app/elements/address/address.service.js',
+                    'app/elements/allergyList/allergyList.controller.js',
                     'app/elements/careProvider/careProvider.controller.js',
+                    'app/elements/careProvider/careProvider.service.js',
                     'app/elements/communication/communication.controller.js',
                     'app/elements/communication/communication.service.js',
                     'app/elements/conditionList/conditionList.controller.js',

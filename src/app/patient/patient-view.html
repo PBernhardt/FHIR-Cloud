@@ -136,28 +136,7 @@
                 </div>
             </md-tab>
             <md-tab label="Allergies">
-                <md-list>
-                    <md-list-item ng-click="vm.showAllergies($index, $event)" class="md-3-line"
-                                  ng-repeat="item in vm.allergies">
-                        <md-icon md-svg-src="view"></md-icon>
-                        <div class="md-list-item-text">
-                            <div ng-hide="item.resource.code && item.resource.code.text">
-                                <h4>{{ item.resource.resourceType }}</h4>
-                            </div>
-                            <div ng-show="item.resource.code && item.resource.code.text">
-                                <h4>{{ item.resource.code.text }}</h4>
-                            </div>
-                            <div ng-if="item.resource.text.div" ng-bind-html="item.resource.text.div">
-                            </div>
-                            <div ng-show="item.resource.emptyReason.text">
-                                <p> {{ item.resource.emptyReason.text }}</p>
-                            </div>
-                            <div ng-show="item.resource.appliesDateTime">
-                                <p> {{ item.resource.appliesDateTime | date:'medium' }}</p>
-                            </div>
-                        </div>
-                    </md-list-item>
-                </md-list>
+                <div ng-include="'elements/allergyList/allergyList.html'"></div>
             </md-tab>
             <md-tab label="Medications">
                 <md-list>

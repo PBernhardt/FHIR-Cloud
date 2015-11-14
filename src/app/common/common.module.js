@@ -52,6 +52,11 @@
                 $broadcast(commonConfig.config.serverChangeEvent, server);
             }
         }
+        function changeAllergyList(list) {
+            if (angular.isDefined(list)) {
+                $delayedBroadcast(commonConfig.config.allergyListChangeEvent, list);
+            }
+        }
 
         function changeConditionList(list) {
             if (angular.isDefined(list)) {
@@ -296,6 +301,7 @@
             $timeout: $timeout,
             // generic
             activateController: activateController,
+            changeAllergyList: changeAllergyList,
             changeConditionList: changeConditionList,
             changeLocationList: changeLocationList,
             changeObservationList: changeObservationList,

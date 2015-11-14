@@ -3,9 +3,8 @@
 
     var controllerId = 'consultationDetail';
 
-    function consultationDetail($filter, $location, $mdBottomSheet, $mdDialog, $routeParams, $scope, $window,
-                                common, fhirServers, localValueSets, identifierService, observationService,
-                                observationValueSets, practitionerService, careProviderService, patientService) {
+    function consultationDetail($filter, $location, $mdBottomSheet, common, fhirServers, observationService,
+                                observationValueSets, practitionerService, patientService) {
 
         /*jshint validthis:true */
         var vm = this;
@@ -989,8 +988,7 @@
     }
 
     angular.module('FHIRCloud').controller(controllerId,
-        ['$filter', '$location', '$mdBottomSheet', '$mdDialog', '$routeParams', '$scope', '$window',
-            'common', 'fhirServers', 'localValueSets', 'identifierService', 'observationService',
-            'observationValueSets', 'practitionerService', 'careProviderService', 'patientService', consultationDetail]);
+        ['$filter', '$location', '$mdBottomSheet', 'common', 'fhirServers', 'observationService',
+            'observationValueSets', 'practitionerService', 'patientService', consultationDetail]);
 
 })();
