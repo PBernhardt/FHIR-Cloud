@@ -1744,17 +1744,17 @@
                         name: "HAPI (Open)",
                         baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
                     },
-/*                   {
+                   {
                         id: 2,
-                        name: "RelayHealth (Stage)",
+                        name: "RelayHealth (Sandbox 2)",
                         baseUrl: "https://api.stage.data.relayhealth.com/rhc/fhirservice",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
                         resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/stage",
                         mode: "implicit"
-                    },*/
+                    },
                     {
                         id: 3,
-                        name: "RelayHealth",
+                        name: "RelayHealth (Sandbox 1)",
                         baseUrl: "https://api.dev.data.relayhealth.com/rhc/fhirservice",
                         clientId: "d59a5f56-cb04-4070-8c13-ee6b54e81bde",
                         resourceId: "http://apps.data.mccadevdpat.onmicrosoft.com/rhc/fhirservice/dev",
@@ -22676,7 +22676,7 @@
         function _getAffiliatedDoctors(org) {
             if (org && org.reference) {
                 var deferred = $q.defer();
-                var queryString = 'role=doctor&organization=' + org.reference;
+                var queryString = 'role=doctor&organization=' + ($filter)('idFromURL')(org.reference);
                 practitionerService.searchPractitioners(vm.activeServer.baseUrl, queryString)
                     .then(function (data) {
                         _processSearchResults(data);

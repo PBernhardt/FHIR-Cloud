@@ -59,7 +59,7 @@
         function _getAffiliatedDoctors(org) {
             if (org && org.reference) {
                 var deferred = $q.defer();
-                var queryString = 'role=doctor&organization=' + org.reference;
+                var queryString = 'role=doctor&organization=' + ($filter)('idFromURL')(org.reference);
                 practitionerService.searchPractitioners(vm.activeServer.baseUrl, queryString)
                     .then(function (data) {
                         _processSearchResults(data);
