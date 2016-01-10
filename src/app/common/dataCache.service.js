@@ -21,7 +21,7 @@
                 var items = readFromCache(key);
                 if (items) {
                     for (var i = 0, len = items.length; i < len; i++) {
-                        if (items[i].$$hashKey === hash) {
+                        if (items[i].resource.id === hash) {
                             foundItem = items[i];
                             break;
                         }

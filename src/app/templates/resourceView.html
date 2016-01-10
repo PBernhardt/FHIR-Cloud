@@ -1,5 +1,5 @@
 <md-input-container class="md-icon-float" ng-if="resourceId">
     <label>Resource Id</label>
     <md-icon md-svg-icon="view" ng-click="show($event)"></md-icon>
-    <input ng-model="resourceId" ng-readonly/>
+    <input ng-model="resourceId" type="text" readonly size="{{resourceId.length}}"/>
 </md-input-container>

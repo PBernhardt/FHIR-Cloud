@@ -2,5 +2,5 @@
     <label>{{title || 'Managing Organization'}}</label>
     <md-icon md-svg-icon="hospital"
              ng-click="goToManagingOrganization(organization.reference)"></md-icon>
-    <input ng-model="organization.display" ng-readonly="true"/>
+    <input ng-model="organization.display" type="text" size="{{organization.display.length}}" readonly>
 </md-input-container>

@@ -26,9 +26,9 @@
                 });
         }
 
-        function goToPractitioner(practitioner) {
-            if (practitioner && practitioner.$$hashKey) {
-                $location.path('/practitioner/view/' + practitioner.$$hashKey);
+        function goToPractitioner(id) {
+            if (id) {
+                $location.path('/practitioner/view/' + id);
             }
         }
         vm.goToPractitioner = goToPractitioner;

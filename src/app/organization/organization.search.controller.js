@@ -60,13 +60,11 @@
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
-            vm.noresults = false;
             organizationService.getOrganizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from '
                         + vm.activeServer.name + '.');
                     deferred.resolve(data.entry || []);
-                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);
@@ -124,8 +122,8 @@
         vm.getOrganizationReference = getOrganizationReference;
 
         function goToOrganization(organization) {
-            if (organization && organization.$$hashKey) {
-                $location.path('/organization/view/' + organization.$$hashKey);
+            if (organization && organization.resource.id) {
+                $location.path('/organization/view/' + organization.resource.id);
             }
         }
 

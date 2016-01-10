@@ -46,7 +46,7 @@
                 var removed = false;
                 var cachedOrganizations = searchResults.entry;
                 for (var i = 0, len = cachedOrganizations.length; i < len; i++) {
-                    if (cachedOrganizations[i].$$hashKey === hashKey) {
+                    if (cachedOrganizations[i].resource.id === hashKey) {
                         cachedOrganizations.splice(i, 1);
                         searchResults.entry = cachedOrganizations;
                         searchResults.totalResults = (searchResults.totalResults - 1);
@@ -102,7 +102,9 @@
             function getOrganization(searchResults) {
                 var cachedOrganization;
                 var cachedOrganizations = searchResults.entry;
-                cachedOrganization = _.find(cachedOrganizations, {'$$hashKey': hashKey});
+                cachedOrganization = _.result(_.find(cachedOrganizations, function(item){
+                    return item.resource.id == hashKey;
+                }), 'resource');
                 if (cachedOrganization) {
                     deferred.resolve(cachedOrganization);
                 } else {

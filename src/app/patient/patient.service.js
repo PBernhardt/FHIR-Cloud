@@ -94,11 +94,17 @@
                 var cachedPatient;
                 var cachedPatients = searchResults.entry;
                 for (var i = 0, len = cachedPatients.length; i < len; i++) {
-                    if (cachedPatients[i].$$hashKey === hashKey) {
+                    if (angular.isUndefined(cachedPatients[i].resource)){
+                        logError("Cached patient resource is undefined.");
+                    }
+                    else if (cachedPatients[i].resource.id == hashKey) {
                         cachedPatient = cachedPatients[i].resource;
-                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
-                        cachedPatient.resourceId = (baseUrl + cachedPatient.resourceType + '/' + cachedPatient.id);
-                        cachedPatient.hashKey = hashKey;
+                        cachedPatient.resourceId = cachedPatients[i].fullUrl;
+                        if (angular.isUndefined(cachedPatient.resourceId)) {
+                            logError("Cached patient full url is undefined.");
+                            var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                            cachedPatient.resourceId = (baseUrl + cachedPatient.resourceType + '/' + cachedPatient.id)
+                        }
                         break;
                     }
                 }

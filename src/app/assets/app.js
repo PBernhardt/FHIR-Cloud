@@ -1152,7 +1152,7 @@
                 var items = readFromCache(key);
                 if (items) {
                     for (var i = 0, len = items.length; i < len; i++) {
-                        if (items[i].$$hashKey === hash) {
+                        if (items[i].resource.id === hash) {
                             foundItem = items[i];
                             break;
                         }
@@ -1537,7 +1537,7 @@
                 method: 'post',
                 url: baseUrl,
                 data: fhirResource,
-                timeout: 7000
+                timeout: 20000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
@@ -1564,7 +1564,7 @@
             var req = {
                 method: 'delete',
                 url: resourceUrl,
-                timeout: 7000
+                timeout: 5000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
@@ -1603,7 +1603,7 @@
             setTimeout(function () {
                 timedOut = true;
                 timeout.resolve();
-            }, (10000));
+            }, (20000));
 
             var req = {
                 method: 'get',
@@ -1744,7 +1744,7 @@
                         name: "HAPI (Open)",
                         baseUrl: "http://fhirtest.uhn.ca/baseDstu2"
                     },
-                   {
+                    {
                         id: 2,
                         name: "RelayHealth (Sandbox 2)",
                         baseUrl: "https://api.stage.data.relayhealth.com/rhc/fhirservice",
@@ -1766,15 +1766,35 @@
                         baseUrl: "http://fhir2.healthintersections.com.au/open"
                     },
                     {
-                        id: 7,
-                        name: "HealthConnex",
-                        baseUrl: "http://sqlonfhir.azurewebsites.net/fhir"
-                    },
-                    {
                         id: 5,
                         name: "Furore Spark",
                         baseUrl: "http://spark.furore.com/fhir"
                     },
+                    {
+                        id: 6,
+                        name: "CareEvolution",
+                        baseUrl: "http://fhir2016.careevolution.com/DAF/fhir"
+                    },
+                    {
+                        id: 7,
+                        name: "Cerner",
+                        baseUrl: "https://fhir-open.sandboxcernerpowerchart.com/dstu2/d075cf8b-3261-481d-97e5-ba6c48d3b41f"
+                    },
+                    {
+                        id: 8,
+                        name: "EPIC",
+                        baseUrl: "https://open-ic.epic.com/Argonaut-Unsecure/API/FHIR/Argonaut"
+                    },
+                    {
+                        id: 10,
+                        name: "Transcend Insights",
+                        baseUrl: "http://rahulsom.ngrok.com/healthdock/alpine/fhir"
+                    },
+                    {
+                        id: 11,
+                        name: "McKesson",
+                        baseUrl: "http://greenflatirons3.azurewebsites.net/fhir"
+                    }
                         /*
                     {
                         id: 6,
@@ -9054,8 +9074,8 @@
         }
 
         function goToOrganization(organization) {
-            if (organization && organization.$$hashKey) {
-                $location.path('/organization/view/' + organization.$$hashKey);
+            if (organization && organization.resource.id) {
+                $location.path('/organization/view/' + organization.resource.id);
             }
         }
         vm.goToOrganization = goToOrganization;
@@ -9311,9 +9331,9 @@
                 });
         }
 
-        function goToPatient(patient) {
-            if (patient && patient.$$hashKey) {
-                $location.path('/patient/view/' + patient.$$hashKey);
+        function goToPatient(id) {
+            if (id) {
+                $location.path('/patient/view/' + id);
             }
         }
         vm.goToPatient = goToPatient;
@@ -9477,9 +9497,9 @@
                 });
         }
 
-        function goToPractitioner(practitioner) {
-            if (practitioner && practitioner.$$hashKey) {
-                $location.path('/practitioner/view/' + practitioner.$$hashKey);
+        function goToPractitioner(id) {
+            if (id) {
+                $location.path('/practitioner/view/' + id);
             }
         }
         vm.goToPractitioner = goToPractitioner;
@@ -19943,13 +19963,11 @@
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
-            vm.noresults = false;
             organizationService.getOrganizations(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logDebug('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Organizations from '
                         + vm.activeServer.name + '.');
                     deferred.resolve(data.entry || []);
-                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
                 }, function (error) {
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);
@@ -20007,8 +20025,8 @@
         vm.getOrganizationReference = getOrganizationReference;
 
         function goToOrganization(organization) {
-            if (organization && organization.$$hashKey) {
-                $location.path('/organization/view/' + organization.$$hashKey);
+            if (organization && organization.resource.id) {
+                $location.path('/organization/view/' + organization.resource.id);
             }
         }
 
@@ -20184,7 +20202,7 @@
                 var removed = false;
                 var cachedOrganizations = searchResults.entry;
                 for (var i = 0, len = cachedOrganizations.length; i < len; i++) {
-                    if (cachedOrganizations[i].$$hashKey === hashKey) {
+                    if (cachedOrganizations[i].resource.id === hashKey) {
                         cachedOrganizations.splice(i, 1);
                         searchResults.entry = cachedOrganizations;
                         searchResults.totalResults = (searchResults.totalResults - 1);
@@ -20240,7 +20258,9 @@
             function getOrganization(searchResults) {
                 var cachedOrganization;
                 var cachedOrganizations = searchResults.entry;
-                cachedOrganization = _.find(cachedOrganizations, {'$$hashKey': hashKey});
+                cachedOrganization = _.result(_.find(cachedOrganizations, function(item){
+                    return item.resource.id == hashKey;
+                }), 'resource');
                 if (cachedOrganization) {
                     deferred.resolve(cachedOrganization);
                 } else {
@@ -21756,8 +21776,8 @@
         }
 
         function goToPatient(patient) {
-            if (patient && patient.$$hashKey) {
-                $location.path('/patient/view/' + patient.$$hashKey);
+            if (patient && patient.resource.id) {
+                $location.path('/patient/view/' + patient.resource.id);
             }
         }
 
@@ -21883,13 +21903,11 @@
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
-            vm.noresults = false;
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
                         vm.activeServer.name, null, noToast);
-                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
-                    deferred.resolve(data.entry);
+                     deferred.resolve(data.entry || []);
                 }, function (error) {
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);
@@ -22111,11 +22129,17 @@
                 var cachedPatient;
                 var cachedPatients = searchResults.entry;
                 for (var i = 0, len = cachedPatients.length; i < len; i++) {
-                    if (cachedPatients[i].$$hashKey === hashKey) {
+                    if (angular.isUndefined(cachedPatients[i].resource)){
+                        logError("Cached patient resource is undefined.");
+                    }
+                    else if (cachedPatients[i].resource.id == hashKey) {
                         cachedPatient = cachedPatients[i].resource;
-                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
-                        cachedPatient.resourceId = (baseUrl + cachedPatient.resourceType + '/' + cachedPatient.id);
-                        cachedPatient.hashKey = hashKey;
+                        cachedPatient.resourceId = cachedPatients[i].fullUrl;
+                        if (angular.isUndefined(cachedPatient.resourceId)) {
+                            logError("Cached patient full url is undefined.");
+                            var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                            cachedPatient.resourceId = (baseUrl + cachedPatient.resourceType + '/' + cachedPatient.id)
+                        }
                         break;
                     }
                 }
@@ -25078,8 +25102,8 @@
         }
 
         function goToPractitioner(practitioner) {
-            if (practitioner && practitioner.$$hashKey) {
-                $location.path('/practitioner/view/' + practitioner.$$hashKey);
+            if (practitioner && practitioner.resource) {
+                $location.path('/practitioner/view/' + practitioner.resource.id);
             }
         }
 
@@ -25379,11 +25403,17 @@
                 var cachedPractitioner;
                 var cachedPractitioners = searchResults.entry;
                 for (var i = 0, len = cachedPractitioners.length; i < len; i++) {
-                    if (cachedPractitioners[i].$$hashKey === hashKey) {
+                    if (angular.isUndefined(cachedPractitioners[i].resource)){
+                        logError("Cached patient resource is undefined.");
+                    }
+                    else if (cachedPractitioners[i].resource.id == hashKey) {
                         cachedPractitioner = cachedPractitioners[i].resource;
-                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
-                        cachedPractitioner.resourceId = (baseUrl + cachedPractitioner.resourceType + '/' + cachedPractitioner.id);
-                        cachedPractitioner.hashKey = hashKey;
+                        cachedPractitioner.resourceId = cachedPractitioners[i].fullUrl;
+                        if (angular.isUndefined(cachedPractitioner.resourceId)) {
+                            logError("Cached Practitioner full url is undefined.");
+                            var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                            cachedPractitioner.resourceId = (baseUrl + cachedPractitioner.resourceType + '/' + cachedPractitioner.id)
+                        }
                         break;
                     }
                 }

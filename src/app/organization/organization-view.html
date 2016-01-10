@@ -16,8 +16,7 @@
                 <div flex="100" layout="row" layout layout-sm="column" layout-align="space-between center"
                      ng-if="vm.organization"
                      layout-wrap style="position: relative; top:15px">
-                    <fc-resource-view resource-id="vm.organization.resourceId" show="vm.showSource(event)"
-                                      flex="100"></fc-resource-view>
+                    <fc-resource-view resource-id="vm.organization.resourceId" flex="100" show="vm.showSource(event)"></fc-resource-view>
 
                     <md-input-container flex="25" ng-if="vm.organization.type && vm.organization.type.coding[0]">
                         <label>Type</label>

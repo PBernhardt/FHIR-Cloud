@@ -77,11 +77,17 @@
                 var cachedPractitioner;
                 var cachedPractitioners = searchResults.entry;
                 for (var i = 0, len = cachedPractitioners.length; i < len; i++) {
-                    if (cachedPractitioners[i].$$hashKey === hashKey) {
+                    if (angular.isUndefined(cachedPractitioners[i].resource)){
+                        logError("Cached patient resource is undefined.");
+                    }
+                    else if (cachedPractitioners[i].resource.id == hashKey) {
                         cachedPractitioner = cachedPractitioners[i].resource;
-                        var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
-                        cachedPractitioner.resourceId = (baseUrl + cachedPractitioner.resourceType + '/' + cachedPractitioner.id);
-                        cachedPractitioner.hashKey = hashKey;
+                        cachedPractitioner.resourceId = cachedPractitioners[i].fullUrl;
+                        if (angular.isUndefined(cachedPractitioner.resourceId)) {
+                            logError("Cached Practitioner full url is undefined.");
+                            var baseUrl = (searchResults.base || (activeServer.baseUrl + '/'));
+                            cachedPractitioner.resourceId = (baseUrl + cachedPractitioner.resourceType + '/' + cachedPractitioner.id)
+                        }
                         break;
                     }
                 }

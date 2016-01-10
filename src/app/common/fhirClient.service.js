@@ -13,7 +13,7 @@
                 method: 'post',
                 url: baseUrl,
                 data: fhirResource,
-                timeout: 7000
+                timeout: 20000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
@@ -40,7 +40,7 @@
             var req = {
                 method: 'delete',
                 url: resourceUrl,
-                timeout: 7000
+                timeout: 5000
             };
             var token = store.get('authToken');
             if (!common.isUndefinedOrNull(token)) {
@@ -79,7 +79,7 @@
             setTimeout(function () {
                 timedOut = true;
                 timeout.resolve();
-            }, (10000));
+            }, (20000));
 
             var req = {
                 method: 'get',

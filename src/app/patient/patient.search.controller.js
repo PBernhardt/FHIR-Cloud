@@ -36,8 +36,8 @@
         }
 
         function goToPatient(patient) {
-            if (patient && patient.$$hashKey) {
-                $location.path('/patient/view/' + patient.$$hashKey);
+            if (patient && patient.resource.id) {
+                $location.path('/patient/view/' + patient.resource.id);
             }
         }
 
@@ -163,13 +163,11 @@
 
         function quickSearch(searchText) {
             var deferred = $q.defer();
-            vm.noresults = false;
             patientService.getPatients(vm.activeServer.baseUrl, searchText)
                 .then(function (data) {
                     logInfo('Returned ' + (angular.isArray(data.entry) ? data.entry.length : 0) + ' Patients from ' +
                         vm.activeServer.name, null, noToast);
-                    vm.noresults = (angular.isUndefined(data.entry) || angular.isArray(data.entry) === false || data.entry.length === 0);
-                    deferred.resolve(data.entry);
+                     deferred.resolve(data.entry || []);
                 }, function (error) {
                     logError((angular.isDefined(error.outcome) ? error.outcome.issue[0].details : error));
                     deferred.resolve([]);

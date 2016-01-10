@@ -2,7 +2,7 @@
     <section>
         <md-subheader class="md-no-sticky">{{ vm.paging.totalResults | messageTotalResults }}</md-subheader>
         <md-list layout="column">
-            <md-list-item class="md-3-line" ng-click="vm.goToPatient(p)"
+            <md-list-item class="md-3-line" ng-click="vm.goToPatient(p.resource.id)"
                           ng-repeat="p in vm.patients">
                 <img fs-img-person="p.resource.photo[0]" class="face" alt="{{p.name}}"/>
 

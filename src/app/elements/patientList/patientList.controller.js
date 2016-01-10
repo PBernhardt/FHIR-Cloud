@@ -26,9 +26,9 @@
                 });
         }
 
-        function goToPatient(patient) {
-            if (patient && patient.$$hashKey) {
-                $location.path('/patient/view/' + patient.$$hashKey);
+        function goToPatient(id) {
+            if (id) {
+                $location.path('/patient/view/' + id);
             }
         }
         vm.goToPatient = goToPatient;

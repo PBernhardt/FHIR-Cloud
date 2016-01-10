@@ -41,8 +41,8 @@
         }
 
         function goToPractitioner(practitioner) {
-            if (practitioner && practitioner.$$hashKey) {
-                $location.path('/practitioner/view/' + practitioner.$$hashKey);
+            if (practitioner && practitioner.resource) {
+                $location.path('/practitioner/view/' + practitioner.resource.id);
             }
         }
 

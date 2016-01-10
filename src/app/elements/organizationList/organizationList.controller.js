@@ -27,8 +27,8 @@
         }
 
         function goToOrganization(organization) {
-            if (organization && organization.$$hashKey) {
-                $location.path('/organization/view/' + organization.$$hashKey);
+            if (organization && organization.resource.id) {
+                $location.path('/organization/view/' + organization.resource.id);
             }
         }
         vm.goToOrganization = goToOrganization;
